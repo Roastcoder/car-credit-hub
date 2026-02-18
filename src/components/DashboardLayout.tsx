@@ -6,6 +6,7 @@ import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   Settings, LogOut, Menu, X, Car, Bell, ChevronDown, CreditCard, Shield
 } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 interface NavItem {
   label: string;
@@ -51,11 +52,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-sidebar-border">
-          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-            <Car size={18} className="text-sidebar-primary-foreground" />
-          </div>
-          <span className="text-sidebar-foreground font-bold text-lg tracking-tight">CarLoan</span>
+        <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
+          <img src={logo} alt="Mehar Finance" className="h-10 w-auto object-contain" />
           <button className="lg:hidden ml-auto text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
