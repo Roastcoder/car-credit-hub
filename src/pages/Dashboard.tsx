@@ -7,7 +7,7 @@ import { FileText, IndianRupee, TrendingUp, Clock, Users, Building2, CheckCircle
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 
-const STATUS_CHART_COLORS = ['#94a3b8', '#2563eb', '#f59e0b', '#10b981', '#c9243f', '#1d6fb5', '#6b7280'];
+const STATUS_CHART_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#6b7280'];
 
 export default function Dashboard() {
   const { user } = useAuth();
