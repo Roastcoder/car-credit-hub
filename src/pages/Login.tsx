@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEMO_USERS, ROLE_LABELS } from '@/lib/auth';
-import { Car, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export default function Login() {
   const { login } = useAuth();
@@ -27,11 +28,8 @@ export default function Login() {
     <div className="min-h-screen bg-primary flex">
       {/* Left branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-            <Car size={22} className="text-accent-foreground" />
-          </div>
-          <span className="text-primary-foreground font-bold text-2xl tracking-tight">CarLoan</span>
+        <div>
+          <img src={logo} alt="Mehar Finance" className="h-16 w-auto object-contain" />
         </div>
         <div>
           <h1 className="text-5xl font-bold text-primary-foreground leading-tight mb-4">
@@ -41,17 +39,14 @@ export default function Login() {
             Streamline your car loan operations with role-based access, real-time tracking, and comprehensive reporting.
           </p>
         </div>
-        <p className="text-primary-foreground/30 text-sm">© 2025 CarLoan Portal. All rights reserved.</p>
+        <p className="text-primary-foreground/30 text-sm">© 2025 Mehar Finance. All rights reserved.</p>
       </div>
 
       {/* Right login */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl p-8">
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
-              <Car size={18} className="text-accent-foreground" />
-            </div>
-            <span className="font-bold text-xl text-foreground">CarLoan</span>
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain" />
           </div>
 
           <h2 className="text-2xl font-bold text-foreground mb-1">Welcome back</h2>
