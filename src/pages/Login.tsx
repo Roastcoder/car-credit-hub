@@ -2,26 +2,38 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEMO_USERS, ROLE_LABELS } from '@/lib/auth';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Mail, Lock, ChevronDown } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [selectedEmail, setSelectedEmail] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    if (!selectedEmail) {
-      setError('Please select a role to continue');
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your email');
       return;
     }
-    const user = login(selectedEmail);
+    if (!password) {
+      setError('Please enter your password');
+      return;
+    }
+    const user = login(email);
     if (user) {
       navigate('/dashboard');
     } else {
-      setError('Invalid credentials');
+      setError('Invalid email or password');
     }
+  };
+
+  const handleDemoSelect = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('demo123');
+    setError('');
   };
 
   return (
@@ -50,48 +62,78 @@ export default function Login() {
           </div>
 
           <h2 className="text-2xl font-bold text-foreground mb-1">Welcome back</h2>
-          <p className="text-muted-foreground mb-6">Select a role to login as a demo user</p>
+          <p className="text-muted-foreground mb-6">Sign in to your account</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>
           )}
 
-          <div className="space-y-2 mb-6">
-            {DEMO_USERS.map(u => (
-              <button
-                key={u.id}
-                onClick={() => { setSelectedEmail(u.email); setError(''); }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                  selectedEmail === u.email
-                    ? 'border-accent bg-accent/5'
-                    : 'border-border hover:border-accent/40'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                  selectedEmail === u.email ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {u.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground text-sm">{u.name}</p>
-                  <p className="text-xs text-muted-foreground">{ROLE_LABELS[u.role]}</p>
-                </div>
-                {selectedEmail === u.email && (
-                  <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-accent-foreground" />
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+          <form onSubmit={handleLogin} className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  placeholder="Enter your email"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+            </div>
 
-          <button
-            onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity"
-          >
-            Continue to Dashboard
-            <ArrowRight size={18} />
-          </button>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  placeholder="Enter your password"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Sign In
+              <ArrowRight size={18} />
+            </button>
+          </form>
+
+          {/* Demo users dropdown */}
+          <div className="border-t border-border pt-4">
+            <p className="text-xs text-muted-foreground mb-2 text-center">Quick Login — Demo Users</p>
+            <div className="space-y-1.5">
+              {DEMO_USERS.map(u => (
+                <button
+                  key={u.id}
+                  onClick={() => handleDemoSelect(u.email)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm ${
+                    email === u.email
+                      ? 'bg-accent/10 border border-accent/30'
+                      : 'hover:bg-muted/50 border border-transparent'
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                    email === u.email ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {u.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-xs truncate">{u.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role]}</p>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground mono truncate">{u.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
