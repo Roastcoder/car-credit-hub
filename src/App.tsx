@@ -11,7 +11,11 @@ import Loans from "@/pages/Loans";
 import CreateLoan from "@/pages/CreateLoan";
 import LoanDetail from "@/pages/LoanDetail";
 import PDDTracking from "@/pages/PDDTracking";
-import ComingSoon from "@/pages/ComingSoon";
+import UserManagement from "@/pages/UserManagement";
+import BankManagement from "@/pages/BankManagement";
+import BrokerManagement from "@/pages/BrokerManagement";
+import Commission from "@/pages/Commission";
+import Reports from "@/pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,11 +37,11 @@ function AppRoutes() {
       <Route path="/loans/new" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
       <Route path="/pdd" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><ComingSoon title="User Management" /></ProtectedRoute>} />
-      <Route path="/banks" element={<ProtectedRoute><ComingSoon title="Bank / NBFC Management" /></ProtectedRoute>} />
-      <Route path="/brokers" element={<ProtectedRoute><ComingSoon title="Broker Management" /></ProtectedRoute>} />
-      <Route path="/commission" element={<ProtectedRoute><ComingSoon title="Commission Module" /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><ComingSoon title="Reports & Analytics" /></ProtectedRoute>} />
+      <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+      <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
+      <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
+      <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
