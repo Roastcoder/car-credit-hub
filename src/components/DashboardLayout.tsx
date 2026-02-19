@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  Settings, LogOut, Menu, X, Car, Bell, ChevronDown, CreditCard, Shield
+  LogOut, Menu, X, Car, Bell, CreditCard, Shield, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
@@ -32,6 +32,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   if (!user) return null;
 
@@ -50,17 +51,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-16' : 'w-64'} bg-sidebar flex flex-col transition-all duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
-          <img src={logo} alt="Mehar Finance" className="h-10 w-auto object-contain" />
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-4'} h-16 border-b border-sidebar-border`}>
+          <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10'} w-auto object-contain`} />
           <button className="lg:hidden ml-auto text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
           {filteredNav.map(item => {
             const active = location.pathname === item.path;
             return (
@@ -68,30 +69,50 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`sidebar-link ${active ? 'sidebar-link-active' : 'sidebar-link-inactive'}`}
+                title={collapsed ? item.label : undefined}
+                className={`sidebar-link ${collapsed ? 'justify-center px-0' : ''} ${active ? 'sidebar-link-active' : 'sidebar-link-inactive'}`}
               >
                 {item.icon}
-                {item.label}
+                {!collapsed && <span>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        {/* User */}
-        <div className="px-3 pb-4 border-t border-sidebar-border pt-4">
-          <div className="flex items-center gap-3 px-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary font-semibold text-sm">
-              {user.name.split(' ').map(n => n[0]).join('')}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-              <p className="text-xs text-sidebar-muted">{ROLE_LABELS[user.role]}</p>
-            </div>
-          </div>
-          <button onClick={handleLogout} className="sidebar-link sidebar-link-inactive w-full text-destructive hover:text-destructive hover:bg-destructive/10">
-            <LogOut size={18} />
-            Logout
+        {/* Collapse toggle (desktop only) */}
+        <div className="hidden lg:flex justify-center py-2 border-t border-sidebar-border">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1.5 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
+        </div>
+
+        {/* User */}
+        <div className={`px-2 pb-4 border-t border-sidebar-border pt-4 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+          {!collapsed && (
+            <div className="flex items-center gap-3 px-3 mb-3">
+              <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary font-semibold text-sm">
+                {user.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+                <p className="text-xs text-sidebar-muted">{ROLE_LABELS[user.role]}</p>
+              </div>
+            </div>
+          )}
+          {collapsed ? (
+            <button onClick={handleLogout} title="Logout" className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors">
+              <LogOut size={18} />
+            </button>
+          ) : (
+            <button onClick={handleLogout} className="sidebar-link sidebar-link-inactive w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+              <LogOut size={18} />
+              Logout
+            </button>
+          )}
         </div>
       </aside>
 
