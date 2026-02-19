@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEMO_USERS, ROLE_LABELS } from '@/lib/auth';
-import { ArrowRight, Mail, Lock, ChevronDown } from 'lucide-react';
+import { ArrowRight, Mail, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 export default function Login() {
@@ -11,29 +11,21 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showDemoUsers, setShowDemoUsers] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      setError('Please enter your email');
-      return;
-    }
-    if (!password) {
-      setError('Please enter your password');
-      return;
-    }
+    if (!email) { setError('Please enter your email'); return; }
+    if (!password) { setError('Please enter your password'); return; }
     const user = login(email);
-    if (user) {
-      navigate('/dashboard');
-    } else {
-      setError('Invalid email or password');
-    }
+    if (user) { navigate('/dashboard'); } else { setError('Invalid email or password'); }
   };
 
   const handleDemoSelect = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('demo123');
     setError('');
+    setShowDemoUsers(false);
   };
 
   return (
@@ -41,7 +33,7 @@ export default function Login() {
       {/* Left branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12">
         <div>
-          <img src={logo} alt="Mehar Finance" className="h-16 w-auto object-contain" />
+          <img src={logo} alt="Mehar Finance" className="h-20 w-auto object-contain drop-shadow-lg" />
         </div>
         <div>
           <h1 className="text-5xl font-bold text-primary-foreground leading-tight mb-4">
@@ -58,7 +50,7 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl p-8">
           <div className="lg:hidden flex items-center justify-center mb-8">
-            <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain" />
+            <img src={logo} alt="Mehar Finance" className="h-16 w-auto object-contain drop-shadow-md" />
           </div>
 
           <h2 className="text-2xl font-bold text-foreground mb-1">Welcome back</h2>
@@ -106,33 +98,36 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo users dropdown */}
+          {/* Demo users collapsible dropdown */}
           <div className="border-t border-border pt-4">
-            <p className="text-xs text-muted-foreground mb-2 text-center">Quick Login — Demo Users</p>
-            <div className="space-y-1.5">
-              {DEMO_USERS.map(u => (
-                <button
-                  key={u.id}
-                  onClick={() => handleDemoSelect(u.email)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm ${
-                    email === u.email
-                      ? 'bg-accent/10 border border-accent/30'
-                      : 'hover:bg-muted/50 border border-transparent'
-                  }`}
-                >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    email === u.email ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {u.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-xs truncate">{u.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role]}</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground mono truncate">{u.email}</span>
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={() => setShowDemoUsers(!showDemoUsers)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+            >
+              <span className="text-muted-foreground font-medium">Quick Login — Demo Users</span>
+              {showDemoUsers ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+            </button>
+
+            {showDemoUsers && (
+              <div className="mt-2 space-y-1 bg-card border border-border rounded-xl p-2 shadow-md z-10">
+                {DEMO_USERS.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => handleDemoSelect(u.email)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm hover:bg-muted/60"
+                  >
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-accent/10 text-accent">
+                      {u.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-xs truncate">{u.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role]}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground mono truncate">{u.email}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
