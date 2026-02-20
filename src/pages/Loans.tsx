@@ -93,14 +93,14 @@ export default function Loans() {
               <tbody>
                 {filtered.map((loan: any) => (
                   <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
-                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.id}</td>
+                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
                     <td className="py-3.5 px-3">
                       <p className="font-medium text-foreground">{loan.applicant_name}</p>
                       <p className="text-xs text-muted-foreground">{loan.mobile}</p>
                     </td>
                     <td className="py-3.5 px-3 hidden md:table-cell">
-                      <p className="text-foreground">{loan.car_make} {loan.car_model}</p>
-                      <p className="text-xs text-muted-foreground">{loan.car_variant}</p>
+                      <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
+                      <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
                     </td>
                     <td className="py-3.5 px-3 text-muted-foreground hidden lg:table-cell">{loan.banks?.name || '—'}</td>
                     <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>

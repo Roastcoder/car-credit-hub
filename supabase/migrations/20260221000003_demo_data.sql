@@ -99,7 +99,7 @@ INSERT INTO loans (
 (
   'DEMO-2026-003', 'VIJAY SINGH', '9876543321',
   'CUST-2026-1003', 'CL-2026-1003',
-  NULL, NULL, 'Prakash Yadav', '9876543322', 'Jodhpur Branch',
+  'Geeta Singh', '9876543324', 'Prakash Yadav', '9876543322', 'Jodhpur Branch',
   'Ward No 12, Main Road', 'Pali', 'Pali', 'Pali', '306401',
   'Ward No 12, Main Road', 'Pali', 'Pali', 'Pali', '306401',
   180000, 180000, 40000, 70.0, 'Used Vehicle Loan',
@@ -116,8 +116,8 @@ INSERT INTO loans (
   6500, 2800, 1000, 0, 0, 0,
   1100, 500, 11900,
   168100, 168100, '100% in Favor of MAPL', 0, '2026-02-21',
-  '2026-02-08', '2026-02-19', NULL, NULL, 'Self', 'Walk-in',
-  'Feb', '2026', NULL, 'Approval', 'under_review', 'Documents under verification'
+  '2026-02-08', '2026-02-19', '2026-02-21', 13, 'Self', 'Walk-in',
+  'Feb', '2026', '2026-02-21', 'Approval', 'under_review', 'Documents under verification'
 ),
 -- Loan 4: PRIYA SHARMA - Submitted
 (
@@ -130,7 +130,7 @@ INSERT INTO loans (
   'RJ27GH3456', 'TATA', 'INTRA V30', '2025', 'LCV', 'New Finance',
   'Business', 38000, 'nip', 'NA', 'NA', 'NA', 'NA',
   'Small Business Owner',
-  'PRIYA SHARMA', '2025-02', '2045-02-10', 'NA', 'Axis Bank', NULL,
+  'PRIYA SHARMA', '2025-02', '2045-02-10', 'NA', 'Axis Bank', '2026-02-12',
   'Suresh RTO', '9876543334', 'UDAIPUR', 'New Registration', 'No', 'Yes', 'Pending',
   14200, 30, 106000, 14200, '2026-04-10',
   27.50, 30, 'Monthly', 14200, 27.50,
@@ -139,26 +139,34 @@ INSERT INTO loans (
   'Customer', 19800, '2026-02-10', '2027-02-10',
   8000, 3500, 1300, 300, 0, 900,
   1500, 0, 15500,
-  304500, 304500, 'Pending', 0, NULL,
-  '2026-02-10', NULL, NULL, NULL, 'Broker', 'Sunil Associates',
-  'Feb', '2026', NULL, 'Login', 'submitted', 'Application submitted for review'
+  304500, 304500, 'Pending', 0, '2026-02-12',
+  '2026-02-10', '2026-02-12', '2026-02-13', 3, 'Broker', 'Sunil Associates',
+  'Feb', '2026', '2026-02-13', 'Login', 'submitted', 'Application submitted for review'
 ),
 -- Loan 5: ANIL GUPTA - Draft
 (
   'DEMO-2026-005', 'ANIL GUPTA', '9876543341',
   'CUST-2026-1005', 'CL-2026-1005',
-  'Meena Gupta', '9876543342', NULL, NULL, 'Ajmer Branch',
+  'Meena Gupta', '9876543342', 'Sunil Gupta', '9876543343', 'Ajmer Branch',
   'Pushkar Road, Near Bus Stand', 'Pushkar', 'Ajmer', 'Ajmer', '305022',
   'Pushkar Road, Near Bus Stand', 'Pushkar', 'Ajmer', 'Ajmer', '305022',
   280000, 280000, 55000, 72.0, 'Used Vehicle Loan',
   'RJ01IJ7890', 'EICHER', 'PRO 2049', '2020', 'LCV', 'Re-finance',
   'Transport Business', 42000, 'nip', 'Good', 'Vehicle Loan', 'Closed', 'Good',
   'NA',
-  'ANIL GUPTA', '2020-03', '2040-03-15', 'SBI', 'Kamal Finance', NULL,
-  NULL, NULL, 'AJMER', NULL, 'No', 'No', NULL,
+  'ANIL GUPTA', '2020-03', '2040-03-15', 'SBI', 'Kamal Finance', '2026-02-14',
+  'Lokesh RTO', '9876543344', 'AJMER', 'Transfer', 'No', 'No', 'RC, NOC, Insurance',
   13500, 28, 98000, 13500, '2026-04-15',
   28.00, 28, 'Monthly', 13500, 28.00,
   '11111111-1111-1111-1111-111111111111', 'RAVI KUMAR', 'LCV', 'AJMER', 'SURESH PATEL',
+  'ORIENTAL INSURANCE', 'ANIL GUPTA', 245000, 'Pending', 'SBI',
+  'Agent', 16500, '2026-02-10', '2027-02-10',
+  7500, 3200, 1100, 0, 0, 0,
+  1300, 0, 13100,
+  266900, 266900, 'Pending', 0, '2026-02-14',
+  '2026-02-12', '2026-02-14', '2026-02-15', 3, 'Self', 'Existing Customer',
+  'Feb', '2026', '2026-02-15', 'Login', 'draft', 'Application in progress'
+),SURESH PATEL',
   'ORIENTAL INSURANCE', 'ANIL GUPTA', 245000, 'Pending', 'SBI',
   'Agent', 16500, NULL, NULL,
   7500, 3200, 1100, 0, 0, 0,
