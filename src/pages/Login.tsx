@@ -13,6 +13,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemoUsers, setShowDemoUsers] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  React.useEffect(() => {
+    // Check if app is running in standalone mode (installed)
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      (window.navigator as any).standalone || 
+                      document.referrer.includes('android-app://');
+    setIsStandalone(standalone);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,15 +105,17 @@ export default function Login() {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
 
-          {/* Mobile APK Download */}
-          <a
-            href="/mehar-finance.apk"
-            download
-            className="lg:hidden w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors text-sm mb-4"
-          >
-            <Download size={16} />
-            Download Android App
-          </a>
+          {/* Mobile APK Download - Only show if not installed */}
+          {!isStandalone && (
+            <a
+              href="/mehar-finance.apk"
+              download
+              className="lg:hidden w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors text-sm mb-4"
+            >
+              <Download size={16} />
+              Download Android App
+            </a>
+          )}
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>

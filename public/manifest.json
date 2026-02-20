@@ -3,7 +3,7 @@
   "short_name": "Mehar Finance",
   "description": "Complete car loan sales & DSA management system",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
