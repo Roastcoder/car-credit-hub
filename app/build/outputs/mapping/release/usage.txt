@@ -10286,9 +10286,6 @@ com.google.j2objc.annotations.WeakOuter
 com.google.thirdparty.publicsuffix.PublicSuffixPatterns
 com.google.thirdparty.publicsuffix.PublicSuffixType
 com.google.thirdparty.publicsuffix.TrieParser
-com.meharfinance.app.Application
-com.meharfinance.app.DelegationService
-com.meharfinance.app.LauncherActivity
 kotlin.ArrayIntrinsicsKt
 kotlin.BuilderInference
 kotlin.CharCodeJVMKt
