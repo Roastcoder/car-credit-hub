@@ -158,7 +158,7 @@ export default function LoanDetail() {
             <h1 className="text-2xl font-bold text-foreground">{loan.id}</h1>
             <LoanStatusBadge status={loan.status} />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {loan.car_make} {loan.car_model}</p>
+          <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
         </div>
         {/* Status update select */}
         <select
@@ -196,40 +196,56 @@ export default function LoanDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <Section title="Applicant Details" icon={<User size={18} />}>
           <div className="grid grid-cols-2 gap-4">
+            <Field label="Customer ID" value={loan.customer_id} />
+            <Field label="Loan Number" value={loan.loan_number} />
             <Field label="Full Name" value={loan.applicant_name} />
             <Field label="Mobile" value={loan.mobile} />
-            <Field label="PAN" value={loan.pan || ''} />
-            <Field label="Aadhaar" value={loan.aadhaar || ''} />
-            <div className="col-span-2"><Field label="Address" value={loan.address || ''} /></div>
+            <Field label="Co-Applicant" value={loan.co_applicant_name || '—'} />
+            <Field label="Co-Applicant Mobile" value={loan.co_applicant_mobile || '—'} />
+            <Field label="Guarantor" value={loan.guarantor_name || '—'} />
+            <Field label="Guarantor Mobile" value={loan.guarantor_mobile || '—'} />
+            <div className="col-span-2"><Field label="Current Address" value={loan.current_address || loan.address || ''} /></div>
+            <Field label="Village" value={loan.current_village || ''} />
+            <Field label="District" value={loan.current_district || ''} />
           </div>
         </Section>
 
-        <Section title="Car Details" icon={<Car size={18} />}>
+        <Section title="Vehicle Details" icon={<Car size={18} />}>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Make" value={loan.car_make || ''} />
-            <Field label="Model" value={loan.car_model || ''} />
-            <Field label="Variant" value={loan.car_variant || ''} />
-            <Field label="On-Road Price" value={formatCurrency(Number(loan.on_road_price))} />
-            <Field label="Dealer" value={loan.dealer_name || ''} />
+            <Field label="Registration No" value={loan.vehicle_number || ''} />
+            <Field label="Maker" value={loan.maker_name || loan.car_make || ''} />
+            <Field label="Model/Variant" value={loan.model_variant_name || loan.car_model || ''} />
+            <Field label="Mfg Year" value={loan.mfg_year || ''} />
+            <Field label="Vertical" value={loan.vertical || ''} />
+            <Field label="Scheme" value={loan.scheme || ''} />
           </div>
         </Section>
 
-        <Section title="Loan Details" icon={<IndianRupee size={18} />}>
+        <Section title="Loan & EMI Details" icon={<IndianRupee size={18} />}>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
-            <Field label="Down Payment" value={formatCurrency(Number(loan.down_payment))} />
+            <Field label="Grid" value={formatCurrency(Number(loan.grid || 0))} />
+            <Field label="LTV" value={loan.ltv ? `${loan.ltv}%` : '—'} />
+            <Field label="IRR" value={loan.irr ? `${loan.irr}%` : `${loan.interest_rate}%`} />
             <Field label="Tenure" value={`${loan.tenure} months`} />
-            <Field label="Interest Rate" value={`${loan.interest_rate}%`} />
-            <Field label="Monthly EMI" value={formatCurrency(Number(loan.emi))} />
+            <Field label="EMI Mode" value={loan.emi_mode || 'Monthly'} />
+            <Field label="Monthly EMI" value={formatCurrency(Number(loan.emi_amount || loan.emi))} />
+            <Field label="Total EMI" value={loan.total_emi || loan.tenure} />
+            <Field label="Total Interest" value={formatCurrency(Number(loan.total_interest || 0))} />
+            <Field label="First EMI Date" value={loan.first_installment_due_date ? new Date(loan.first_installment_due_date).toLocaleDateString('en-IN') : '—'} />
           </div>
         </Section>
 
-        <Section title="Assignment & Dates" icon={<Building2 size={18} />}>
+        <Section title="Financier & Insurance" icon={<Building2 size={18} />}>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Assigned Bank" value={(loan as any).banks?.name || '—'} />
+            <Field label="Financier Executive" value={loan.financier_executive_name || '—'} />
+            <Field label="Branch" value={loan.disburse_branch_name || '—'} />
+            <Field label="Branch Manager" value={loan.branch_manager_name || '—'} />
             <Field label="Assigned Broker" value={(loan as any).brokers?.name || '—'} />
-            <Field label="Created" value={new Date(loan.created_at).toLocaleDateString('en-IN')} />
-            <Field label="Last Updated" value={new Date(loan.updated_at).toLocaleDateString('en-IN')} />
+            <Field label="Insurance Company" value={loan.insurance_company_name || '—'} />
+            <Field label="IDV" value={loan.idv ? formatCurrency(Number(loan.idv)) : '—'} />
+            <Field label="Premium" value={loan.premium_amount ? formatCurrency(Number(loan.premium_amount)) : '—'} />
           </div>
         </Section>
       </div>
