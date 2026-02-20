@@ -70,7 +70,7 @@ export default function Login() {
           <h1 className="text-5xl font-bold text-primary-foreground leading-tight mb-6">
             Car Loan Sales<br />& Management Portal
           </h1>
-          <div className="space-y-4 max-w-md">
+          <div className="space-y-4 max-w-md mb-6">
             {[
               { icon: <Shield size={20} />, title: 'Secure Role-Based Access', desc: 'Multi-level permissions for admins, managers, brokers, and employees' },
               { icon: <BarChart3 size={20} />, title: 'Real-Time Analytics', desc: 'Track loan applications, commissions, and performance metrics' },
@@ -86,6 +86,14 @@ export default function Login() {
               </div>
             ))}
           </div>
+          <a
+            href="/app-release-signed.apk"
+            download
+            className="inline-flex items-center gap-2 bg-primary-foreground text-primary font-semibold py-3 px-6 rounded-xl hover:opacity-90 transition-opacity"
+          >
+            <Download size={20} />
+            Download Android App
+          </a>
         </div>
         <p className="text-primary-foreground/30 text-sm">© 2025 Mehar Finance. All rights reserved.</p>
       </div>
