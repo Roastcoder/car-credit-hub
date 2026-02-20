@@ -7,6 +7,7 @@ import {
   LogOut, Menu, X, Car, Bell, CreditCard, Shield, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import MobileBottomNav from './MobileBottomNav';
 
 interface NavItem {
   label: string;
@@ -141,12 +142,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
           <div className="animate-fade-in">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
