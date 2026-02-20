@@ -1,18 +1,36 @@
 import { useState } from 'react';
-import { MOCK_LOANS, formatCurrency } from '@/lib/mock-data';
-import { UserCheck, Search, Plus, TrendingUp, FileText, IndianRupee, Edit, Trash2 } from 'lucide-react';
-
-const BROKERS = [
-  { id: '1', name: 'Vikram Singh', email: 'vikram@carloan.com', phone: '9876543210', area: 'Mumbai', commissionRate: 1.5 },
-  { id: '2', name: 'Rohit Kapoor', email: 'rohit@carloan.com', phone: '9812345678', area: 'Delhi NCR', commissionRate: 1.2 },
-  { id: '3', name: 'Sunil Mehta', email: 'sunil@carloan.com', phone: '9988776655', area: 'Pune', commissionRate: 1.3 },
-  { id: '4', name: 'Ajay Thakur', email: 'ajay@carloan.com', phone: '9654321098', area: 'Bangalore', commissionRate: 1.4 },
-  { id: '5', name: 'Manoj Pandey', email: 'manoj@carloan.com', phone: '9123456789', area: 'Ahmedabad', commissionRate: 1.1 },
-];
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/lib/mock-data';
+import { UserCheck, Search, Plus, FileText, IndianRupee, Edit, Trash2 } from 'lucide-react';
 
 export default function BrokerManagement() {
   const [search, setSearch] = useState('');
-  const filtered = BROKERS.filter(b => b.name.toLowerCase().includes(search.toLowerCase()) || b.area.toLowerCase().includes(search.toLowerCase()));
+
+  const { data: brokers = [], isLoading } = useQuery({
+    queryKey: ['brokers'],
+    queryFn: async () => {
+      const { data } = await supabase.from('brokers').select('*').order('name');
+      return data ?? [];
+    },
+  });
+
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans-for-brokers'],
+    queryFn: async () => {
+      const { data } = await supabase.from('loans').select('assigned_broker_id, loan_amount, status');
+      return data ?? [];
+    },
+  });
+
+  const filtered = (brokers as any[]).filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase()) ||
+    (b.area || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPending = (loans as any[])
+    .filter(l => l.status !== 'disbursed')
+    .reduce((s, l) => s + Number(l.loan_amount) * 0.015, 0);
 
   return (
     <div>
@@ -26,23 +44,21 @@ export default function BrokerManagement() {
         </button>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="stat-card flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><UserCheck size={20} className="text-accent" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{BROKERS.length}</p><p className="text-xs text-muted-foreground">Active Brokers</p></div>
+          <div><p className="text-2xl font-bold text-foreground">{brokers.length}</p><p className="text-xs text-muted-foreground">Active Brokers</p></div>
         </div>
         <div className="stat-card flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><FileText size={20} className="text-accent" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{MOCK_LOANS.length}</p><p className="text-xs text-muted-foreground">Total Cases</p></div>
+          <div><p className="text-2xl font-bold text-foreground">{loans.length}</p><p className="text-xs text-muted-foreground">Total Cases</p></div>
         </div>
         <div className="stat-card flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><IndianRupee size={20} className="text-accent" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{formatCurrency(125000)}</p><p className="text-xs text-muted-foreground">Pending Payouts</p></div>
+          <div><p className="text-2xl font-bold text-foreground">{formatCurrency(totalPending)}</p><p className="text-xs text-muted-foreground">Pending Payouts</p></div>
         </div>
       </div>
 
-      {/* Search */}
       <div className="stat-card mb-4">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -51,51 +67,55 @@ export default function BrokerManagement() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="stat-card">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Area</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Phone</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission %</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right py-3 px-3 font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(b => (
-                <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
-                        {b.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{b.name}</p>
-                        <p className="text-xs text-muted-foreground">{b.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{b.area}</td>
-                  <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell mono text-xs">{b.phone}</td>
-                  <td className="py-3 px-3 font-medium text-accent">{b.commissionRate}%</td>
-                  <td className="py-3 px-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-medium">Active</span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Edit size={14} /></button>
-                      <button className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
+        {isLoading ? (
+          <div className="py-8 text-center text-muted-foreground text-sm">Loading brokers…</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Area</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Phone</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Cases</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission %</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((b: any) => {
+                  const brokerLoans = (loans as any[]).filter(l => l.assigned_broker_id === b.id);
+                  return (
+                    <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
+                            {b.name.split(' ').map((n: string) => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{b.name}</p>
+                            <p className="text-xs text-muted-foreground">{b.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{b.area || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell mono text-xs">{b.phone || '—'}</td>
+                      <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>
+                      <td className="py-3 px-3 font-medium text-accent">{b.commission_rate}%</td>
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${b.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                          {b.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filtered.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No brokers found</p>}
+          </div>
+        )}
       </div>
     </div>
   );

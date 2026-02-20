@@ -1,31 +1,46 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { DEMO_USERS, ROLE_LABELS, UserRole } from '@/lib/auth';
-import { Users, Search, Plus, Mail, Shield, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
-
-const MOCK_USERS_EXTENDED = [
-  ...DEMO_USERS,
-  { id: '7', name: 'Sanjay Rao', email: 'sanjay@carloan.com', role: 'employee' as UserRole },
-  { id: '8', name: 'Meera Iyer', email: 'meera@carloan.com', role: 'employee' as UserRole },
-  { id: '9', name: 'Rohit Kapoor', email: 'rohit@carloan.com', role: 'broker' as UserRole },
-  { id: '10', name: 'Anita Deshmukh', email: 'anita@carloan.com', role: 'manager' as UserRole },
-];
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ROLE_LABELS, UserRole } from '@/lib/auth';
+import { Users, Search, Shield } from 'lucide-react';
 
 export default function UserManagement() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  const filtered = MOCK_USERS_EXTENDED.filter(u => {
-    const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+  const { data: profiles = [], isLoading } = useQuery({
+    queryKey: ['users-management'],
+    queryFn: async () => {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      return (profilesData ?? []).map((p: any) => ({
+        ...p,
+        role: rolesData?.find((r: any) => r.user_id === p.id)?.role ?? null,
+      }));
+    },
+    enabled: !!user,
+  });
+
+  const filtered = profiles.filter((u: any) => {
+    const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase());
     const matchRole = roleFilter === 'all' || u.role === roleFilter;
     return matchSearch && matchRole;
   });
 
-  const roleCounts = MOCK_USERS_EXTENDED.reduce((acc, u) => {
-    acc[u.role] = (acc[u.role] || 0) + 1;
+  const roleCounts = profiles.reduce((acc: Record<string, number>, u: any) => {
+    if (u.role) acc[u.role] = (acc[u.role] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
 
   return (
     <div>
@@ -34,9 +49,6 @@ export default function UserManagement() {
           <h1 className="text-2xl font-bold text-foreground">User Management</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage system users and their roles</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
-          <Plus size={16} /> Add User
-        </button>
       </div>
 
       {/* Role summary cards */}
@@ -69,50 +81,49 @@ export default function UserManagement() {
 
       {/* Table */}
       <div className="stat-card">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Email</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
-                <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right py-3 px-3 font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(u => (
-                <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
-                        {u.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <span className="font-medium text-foreground">{u.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell">{u.email}</td>
-                  <td className="py-3 px-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                      <Shield size={10} /> {ROLE_LABELS[u.role]}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-medium">Active</span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Edit size={14} /></button>
-                      <button className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
+        {isLoading ? (
+          <div className="py-8 text-center text-muted-foreground text-sm">Loading users…</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Email</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-8 text-sm">No users found</p>
+              </thead>
+              <tbody>
+                {filtered.map((u: any) => (
+                  <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
+                          {(u.full_name || u.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-foreground">{u.full_name || '(No name)'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell">{u.email}</td>
+                    <td className="py-3 px-3">
+                      {u.role ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                          <Shield size={10} /> {ROLE_LABELS[u.role as UserRole]}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No role</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-muted-foreground text-xs">
+                      {new Date(u.created_at).toLocaleDateString('en-IN')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No users found</p>}
+          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { ROLE_LABELS, UserRole } from '@/lib/auth';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { ROLE_LABELS } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, Menu, X, Car, Bell, CreditCard, Shield, ChevronLeft, ChevronRight
@@ -36,12 +36,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (!user) return null;
 
-  const filteredNav = NAV_ITEMS.filter(item => item.roles.includes(user.role));
+  const filteredNav = NAV_ITEMS.filter(item => !user.role || item.roles.includes(user.role));
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
+
+  const initials = user.full_name
+    ? user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : user.email.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -55,6 +59,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Logo */}
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-4'} h-16 border-b border-sidebar-border`}>
           <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10'} w-auto object-contain bg-white rounded p-1`} />
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-sidebar-foreground truncate">Mehar Finance</p>
+              <p className="text-[10px] text-sidebar-muted">Car Loan Portal</p>
+            </div>
+          )}
           <button className="lg:hidden ml-auto text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
@@ -94,12 +104,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className={`px-2 pb-4 border-t border-sidebar-border pt-4 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {!collapsed && (
             <div className="flex items-center gap-3 px-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary font-semibold text-sm">
-                {user.name.split(' ').map(n => n[0]).join('')}
+              <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary font-semibold text-sm shrink-0">
+                {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-                <p className="text-xs text-sidebar-muted">{ROLE_LABELS[user.role]}</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.full_name || user.email}</p>
+                <p className="text-xs text-sidebar-muted">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
               </div>
             </div>
           )}
