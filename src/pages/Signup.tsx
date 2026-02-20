@@ -41,7 +41,10 @@ export default function Signup() {
     
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Update profile with branch_id
       await supabase.from('profiles').update({ branch_id: branchId }).eq('id', user.id);
+      // Assign employee role by default
+      await supabase.from('user_roles').insert({ user_id: user.id, role: 'employee' });
     }
     
     setLoading(false);
