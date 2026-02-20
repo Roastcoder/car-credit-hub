@@ -160,15 +160,16 @@ export default function LoanDetail() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
         </div>
-        {/* Status update select */}
-        <select
-          value={loan.status}
-          onChange={e => updateStatus.mutate(e.target.value)}
-          disabled={updateStatus.isPending}
-          className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
-        >
-          {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
+        {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
+          <select
+            value={loan.status}
+            onChange={e => updateStatus.mutate(e.target.value)}
+            disabled={updateStatus.isPending}
+            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
+          >
+            {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Status Pipeline */}
