@@ -59,7 +59,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         <StatCard label="Total Applications" value={String(totalLoans)} change="+12% this month" changeType="positive" icon={<FileText size={20} />} />
         <StatCard label="Loan Volume" value={formatCurrency(totalVolume)} change="+8.5% this month" changeType="positive" icon={<IndianRupee size={20} />} />
         <StatCard label="Disbursed" value={formatCurrency(disbursedAmount)} change={`${disbursed.length} loans`} changeType="neutral" icon={<CheckCircle2 size={20} />} />
@@ -67,7 +67,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 mb-6">
         <div className="stat-card">
           <h3 className="font-semibold text-foreground mb-4">Bank-wise Distribution (₹ Lakhs)</h3>
           <div className="h-64">
