@@ -1,5 +1,9 @@
 -- Demo Data for Loan Management System
--- This includes banks, brokers, and comprehensive loan applications
+-- Assign loans to actual user accounts
+
+-- Get user IDs (these will be populated from auth.users)
+-- Note: Replace these with actual UUIDs from your Supabase auth.users table
+-- For now using placeholder UUIDs that should be updated after users are created
 
 -- Insert Banks
 INSERT INTO banks (id, name, contact_person, phone, email, interest_rate, is_active)
@@ -160,6 +164,34 @@ INSERT INTO loans (
   7500, 3200, 1100, 0, 0, 0,
   1300, 0, 13100,
   266900, 266900, 'Pending', 0, NULL,
+  '2026-02-12', NULL, NULL, NULL, 'Self', 'Existing Customer',
+  'Feb', '2026', NULL, 'Login', 'draft', 'Application in progress'
+),
+-- Loan 6: DEEPAK YADAV - Disbursed (HCV)
+(
+  'DEMO-2026-006', 'DEEPAK YADAV', '9876543351',
+  'CUST-2026-1006', 'CL-2026-1006',
+  'Kavita Yadav', '9876543352', 'Suresh Yadav', '9876543353', 'Kota Branch',
+  'Industrial Area, Sector 5', 'Kota', 'Kota', 'Kota', '324005',
+  'Industrial Area, Sector 5', 'Kota', 'Kota', 'Kota', '324005',
+  850000, 850000, 150000, 82.0, 'New Vehicle Loan',
+  'RJ20KL1234', 'TATA', 'LPT 1613', '2025', 'HCV', 'New Finance',
+  'Transport Business', 75000, 'ip', 'Excellent', 'Business Loan', 'Active', 'Excellent',
+  'NA',
+  'DEEPAK YADAV', '2025-01', '2045-01-20', 'NA', 'HDFC Bank', '2026-02-15',
+  'Ramesh RTO', '9876543354', 'KOTA', 'New Registration', 'No', 'Yes', 'All documents complete',
+  32500, 48, 710000, 32500, '2026-03-20',
+  25.50, 48, 'Monthly', 32500, 25.50,
+  '22222222-2222-2222-2222-222222222222', 'ASHOK KUMAR', 'HCV', 'KOTA', 'VIJAY SHARMA',
+  'NEW INDIA ASSURANCE', 'DEEPAK YADAV', 780000, 'Done', 'NA',
+  'Company', 45000, '2026-01-15', '2027-01-15',
+  18000, 8500, 2500, 1000, 0, 2800,
+  3500, 0, 36300,
+  813700, 813700, '100% in Favor of MAPL', 0, '2026-02-15',
+  '2026-01-20', '2026-02-10', '2026-02-15', 26, 'Broker', 'Deepak Finance',
+  'Feb', '2026', '2026-02-15', 'Disburse', 'disbursed', 'HCV loan disbursed'
+)
+ON CONFLICT (id) DO NOTHING;ULL,
   '2026-02-12', NULL, NULL, NULL, 'Self', 'Existing Customer',
   'Feb', '2026', NULL, 'Login', 'draft', 'Application in progress'
 ),
