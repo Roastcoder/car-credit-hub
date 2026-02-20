@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
@@ -9,6 +9,7 @@ import { Search, Plus, ChevronRight } from 'lucide-react';
 type LoanStatusFilter = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 
 export default function Loans() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
 
