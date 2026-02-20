@@ -21,10 +21,10 @@ plugins {
 }
 
 def twaManifest = [
-    applicationId: 'com.meharfinance.app',
+    applicationId: 'app.lovable.car_credit_hub.twa',
     hostName: 'car-credit-hub.lovable.app', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
-    name: 'Mehar Finance', // The application name.
+    name: 'Mehar Finance - Car Loan Portal', // The application name.
     launcherName: 'Mehar Fin', // The name shown on the Android Launcher.
     themeColor: '#0F172A', // The color used for the status bar.
     themeColorDark: '#000000', // The color used for the dark status bar.
@@ -52,9 +52,9 @@ def twaManifest = [
 
 android {
     compileSdkVersion 36
-    namespace "com.meharfinance.app"
+    namespace "app.lovable.car_credit_hub.twa"
     defaultConfig {
-        applicationId "com.meharfinance.app"
+        applicationId "app.lovable.car_credit_hub.twa"
         minSdkVersion 21
         targetSdkVersion 35
         versionCode 1

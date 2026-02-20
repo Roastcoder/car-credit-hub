@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEMO_ACCOUNTS, ROLE_LABELS } from '@/lib/auth';
-import { ArrowRight, Mail, Lock, ChevronDown, ChevronUp, Shield, BarChart3, Users, Zap } from 'lucide-react';
+import { ArrowRight, Mail, Lock, ChevronDown, ChevronUp, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 export default function Login() {
@@ -13,6 +13,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemoUsers, setShowDemoUsers] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +104,16 @@ export default function Login() {
 
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
+
+          {deferredPrompt && (
+            <button
+              onClick={handleInstall}
+              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-green-700 transition-colors text-sm mb-4"
+            >
+              <Download size={16} />
+              Install App
+            </button>
+          )}
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>

@@ -1,7 +1,7 @@
 {
-  "packageId": "com.meharfinance.app",
+  "packageId": "app.lovable.car_credit_hub.twa",
   "host": "car-credit-hub.lovable.app",
-  "name": "Mehar Finance",
+  "name": "Mehar Finance - Car Loan Portal",
   "launcherName": "Mehar Fin",
   "display": "standalone",
   "themeColor": "#0F172A",
