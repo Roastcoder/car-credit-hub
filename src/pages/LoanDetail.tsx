@@ -248,6 +248,52 @@ export default function LoanDetail() {
             <Field label="Premium" value={loan.premium_amount ? formatCurrency(Number(loan.premium_amount)) : '—'} />
           </div>
         </Section>
+
+        <Section title="Income & Agriculture" icon={<IndianRupee size={18} />}>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Income Source" value={loan.income_source || '—'} />
+            <Field label="Monthly Income" value={loan.monthly_income ? formatCurrency(Number(loan.monthly_income)) : '—'} />
+            <Field label="NIP/IP" value={loan.nip_ip || '—'} />
+            <Field label="Agriculture" value={loan.agriculture || '—'} />
+          </div>
+        </Section>
+
+        <Section title="RTO Details" icon={<FileText size={18} />}>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="RC Owner" value={loan.rc_owner_name || '—'} />
+            <Field label="RC Mfg Date" value={loan.rc_mfg_date || '—'} />
+            <Field label="HPN at Login" value={loan.hpn_at_login || '—'} />
+            <Field label="New Financier" value={loan.new_financier || '—'} />
+            <Field label="RTO Agent" value={loan.rto_agent_name || '—'} />
+            <Field label="Agent Mobile" value={loan.agent_mobile_no || '—'} />
+            <Field label="DTO Location" value={loan.dto_location || '—'} />
+            <Field label="Challan" value={loan.challan || '—'} />
+          </div>
+        </Section>
+
+        <Section title="Deductions & Disbursement" icon={<IndianRupee size={18} />}>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="File Charge" value={loan.file_charge ? formatCurrency(Number(loan.file_charge)) : '—'} />
+            <Field label="Loan Suraksha" value={loan.loan_suraksha ? formatCurrency(Number(loan.loan_suraksha)) : '—'} />
+            <Field label="Stamping" value={loan.stamping ? formatCurrency(Number(loan.stamping)) : '—'} />
+            <Field label="Total Deduction" value={loan.total_deduction ? formatCurrency(Number(loan.total_deduction)) : '—'} />
+            <Field label="Net Disbursement" value={loan.net_disbursement_amount ? formatCurrency(Number(loan.net_disbursement_amount)) : '—'} />
+            <Field label="Payment Received" value={loan.payment_received_date ? new Date(loan.payment_received_date).toLocaleDateString('en-IN') : '—'} />
+          </div>
+        </Section>
+
+        <Section title="Important Dates" icon={<Building2 size={18} />}>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Login Date" value={loan.login_date ? new Date(loan.login_date).toLocaleDateString('en-IN') : '—'} />
+            <Field label="Approval Date" value={loan.approval_date ? new Date(loan.approval_date).toLocaleDateString('en-IN') : '—'} />
+            <Field label="Disburse Date" value={loan.financier_disburse_date ? new Date(loan.financier_disburse_date).toLocaleDateString('en-IN') : '—'} />
+            <Field label="TAT" value={loan.tat ? `${loan.tat} days` : '—'} />
+            <Field label="Booking Mode" value={loan.booking_mode || '—'} />
+            <Field label="File Stage" value={loan.file_stage || '—'} />
+            <Field label="Created" value={new Date(loan.created_at).toLocaleDateString('en-IN')} />
+            <Field label="Last Updated" value={new Date(loan.updated_at).toLocaleDateString('en-IN')} />
+          </div>
+        </Section>
       </div>
 
       {/* Document Upload Section */}
