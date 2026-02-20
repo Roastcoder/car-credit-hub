@@ -34,6 +34,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   if (!user) return null;
 
@@ -131,14 +132,51 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
         <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 gap-4 shrink-0">
-          <button className="lg:hidden text-foreground" onClick={() => setSidebarOpen(true)}>
+          {/* Mobile: Logo */}
+          <div className="lg:hidden flex items-center gap-2">
+            <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain bg-white rounded p-0.5" />
+          </div>
+          
+          {/* Desktop: Menu button */}
+          <button className="hidden lg:block text-foreground" onClick={() => setSidebarOpen(true)}>
             <Menu size={22} />
           </button>
+          
           <div className="flex-1" />
+          
+          {/* Notification - Center on mobile */}
           <button className="relative p-2 rounded-lg hover:bg-muted transition-colors">
             <Bell size={20} className="text-muted-foreground" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
           </button>
+          
+          {/* Mobile: Profile Dropdown */}
+          <div className="lg:hidden relative">
+            <button 
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-semibold text-sm"
+            >
+              {initials}
+            </button>
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                <div className="absolute right-0 top-12 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                  <div className="p-3 border-b border-border">
+                    <p className="text-sm font-medium text-foreground truncate">{user.full_name || user.email}</p>
+                    <p className="text-xs text-muted-foreground">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                  </div>
+                  <button 
+                    onClick={() => { handleLogout(); setProfileOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </header>
 
         {/* Page */}
