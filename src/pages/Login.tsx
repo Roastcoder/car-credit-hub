@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DEMO_ACCOUNTS, ROLE_LABELS } from '@/lib/auth';
-import { ArrowRight, Mail, Lock, ChevronDown, ChevronUp, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 export default function Login() {
@@ -12,7 +11,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDemoUsers, setShowDemoUsers] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   React.useEffect(() => {
@@ -36,13 +34,6 @@ export default function Login() {
     } else {
       navigate('/dashboard');
     }
-  };
-
-  const handleDemoSelect = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError('');
-    setShowDemoUsers(false);
   };
 
   return (
@@ -159,39 +150,6 @@ export default function Login() {
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
-
-          {/* Demo users collapsible dropdown */}
-          <div className="border-t border-border pt-3 sm:pt-4">
-            <button
-              onClick={() => setShowDemoUsers(!showDemoUsers)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
-            >
-              <span className="text-muted-foreground font-medium">Quick Login — Demo Users</span>
-              {showDemoUsers ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
-            </button>
-
-            {showDemoUsers && (
-              <div className="mt-2 space-y-1 bg-card border border-border rounded-xl p-2 shadow-md z-10 max-h-64 overflow-y-auto">
-                {DEMO_ACCOUNTS.map(u => (
-                  <button
-                    key={u.email}
-                    onClick={() => handleDemoSelect(u.email, u.password)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm hover:bg-muted/60"
-                  >
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-accent/10 text-accent">
-                      {u.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-xs truncate">{u.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role]}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground mono truncate">{u.email}</span>
-                  </button>
-                ))}
-                <p className="text-[10px] text-muted-foreground text-center pt-1 pb-0.5">Password for all: Demo@1234</p>
-              </div>
-            )}
-          </div>
 
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
