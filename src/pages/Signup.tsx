@@ -1,48 +1,52 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DEMO_ACCOUNTS, ROLE_LABELS } from '@/lib/auth';
-import { ArrowRight, Mail, Lock, ChevronDown, ChevronUp, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Mail, Lock, User, Building2, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import { toast } from 'sonner';
+import React from 'react';
 
-export default function Login() {
-  const { login } = useAuth();
+export default function Signup() {
+  const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [branchId, setBranchId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDemoUsers, setShowDemoUsers] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
-  React.useEffect(() => {
-    // Check if app is running in standalone mode (installed)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      (window.navigator as any).standalone || 
-                      document.referrer.includes('android-app://');
-    setIsStandalone(standalone);
-  }, []);
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branches-signup'],
+    queryFn: async () => {
+      const { data } = await supabase.from('branches').select('*').eq('is_active', true).order('name');
+      return data ?? [];
+    },
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) { setError('Please enter your email'); return; }
-    if (!password) { setError('Please enter your password'); return; }
-    setLoading(true);
-    setError('');
-    const { error: err } = await login(email, password);
-    setLoading(false);
-    if (err) {
-      setError('Invalid email or password. Use the demo accounts below.');
-    } else {
-      navigate('/dashboard');
+    if (!fullName || !email || !password || !branchId) {
+      toast.error('Please fill all fields');
+      return;
     }
-  };
-
-  const handleDemoSelect = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError('');
-    setShowDemoUsers(false);
+    setLoading(true);
+    const { error } = await signUp(email, password, fullName);
+    if (error) {
+      toast.error(error);
+      setLoading(false);
+      return;
+    }
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ branch_id: branchId }).eq('id', user.id);
+    }
+    
+    setLoading(false);
+    toast.success('Account created! Please login.');
+    navigate('/login');
   };
 
   return (
@@ -90,7 +94,7 @@ export default function Login() {
         <p className="text-primary-foreground/30 text-sm">© 2025 Mehar Finance. All rights reserved.</p>
       </div>
 
-      {/* Right login */}
+      {/* Right signup */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl p-6 sm:p-8">
           {/* Mobile logo */}
@@ -102,26 +106,24 @@ export default function Login() {
             <p className="text-xs text-muted-foreground">Car Loan Portal</p>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
-          <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Create Account</h2>
+          <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Join Mehar Finance</p>
 
-          {/* Mobile APK Download - Only show if not installed */}
-          {!isStandalone && (
-            <a
-              href="/mehar-finance.apk"
-              download
-              className="lg:hidden w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors text-sm mb-4"
-            >
-              <Download size={16} />
-              Download Android App
-            </a>
-          )}
+          <form onSubmit={handleSignup} className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+              <div className="relative">
+                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+            </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
               <div className="relative">
@@ -129,7 +131,7 @@ export default function Login() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors"
                 />
@@ -143,10 +145,29 @@ export default function Login() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="Enter your password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a password"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Branch</label>
+              <div className="relative">
+                <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={branchId}
+                  onChange={(e) => setBranchId(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors appearance-none"
+                >
+                  <option value="">Select your branch</option>
+                  {branches.map((branch: any) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name} ({branch.code})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -155,50 +176,17 @@ export default function Login() {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 sm:py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 text-sm sm:text-base"
             >
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? 'Creating Account…' : 'Sign Up'}
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
 
-          {/* Demo users collapsible dropdown */}
-          <div className="border-t border-border pt-3 sm:pt-4">
-            <button
-              onClick={() => setShowDemoUsers(!showDemoUsers)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
-            >
-              <span className="text-muted-foreground font-medium">Quick Login — Demo Users</span>
-              {showDemoUsers ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
-            </button>
-
-            {showDemoUsers && (
-              <div className="mt-2 space-y-1 bg-card border border-border rounded-xl p-2 shadow-md z-10 max-h-64 overflow-y-auto">
-                {DEMO_ACCOUNTS.map(u => (
-                  <button
-                    key={u.email}
-                    onClick={() => handleDemoSelect(u.email, u.password)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm hover:bg-muted/60"
-                  >
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-accent/10 text-accent">
-                      {u.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-xs truncate">{u.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[u.role]}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground mono truncate">{u.email}</span>
-                  </button>
-                ))}
-                <p className="text-[10px] text-muted-foreground text-center pt-1 pb-0.5">Password for all: Demo@1234</p>
-              </div>
-            )}
-          </div>
-
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-accent font-medium hover:underline">
-                Sign Up
-              </a>
+              Already have an account?{' '}
+              <Link to="/login" className="text-accent font-medium hover:underline">
+                Sign In
+              </Link>
             </p>
           </div>
         </div>

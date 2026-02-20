@@ -19,20 +19,29 @@ export default function UserManagement() {
   };
 
   const { data: profiles = [], isLoading, refetch } = useQuery({
-    queryKey: ['users-management'],
+    queryKey: ['users-management', user?.branch_id],
     queryFn: async () => {
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let profilesQuery = supabase.from('profiles').select('*');
+      
+      // Filter by branch unless admin
+      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
+        profilesQuery = profilesQuery.eq('branch_id', user.branch_id);
+      }
+      
+      const { data: profilesData } = await profilesQuery.order('created_at', { ascending: false });
 
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('*');
 
+      const { data: branchesData } = await supabase
+        .from('branches')
+        .select('id, name');
+
       return (profilesData ?? []).map((p: any) => ({
         ...p,
         role: rolesData?.find((r: any) => r.user_id === p.id)?.role ?? null,
+        branch_name: branchesData?.find((b: any) => b.id === p.branch_id)?.name ?? null,
       }));
     },
     enabled: !!user,
@@ -99,6 +108,7 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Email</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
                   {user?.role === 'super_admin' && <th className="py-3 px-3"></th>}
                 </tr>
@@ -123,6 +133,9 @@ export default function UserManagement() {
                       ) : (
                         <span className="text-xs text-muted-foreground">No role</span>
                       )}
+                    </td>
+                    <td className="py-3 px-3 text-muted-foreground text-xs hidden md:table-cell">
+                      {u.branch_name || <span className="text-muted-foreground/50">No branch</span>}
                     </td>
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}

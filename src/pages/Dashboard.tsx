@@ -15,16 +15,31 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const { data: loans = [] } = useQuery({
-    queryKey: ['loans-dashboard'],
+    queryKey: ['loans-dashboard', user?.branch_id],
     queryFn: async () => {
-      const { data } = await supabase
+      let query = supabase
         .from('loans')
-        .select('*, banks(name), brokers(name)')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .select('*, banks(name), brokers(name)');
+      
+      // Filter by branch unless admin
+      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
+        query = query.eq('branch_id', user.branch_id);
+      }
+      
+      const { data } = await query.order('created_at', { ascending: false }).limit(50);
       return data ?? [];
     },
     enabled: !!user,
+  });
+
+  const { data: branchInfo } = useQuery({
+    queryKey: ['branch-info', user?.branch_id],
+    queryFn: async () => {
+      if (!user?.branch_id) return null;
+      const { data } = await supabase.from('branches').select('name, code').eq('id', user.branch_id).single();
+      return data;
+    },
+    enabled: !!user?.branch_id,
   });
 
   if (!user) return null;
@@ -54,7 +69,7 @@ export default function Dashboard() {
           Welcome, {user.full_name || user.email}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {user.role ? ROLE_LABELS[user.role] : 'User'} Dashboard • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          {user.role ? ROLE_LABELS[user.role] : 'User'} Dashboard{branchInfo ? ` • ${branchInfo.name} (${branchInfo.code})` : ''} • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
 

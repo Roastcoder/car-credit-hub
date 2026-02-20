@@ -18,12 +18,18 @@ export default function Loans() {
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
 
   const { data: loans = [], isLoading } = useQuery({
-    queryKey: ['loans'],
+    queryKey: ['loans', user?.branch_id],
     queryFn: async () => {
-      const { data } = await supabase
+      let query = supabase
         .from('loans')
-        .select('*, banks(name), brokers(name)')
-        .order('created_at', { ascending: false });
+        .select('*, banks(name), brokers(name), branches(name)');
+      
+      // Filter by branch unless admin
+      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
+        query = query.eq('branch_id', user.branch_id);
+      }
+      
+      const { data } = await query.order('created_at', { ascending: false });
       return data ?? [];
     },
   });

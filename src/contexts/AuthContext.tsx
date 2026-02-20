@@ -10,6 +10,7 @@ export interface AppUser {
   full_name: string;
   role: UserRole | null;
   avatar_url?: string;
+  branch_id?: string | null;
 }
 
 interface AuthContextType {
@@ -49,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: profile?.full_name ?? supabaseUser.email ?? '',
         role: (roleData?.role as UserRole) ?? null,
         avatar_url: profile?.avatar_url,
+        branch_id: profile?.branch_id ?? null,
       };
     } catch {
       return {
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: supabaseUser.email ?? '',
         full_name: supabaseUser.email ?? '',
         role: null,
+        branch_id: null,
       };
     }
   };
