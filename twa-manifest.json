@@ -1,0 +1,30 @@
+{
+  "host": "car-credit-hub.lovable.app",
+  "name": "Mehar Finance",
+  "launcherName": "Mehar Finance",
+  "display": "standalone",
+  "themeColor": "#0f172a",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/",
+  "iconUrl": "https://car-credit-hub.lovable.app/favicon.ico",
+  "maskableIconUrl": "https://car-credit-hub.lovable.app/favicon.ico",
+  "monochromeIconUrl": "https://car-credit-hub.lovable.app/favicon.ico",
+  "packageId": "com.meharfinance.app",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://car-credit-hub.lovable.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableNotifications": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false
+}
