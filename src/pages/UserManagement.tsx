@@ -110,7 +110,7 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
-                  {user?.role === 'super_admin' && <th className="py-3 px-3"></th>}
+                  {(user?.role === 'super_admin' || user?.role === 'admin') && <th className="py-3 px-3"></th>}
                 </tr>
               </thead>
               <tbody>
@@ -140,7 +140,7 @@ export default function UserManagement() {
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}
                     </td>
-                    {user?.role === 'super_admin' && (
+                    {(user?.role === 'super_admin' || user?.role === 'admin') && (
                       <td className="py-3 px-3">
                         <button onClick={() => handleAssignRole(u)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                           <Edit size={14} />

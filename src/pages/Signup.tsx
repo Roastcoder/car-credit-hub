@@ -32,24 +32,33 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, fullName);
-    if (error) {
-      toast.error(error);
+    
+    try {
+      const { error, data } = await signUp(email, password, fullName);
+      if (error) {
+        toast.error(error);
+        setLoading(false);
+        return;
+      }
+      
+      // Wait a bit for auth to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Update profile with branch_id
+        await supabase.from('profiles').update({ branch_id: branchId }).eq('id', user.id);
+        // Assign employee role by default
+        await supabase.from('user_roles').insert({ user_id: user.id, role: 'employee' });
+      }
+      
       setLoading(false);
-      return;
+      toast.success('Account created! Please login.');
+      navigate('/login');
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err.message || 'Failed to create account');
     }
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Update profile with branch_id
-      await supabase.from('profiles').update({ branch_id: branchId }).eq('id', user.id);
-      // Assign employee role by default
-      await supabase.from('user_roles').insert({ user_id: user.id, role: 'employee' });
-    }
-    
-    setLoading(false);
-    toast.success('Account created! Please login.');
-    navigate('/login');
   };
 
   return (
