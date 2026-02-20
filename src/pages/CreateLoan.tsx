@@ -77,25 +77,88 @@ export default function CreateLoan() {
 
   const createLoan = useMutation({
     mutationFn: async () => {
-      const loanId = generateLoanId();
+      const loanId = form.loanNumber || generateLoanId();
       const { data, error } = await supabase.from('loans').insert({
         id: loanId,
+        // Application Details
+        loan_number: loanId,
         applicant_name: form.customerName,
         mobile: form.mobile,
-        pan: form.pan,
-        aadhaar: form.aadhaar,
-        address: form.address,
-        car_make: form.carMake,
-        car_model: form.carModel,
-        car_variant: form.carVariant,
+        co_applicant_name: form.coApplicantName,
+        co_applicant_mobile: form.coApplicantMobile,
+        guarantor_name: form.guarantorName,
+        guarantor_mobile: form.guarantorMobile,
+        current_address: form.currentAddress,
+        permanent_address: form.permanentAddress,
+        login_date: form.loginDate || null,
+        file_sign_date: form.fileSignDate || null,
+        approval_date: form.approvalDate || null,
+        disburse_date: form.disburseDate || null,
+        disburse_branch_name: form.disburseBranchName,
+        our_branch: form.ourBranch,
+        remark: form.remark,
+        // Vehicle & Product
+        vehicle_number: form.vehicleNumber,
+        product_name: form.productName,
+        model_year: form.model,
+        vertical: form.vertical,
+        product_code: form.productCode,
+        // Loan Details
         loan_amount: Number(form.loanAmount),
-        down_payment: Number(form.downPayment) || 0,
+        grid: Number(form.grid) || null,
+        ltv: Number(form.ltv) || null,
+        // Income
+        income_source: form.incomeSource,
+        monthly_income: Number(form.monthlyIncome) || null,
+        nip_ip: form.nipIp,
+        // Agriculture
+        agriculture: form.agriculture,
+        // RTO
+        rc_owner_name: form.rcOwnerName,
+        rc_mfg_date: form.rcMfgDate,
+        rc_expiry_date: form.rcExpiryDate || null,
+        hpn_at_login: form.hpnAtLogin,
+        hpn_after_pdd: form.hpnAfterPdd,
+        rto_rc_handover_date: form.rtoRcHandoverDate || null,
+        rto_agent_name: form.rtoAgentName,
+        agent_mobile_no: form.agentMobileNo,
+        dto_location: form.dtoLocation,
+        challan: form.challan,
+        rto_papers: form.rtoPapers,
+        for_closure: form.forClosure,
+        // EMI & Financier
+        emi_amount: Number(form.emiAmount) || emi,
+        total_emi: Number(form.totalEmi) || Number(form.tenure),
+        total_interest: Number(form.totalInterest) || totalInterest,
+        first_emi_amount: Number(form.firstEmiAmount) || emi,
+        first_installment_due_date: form.firstInstallmentDueDate || null,
+        irr: Number(form.irr),
         tenure: Number(form.tenure),
-        interest_rate: Number(form.irr),
+        emi_mode: form.emiMode,
         emi: emi,
-        status: form.fileStatus || 'draft',
+        interest_rate: Number(form.irr),
+        customer_track_company: form.customerTrackCompany,
         assigned_bank_id: form.assignedBankId || null,
         assigned_broker_id: form.assignedBrokerId || null,
+        // Insurance
+        insurance_company_name: form.insuranceCompanyName,
+        insured_name: form.insuredName,
+        idv: Number(form.idv) || null,
+        insurance_transfer: form.insuranceTransfer,
+        insurance_hpn: form.insuranceHpn,
+        insurance_date: form.insuranceDate || null,
+        insurance_renewal_date: form.insuranceRenewalDate || null,
+        // Deductions
+        file_charge: Number(form.fileCharge) || null,
+        loan_suraksha: Number(form.loanSuraksha) || null,
+        stamping: Number(form.stamping) || null,
+        valuation: Number(form.valuation) || null,
+        deferral_charges: Number(form.deferralCharges) || null,
+        gst: Number(form.gst) || null,
+        documentation_charges: Number(form.documentationCharges) || null,
+        other_charges: Number(form.otherCharges) || null,
+        // Status
+        status: form.fileStatus || 'draft',
         created_by: user?.id,
       }).select().single();
       if (error) throw error;
