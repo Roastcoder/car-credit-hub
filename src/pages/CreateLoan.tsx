@@ -1,16 +1,38 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BANKS, CAR_MAKES, calculateEMI, formatCurrency } from '@/lib/mock-data';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { CAR_MAKES, calculateEMI, formatCurrency } from '@/lib/mock-data';
 import { ArrowLeft, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CreateLoan() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: banks = [] } = useQuery({
+    queryKey: ['banks-list'],
+    queryFn: async () => {
+      const { data } = await supabase.from('banks').select('id, name').eq('is_active', true).order('name');
+      return data ?? [];
+    },
+  });
+
+  const { data: brokers = [] } = useQuery({
+    queryKey: ['brokers-list'],
+    queryFn: async () => {
+      const { data } = await supabase.from('brokers').select('id, name').eq('is_active', true).order('name');
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({
     applicantName: '', mobile: '', pan: '', aadhaar: '', address: '',
     carMake: '', carModel: '', carVariant: '', onRoadPrice: '',
     dealerName: '', loanAmount: '', downPayment: '', tenure: '60',
-    interestRate: '8.5', assignedBank: '',
+    interestRate: '8.5', assignedBankId: '', assignedBrokerId: '',
   });
 
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
@@ -26,10 +48,54 @@ export default function CreateLoan() {
   const totalPayable = emi * Number(form.tenure);
   const totalInterest = totalPayable - Number(form.loanAmount);
 
+  const generateLoanId = () => {
+    const year = new Date().getFullYear();
+    const num = Math.floor(Math.random() * 9000) + 1000;
+    return `CL-${year}-${num}`;
+  };
+
+  const createLoan = useMutation({
+    mutationFn: async () => {
+      const loanId = generateLoanId();
+      const { data, error } = await supabase.from('loans').insert({
+        id: loanId,
+        applicant_name: form.applicantName,
+        mobile: form.mobile,
+        pan: form.pan,
+        aadhaar: form.aadhaar,
+        address: form.address,
+        car_make: form.carMake,
+        car_model: form.carModel,
+        car_variant: form.carVariant,
+        on_road_price: Number(form.onRoadPrice) || 0,
+        dealer_name: form.dealerName,
+        loan_amount: Number(form.loanAmount),
+        down_payment: Number(form.downPayment) || 0,
+        tenure: Number(form.tenure),
+        interest_rate: Number(form.interestRate),
+        emi: emi,
+        status: 'draft',
+        assigned_bank_id: form.assignedBankId || null,
+        assigned_broker_id: form.assignedBrokerId || null,
+        created_by: user?.id,
+      }).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['loans-dashboard'] });
+      toast.success('Loan application created successfully!');
+      navigate(`/loans/${data.id}`);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to create loan');
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Loan application created successfully!');
-    navigate('/loans');
+    createLoan.mutate();
   };
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all";
@@ -51,9 +117,9 @@ export default function CreateLoan() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className={labelClass}>Full Name *</label><input required className={inputClass} value={form.applicantName} onChange={e => update('applicantName', e.target.value)} /></div>
             <div><label className={labelClass}>Mobile *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
-            <div><label className={labelClass}>PAN *</label><input required className={inputClass} value={form.pan} onChange={e => update('pan', e.target.value.toUpperCase())} maxLength={10} /></div>
-            <div><label className={labelClass}>Aadhaar *</label><input required className={inputClass} value={form.aadhaar} onChange={e => update('aadhaar', e.target.value)} /></div>
-            <div className="sm:col-span-2"><label className={labelClass}>Address *</label><textarea required className={inputClass} rows={2} value={form.address} onChange={e => update('address', e.target.value)} /></div>
+            <div><label className={labelClass}>PAN</label><input className={inputClass} value={form.pan} onChange={e => update('pan', e.target.value.toUpperCase())} maxLength={10} /></div>
+            <div><label className={labelClass}>Aadhaar</label><input className={inputClass} value={form.aadhaar} onChange={e => update('aadhaar', e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.address} onChange={e => update('address', e.target.value)} /></div>
           </div>
         </div>
 
@@ -62,15 +128,15 @@ export default function CreateLoan() {
           <h2 className="font-semibold text-foreground mb-4">Car Details</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Car Make *</label>
-              <select required className={inputClass} value={form.carMake} onChange={e => update('carMake', e.target.value)}>
+              <label className={labelClass}>Car Make</label>
+              <select className={inputClass} value={form.carMake} onChange={e => update('carMake', e.target.value)}>
                 <option value="">Select Make</option>
                 {CAR_MAKES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-            <div><label className={labelClass}>Model *</label><input required className={inputClass} value={form.carModel} onChange={e => update('carModel', e.target.value)} /></div>
+            <div><label className={labelClass}>Model</label><input className={inputClass} value={form.carModel} onChange={e => update('carModel', e.target.value)} /></div>
             <div><label className={labelClass}>Variant</label><input className={inputClass} value={form.carVariant} onChange={e => update('carVariant', e.target.value)} /></div>
-            <div><label className={labelClass}>On-Road Price (₹) *</label><input required type="number" className={inputClass} value={form.onRoadPrice} onChange={e => update('onRoadPrice', e.target.value)} /></div>
+            <div><label className={labelClass}>On-Road Price (₹)</label><input type="number" className={inputClass} value={form.onRoadPrice} onChange={e => update('onRoadPrice', e.target.value)} /></div>
             <div><label className={labelClass}>Dealer Name</label><input className={inputClass} value={form.dealerName} onChange={e => update('dealerName', e.target.value)} /></div>
           </div>
         </div>
@@ -90,33 +156,29 @@ export default function CreateLoan() {
             <div><label className={labelClass}>Interest Rate (%) *</label><input required type="number" step="0.1" className={inputClass} value={form.interestRate} onChange={e => update('interestRate', e.target.value)} /></div>
             <div>
               <label className={labelClass}>Assign to Bank</label>
-              <select className={inputClass} value={form.assignedBank} onChange={e => update('assignedBank', e.target.value)}>
+              <select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}>
                 <option value="">Select Bank</option>
-                {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+                {(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Assign to Broker</label>
+              <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
+                <option value="">Select Broker</option>
+                {(brokers as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
           </div>
 
-          {/* EMI Calculator */}
           {emi > 0 && (
             <div className="mt-6 p-4 rounded-xl bg-accent/5 border border-accent/20">
               <div className="flex items-center gap-2 mb-3 text-accent font-semibold text-sm">
-                <Calculator size={16} />
-                EMI Calculator
+                <Calculator size={16} /> EMI Calculator
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Monthly EMI</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(emi)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Interest</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Payable</p>
-                  <p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p>
-                </div>
+                <div><p className="text-xs text-muted-foreground">Monthly EMI</p><p className="text-lg font-bold text-foreground">{formatCurrency(emi)}</p></div>
+                <div><p className="text-xs text-muted-foreground">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
+                <div><p className="text-xs text-muted-foreground">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
               </div>
             </div>
           )}
@@ -126,8 +188,8 @@ export default function CreateLoan() {
           <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
             Cancel
           </button>
-          <button type="submit" className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
-            Create Application
+          <button type="submit" disabled={createLoan.isPending} className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60">
+            {createLoan.isPending ? 'Creating…' : 'Create Application'}
           </button>
         </div>
       </form>

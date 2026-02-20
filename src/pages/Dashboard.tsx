@@ -1,9 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import StatCard from '@/components/StatCard';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { MOCK_LOANS, formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
-import { FileText, IndianRupee, TrendingUp, Clock, Users, Building2, CheckCircle2 } from 'lucide-react';
+import { FileText, IndianRupee, CheckCircle2, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 
@@ -11,32 +13,49 @@ const STATUS_CHART_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef444
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans-dashboard'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('loans')
+        .select('*, banks(name), brokers(name)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   if (!user) return null;
 
-  const totalLoans = MOCK_LOANS.length;
-  const totalVolume = MOCK_LOANS.reduce((s, l) => s + l.loanAmount, 0);
-  const disbursed = MOCK_LOANS.filter(l => l.status === 'disbursed');
-  const disbursedAmount = disbursed.reduce((s, l) => s + l.loanAmount, 0);
-  const pendingReview = MOCK_LOANS.filter(l => l.status === 'under_review').length;
+  const totalLoans = loans.length;
+  const totalVolume = loans.reduce((s: number, l: any) => s + Number(l.loan_amount), 0);
+  const disbursed = loans.filter((l: any) => l.status === 'disbursed');
+  const disbursedAmount = disbursed.reduce((s: number, l: any) => s + Number(l.loan_amount), 0);
+  const pendingReview = loans.filter((l: any) => l.status === 'under_review').length;
 
   const statusData = LOAN_STATUSES.map(s => ({
     name: s.label,
-    value: MOCK_LOANS.filter(l => l.status === s.value).length,
+    value: loans.filter((l: any) => l.status === s.value).length,
   })).filter(d => d.value > 0);
 
-  const bankData = [...new Set(MOCK_LOANS.map(l => l.assignedBank).filter(Boolean))].map(bank => ({
-    name: bank.replace(' Bank', ''),
-    loans: MOCK_LOANS.filter(l => l.assignedBank === bank).length,
-    amount: MOCK_LOANS.filter(l => l.assignedBank === bank).reduce((s, l) => s + l.loanAmount, 0) / 100000,
+  const bankNames = [...new Set(loans.map((l: any) => l.banks?.name).filter(Boolean))];
+  const bankData = bankNames.map(bank => ({
+    name: (bank as string).replace(' Bank', ''),
+    loans: loans.filter((l: any) => l.banks?.name === bank).length,
+    amount: loans.filter((l: any) => l.banks?.name === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
   }));
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {user.name}
+          Welcome, {user.full_name || user.email}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">{ROLE_LABELS[user.role]} Dashboard • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {user.role ? ROLE_LABELS[user.role] : 'User'} Dashboard • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
       {/* Stats */}
@@ -52,31 +71,39 @@ export default function Dashboard() {
         <div className="stat-card">
           <h3 className="font-semibold text-foreground mb-4">Bank-wise Distribution (₹ Lakhs)</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bankData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} />
-                <Bar dataKey="amount" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {bankData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={bankData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} />
+                  <Bar dataKey="amount" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+            )}
           </div>
         </div>
 
         <div className="stat-card">
           <h3 className="font-semibold text-foreground mb-4">Status Breakdown</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
-                  {statusData.map((_, i) => (
-                    <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    {statusData.map((_, i) => (
+                      <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+            )}
           </div>
         </div>
       </div>
@@ -99,15 +126,18 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_LOANS.slice(0, 5).map(loan => (
+              {loans.slice(0, 5).map((loan: any) => (
                 <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="py-3 px-2 mono text-xs text-accent font-medium">{loan.id}</td>
-                  <td className="py-3 px-2 font-medium text-foreground">{loan.applicantName}</td>
-                  <td className="py-3 px-2 text-muted-foreground hidden sm:table-cell">{loan.carMake} {loan.carModel}</td>
-                  <td className="py-3 px-2 font-medium text-foreground">{formatCurrency(loan.loanAmount)}</td>
+                  <td className="py-3 px-2 font-medium text-foreground">{loan.applicant_name}</td>
+                  <td className="py-3 px-2 text-muted-foreground hidden sm:table-cell">{loan.car_make} {loan.car_model}</td>
+                  <td className="py-3 px-2 font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
                   <td className="py-3 px-2"><LoanStatusBadge status={loan.status} /></td>
                 </tr>
               ))}
+              {loans.length === 0 && (
+                <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">No applications yet. <Link to="/loans/new" className="text-accent hover:underline">Create your first loan →</Link></td></tr>
+              )}
             </tbody>
           </table>
         </div>
