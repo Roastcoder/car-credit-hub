@@ -13,23 +13,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDemoUsers, setShowDemoUsers] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  React.useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +70,7 @@ export default function Login() {
             ))}
           </div>
           <a
-            href="/app-release-signed.apk"
+            href="/mehar-finance.apk"
             download
             className="inline-flex items-center gap-2 bg-primary-foreground text-primary font-semibold py-3 px-6 rounded-xl hover:opacity-90 transition-opacity"
           >
@@ -115,23 +98,13 @@ export default function Login() {
 
           {/* Mobile APK Download */}
           <a
-            href="/app-release-signed.apk"
+            href="/mehar-finance.apk"
             download
             className="lg:hidden w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors text-sm mb-4"
           >
             <Download size={16} />
             Download Android App
           </a>
-
-          {deferredPrompt && (
-            <button
-              onClick={handleInstall}
-              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-green-700 transition-colors text-sm mb-4"
-            >
-              <Download size={16} />
-              Install App
-            </button>
-          )}
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>
