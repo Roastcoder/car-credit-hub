@@ -74,24 +74,25 @@ export default function Login() {
       </div>
 
       {/* Right login */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-2xl p-6 sm:p-8">
           {/* Mobile logo */}
-          <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="bg-white rounded-xl p-3 shadow-lg mb-3">
-              <img src={logo} alt="Mehar Finance" className="h-12 w-auto object-contain" />
+          <div className="lg:hidden flex flex-col items-center mb-6 sm:mb-8">
+            <div className="bg-white rounded-xl p-2.5 sm:p-3 shadow-lg mb-2 sm:mb-3">
+              <img src={logo} alt="Mehar Finance" className="h-10 sm:h-12 w-auto object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">Mehar Finance</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground">Mehar Finance</h2>
+            <p className="text-xs text-muted-foreground">Car Loan Portal</p>
           </div>
 
-          <h2 className="text-2xl font-bold text-foreground mb-1">Welcome back</h2>
-          <p className="text-muted-foreground mb-6">Sign in to your account</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
+          <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">{error}</div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4 mb-6">
+          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
               <div className="relative">
@@ -123,7 +124,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 sm:py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 text-sm sm:text-base"
             >
               {loading ? 'Signing in…' : 'Sign In'}
               {!loading && <ArrowRight size={18} />}
@@ -131,7 +132,7 @@ export default function Login() {
           </form>
 
           {/* Demo users collapsible dropdown */}
-          <div className="border-t border-border pt-4">
+          <div className="border-t border-border pt-3 sm:pt-4">
             <button
               onClick={() => setShowDemoUsers(!showDemoUsers)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
@@ -141,7 +142,7 @@ export default function Login() {
             </button>
 
             {showDemoUsers && (
-              <div className="mt-2 space-y-1 bg-card border border-border rounded-xl p-2 shadow-md z-10">
+              <div className="mt-2 space-y-1 bg-card border border-border rounded-xl p-2 shadow-md z-10 max-h-64 overflow-y-auto">
                 {DEMO_ACCOUNTS.map(u => (
                   <button
                     key={u.email}
