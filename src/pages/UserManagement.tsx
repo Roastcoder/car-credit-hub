@@ -3,14 +3,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
-import { Users, Search, Shield } from 'lucide-react';
+import { Users, Search, Shield, Edit } from 'lucide-react';
+import { RoleAssignModal } from '@/components/RoleAssignModal';
 
 export default function UserManagement() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  const { data: profiles = [], isLoading } = useQuery({
+  const handleAssignRole = (u: any) => {
+    setSelectedUser(u);
+    setModalOpen(true);
+  };
+
+  const { data: profiles = [], isLoading, refetch } = useQuery({
     queryKey: ['users-management'],
     queryFn: async () => {
       const { data: profilesData } = await supabase
@@ -92,6 +100,7 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Email</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
+                  {user?.role === 'super_admin' && <th className="py-3 px-3"></th>}
                 </tr>
               </thead>
               <tbody>
@@ -118,6 +127,13 @@ export default function UserManagement() {
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}
                     </td>
+                    {user?.role === 'super_admin' && (
+                      <td className="py-3 px-3">
+                        <button onClick={() => handleAssignRole(u)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          <Edit size={14} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -126,6 +142,8 @@ export default function UserManagement() {
           </div>
         )}
       </div>
+
+      <RoleAssignModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={refetch} user={selectedUser} />
     </div>
   );
 }

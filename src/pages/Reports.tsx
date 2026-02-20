@@ -1,23 +1,37 @@
 import { useState } from 'react';
-import { MOCK_LOANS, formatCurrency, LOAN_STATUSES, BANKS } from '@/lib/mock-data';
-import { BarChart3, Download, Filter, FileText, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/lib/mock-data';
+import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
 
 const CHART_COLORS = ['#2dd4bf', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#6b7280', '#ec4899'];
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft', submitted: 'Submitted', under_review: 'Under Review',
+  approved: 'Approved', rejected: 'Rejected', disbursed: 'Disbursed', cancelled: 'Cancelled'
+};
 
 export default function Reports() {
   const [reportType, setReportType] = useState<'overview' | 'bank' | 'status' | 'disbursal'>('overview');
 
-  const statusData = LOAN_STATUSES.map(s => ({
-    name: s.label,
-    value: MOCK_LOANS.filter(l => l.status === s.value).length,
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans-reports'],
+    queryFn: async () => {
+      const { data } = await supabase.from('loans').select('*, banks(name), brokers(name)');
+      return data ?? [];
+    },
+  });
+
+  const statusData = Object.entries(STATUS_LABELS).map(([key, label]) => ({
+    name: label,
+    value: (loans as any[]).filter(l => l.status === key).length,
   })).filter(d => d.value > 0);
 
-  const bankData = [...new Set(MOCK_LOANS.map(l => l.assignedBank).filter(Boolean))].map(bank => ({
+  const bankData = [...new Set((loans as any[]).map(l => l.banks?.name).filter(Boolean))].map(bank => ({
     name: bank.replace(' Bank', ''),
-    cases: MOCK_LOANS.filter(l => l.assignedBank === bank).length,
-    amount: MOCK_LOANS.filter(l => l.assignedBank === bank).reduce((s, l) => s + l.loanAmount, 0) / 100000,
+    cases: (loans as any[]).filter(l => l.banks?.name === bank).length,
+    amount: (loans as any[]).filter(l => l.banks?.name === bank).reduce((s, l) => s + Number(l.loan_amount), 0) / 100000,
   }));
 
   const monthlyData = [
@@ -25,12 +39,12 @@ export default function Reports() {
     { month: 'Nov', applications: 18, disbursed: 12, amount: 120 },
     { month: 'Dec', applications: 15, disbursed: 10, amount: 98 },
     { month: 'Jan', applications: 22, disbursed: 15, amount: 145 },
-    { month: 'Feb', applications: MOCK_LOANS.length, disbursed: MOCK_LOANS.filter(l => l.status === 'disbursed').length, amount: MOCK_LOANS.reduce((s, l) => s + l.loanAmount, 0) / 100000 },
+    { month: 'Feb', applications: loans.length, disbursed: (loans as any[]).filter(l => l.status === 'disbursed').length, amount: (loans as any[]).reduce((s, l) => s + Number(l.loan_amount), 0) / 100000 },
   ];
 
-  const totalVolume = MOCK_LOANS.reduce((s, l) => s + l.loanAmount, 0);
-  const avgLoanSize = totalVolume / MOCK_LOANS.length;
-  const conversionRate = Math.round((MOCK_LOANS.filter(l => l.status === 'disbursed').length / MOCK_LOANS.length) * 100);
+  const totalVolume = (loans as any[]).reduce((s, l) => s + Number(l.loan_amount), 0);
+  const avgLoanSize = loans.length > 0 ? totalVolume / loans.length : 0;
+  const conversionRate = loans.length > 0 ? Math.round(((loans as any[]).filter(l => l.status === 'disbursed').length / loans.length) * 100) : 0;
 
   const handleExportPDF = () => {
     toast.success('Report exported successfully!');
@@ -52,7 +66,7 @@ export default function Reports() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="stat-card">
           <div className="flex items-center gap-2 mb-2"><FileText size={16} className="text-accent" /><span className="text-xs text-muted-foreground">Total Applications</span></div>
-          <p className="text-2xl font-bold text-foreground">{MOCK_LOANS.length}</p>
+          <p className="text-2xl font-bold text-foreground">{loans.length}</p>
         </div>
         <div className="stat-card">
           <div className="flex items-center gap-2 mb-2"><IndianRupee size={16} className="text-accent" /><span className="text-xs text-muted-foreground">Total Volume</span></div>

@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/mock-data';
-import { UserCheck, Search, Plus, FileText, IndianRupee, Edit, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { UserCheck, Search, Plus, FileText, IndianRupee, Edit } from 'lucide-react';
+import { BrokerFormModal } from '@/components/BrokerFormModal';
 
 export default function BrokerManagement() {
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editBroker, setEditBroker] = useState<any>(null);
 
-  const { data: brokers = [], isLoading } = useQuery({
+  const { data: brokers = [], isLoading, refetch } = useQuery({
     queryKey: ['brokers'],
     queryFn: async () => {
       const { data } = await supabase.from('brokers').select('*').order('name');
@@ -25,7 +27,13 @@ export default function BrokerManagement() {
   });
 
   const handleAddBroker = () => {
-    toast.info('Add Broker feature coming soon!');
+    setEditBroker(null);
+    setModalOpen(true);
+  };
+
+  const handleEditBroker = (broker: any) => {
+    setEditBroker(broker);
+    setModalOpen(true);
   };
 
   const filtered = (brokers as any[]).filter(b =>
@@ -86,6 +94,7 @@ export default function BrokerManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Cases</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission %</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                  <th className="py-3 px-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -113,6 +122,11 @@ export default function BrokerManagement() {
                           {b.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
+                      <td className="py-3 px-3">
+                        <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          <Edit size={14} />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -122,6 +136,8 @@ export default function BrokerManagement() {
           </div>
         )}
       </div>
+
+      <BrokerFormModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={refetch} broker={editBroker} />
     </div>
   );
 }

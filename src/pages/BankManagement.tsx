@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/mock-data';
-import { Building2, Search, Plus, TrendingUp, FileText } from 'lucide-react';
-import { toast } from 'sonner';
+import { Building2, Search, Plus, TrendingUp, FileText, Edit } from 'lucide-react';
+import { BankFormModal } from '@/components/BankFormModal';
 
 export default function BankManagement() {
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editBank, setEditBank] = useState<any>(null);
 
-  const { data: banks = [], isLoading } = useQuery({
+  const { data: banks = [], isLoading, refetch } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
       const { data } = await supabase.from('banks').select('*').order('name');
@@ -25,7 +27,13 @@ export default function BankManagement() {
   });
 
   const handleAddBank = () => {
-    toast.info('Add Bank feature coming soon!');
+    setEditBank(null);
+    setModalOpen(true);
+  };
+
+  const handleEditBank = (bank: any) => {
+    setEditBank(bank);
+    setModalOpen(true);
   };
 
   const filtered = (banks as any[]).filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
@@ -86,9 +94,14 @@ export default function BankManagement() {
                       <p className="text-xs text-muted-foreground">{bank.contact_person || 'No contact'}</p>
                     </div>
                   </div>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${bank.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                    {bank.is_active ? 'Active' : 'Inactive'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${bank.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                      {bank.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                    <button onClick={() => handleEditBank(bank)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                      <Edit size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center border-t border-border pt-3">
                   <div><p className="text-lg font-bold text-foreground">{bankLoans.length}</p><p className="text-[10px] text-muted-foreground">Cases</p></div>
@@ -101,6 +114,8 @@ export default function BankManagement() {
           {filtered.length === 0 && <p className="text-muted-foreground text-sm col-span-2 text-center py-8">No banks found</p>}
         </div>
       )}
+
+      <BankFormModal open={modalOpen} onClose={() => setModalOpen(false)} onSuccess={refetch} bank={editBank} />
     </div>
   );
 }
