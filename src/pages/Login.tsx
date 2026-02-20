@@ -113,6 +113,16 @@ export default function Login() {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
 
+          {/* Mobile APK Download */}
+          <a
+            href="/app-release-signed.apk"
+            download
+            className="lg:hidden w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-blue-700 transition-colors text-sm mb-4"
+          >
+            <Download size={16} />
+            Download Android App
+          </a>
+
           {deferredPrompt && (
             <button
               onClick={handleInstall}
