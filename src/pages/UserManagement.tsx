@@ -18,7 +18,7 @@ export default function UserManagement() {
     setModalOpen(true);
   };
 
-  const { data: profiles = [], isLoading, refetch } = useQuery({
+  const { data: profiles = [], isLoading, refetch, error } = useQuery({
     queryKey: ['users-management', user?.branch_id],
     queryFn: async () => {
       let profilesQuery = supabase.from('profiles').select('*');
@@ -28,7 +28,12 @@ export default function UserManagement() {
         profilesQuery = profilesQuery.eq('branch_id', user.branch_id);
       }
       
-      const { data: profilesData } = await profilesQuery.order('created_at', { ascending: false });
+      const { data: profilesData, error: profileError } = await profilesQuery.order('created_at', { ascending: false });
+      
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw profileError;
+      }
 
       const { data: rolesData } = await supabase
         .from('user_roles')
@@ -37,6 +42,8 @@ export default function UserManagement() {
       const { data: branchesData } = await supabase
         .from('branches')
         .select('id, name');
+
+      console.log('Profiles:', profilesData?.length, 'Roles:', rolesData?.length);
 
       return (profilesData ?? []).map((p: any) => ({
         ...p,
@@ -100,6 +107,8 @@ export default function UserManagement() {
       <div className="stat-card">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground text-sm">Loading users…</div>
+        ) : error ? (
+          <div className="py-8 text-center text-destructive text-sm">Error loading users. Check console for details.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -110,7 +119,7 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
-                  {(user?.role === 'super_admin' || user?.role === 'admin') && <th className="py-3 px-3"></th>}
+                  {user?.role === 'super_admin' && <th className="py-3 px-3"></th>}
                 </tr>
               </thead>
               <tbody>
@@ -140,7 +149,7 @@ export default function UserManagement() {
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}
                     </td>
-                    {(user?.role === 'super_admin' || user?.role === 'admin') && (
+                    {user?.role === 'super_admin' && (
                       <td className="py-3 px-3">
                         <button onClick={() => handleAssignRole(u)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                           <Edit size={14} />
