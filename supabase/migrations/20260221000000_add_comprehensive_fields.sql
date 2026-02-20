@@ -1,5 +1,8 @@
 -- Add all comprehensive fields for complete loan management system
 
+-- Customer ID field (must be added before demo data)
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS customer_id TEXT;
+
 -- Customer Address Details
 ALTER TABLE loans ADD COLUMN IF NOT EXISTS current_village TEXT;
 ALTER TABLE loans ADD COLUMN IF NOT EXISTS current_tehsil TEXT;

@@ -4,18 +4,18 @@
 -- Insert Banks
 INSERT INTO banks (id, name, contact_person, phone, email, interest_rate, is_active)
 VALUES 
-  ('bank-kamal', 'Kamal Finserve', 'Manoj Kumar', '9876543210', 'manoj@kamalfinserve.com', 28.50, true),
-  ('bank-hdfc', 'HDFC Bank', 'Rajesh Sharma', '9876543211', 'rajesh@hdfc.com', 26.00, true),
-  ('bank-icici', 'ICICI Bank', 'Priya Singh', '9876543212', 'priya@icici.com', 27.50, true),
-  ('bank-axis', 'Axis Bank', 'Amit Verma', '9876543213', 'amit@axis.com', 25.50, true)
+  ('11111111-1111-1111-1111-111111111111', 'Kamal Finserve', 'Manoj Kumar', '9876543210', 'manoj@kamalfinserve.com', 28.50, true),
+  ('22222222-2222-2222-2222-222222222222', 'HDFC Bank', 'Rajesh Sharma', '9876543211', 'rajesh@hdfc.com', 26.00, true),
+  ('33333333-3333-3333-3333-333333333333', 'ICICI Bank', 'Priya Singh', '9876543212', 'priya@icici.com', 27.50, true),
+  ('44444444-4444-4444-4444-444444444444', 'Axis Bank', 'Amit Verma', '9876543213', 'amit@axis.com', 25.50, true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert Brokers
 INSERT INTO brokers (id, name, phone, email, area, commission_rate, is_active)
 VALUES 
-  ('broker-rajesh', 'Rajesh Broker', '9876543220', 'rajesh@broker.com', 'Bikaner', 2.5, true),
-  ('broker-sunil', 'Sunil Associates', '9876543221', 'sunil@associates.com', 'Jaipur', 2.0, true),
-  ('broker-deepak', 'Deepak Finance', '9876543222', 'deepak@finance.com', 'Jodhpur', 2.5, true)
+  ('55555555-5555-5555-5555-555555555555', 'Rajesh Broker', '9876543220', 'rajesh@broker.com', 'Bikaner', 2.5, true),
+  ('66666666-6666-6666-6666-666666666666', 'Sunil Associates', '9876543221', 'sunil@associates.com', 'Jaipur', 2.0, true),
+  ('77777777-7777-7777-7777-777777777777', 'Deepak Finance', '9876543222', 'deepak@finance.com', 'Jodhpur', 2.5, true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert Demo Loan Applications
@@ -58,7 +58,7 @@ INSERT INTO loans (
   'DHANESH', '6367966369', 'BIKANER', 'HPN', 'No', 'No', 'RC NOC Permit Pollution 29-30 form Sell Agreement RC owners KYC Stamp Papers',
   12683, 24, 74392, 12683, '2026-04-05',
   28.50, 24, 'Monthly', 12683, 28.50,
-  'bank-kamal', 'MANOJ KUMAR', 'LCV', 'BIKANER', 'SHER SINGH',
+  '11111111-1111-1111-1111-111111111111', 'MANOJ KUMAR', 'LCV', 'BIKANER', 'SHER SINGH',
   'TATA AIG INSURANCE', 'JAGDISH KUMAR', 269280, 'Done', 'NA',
   'Customer', 17974, '2025-12-17', '2026-12-17',
   7300, 3250, 1200, 0, 0, 0,
@@ -82,7 +82,7 @@ INSERT INTO loans (
   'Rajesh RTO', '9876543314', 'JAIPUR', 'Registration', 'No', 'Yes', 'All documents submitted',
   18500, 36, 216000, 18500, '2026-03-15',
   26.00, 36, 'Monthly', 18500, 26.00,
-  'bank-hdfc', 'SURESH KUMAR', 'LCV', 'JAIPUR', 'ANIL VERMA',
+  '22222222-2222-2222-2222-222222222222', 'SURESH KUMAR', 'LCV', 'JAIPUR', 'ANIL VERMA',
   'ICICI LOMBARD', 'RAMESH PATEL', 380000, 'Done', 'HDFC Bank',
   'Company', 22500, '2026-01-10', '2027-01-10',
   9000, 4500, 1500, 500, 0, 1200,
@@ -106,7 +106,7 @@ INSERT INTO loans (
   'Mohan RTO', '9876543323', 'JODHPUR', 'Transfer', 'Yes', 'No', 'RC, Insurance, NOC',
   9800, 24, 55200, 9800, '2026-04-01',
   30.00, 24, 'Monthly', 9800, 30.00,
-  'bank-icici', 'DINESH KUMAR', 'LCV', 'JODHPUR', 'RAMESH CHOUDHARY',
+  '33333333-3333-3333-3333-333333333333', 'DINESH KUMAR', 'LCV', 'JODHPUR', 'RAMESH CHOUDHARY',
   'BAJAJ ALLIANZ', 'VIJAY SINGH', 195000, 'Pending', 'ICICI Bank',
   'Agent', 14500, '2026-02-15', '2027-02-15',
   6500, 2800, 1000, 0, 0, 0,
@@ -130,7 +130,7 @@ INSERT INTO loans (
   'Suresh RTO', '9876543334', 'UDAIPUR', 'New Registration', 'No', 'Yes', 'Pending',
   14200, 30, 106000, 14200, '2026-04-10',
   27.50, 30, 'Monthly', 14200, 27.50,
-  'bank-axis', 'VIKRAM SINGH', 'LCV', 'UDAIPUR', 'MOHAN LAL',
+  '44444444-4444-4444-4444-444444444444', 'VIKRAM SINGH', 'LCV', 'UDAIPUR', 'MOHAN LAL',
   'HDFC ERGO', 'PRIYA SHARMA', 295000, 'Pending', 'NA',
   'Customer', 19800, '2026-02-10', '2027-02-10',
   8000, 3500, 1300, 300, 0, 900,
@@ -154,7 +154,7 @@ INSERT INTO loans (
   NULL, NULL, 'AJMER', NULL, 'No', 'No', NULL,
   13500, 28, 98000, 13500, '2026-04-15',
   28.00, 28, 'Monthly', 13500, 28.00,
-  'bank-kamal', 'RAVI KUMAR', 'LCV', 'AJMER', 'SURESH PATEL',
+  '11111111-1111-1111-1111-111111111111', 'RAVI KUMAR', 'LCV', 'AJMER', 'SURESH PATEL',
   'ORIENTAL INSURANCE', 'ANIL GUPTA', 245000, 'Pending', 'SBI',
   'Agent', 16500, NULL, NULL,
   7500, 3200, 1100, 0, 0, 0,
@@ -178,7 +178,7 @@ INSERT INTO loans (
   'Ramesh RTO', '9876543354', 'KOTA', 'New Registration', 'No', 'Yes', 'All documents complete',
   32500, 48, 710000, 32500, '2026-03-20',
   25.50, 48, 'Monthly', 32500, 25.50,
-  'bank-hdfc', 'ASHOK KUMAR', 'HCV', 'KOTA', 'VIJAY SHARMA',
+  '22222222-2222-2222-2222-222222222222', 'ASHOK KUMAR', 'HCV', 'KOTA', 'VIJAY SHARMA',
   'NEW INDIA ASSURANCE', 'DEEPAK YADAV', 780000, 'Done', 'NA',
   'Company', 45000, '2026-01-15', '2027-01-15',
   18000, 8500, 2500, 1000, 0, 2800,
