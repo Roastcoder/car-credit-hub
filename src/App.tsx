@@ -14,6 +14,7 @@ import PDDTracking from "@/pages/PDDTracking";
 import UserManagement from "@/pages/UserManagement";
 import BankManagement from "@/pages/BankManagement";
 import BrokerManagement from "@/pages/BrokerManagement";
+import BranchManagement from "@/pages/BranchManagement";
 import Commission from "@/pages/Commission";
 import Reports from "@/pages/Reports";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
       <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
+      <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
