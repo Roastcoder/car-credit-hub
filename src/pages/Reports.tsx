@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MOCK_LOANS, formatCurrency, LOAN_STATUSES, BANKS } from '@/lib/mock-data';
 import { BarChart3, Download, Filter, FileText, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { toast } from 'sonner';
 
 const CHART_COLORS = ['#2dd4bf', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#6b7280', '#ec4899'];
 
@@ -31,6 +32,10 @@ export default function Reports() {
   const avgLoanSize = totalVolume / MOCK_LOANS.length;
   const conversionRate = Math.round((MOCK_LOANS.filter(l => l.status === 'disbursed').length / MOCK_LOANS.length) * 100);
 
+  const handleExportPDF = () => {
+    toast.success('Report exported successfully!');
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -38,7 +43,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-foreground">Reports & Analytics</h1>
           <p className="text-muted-foreground text-sm mt-1">Comprehensive business insights</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+        <button onClick={handleExportPDF} className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
           <Download size={16} /> Export PDF
         </button>
       </div>

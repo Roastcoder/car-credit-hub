@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/mock-data';
 import { Building2, Search, Plus, TrendingUp, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function BankManagement() {
   const [search, setSearch] = useState('');
@@ -23,6 +24,10 @@ export default function BankManagement() {
     },
   });
 
+  const handleAddBank = () => {
+    toast.info('Add Bank feature coming soon!');
+  };
+
   const filtered = (banks as any[]).filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
   const totalVolume = (loans as any[]).reduce((s, l) => s + Number(l.loan_amount), 0);
   const totalCases = loans.length;
@@ -34,7 +39,7 @@ export default function BankManagement() {
           <h1 className="text-2xl font-bold text-foreground">Bank / NBFC Management</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage lending partners and track performance</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+        <button onClick={handleAddBank} className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
           <Plus size={16} /> Add Bank / NBFC
         </button>
       </div>

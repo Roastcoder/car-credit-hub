@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/mock-data';
 import { CreditCard, Download, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ReactNode; label: string }> = {
   paid: { bg: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle2 size={10} />, label: 'Paid' },
@@ -12,6 +13,10 @@ const STATUS_STYLES: Record<string, { bg: string; icon: React.ReactNode; label: 
 
 export default function Commission() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const handleExportReport = () => {
+    toast.success('Commission report exported successfully!');
+  };
 
   const { data: commissions = [], isLoading } = useQuery({
     queryKey: ['commissions'],
@@ -37,7 +42,7 @@ export default function Commission() {
           <h1 className="text-2xl font-bold text-foreground">Commission Module</h1>
           <p className="text-muted-foreground text-sm mt-1">Track broker and employee payouts</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+        <button onClick={handleExportReport} className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
           <Download size={16} /> Export Report
         </button>
       </div>
