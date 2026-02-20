@@ -92,7 +92,7 @@ export default function Loans() {
               </thead>
               <tbody>
                 {filtered.map((loan: any) => (
-                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
+                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
                     <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
                     <td className="py-3.5 px-3">
                       <p className="font-medium text-foreground">{loan.applicant_name}</p>
@@ -107,9 +107,7 @@ export default function Loans() {
                     <td className="py-3.5 px-3 text-right text-muted-foreground hidden sm:table-cell">{formatCurrency(Number(loan.emi))}/mo</td>
                     <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                     <td className="py-3.5 px-3">
-                      <Link to={`/loans/${loan.id}`} className="text-muted-foreground group-hover:text-accent transition-colors">
-                        <ChevronRight size={16} />
-                      </Link>
+                      <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent transition-colors" />
                     </td>
                   </tr>
                 ))}
