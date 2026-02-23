@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, Upload, FileText, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, Building2, Upload, FileText, Trash2, Download, Printer } from 'lucide-react';
+import { exportLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
 const DOC_TYPES = [
@@ -160,16 +161,25 @@ export default function LoanDetail() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
-          <select
-            value={loan.status}
-            onChange={e => updateStatus.mutate(e.target.value)}
-            disabled={updateStatus.isPending}
-            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportLoanPDF(loan)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
           >
-            {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        )}
+            <Printer size={16} className="text-accent" />
+            Export PDF
+          </button>
+          {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
+            <select
+              value={loan.status}
+              onChange={e => updateStatus.mutate(e.target.value)}
+              disabled={updateStatus.isPending}
+              className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
+            >
+              {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Status Pipeline */}
