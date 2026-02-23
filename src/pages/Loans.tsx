@@ -5,9 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { exportToCSV, parseCSV } from '@/lib/export-utils';
+import { exportLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle } from 'lucide-react';
 
 type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 
@@ -190,18 +191,33 @@ export default function Loans() {
                   <p className="text-foreground truncate">{loan.banks?.name || '—'}</p>
                 </div>
               </div>
-              {canEditStatus && (
-                <div className="mt-3 pt-3 border-t border-border" onClick={e => e.stopPropagation()}>
+              <div className="mt-3 pt-3 border-t border-border flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => exportLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
+                >
+                  <Printer size={13} className="text-accent" /> PDF
+                </button>
+                <button
+                  onClick={() => {
+                    const text = `*Mehar Finance*%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Amount:* ${formatCurrency(Number(loan.loan_amount))}%0A*Status:* ${loan.status}`;
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-green-500/10 transition-colors"
+                >
+                  <MessageCircle size={13} className="text-green-500" /> Share
+                </button>
+                {canEditStatus && (
                   <select
                     value={loan.status}
                     onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
                     disabled={updateStatus.isPending}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
                   >
                     {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))
         )}
