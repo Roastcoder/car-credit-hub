@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Download, Printer, MessageCircle, Mail } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, Printer, MessageCircle, Mail } from 'lucide-react';
 import { exportLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -69,9 +69,14 @@ export default function LoanDetail() {
   });
 
 
-  const downloadDocument = async (doc: any) => {
-    const { data } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  const previewDocument = async (doc: any) => {
+    const { data } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 300);
+    if (data?.signedUrl) {
+      // Open in new tab for inline preview (works for images, PDFs)
+      window.open(data.signedUrl, '_blank');
+    } else {
+      toast.error('Could not load document preview');
+    }
   };
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">Loading…</div>;
@@ -307,8 +312,8 @@ export default function LoanDetail() {
                     {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                   </p>
                 </div>
-                <button onClick={() => downloadDocument(doc)} className="p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Download">
-                  <Download size={14} />
+                <button onClick={() => previewDocument(doc)} className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors text-xs" title="Preview">
+                  <Eye size={14} /> View
                 </button>
               </div>
             ))}
