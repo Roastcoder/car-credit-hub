@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Fingerprint } from 'lucide-react';
@@ -11,7 +12,8 @@ import {
 } from '@/lib/biometric-auth';
 
 export default function BiometricSetup() {
-  const { user, session } = useAuth();
+  const { user, session, logout } = useAuth();
+  const navigate = useNavigate();
   const [available, setAvailable] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,10 @@ export default function BiometricSetup() {
       const success = await registerBiometric(user.id, user.email, refreshToken);
       if (success) {
         setEnabled(true);
-        toast.success('Fingerprint login enabled! You can now login with your fingerprint.');
+        toast.success('Fingerprint enabled! Redirecting to login...');
+        // Log out and redirect so fingerprint prompt appears
+        await logout();
+        navigate('/login');
       } else {
         toast.error('Failed to set up fingerprint. Please try again.');
       }
