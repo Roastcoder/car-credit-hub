@@ -145,7 +145,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Menu size={22} />
           </button>
           
-          <div className="flex-1" />
+          {/* Page title / User greeting */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate lg:text-base">
+              Hi, {user.full_name?.split(' ')[0] || user.email}
+            </p>
+            <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
+              {user.role ? ROLE_LABELS[user.role] : 'User'}
+            </p>
+          </div>
           
           {/* Biometric Setup */}
           <BiometricSetup />
