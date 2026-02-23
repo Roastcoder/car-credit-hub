@@ -68,59 +68,6 @@ export default function Dashboard() {
       {/* Feature Carousel Banner */}
       <FeatureCarousel />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {user.full_name || user.email}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {user.role ? ROLE_LABELS[user.role] : 'User'} Dashboard • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-      </div>
-
-      {/* Branch Info Card */}
-      {branchInfo && (
-        <div className="stat-card mb-6 bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-accent/10">
-              <Building2 size={24} className="text-accent" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground mb-1">{branchInfo.name} Branch</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Branch Code</p>
-                  <p className="font-semibold text-foreground">{branchInfo.code}</p>
-                </div>
-                {branchInfo.city && (
-                  <div>
-                    <p className="text-muted-foreground">City</p>
-                    <p className="font-semibold text-foreground">{branchInfo.city}, {branchInfo.state}</p>
-                  </div>
-                )}
-                {branchInfo.manager_name && (
-                  <div>
-                    <p className="text-muted-foreground">Manager</p>
-                    <p className="font-semibold text-foreground">{branchInfo.manager_name}</p>
-                  </div>
-                )}
-                {branchInfo.phone && (
-                  <div>
-                    <p className="text-muted-foreground">Contact</p>
-                    <p className="font-semibold text-foreground">{branchInfo.phone}</p>
-                  </div>
-                )}
-              </div>
-              {branchInfo.address && (
-                <div className="mt-3 flex items-start gap-2">
-                  <MapPin size={14} className="text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-muted-foreground">{branchInfo.address}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         {[
