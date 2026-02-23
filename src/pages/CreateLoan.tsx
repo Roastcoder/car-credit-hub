@@ -49,6 +49,9 @@ export default function CreateLoan() {
     currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentPincode: '',
     sameAsCurrentAddress: false,
     permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentPincode: '',
+    // Additional fields for DB mapping
+    fileSignDate: '', disburseDate: '', productName: '', model: '', productCode: '',
+    hpnAfterPdd: '', rtoRcHandoverDate: '', forClosure: 'No', customerTrackCompany: '',
     // Loan & Vehicle Details
     loanNumber: '', grid: '', loanAmount: '', actualLoanAmount: '', ltv: '', loanTypeVehicle: '',
     vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', vertical: '', scheme: '',
@@ -80,7 +83,7 @@ export default function CreateLoan() {
     netReceivedAmount: '', netDisbursementAmount: '', firstPaymentCredited: '', holdAmount: '', paymentReceivedDate: '',
     // Others
     loginDate: '', approvalDate: '', financierDisburseDate: '', tat: '', bookingMode: '', sourcingPersonName: '',
-    bookingMonth: '', bookingYear: '', meharDisburseDate: '', remark: '', fileStage: '', fileStatus: 'draft',
+    bookingMonth: '', bookingYear: '', meharDisburseDate: '', remark: '', fileStage: '', fileStatus: 'submitted',
     // Documents
     aadharFront: null, aadharBack: null, panCard: null, drivingLicence: null, lightBill: null,
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
@@ -126,7 +129,7 @@ export default function CreateLoan() {
   const createLoan = useMutation({
     mutationFn: async () => {
       const loanId = form.loanNumber || generateLoanId();
-      const { data, error } = await supabase.from('loans').insert({
+      const { data, error } = await supabase.from('loans').insert([{
         id: loanId,
         // Application Details
         loan_number: loanId,
@@ -206,9 +209,9 @@ export default function CreateLoan() {
         documentation_charges: Number(form.documentationCharges) || null,
         other_charges: Number(form.otherCharges) || null,
         // Status
-        status: form.fileStatus || 'draft',
+        status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) as any || 'submitted',
         created_by: user?.id,
-      }).select().single();
+      }]).select().single();
       if (error) throw error;
       return data;
     },
@@ -225,6 +228,10 @@ export default function CreateLoan() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.customerName.trim() || !form.mobile.trim() || !form.loanAmount) {
+      toast.error('Customer Name, Mobile, and Loan Amount are required');
+      return;
+    }
     createLoan.mutate();
   };
 
@@ -532,7 +539,7 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Booking Year</label><input type="number" className={inputClass} value={form.bookingYear} onChange={e => update('bookingYear', e.target.value)} placeholder="2026" min="2020" max="2030" /></div>
                 <div><label className={labelClass}>Mehar Disburse Date</label><input type="date" className={inputClass} value={form.meharDisburseDate} onChange={e => update('meharDisburseDate', e.target.value)} /></div>
                 <div><label className={labelClass}>File Stage</label><select className={inputClass} value={form.fileStage} onChange={e => update('fileStage', e.target.value)}><option value="">Select</option><option value="Login">Login</option><option value="Approval">Approval</option><option value="Disburse">Disburse</option><option value="Closed">Closed</option></select></div>
-                <div><label className={labelClass}>File Status</label><select className={inputClass} value={form.fileStatus} onChange={e => update('fileStatus', e.target.value)}><option value="draft">Draft</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Disbursed">Disbursed</option></select></div>
+                <div><label className={labelClass}>File Status</label><select className={inputClass} value={form.fileStatus} onChange={e => update('fileStatus', e.target.value)}><option value="submitted">Submitted</option><option value="under_review">Under Review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="disbursed">Disbursed</option></select></div>
                 <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} placeholder="Enter any additional remarks" /></div>
               </div>
             </div>

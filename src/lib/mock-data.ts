@@ -1,7 +1,6 @@
-export type LoanStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled';
+export type LoanStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled';
 
 export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[] = [
-  { value: 'draft', label: 'Draft', color: 'status-draft' },
   { value: 'submitted', label: 'Submitted', color: 'status-submitted' },
   { value: 'under_review', label: 'Under Review', color: 'status-review' },
   { value: 'approved', label: 'Approved', color: 'status-approved' },
@@ -144,7 +143,7 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 60,
     interestRate: 8.9,
     emi: 33104,
-    status: 'draft',
+    status: 'submitted',
     assignedBank: '',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-02-14',

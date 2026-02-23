@@ -50,6 +50,54 @@ export type Database = {
         }
         Relationships: []
       }
+      branches: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean | null
+          manager_name: string | null
+          name: string
+          phone: string | null
+          pincode: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_name?: string | null
+          name: string
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_name?: string | null
+          name?: string
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brokers: {
         Row: {
           area: string | null
@@ -188,78 +236,453 @@ export type Database = {
       loans: {
         Row: {
           aadhaar: string | null
+          actual_loan_amount: number | null
           address: string | null
+          advance_emi: number | null
+          agent_mobile_no: string | null
+          agreement_date: string | null
+          agreement_number: string | null
+          agriculture: string | null
           applicant_name: string
+          approval_date: string | null
           assigned_bank_id: string | null
           assigned_broker_id: string | null
+          booking_mode: string | null
+          booking_month: string | null
+          booking_year: string | null
+          bounce_charges: number | null
+          branch_id: string | null
+          branch_manager_name: string | null
           car_make: string | null
           car_model: string | null
           car_variant: string | null
+          challan: string | null
+          co_applicant_mobile: string | null
+          co_applicant_name: string | null
           created_at: string
           created_by: string | null
+          current_address: string | null
+          current_district: string | null
+          current_pincode: string | null
+          current_tehsil: string | null
+          current_village: string | null
+          customer_id: string | null
+          customer_track_company: string | null
           dealer_name: string | null
+          deferral_charges: number | null
+          disburse_branch_name: string | null
+          disburse_date: string | null
+          documentation_charges: number | null
           down_payment: number | null
+          dto_location: string | null
           emi: number | null
+          emi_amount: number | null
+          emi_end_date: string | null
+          emi_mode: string | null
+          emi_start_date: string | null
+          fc: string | null
+          file_charge: number | null
+          file_sign_date: string | null
+          file_stage: string | null
+          financier_address: string | null
+          financier_contact_no: string | null
+          financier_disburse_date: string | null
+          financier_email: string | null
+          financier_executive_name: string | null
+          financier_loan_id: string | null
+          financier_team_vertical: string | null
+          first_emi_amount: number | null
+          first_installment_due_date: string | null
+          first_payment_credited: string | null
+          for_closure: string | null
+          grid: number | null
+          gst: number | null
+          guarantor_mobile: string | null
+          guarantor_name: string | null
+          hold_amount: number | null
+          hpn_after_pdd: string | null
+          hpn_at_login: string | null
           id: string
+          idv: number | null
+          income_source: string | null
+          insurance_agent_contact: string | null
+          insurance_agent_name: string | null
+          insurance_company_name: string | null
+          insurance_coverage_amount: number | null
+          insurance_date: string | null
+          insurance_hpn: string | null
+          insurance_made_by: string | null
+          insurance_nominee: string | null
+          insurance_policy_number: string | null
+          insurance_renewal_date: string | null
+          insurance_status: string | null
+          insurance_transfer: string | null
+          insurance_type: string | null
+          insured_name: string | null
           interest_rate: number | null
+          irr: number | null
           loan_amount: number
+          loan_number: string | null
+          loan_suraksha: number | null
+          loan_type: string | null
+          loan_type_vehicle: string | null
+          login_date: string | null
+          ltv: number | null
+          maker_name: string | null
           manager_id: string | null
+          mehar_disburse_date: string | null
+          mfg_year: string | null
           mobile: string
+          model_variant_name: string | null
+          model_year: string | null
+          monthly_income: number | null
+          net_disbursement_amount: number | null
+          net_received_amount: number | null
+          new_financier: string | null
+          nip_ip: string | null
           on_road_price: number | null
+          other_charges: number | null
+          our_branch: string | null
           pan: string | null
+          payment_received_date: string | null
+          penalty_charges: number | null
+          permanent_address: string | null
+          permanent_district: string | null
+          permanent_pincode: string | null
+          permanent_tehsil: string | null
+          permanent_village: string | null
+          premium_amount: number | null
+          previous_track_details: string | null
+          principal_amount: number | null
+          processing_fee: number | null
+          product_code: string | null
+          product_name: string | null
+          rc_expiry_date: string | null
+          rc_mfg_date: string | null
+          rc_owner_name: string | null
+          record: string | null
+          remark: string | null
+          rto_agent_name: string | null
+          rto_docs_handover_date: string | null
+          rto_papers: string | null
+          rto_rc_handover_date: string | null
+          rto_work_description: string | null
+          sanction_amount: number | null
+          sanction_date: string | null
+          scheme: string | null
+          sourcing_person_name: string | null
+          stamping: number | null
           status: Database["public"]["Enums"]["loan_status"]
+          tat: number | null
           tenure: number | null
+          total_deduction: number | null
+          total_emi: number | null
+          total_interest: number | null
+          track_status: string | null
           updated_at: string
+          valuation: number | null
+          vehicle_number: string | null
+          vertical: string | null
         }
         Insert: {
           aadhaar?: string | null
+          actual_loan_amount?: number | null
           address?: string | null
+          advance_emi?: number | null
+          agent_mobile_no?: string | null
+          agreement_date?: string | null
+          agreement_number?: string | null
+          agriculture?: string | null
           applicant_name: string
+          approval_date?: string | null
           assigned_bank_id?: string | null
           assigned_broker_id?: string | null
+          booking_mode?: string | null
+          booking_month?: string | null
+          booking_year?: string | null
+          bounce_charges?: number | null
+          branch_id?: string | null
+          branch_manager_name?: string | null
           car_make?: string | null
           car_model?: string | null
           car_variant?: string | null
+          challan?: string | null
+          co_applicant_mobile?: string | null
+          co_applicant_name?: string | null
           created_at?: string
           created_by?: string | null
+          current_address?: string | null
+          current_district?: string | null
+          current_pincode?: string | null
+          current_tehsil?: string | null
+          current_village?: string | null
+          customer_id?: string | null
+          customer_track_company?: string | null
           dealer_name?: string | null
+          deferral_charges?: number | null
+          disburse_branch_name?: string | null
+          disburse_date?: string | null
+          documentation_charges?: number | null
           down_payment?: number | null
+          dto_location?: string | null
           emi?: number | null
+          emi_amount?: number | null
+          emi_end_date?: string | null
+          emi_mode?: string | null
+          emi_start_date?: string | null
+          fc?: string | null
+          file_charge?: number | null
+          file_sign_date?: string | null
+          file_stage?: string | null
+          financier_address?: string | null
+          financier_contact_no?: string | null
+          financier_disburse_date?: string | null
+          financier_email?: string | null
+          financier_executive_name?: string | null
+          financier_loan_id?: string | null
+          financier_team_vertical?: string | null
+          first_emi_amount?: number | null
+          first_installment_due_date?: string | null
+          first_payment_credited?: string | null
+          for_closure?: string | null
+          grid?: number | null
+          gst?: number | null
+          guarantor_mobile?: string | null
+          guarantor_name?: string | null
+          hold_amount?: number | null
+          hpn_after_pdd?: string | null
+          hpn_at_login?: string | null
           id: string
+          idv?: number | null
+          income_source?: string | null
+          insurance_agent_contact?: string | null
+          insurance_agent_name?: string | null
+          insurance_company_name?: string | null
+          insurance_coverage_amount?: number | null
+          insurance_date?: string | null
+          insurance_hpn?: string | null
+          insurance_made_by?: string | null
+          insurance_nominee?: string | null
+          insurance_policy_number?: string | null
+          insurance_renewal_date?: string | null
+          insurance_status?: string | null
+          insurance_transfer?: string | null
+          insurance_type?: string | null
+          insured_name?: string | null
           interest_rate?: number | null
+          irr?: number | null
           loan_amount?: number
+          loan_number?: string | null
+          loan_suraksha?: number | null
+          loan_type?: string | null
+          loan_type_vehicle?: string | null
+          login_date?: string | null
+          ltv?: number | null
+          maker_name?: string | null
           manager_id?: string | null
+          mehar_disburse_date?: string | null
+          mfg_year?: string | null
           mobile: string
+          model_variant_name?: string | null
+          model_year?: string | null
+          monthly_income?: number | null
+          net_disbursement_amount?: number | null
+          net_received_amount?: number | null
+          new_financier?: string | null
+          nip_ip?: string | null
           on_road_price?: number | null
+          other_charges?: number | null
+          our_branch?: string | null
           pan?: string | null
+          payment_received_date?: string | null
+          penalty_charges?: number | null
+          permanent_address?: string | null
+          permanent_district?: string | null
+          permanent_pincode?: string | null
+          permanent_tehsil?: string | null
+          permanent_village?: string | null
+          premium_amount?: number | null
+          previous_track_details?: string | null
+          principal_amount?: number | null
+          processing_fee?: number | null
+          product_code?: string | null
+          product_name?: string | null
+          rc_expiry_date?: string | null
+          rc_mfg_date?: string | null
+          rc_owner_name?: string | null
+          record?: string | null
+          remark?: string | null
+          rto_agent_name?: string | null
+          rto_docs_handover_date?: string | null
+          rto_papers?: string | null
+          rto_rc_handover_date?: string | null
+          rto_work_description?: string | null
+          sanction_amount?: number | null
+          sanction_date?: string | null
+          scheme?: string | null
+          sourcing_person_name?: string | null
+          stamping?: number | null
           status?: Database["public"]["Enums"]["loan_status"]
+          tat?: number | null
           tenure?: number | null
+          total_deduction?: number | null
+          total_emi?: number | null
+          total_interest?: number | null
+          track_status?: string | null
           updated_at?: string
+          valuation?: number | null
+          vehicle_number?: string | null
+          vertical?: string | null
         }
         Update: {
           aadhaar?: string | null
+          actual_loan_amount?: number | null
           address?: string | null
+          advance_emi?: number | null
+          agent_mobile_no?: string | null
+          agreement_date?: string | null
+          agreement_number?: string | null
+          agriculture?: string | null
           applicant_name?: string
+          approval_date?: string | null
           assigned_bank_id?: string | null
           assigned_broker_id?: string | null
+          booking_mode?: string | null
+          booking_month?: string | null
+          booking_year?: string | null
+          bounce_charges?: number | null
+          branch_id?: string | null
+          branch_manager_name?: string | null
           car_make?: string | null
           car_model?: string | null
           car_variant?: string | null
+          challan?: string | null
+          co_applicant_mobile?: string | null
+          co_applicant_name?: string | null
           created_at?: string
           created_by?: string | null
+          current_address?: string | null
+          current_district?: string | null
+          current_pincode?: string | null
+          current_tehsil?: string | null
+          current_village?: string | null
+          customer_id?: string | null
+          customer_track_company?: string | null
           dealer_name?: string | null
+          deferral_charges?: number | null
+          disburse_branch_name?: string | null
+          disburse_date?: string | null
+          documentation_charges?: number | null
           down_payment?: number | null
+          dto_location?: string | null
           emi?: number | null
+          emi_amount?: number | null
+          emi_end_date?: string | null
+          emi_mode?: string | null
+          emi_start_date?: string | null
+          fc?: string | null
+          file_charge?: number | null
+          file_sign_date?: string | null
+          file_stage?: string | null
+          financier_address?: string | null
+          financier_contact_no?: string | null
+          financier_disburse_date?: string | null
+          financier_email?: string | null
+          financier_executive_name?: string | null
+          financier_loan_id?: string | null
+          financier_team_vertical?: string | null
+          first_emi_amount?: number | null
+          first_installment_due_date?: string | null
+          first_payment_credited?: string | null
+          for_closure?: string | null
+          grid?: number | null
+          gst?: number | null
+          guarantor_mobile?: string | null
+          guarantor_name?: string | null
+          hold_amount?: number | null
+          hpn_after_pdd?: string | null
+          hpn_at_login?: string | null
           id?: string
+          idv?: number | null
+          income_source?: string | null
+          insurance_agent_contact?: string | null
+          insurance_agent_name?: string | null
+          insurance_company_name?: string | null
+          insurance_coverage_amount?: number | null
+          insurance_date?: string | null
+          insurance_hpn?: string | null
+          insurance_made_by?: string | null
+          insurance_nominee?: string | null
+          insurance_policy_number?: string | null
+          insurance_renewal_date?: string | null
+          insurance_status?: string | null
+          insurance_transfer?: string | null
+          insurance_type?: string | null
+          insured_name?: string | null
           interest_rate?: number | null
+          irr?: number | null
           loan_amount?: number
+          loan_number?: string | null
+          loan_suraksha?: number | null
+          loan_type?: string | null
+          loan_type_vehicle?: string | null
+          login_date?: string | null
+          ltv?: number | null
+          maker_name?: string | null
           manager_id?: string | null
+          mehar_disburse_date?: string | null
+          mfg_year?: string | null
           mobile?: string
+          model_variant_name?: string | null
+          model_year?: string | null
+          monthly_income?: number | null
+          net_disbursement_amount?: number | null
+          net_received_amount?: number | null
+          new_financier?: string | null
+          nip_ip?: string | null
           on_road_price?: number | null
+          other_charges?: number | null
+          our_branch?: string | null
           pan?: string | null
+          payment_received_date?: string | null
+          penalty_charges?: number | null
+          permanent_address?: string | null
+          permanent_district?: string | null
+          permanent_pincode?: string | null
+          permanent_tehsil?: string | null
+          permanent_village?: string | null
+          premium_amount?: number | null
+          previous_track_details?: string | null
+          principal_amount?: number | null
+          processing_fee?: number | null
+          product_code?: string | null
+          product_name?: string | null
+          rc_expiry_date?: string | null
+          rc_mfg_date?: string | null
+          rc_owner_name?: string | null
+          record?: string | null
+          remark?: string | null
+          rto_agent_name?: string | null
+          rto_docs_handover_date?: string | null
+          rto_papers?: string | null
+          rto_rc_handover_date?: string | null
+          rto_work_description?: string | null
+          sanction_amount?: number | null
+          sanction_date?: string | null
+          scheme?: string | null
+          sourcing_person_name?: string | null
+          stamping?: number | null
           status?: Database["public"]["Enums"]["loan_status"]
+          tat?: number | null
           tenure?: number | null
+          total_deduction?: number | null
+          total_emi?: number | null
+          total_interest?: number | null
+          track_status?: string | null
           updated_at?: string
+          valuation?: number | null
+          vehicle_number?: string | null
+          vertical?: string | null
         }
         Relationships: [
           {
@@ -274,6 +697,13 @@ export type Database = {
             columns: ["assigned_broker_id"]
             isOneToOne: false
             referencedRelation: "brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loans_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
@@ -295,6 +725,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          branch_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -304,6 +735,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          branch_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -313,6 +745,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          branch_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -320,7 +753,15 @@ export type Database = {
           phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

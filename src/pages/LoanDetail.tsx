@@ -156,7 +156,7 @@ export default function LoanDetail() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground">{loan.id}</h1>
-            <LoanStatusBadge status={loan.status} />
+            <LoanStatusBadge status={loan.status as any} />
           </div>
           <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
         </div>
