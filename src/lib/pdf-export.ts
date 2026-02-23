@@ -21,191 +21,125 @@ function fmtCur(val: any): string {
   return formatCurrency(n);
 }
 
+function row4(l1: string, v1: string, l2: string, v2: string, l3: string, v3: string, l4: string, v4: string): string {
+  return `<tr>
+    <td class="lbl">${l1}</td><td class="val">${v1}</td>
+    <td class="lbl">${l2}</td><td class="val">${v2}</td>
+    <td class="lbl">${l3}</td><td class="val">${v3}</td>
+    <td class="lbl">${l4}</td><td class="val">${v4}</td>
+  </tr>`;
+}
+
+function sectionTitle(icon: string, title: string): string {
+  return `<tr><td colspan="8" class="sec-title">${icon} ${title}</td></tr>`;
+}
+
 function buildLoanHTML(loan: LoanData): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Loan Application - ${loan.id}</title>
 <style>
-  @page { size: A4; margin: 18mm 20mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 10px; line-height: 1.4; max-width: 170mm; margin: 0 auto; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1a1a2e; font-size: 10px; line-height: 1.4; padding: 10px; }
   
-  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1a3a6b; padding-bottom: 10px; margin-bottom: 12px; }
-  .header-left { display: flex; align-items: center; gap: 10px; }
-  .logo-box { background: #fff; border: 2px solid #1a3a6b; border-radius: 6px; padding: 4px; }
-  .logo-box img { height: 36px; width: auto; }
-  .company-name { font-size: 18px; font-weight: 800; color: #1a3a6b; letter-spacing: -0.5px; }
-  .company-sub { font-size: 9px; color: #666; margin-top: 1px; }
-  .header-right { text-align: right; }
-  .header-right .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-  .header-right .value { font-size: 12px; font-weight: 700; color: #1a3a6b; }
+  .hdr-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #1a3a6b; padding-bottom: 6px; }
+  .hdr-table td { vertical-align: middle; padding: 4px; }
+  .company-name { font-size: 18px; font-weight: 800; color: #1a3a6b; }
+  .company-sub { font-size: 9px; color: #666; }
+  .hdr-right { text-align: right; }
+  .hdr-lbl { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .hdr-val { font-size: 12px; font-weight: 700; color: #1a3a6b; }
 
-  .title-bar { background: linear-gradient(135deg, #1a3a6b, #c0392b); color: #fff; padding: 8px 14px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-  .title-bar h1 { font-size: 13px; font-weight: 700; }
-  .title-bar .status { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; font-size: 9px; font-weight: 600; text-transform: uppercase; }
+  .title-bar { background: #1a3a6b; color: #fff; padding: 6px 12px; margin-bottom: 8px; }
+  .title-bar table { width: 100%; }
+  .title-bar td { color: #fff; }
+  .title-bar .t-left { font-size: 13px; font-weight: 700; }
+  .title-bar .t-right { text-align: right; font-size: 9px; font-weight: 600; text-transform: uppercase; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; }
 
-  .section { margin-bottom: 8px; break-inside: avoid; }
-  .section-title { font-size: 10px; font-weight: 700; color: #1a3a6b; border-bottom: 1.5px solid #e8ecf1; padding-bottom: 3px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-  
-  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-  .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .field { padding: 3px 6px; border: 0.5px solid #e8ecf1; }
-  .field .label { font-size: 7px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; }
-  .field .value { font-size: 10px; font-weight: 600; color: #1a1a2e; margin-top: 1px; word-break: break-word; }
-  .field-full { grid-column: span 2; }
+  .data-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+  .data-table td { padding: 3px 5px; border: 1px solid #e0e4ea; vertical-align: top; }
+  .data-table .lbl { font-size: 7px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; width: 9%; background: #f8f9fb; }
+  .data-table .val { font-size: 10px; font-weight: 600; color: #1a1a2e; width: 16%; word-break: break-word; }
+  .data-table .sec-title { font-size: 10px; font-weight: 700; color: #1a3a6b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #1a3a6b; background: #f0f4f8; padding: 5px; }
 
-  .footer { margin-top: 14px; border-top: 1.5px solid #e8ecf1; padding-top: 8px; display: flex; justify-content: space-between; color: #999; font-size: 8px; }
-  
-  .sig-area { margin-top: 20px; display: flex; justify-content: space-between; gap: 30px; }
-  .sig-box { flex: 1; text-align: center; }
-  .sig-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 3px; font-size: 9px; color: #555; }
+  .sig-table { width: 100%; margin-top: 25px; border-collapse: collapse; }
+  .sig-table td { width: 33%; text-align: center; padding-top: 40px; border-top: 1px solid #333; font-size: 9px; color: #555; }
 
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  .footer-table { width: 100%; margin-top: 12px; border-top: 1.5px solid #e8ecf1; padding-top: 6px; }
+  .footer-table td { font-size: 8px; color: #999; padding: 2px; }
 </style></head><body>
 
-<div class="header">
-  <div class="header-left">
-    <div class="logo-box"><img src="${window.location.origin}/favicon.png" alt="Logo" onerror="this.style.display='none'" /></div>
-    <div>
-      <div class="company-name">Mehar Finance</div>
-      <div class="company-sub">Vehicle Loan Solutions • Since 2015</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="label">Application ID</div>
-    <div class="value">${loan.id}</div>
-    <div class="label" style="margin-top:4px">Date</div>
-    <div class="value" style="font-size:11px">${new Date().toLocaleDateString('en-IN')}</div>
-  </div>
-</div>
+<table class="hdr-table">
+  <tr>
+    <td style="width:70%">
+      <span class="company-name">Mehar Finance</span><br/>
+      <span class="company-sub">Vehicle Loan Solutions &bull; Since 2015</span>
+    </td>
+    <td class="hdr-right">
+      <span class="hdr-lbl">Application ID</span><br/>
+      <span class="hdr-val">${loan.id}</span><br/>
+      <span class="hdr-lbl">Date</span><br/>
+      <span class="hdr-val" style="font-size:11px">${new Date().toLocaleDateString('en-IN')}</span>
+    </td>
+  </tr>
+</table>
 
 <div class="title-bar">
-  <h1>Loan Application Details</h1>
-  <span class="status">${fmt(loan.status)}</span>
+  <table><tr>
+    <td class="t-left">Loan Application Details</td>
+    <td><span class="t-right">${fmt(loan.status)}</span></td>
+  </tr></table>
 </div>
 
-<!-- Applicant Details -->
-<div class="section">
-  <div class="section-title">👤 Applicant Information</div>
-  <div class="grid">
-    <div class="field"><div class="label">Customer ID</div><div class="value">${fmt(loan.customer_id)}</div></div>
-    <div class="field"><div class="label">Loan Number</div><div class="value">${fmt(loan.loan_number)}</div></div>
-    <div class="field"><div class="label">Applicant Name</div><div class="value">${fmt(loan.applicant_name)}</div></div>
-    <div class="field"><div class="label">Mobile</div><div class="value">${fmt(loan.mobile)}</div></div>
-    <div class="field"><div class="label">Co-Applicant</div><div class="value">${fmt(loan.co_applicant_name)}</div></div>
-    <div class="field"><div class="label">Co-Applicant Mobile</div><div class="value">${fmt(loan.co_applicant_mobile)}</div></div>
-    <div class="field"><div class="label">Guarantor</div><div class="value">${fmt(loan.guarantor_name)}</div></div>
-    <div class="field"><div class="label">Guarantor Mobile</div><div class="value">${fmt(loan.guarantor_mobile)}</div></div>
-    <div class="field field-full"><div class="label">Current Address</div><div class="value">${fmt(loan.current_address || loan.address)}</div></div>
-    <div class="field"><div class="label">Village</div><div class="value">${fmt(loan.current_village)}</div></div>
-    <div class="field"><div class="label">District</div><div class="value">${fmt(loan.current_district)}</div></div>
-  </div>
-</div>
+<table class="data-table">
+  ${sectionTitle('&#128100;', 'Applicant Information')}
+  ${row4('Customer ID', fmt(loan.customer_id), 'Loan Number', fmt(loan.loan_number), 'Applicant Name', fmt(loan.applicant_name), 'Mobile', fmt(loan.mobile))}
+  ${row4('Co-Applicant', fmt(loan.co_applicant_name), 'Co-App Mobile', fmt(loan.co_applicant_mobile), 'Guarantor', fmt(loan.guarantor_name), 'Guarantor Mobile', fmt(loan.guarantor_mobile))}
+  <tr>
+    <td class="lbl">Address</td><td class="val" colspan="3">${fmt(loan.current_address || loan.address)}</td>
+    <td class="lbl">Village</td><td class="val">${fmt(loan.current_village)}</td>
+    <td class="lbl">District</td><td class="val">${fmt(loan.current_district)}</td>
+  </tr>
 
-<!-- Vehicle Details -->
-<div class="section">
-  <div class="section-title">🚗 Vehicle Details</div>
-  <div class="grid">
-    <div class="field"><div class="label">Registration No</div><div class="value">${fmt(loan.vehicle_number)}</div></div>
-    <div class="field"><div class="label">Maker</div><div class="value">${fmt(loan.maker_name || loan.car_make)}</div></div>
-    <div class="field"><div class="label">Model / Variant</div><div class="value">${fmt(loan.model_variant_name || loan.car_model)}</div></div>
-    <div class="field"><div class="label">Mfg Year</div><div class="value">${fmt(loan.mfg_year)}</div></div>
-    <div class="field"><div class="label">Vertical</div><div class="value">${fmt(loan.vertical)}</div></div>
-    <div class="field"><div class="label">Scheme</div><div class="value">${fmt(loan.scheme)}</div></div>
-    <div class="field"><div class="label">Valuation</div><div class="value">${fmtCur(loan.valuation)}</div></div>
-    <div class="field"><div class="label">On Road Price</div><div class="value">${fmtCur(loan.on_road_price)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#128663;', 'Vehicle Details')}
+  ${row4('Reg. No', fmt(loan.vehicle_number), 'Maker', fmt(loan.maker_name || loan.car_make), 'Model/Variant', fmt(loan.model_variant_name || loan.car_model), 'Mfg Year', fmt(loan.mfg_year))}
+  ${row4('Vertical', fmt(loan.vertical), 'Scheme', fmt(loan.scheme), 'Valuation', fmtCur(loan.valuation), 'On Road Price', fmtCur(loan.on_road_price))}
 
-<!-- Loan & EMI Details -->
-<div class="section">
-  <div class="section-title">💰 Loan & EMI Details</div>
-  <div class="grid">
-    <div class="field"><div class="label">Loan Amount</div><div class="value">${fmtCur(loan.loan_amount)}</div></div>
-    <div class="field"><div class="label">Grid</div><div class="value">${fmtCur(loan.grid)}</div></div>
-    <div class="field"><div class="label">LTV</div><div class="value">${loan.ltv ? loan.ltv + '%' : '—'}</div></div>
-    <div class="field"><div class="label">IRR</div><div class="value">${loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—')}</div></div>
-    <div class="field"><div class="label">Tenure</div><div class="value">${loan.tenure ? loan.tenure + ' months' : '—'}</div></div>
-    <div class="field"><div class="label">EMI Mode</div><div class="value">${fmt(loan.emi_mode || 'Monthly')}</div></div>
-    <div class="field"><div class="label">Monthly EMI</div><div class="value">${fmtCur(loan.emi_amount || loan.emi)}</div></div>
-    <div class="field"><div class="label">Total EMI</div><div class="value">${fmt(loan.total_emi || loan.tenure)}</div></div>
-    <div class="field"><div class="label">Total Interest</div><div class="value">${fmtCur(loan.total_interest)}</div></div>
-    <div class="field"><div class="label">First EMI Date</div><div class="value">${formatDate(loan.first_installment_due_date)}</div></div>
-    <div class="field"><div class="label">Down Payment</div><div class="value">${fmtCur(loan.down_payment)}</div></div>
-    <div class="field"><div class="label">Advance EMI</div><div class="value">${fmt(loan.advance_emi)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#128176;', 'Loan & EMI Details')}
+  ${row4('Loan Amount', fmtCur(loan.loan_amount), 'Grid', fmtCur(loan.grid), 'LTV', loan.ltv ? loan.ltv + '%' : '—', 'IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—'))}
+  ${row4('Tenure', loan.tenure ? loan.tenure + ' months' : '—', 'EMI Mode', fmt(loan.emi_mode || 'Monthly'), 'Monthly EMI', fmtCur(loan.emi_amount || loan.emi), 'Total EMI', fmt(loan.total_emi || loan.tenure))}
+  ${row4('Total Interest', fmtCur(loan.total_interest), 'First EMI Date', formatDate(loan.first_installment_due_date), 'Down Payment', fmtCur(loan.down_payment), 'Advance EMI', fmt(loan.advance_emi))}
 
-<!-- Financier & Insurance -->
-<div class="section">
-  <div class="section-title">🏦 Financier & Insurance</div>
-  <div class="grid">
-    <div class="field"><div class="label">Assigned Bank</div><div class="value">${fmt(loan.banks?.name)}</div></div>
-    <div class="field"><div class="label">Financier Executive</div><div class="value">${fmt(loan.financier_executive_name)}</div></div>
-    <div class="field"><div class="label">Branch</div><div class="value">${fmt(loan.disburse_branch_name)}</div></div>
-    <div class="field"><div class="label">Branch Manager</div><div class="value">${fmt(loan.branch_manager_name)}</div></div>
-    <div class="field"><div class="label">Insurance Company</div><div class="value">${fmt(loan.insurance_company_name)}</div></div>
-    <div class="field"><div class="label">IDV</div><div class="value">${fmtCur(loan.idv)}</div></div>
-    <div class="field"><div class="label">Premium</div><div class="value">${fmtCur(loan.premium_amount)}</div></div>
-    <div class="field"><div class="label">Insurance Type</div><div class="value">${fmt(loan.insurance_type)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#127974;', 'Financier & Insurance')}
+  ${row4('Assigned Bank', fmt(loan.banks?.name), 'Financier Exec.', fmt(loan.financier_executive_name), 'Branch', fmt(loan.disburse_branch_name), 'Branch Manager', fmt(loan.branch_manager_name))}
+  ${row4('Insurance Co.', fmt(loan.insurance_company_name), 'IDV', fmtCur(loan.idv), 'Premium', fmtCur(loan.premium_amount), 'Insurance Type', fmt(loan.insurance_type))}
 
-<!-- Deductions & Disbursement -->
-<div class="section">
-  <div class="section-title">📋 Deductions & Disbursement</div>
-  <div class="grid">
-    <div class="field"><div class="label">File Charge</div><div class="value">${fmtCur(loan.file_charge)}</div></div>
-    <div class="field"><div class="label">Loan Suraksha</div><div class="value">${fmtCur(loan.loan_suraksha)}</div></div>
-    <div class="field"><div class="label">Stamping</div><div class="value">${fmtCur(loan.stamping)}</div></div>
-    <div class="field"><div class="label">Processing Fee</div><div class="value">${fmtCur(loan.processing_fee)}</div></div>
-    <div class="field"><div class="label">Total Deduction</div><div class="value">${fmtCur(loan.total_deduction)}</div></div>
-    <div class="field"><div class="label">Net Disbursement</div><div class="value">${fmtCur(loan.net_disbursement_amount)}</div></div>
-    <div class="field"><div class="label">Payment Received</div><div class="value">${formatDate(loan.payment_received_date)}</div></div>
-    <div class="field"><div class="label">Disburse Date</div><div class="value">${formatDate(loan.financier_disburse_date)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#128203;', 'Deductions & Disbursement')}
+  ${row4('File Charge', fmtCur(loan.file_charge), 'Loan Suraksha', fmtCur(loan.loan_suraksha), 'Stamping', fmtCur(loan.stamping), 'Processing Fee', fmtCur(loan.processing_fee))}
+  ${row4('Total Deduction', fmtCur(loan.total_deduction), 'Net Disbursement', fmtCur(loan.net_disbursement_amount), 'Payment Recd.', formatDate(loan.payment_received_date), 'Disburse Date', formatDate(loan.financier_disburse_date))}
 
-<!-- Important Dates -->
-<div class="section">
-  <div class="section-title">📅 Important Dates</div>
-  <div class="grid">
-    <div class="field"><div class="label">Login Date</div><div class="value">${formatDate(loan.login_date)}</div></div>
-    <div class="field"><div class="label">Approval Date</div><div class="value">${formatDate(loan.approval_date)}</div></div>
-    <div class="field"><div class="label">Disburse Date</div><div class="value">${formatDate(loan.financier_disburse_date)}</div></div>
-    <div class="field"><div class="label">TAT</div><div class="value">${loan.tat ? loan.tat + ' days' : '—'}</div></div>
-    <div class="field"><div class="label">Agreement Date</div><div class="value">${formatDate(loan.agreement_date)}</div></div>
-    <div class="field"><div class="label">File Stage</div><div class="value">${fmt(loan.file_stage)}</div></div>
-    <div class="field"><div class="label">Created</div><div class="value">${formatDate(loan.created_at)}</div></div>
-    <div class="field"><div class="label">Last Updated</div><div class="value">${formatDate(loan.updated_at)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#128197;', 'Important Dates')}
+  ${row4('Login Date', formatDate(loan.login_date), 'Approval Date', formatDate(loan.approval_date), 'Disburse Date', formatDate(loan.financier_disburse_date), 'TAT', loan.tat ? loan.tat + ' days' : '—')}
+  ${row4('Agreement Date', formatDate(loan.agreement_date), 'File Stage', fmt(loan.file_stage), 'Created', formatDate(loan.created_at), 'Last Updated', formatDate(loan.updated_at))}
 
-<!-- RTO Details -->
-<div class="section">
-  <div class="section-title">📄 RTO Details</div>
-  <div class="grid">
-    <div class="field"><div class="label">RC Owner</div><div class="value">${fmt(loan.rc_owner_name)}</div></div>
-    <div class="field"><div class="label">RC Mfg Date</div><div class="value">${fmt(loan.rc_mfg_date)}</div></div>
-    <div class="field"><div class="label">HPN at Login</div><div class="value">${fmt(loan.hpn_at_login)}</div></div>
-    <div class="field"><div class="label">New Financier</div><div class="value">${fmt(loan.new_financier)}</div></div>
-    <div class="field"><div class="label">RTO Agent</div><div class="value">${fmt(loan.rto_agent_name)}</div></div>
-    <div class="field"><div class="label">Agent Mobile</div><div class="value">${fmt(loan.agent_mobile_no)}</div></div>
-    <div class="field"><div class="label">DTO Location</div><div class="value">${fmt(loan.dto_location)}</div></div>
-    <div class="field"><div class="label">Challan</div><div class="value">${fmt(loan.challan)}</div></div>
-  </div>
-</div>
+  ${sectionTitle('&#128196;', 'RTO Details')}
+  ${row4('RC Owner', fmt(loan.rc_owner_name), 'RC Mfg Date', fmt(loan.rc_mfg_date), 'HPN at Login', fmt(loan.hpn_at_login), 'New Financier', fmt(loan.new_financier))}
+  ${row4('RTO Agent', fmt(loan.rto_agent_name), 'Agent Mobile', fmt(loan.agent_mobile_no), 'DTO Location', fmt(loan.dto_location), 'Challan', fmt(loan.challan))}
+</table>
 
-<!-- Signature Area -->
-<div class="sig-area">
-  <div class="sig-box"><div class="sig-line">Applicant Signature</div></div>
-  <div class="sig-box"><div class="sig-line">Co-Applicant Signature</div></div>
-  <div class="sig-box"><div class="sig-line">Authorized Signatory</div></div>
-</div>
+<table class="sig-table">
+  <tr>
+    <td>Applicant Signature</td>
+    <td>Co-Applicant Signature</td>
+    <td>Authorized Signatory</td>
+  </tr>
+</table>
 
-<div class="footer">
-  <span>Generated on ${new Date().toLocaleString('en-IN')} • Mehar Finance</span>
-  <span>This is a system-generated document</span>
-</div>
+<table class="footer-table">
+  <tr>
+    <td>Generated on ${new Date().toLocaleString('en-IN')} &bull; Mehar Finance</td>
+    <td style="text-align:right">This is a system-generated document</td>
+  </tr>
+</table>
 
 </body></html>`;
 }
