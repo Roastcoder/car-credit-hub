@@ -27,39 +27,39 @@ export function exportLoanPDF(loan: LoanData) {
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Loan Application - ${loan.id}</title>
 <style>
-  @page { size: A4; margin: 15mm; }
+  @page { size: A4; margin: 18mm 20mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 11px; line-height: 1.4; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 10px; line-height: 1.4; max-width: 170mm; margin: 0 auto; }
   
-  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #1a3a6b; padding-bottom: 12px; margin-bottom: 16px; }
-  .header-left { display: flex; align-items: center; gap: 12px; }
-  .logo-box { background: #fff; border: 2px solid #1a3a6b; border-radius: 8px; padding: 6px; }
-  .logo-box img { height: 44px; width: auto; }
-  .company-name { font-size: 22px; font-weight: 800; color: #1a3a6b; letter-spacing: -0.5px; }
-  .company-sub { font-size: 10px; color: #666; margin-top: 2px; }
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1a3a6b; padding-bottom: 10px; margin-bottom: 12px; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-box { background: #fff; border: 2px solid #1a3a6b; border-radius: 6px; padding: 4px; }
+  .logo-box img { height: 36px; width: auto; }
+  .company-name { font-size: 18px; font-weight: 800; color: #1a3a6b; letter-spacing: -0.5px; }
+  .company-sub { font-size: 9px; color: #666; margin-top: 1px; }
   .header-right { text-align: right; }
-  .header-right .label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-  .header-right .value { font-size: 13px; font-weight: 700; color: #1a3a6b; }
+  .header-right .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .header-right .value { font-size: 12px; font-weight: 700; color: #1a3a6b; }
 
-  .title-bar { background: linear-gradient(135deg, #1a3a6b, #c0392b); color: #fff; padding: 10px 16px; border-radius: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .title-bar h1 { font-size: 16px; font-weight: 700; }
-  .title-bar .status { background: rgba(255,255,255,0.2); padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .title-bar { background: linear-gradient(135deg, #1a3a6b, #c0392b); color: #fff; padding: 8px 14px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .title-bar h1 { font-size: 13px; font-weight: 700; }
+  .title-bar .status { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; font-size: 9px; font-weight: 600; text-transform: uppercase; }
 
-  .section { margin-bottom: 12px; break-inside: avoid; }
-  .section-title { font-size: 12px; font-weight: 700; color: #1a3a6b; border-bottom: 2px solid #e8ecf1; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .section { margin-bottom: 8px; break-inside: avoid; }
+  .section-title { font-size: 10px; font-weight: 700; color: #1a3a6b; border-bottom: 1.5px solid #e8ecf1; padding-bottom: 3px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
   
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
   .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .field { padding: 5px 8px; border: 0.5px solid #e8ecf1; }
-  .field .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; }
-  .field .value { font-size: 11px; font-weight: 600; color: #1a1a2e; margin-top: 1px; }
+  .field { padding: 3px 6px; border: 0.5px solid #e8ecf1; }
+  .field .label { font-size: 7px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; }
+  .field .value { font-size: 10px; font-weight: 600; color: #1a1a2e; margin-top: 1px; word-break: break-word; }
   .field-full { grid-column: span 2; }
 
-  .footer { margin-top: 20px; border-top: 2px solid #e8ecf1; padding-top: 10px; display: flex; justify-content: space-between; color: #999; font-size: 9px; }
+  .footer { margin-top: 14px; border-top: 1.5px solid #e8ecf1; padding-top: 8px; display: flex; justify-content: space-between; color: #999; font-size: 8px; }
   
-  .sig-area { margin-top: 30px; display: flex; justify-content: space-between; gap: 40px; }
+  .sig-area { margin-top: 20px; display: flex; justify-content: space-between; gap: 30px; }
   .sig-box { flex: 1; text-align: center; }
-  .sig-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 4px; font-size: 10px; color: #555; }
+  .sig-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 3px; font-size: 9px; color: #555; }
 
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style></head><body>
