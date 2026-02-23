@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { LayoutDashboard, FileText, Car, Users, UserPlus } from 'lucide-react';
+import { LayoutDashboard, FileText, Car, Users, UserPlus, BarChart3 } from 'lucide-react';
 
 interface NavItem {
   label: string;
