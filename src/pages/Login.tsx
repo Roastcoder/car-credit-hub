@@ -152,33 +152,6 @@ export default function Login() {
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
 
-          {/* Biometric Login Button */}
-          {biometricAvailable && (
-            <button
-              onClick={handleBiometricLogin}
-              disabled={biometricLoading}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold py-3.5 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-60 mb-4 shadow-lg"
-            >
-              <Fingerprint size={22} />
-              <div className="text-left">
-                <span className="block text-sm">
-                  {biometricLoading ? 'Authenticating...' : 'Login with Fingerprint'}
-                </span>
-                {biometricEmail && (
-                  <span className="block text-[10px] opacity-70">{biometricEmail}</span>
-                )}
-              </div>
-            </button>
-          )}
-
-          {biometricAvailable && (
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">or sign in with email</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-          )}
-
           {/* Mobile APK Download - Only show if not installed */}
           {!isStandalone && (
             <a
@@ -233,6 +206,32 @@ export default function Login() {
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
+
+          {/* Biometric Login Button */}
+          {biometricAvailable && (
+            <>
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <button
+                onClick={handleBiometricLogin}
+                disabled={biometricLoading}
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold py-3.5 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-60 shadow-lg"
+              >
+                <Fingerprint size={22} />
+                <div className="text-left">
+                  <span className="block text-sm">
+                    {biometricLoading ? 'Authenticating...' : 'Login with Fingerprint'}
+                  </span>
+                  {biometricEmail && (
+                    <span className="block text-[10px] opacity-70">{biometricEmail}</span>
+                  )}
+                </div>
+              </button>
+            </>
+          )}
 
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
