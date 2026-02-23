@@ -80,7 +80,49 @@ export default function BrokerManagement() {
         </div>
       </div>
 
-      <div className="stat-card">
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {isLoading ? (
+          <div className="py-8 text-center text-muted-foreground text-sm">Loading brokers…</div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8 text-sm">No brokers found</p>
+        ) : (
+          filtered.map((b: any) => {
+            const brokerLoans = (loans as any[]).filter(l => l.assigned_broker_id === b.id);
+            return (
+              <div key={b.id} className="stat-card">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-sm">
+                      {b.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{b.name}</p>
+                      <p className="text-xs text-muted-foreground">{b.email || b.phone || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${b.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                      {b.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                    <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+                      <Edit size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center border-t border-border pt-3">
+                  <div><p className="text-lg font-bold text-foreground">{brokerLoans.length}</p><p className="text-[10px] text-muted-foreground">Cases</p></div>
+                  <div><p className="text-lg font-bold text-accent">{b.commission_rate}%</p><p className="text-[10px] text-muted-foreground">Rate</p></div>
+                  <div><p className="text-sm font-medium text-muted-foreground">{b.area || '—'}</p><p className="text-[10px] text-muted-foreground">Area</p></div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="stat-card hidden lg:block">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground text-sm">Loading brokers…</div>
         ) : (
@@ -89,8 +131,8 @@ export default function BrokerManagement() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Area</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Phone</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Phone</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Cases</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission %</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
@@ -113,8 +155,8 @@ export default function BrokerManagement() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{b.area || '—'}</td>
-                      <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell mono text-xs">{b.phone || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground">{b.area || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground mono text-xs">{b.phone || '—'}</td>
                       <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>
                       <td className="py-3 px-3 font-medium text-accent">{b.commission_rate}%</td>
                       <td className="py-3 px-3">

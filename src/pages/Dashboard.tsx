@@ -169,8 +169,39 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Loans */}
-      <div className="stat-card">
+      {/* Recent Loans - Mobile Cards */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-foreground">Recent Applications</h3>
+          <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
+        </div>
+        {loans.length === 0 ? (
+          <div className="stat-card text-center py-8 text-muted-foreground text-sm">
+            No applications yet. <Link to="/loans/new" className="text-accent hover:underline">Create your first loan →</Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {loans.slice(0, 5).map((loan: any) => (
+              <Link key={loan.id} to={`/loans/${loan.id}`} className="stat-card block active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
+                    <p className="text-xs text-muted-foreground">{loan.car_make} {loan.car_model}</p>
+                  </div>
+                  <LoanStatusBadge status={loan.status} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground mono">{loan.id}</p>
+                  <p className="font-bold text-foreground text-sm">{formatCurrency(Number(loan.loan_amount))}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Loans - Desktop Table */}
+      <div className="stat-card hidden lg:block">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-foreground">Recent Applications</h3>
           <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
@@ -181,17 +212,17 @@ export default function Dashboard() {
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">ID</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Applicant</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground hidden sm:table-cell">Car</th>
+                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Car</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Amount</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
               {loans.slice(0, 5).map((loan: any) => (
-                <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => {}}>
                   <td className="py-3 px-2 mono text-xs text-accent font-medium">{loan.id}</td>
                   <td className="py-3 px-2 font-medium text-foreground">{loan.applicant_name}</td>
-                  <td className="py-3 px-2 text-muted-foreground hidden sm:table-cell">{loan.car_make} {loan.car_model}</td>
+                  <td className="py-3 px-2 text-muted-foreground">{loan.car_make} {loan.car_model}</td>
                   <td className="py-3 px-2 font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
                   <td className="py-3 px-2"><LoanStatusBadge status={loan.status} /></td>
                 </tr>

@@ -82,7 +82,53 @@ export default function Commission() {
         </div>
       </div>
 
-      <div className="stat-card">
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {isLoading ? (
+          <div className="py-8 text-center text-muted-foreground text-sm">Loading commissions…</div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8 text-sm">No commission records found</p>
+        ) : (
+          filtered.map((c: any) => {
+            const style = STATUS_STYLES[c.status] || STATUS_STYLES['pending'];
+            return (
+              <div key={c.id} className="stat-card">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground truncate">{c.loans?.applicant_name || '—'}</p>
+                    <p className="text-xs text-muted-foreground mono">{c.id.slice(0, 8).toUpperCase()}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${style.bg}`}>
+                    {style.icon} {style.label}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Loan Amount</p>
+                    <p className="font-medium text-foreground">{formatCurrency(Number(c.loans?.loan_amount || 0))}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Commission</p>
+                    <p className="font-bold text-accent">{formatCurrency(Number(c.commission_amount))}</p>
+                    <p className="text-[10px] text-muted-foreground">{c.commission_rate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Broker</p>
+                    <p className="text-foreground truncate">{c.brokers?.name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Loan ID</p>
+                    <p className="text-foreground truncate mono text-xs">{c.loan_id}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="stat-card hidden lg:block">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground text-sm">Loading commissions…</div>
         ) : (
@@ -92,7 +138,7 @@ export default function Commission() {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">ID</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Broker</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan Amount</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
@@ -108,7 +154,7 @@ export default function Commission() {
                         <p className="font-medium text-foreground">{c.loans?.applicant_name || '—'}</p>
                         <p className="text-xs text-muted-foreground">{c.loan_id}</p>
                       </td>
-                      <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell">{c.brokers?.name || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground">{c.brokers?.name || '—'}</td>
                       <td className="py-3 px-3 font-medium text-foreground">{formatCurrency(Number(c.loans?.loan_amount || 0))}</td>
                       <td className="py-3 px-3">
                         <p className="font-bold text-accent">{formatCurrency(Number(c.commission_amount))}</p>
