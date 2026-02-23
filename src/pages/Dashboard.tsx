@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import MobileStatCarousel from '@/components/MobileStatCarousel';
+
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
@@ -121,14 +121,23 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats - Mobile Carousel */}
-      <div className="mb-6">
-        <MobileStatCarousel items={[
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+        {[
           { icon: <FileText size={16} />, label: 'Total Applications', value: String(totalLoans), sub: '+12% this month', subColor: 'text-emerald-500' },
           { icon: <IndianRupee size={16} />, label: 'Loan Volume', value: formatCurrency(totalVolume), sub: '+8.5% this month', subColor: 'text-emerald-500' },
           { icon: <CheckCircle2 size={16} />, label: 'Disbursed', value: formatCurrency(disbursedAmount), sub: `${disbursed.length} loans` },
           { icon: <Clock size={16} />, label: 'Under Review', value: String(pendingReview), sub: 'Needs attention', subColor: 'text-destructive' },
-        ]} />
+        ].map((item, i) => (
+          <div key={i} className="stat-card">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-accent">{item.icon}</span>
+              <span className="text-xs text-muted-foreground">{item.label}</span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{item.value}</p>
+            {item.sub && <p className={`text-xs mt-1 ${item.subColor || 'text-muted-foreground'}`}>{item.sub}</p>}
+          </div>
+        ))}
       </div>
 
       {/* Charts */}
