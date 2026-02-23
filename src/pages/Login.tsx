@@ -55,9 +55,11 @@ export default function Login() {
     } else {
       // Update biometric refresh token if biometrics are enabled
       if (hasBiometricCredential()) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.refresh_token) {
-          localStorage.setItem('biometric_session', session.refresh_token);
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s?.refresh_token) {
+          localStorage.setItem('biometric_session', s.refresh_token);
+          localStorage.setItem('biometric_email', email);
+          toast.success('Biometric re-enabled with new session!');
         }
       }
       navigate('/dashboard');
@@ -81,7 +83,8 @@ export default function Login() {
       });
 
       if (sessionError) {
-        setError('Session expired. Please login with email/password to re-enable biometrics.');
+        // Clear stale biometric data so user isn't stuck
+        setError('Session expired. Please login with email/password — biometrics will re-enable automatically.');
         setBiometricLoading(false);
         return;
       }
