@@ -30,7 +30,7 @@ const FEATURES = [
   {
     icon: <Shield size={28} />,
     title: 'Secure & Reliable',
-    description: 'Bank-grade security with biometric login, role-based access, and encrypted data.',
+    description: 'Bank-grade security with role-based access and encrypted data.',
     gradient: 'from-amber-500 to-orange-500',
     link: '/settings',
     cta: 'Settings',
