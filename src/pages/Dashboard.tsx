@@ -1,13 +1,14 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import StatCard from '@/components/StatCard';
+
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
+import FeatureCarousel from '@/components/FeatureCarousel';
 
 const STATUS_CHART_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#6b7280'];
 
@@ -36,8 +37,8 @@ export default function Dashboard() {
     queryKey: ['branch-info', user?.branch_id],
     queryFn: async () => {
       if (!user?.branch_id) return null;
-      const { data } = await supabase.from('branches').select('*').eq('id', user.branch_id).single();
-      return data;
+      const { data } = await supabase.from('branches' as any).select('*').eq('id', user.branch_id).single();
+      return data as any;
     },
     enabled: !!user?.branch_id,
   });
@@ -64,65 +65,26 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {user.full_name || user.email}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {user.role ? ROLE_LABELS[user.role] : 'User'} Dashboard • {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-      </div>
+      {/* Feature Carousel Banner */}
+      <FeatureCarousel />
 
-      {/* Branch Info Card */}
-      {branchInfo && (
-        <div className="stat-card mb-6 bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-accent/10">
-              <Building2 size={24} className="text-accent" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground mb-1">{branchInfo.name} Branch</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Branch Code</p>
-                  <p className="font-semibold text-foreground">{branchInfo.code}</p>
-                </div>
-                {branchInfo.city && (
-                  <div>
-                    <p className="text-muted-foreground">City</p>
-                    <p className="font-semibold text-foreground">{branchInfo.city}, {branchInfo.state}</p>
-                  </div>
-                )}
-                {branchInfo.manager_name && (
-                  <div>
-                    <p className="text-muted-foreground">Manager</p>
-                    <p className="font-semibold text-foreground">{branchInfo.manager_name}</p>
-                  </div>
-                )}
-                {branchInfo.phone && (
-                  <div>
-                    <p className="text-muted-foreground">Contact</p>
-                    <p className="font-semibold text-foreground">{branchInfo.phone}</p>
-                  </div>
-                )}
-              </div>
-              {branchInfo.address && (
-                <div className="mt-3 flex items-start gap-2">
-                  <MapPin size={14} className="text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-muted-foreground">{branchInfo.address}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        <StatCard label="Total Applications" value={String(totalLoans)} change="+12% this month" changeType="positive" icon={<FileText size={20} />} />
-        <StatCard label="Loan Volume" value={formatCurrency(totalVolume)} change="+8.5% this month" changeType="positive" icon={<IndianRupee size={20} />} />
-        <StatCard label="Disbursed" value={formatCurrency(disbursedAmount)} change={`${disbursed.length} loans`} changeType="neutral" icon={<CheckCircle2 size={20} />} />
-        <StatCard label="Under Review" value={String(pendingReview)} change="Needs attention" changeType="negative" icon={<Clock size={20} />} />
+        {[
+          { icon: <FileText size={16} />, label: 'Total Applications', value: String(totalLoans), sub: '+12% this month', subColor: 'text-emerald-500' },
+          { icon: <IndianRupee size={16} />, label: 'Loan Volume', value: formatCurrency(totalVolume), sub: '+8.5% this month', subColor: 'text-emerald-500' },
+          { icon: <CheckCircle2 size={16} />, label: 'Disbursed', value: formatCurrency(disbursedAmount), sub: `${disbursed.length} loans` },
+          { icon: <Clock size={16} />, label: 'Under Review', value: String(pendingReview), sub: 'Needs attention', subColor: 'text-destructive' },
+        ].map((item, i) => (
+          <div key={i} className="stat-card">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-accent">{item.icon}</span>
+              <span className="text-xs text-muted-foreground">{item.label}</span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{item.value}</p>
+            {item.sub && <p className={`text-xs mt-1 ${item.subColor || 'text-muted-foreground'}`}>{item.sub}</p>}
+          </div>
+        ))}
       </div>
 
       {/* Charts */}
@@ -167,8 +129,39 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Loans */}
-      <div className="stat-card">
+      {/* Recent Loans - Mobile Cards */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-foreground">Recent Applications</h3>
+          <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
+        </div>
+        {loans.length === 0 ? (
+          <div className="stat-card text-center py-8 text-muted-foreground text-sm">
+            No applications yet. <Link to="/loans/new" className="text-accent hover:underline">Create your first loan →</Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {loans.slice(0, 5).map((loan: any) => (
+              <Link key={loan.id} to={`/loans/${loan.id}`} className="stat-card block active:scale-[0.98] transition-transform">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
+                    <p className="text-xs text-muted-foreground">{loan.car_make} {loan.car_model}</p>
+                  </div>
+                  <LoanStatusBadge status={loan.status} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground mono">{loan.id}</p>
+                  <p className="font-bold text-foreground text-sm">{formatCurrency(Number(loan.loan_amount))}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Loans - Desktop Table */}
+      <div className="stat-card hidden lg:block">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-foreground">Recent Applications</h3>
           <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
@@ -179,17 +172,17 @@ export default function Dashboard() {
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">ID</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Applicant</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground hidden sm:table-cell">Car</th>
+                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Car</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Amount</th>
                 <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
               {loans.slice(0, 5).map((loan: any) => (
-                <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => {}}>
                   <td className="py-3 px-2 mono text-xs text-accent font-medium">{loan.id}</td>
                   <td className="py-3 px-2 font-medium text-foreground">{loan.applicant_name}</td>
-                  <td className="py-3 px-2 text-muted-foreground hidden sm:table-cell">{loan.car_make} {loan.car_model}</td>
+                  <td className="py-3 px-2 text-muted-foreground">{loan.car_make} {loan.car_model}</td>
                   <td className="py-3 px-2 font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
                   <td className="py-3 px-2"><LoanStatusBadge status={loan.status} /></td>
                 </tr>

@@ -20,8 +20,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches').select('*').eq('is_active', true).order('name');
-      return data ?? [];
+      const { data } = await supabase.from('branches' as any).select('*').eq('is_active', true).order('name');
+      return (data ?? []) as any[];
     },
   });
 
@@ -37,7 +37,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     setLoading(true);
     try {
       // Update profile with branch_id
-      await supabase.from('profiles').update({ branch_id: branchId || null }).eq('id', user.id);
+      await supabase.from('profiles').update({ branch_id: branchId || null } as any).eq('id', user.id);
       
       // Update or insert role
       const { data: existingRole } = await supabase.from('user_roles').select('*').eq('user_id', user.id).single();

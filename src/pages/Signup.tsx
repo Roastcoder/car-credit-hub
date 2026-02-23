@@ -20,8 +20,8 @@ export default function Signup() {
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-signup'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches').select('*').eq('is_active', true).order('name');
-      return data ?? [];
+      const { data } = await supabase.from('branches' as any).select('*').eq('is_active', true).order('name');
+      return (data ?? []) as any[];
     },
   });
 
@@ -34,57 +34,29 @@ export default function Signup() {
     setLoading(true);
     
     try {
-      // Sign up the user
-      const { error: signUpError, data: signUpData } = await signUp(email, password, fullName);
-      if (signUpError) {
-        toast.error(signUpError);
+      const result = await signUp(email, password, fullName);
+      const error = result.error;
+      if (error) {
+        toast.error(error);
         setLoading(false);
         return;
       }
       
-      // Wait for auth to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait a bit for auth to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Get the newly created user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        console.error('User fetch error:', userError);
-        toast.error('Account created but failed to set details. Please contact admin.');
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Setting branch for user:', user.id, 'Branch:', branchId);
-      
-      // Update profile with branch_id
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ branch_id: branchId })
-        .eq('id', user.id);
-      
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-      }
-      
-      // Assign employee role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: 'employee' });
-      
-      if (roleError) {
-        console.error('Role insert error:', roleError);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Update profile with branch_id
+        await supabase.from('profiles').update({ branch_id: branchId } as any).eq('id', user.id);
+        // Assign employee role by default
+        await supabase.from('user_roles').insert({ user_id: user.id, role: 'employee' });
       }
       
       setLoading(false);
-      toast.success('Account created successfully! Please login.');
-      
-      // Sign out the user so they can login properly
-      await supabase.auth.signOut();
-      
+      toast.success('Account created! Please login.');
       navigate('/login');
     } catch (err: any) {
-      console.error('Signup error:', err);
       setLoading(false);
       toast.error(err.message || 'Failed to create account');
     }

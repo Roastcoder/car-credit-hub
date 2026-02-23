@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
+import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 
 export default function Login() {
@@ -13,11 +15,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
-  React.useEffect(() => {
-    // Check if app is running in standalone mode (installed)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      (window.navigator as any).standalone || 
-                      document.referrer.includes('android-app://');
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone ||
+      document.referrer.includes('android-app://');
     setIsStandalone(standalone);
   }, []);
 
@@ -27,7 +28,8 @@ export default function Login() {
     if (!password) { setError('Please enter your password'); return; }
     setLoading(true);
     setError('');
-    const { error: err } = await login(email, password);
+    
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (err) {
       setError('Invalid email or password. Use the demo accounts below.');

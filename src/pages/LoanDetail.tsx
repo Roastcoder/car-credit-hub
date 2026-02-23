@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, Upload, FileText, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download } from 'lucide-react';
+import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
 const DOC_TYPES = [
@@ -22,7 +23,7 @@ export default function LoanDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  
 
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loan', id],
@@ -68,64 +69,19 @@ export default function LoanDetail() {
     onError: () => toast.error('Failed to update status'),
   });
 
-  const handleFileUpload = async (docType: string, file: File) => {
-    if (!user || !id) return;
-    setUploadingDoc(docType);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/${id}/${docType}-${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('loan-documents')
-        .upload(path, file);
-      if (uploadError) throw uploadError;
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
 
-      const { error: dbError } = await supabase.from('loan_documents').insert([{
-        loan_id: id,
-        document_type: docType as any,
-        file_name: file.name,
-        storage_path: path,
-        file_size: file.size,
-        uploaded_by: user.id,
-      }] as any);
-      if (dbError) throw dbError;
-
-      refetchDocs();
-      toast.success(`${file.name} uploaded successfully`);
-    } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
-    } finally {
-      setUploadingDoc(null);
+  const previewDocument = async (doc: any) => {
+    setLoadingPreview(doc.id);
+    const { data, error } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 300);
+    setLoadingPreview(null);
+    if (data?.signedUrl) {
+      setPreviewDoc({ url: data.signedUrl, name: doc.file_name });
+    } else {
+      toast.error('Document not found in storage');
     }
-  };
-
-  const deleteDocument = useMutation({
-    mutationFn: async (doc: any) => {
-      await supabase.storage.from('loan-documents').remove([doc.storage_path]);
-      const { error } = await supabase.from('loan_documents').delete().eq('id', doc.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      refetchDocs();
-      toast.success('Document deleted');
-    },
-  });
-
-  const deleteLoan = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('loans').delete().eq('id', id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('Loan application deleted');
-      navigate('/loans');
-    },
-    onError: () => toast.error('Failed to delete loan'),
-  });
-
-  const downloadDocument = async (doc: any) => {
-    const { data } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
   };
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">Loading…</div>;
@@ -168,11 +124,43 @@ export default function LoanDetail() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground">{loan.id}</h1>
-            <LoanStatusBadge status={loan.status} />
+            <LoanStatusBadge status={loan.status as any} />
           </div>
           <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => exportLoanPDF(loan)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+          >
+            <Printer size={16} className="text-accent" />
+            Export PDF
+          </button>
+          <button
+            onClick={() => downloadLoanPDF(loan)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+          >
+            <Download size={16} className="text-accent" />
+            Download
+          </button>
+          <button
+            onClick={() => shareLoanPDF(loan)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-green-500/10 hover:border-green-500 transition-colors"
+          >
+            <MessageCircle size={16} className="text-green-500" />
+            WhatsApp
+          </button>
+          <button
+            onClick={() => {
+              const subject = `Loan Application - ${loan.id} | ${loan.applicant_name}`;
+              const body = `Mehar Finance - Loan Application Details\n\nApplication ID: ${loan.id}\nApplicant: ${loan.applicant_name}\nMobile: ${loan.mobile}\nVehicle: ${(loan as any).maker_name || loan.car_make || ''} ${(loan as any).model_variant_name || loan.car_model || ''}\nLoan Amount: ${formatCurrency(Number(loan.loan_amount))}\nStatus: ${loan.status}\nEMI: ${formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))}\nTenure: ${loan.tenure} months\n\nGenerated by Mehar Finance`;
+              window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_self');
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-blue-500/10 hover:border-blue-500 transition-colors"
+          >
+            <Mail size={16} className="text-blue-500" />
+            Email
+          </button>
           {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
             <select
               value={loan.status}
@@ -182,19 +170,6 @@ export default function LoanDetail() {
             >
               {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-          )}
-          {(user?.role === 'admin' || user?.role === 'super_admin') && (
-            <button
-              onClick={() => {
-                if (confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
-                  deleteLoan.mutate();
-                }
-              }}
-              disabled={deleteLoan.isPending}
-              className="px-3 py-2 rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors text-sm font-medium disabled:opacity-50"
-            >
-              <Trash2 size={16} />
-            </button>
           )}
         </div>
       </div>
@@ -324,53 +299,35 @@ export default function LoanDetail() {
         </Section>
       </div>
 
-      {/* Document Upload Section */}
+      {/* Documents Section (Read-only) */}
       <div className="stat-card">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-accent"><FileText size={18} /></span>
           <h3 className="font-semibold text-foreground">Loan Documents</h3>
+          <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{(documents as any[]).length} files</span>
         </div>
 
-        {/* Upload buttons by doc type */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-          {DOC_TYPES.map(dt => {
-            const existingDocs = (documents as any[]).filter((d: any) => d.document_type === dt.value);
-            return (
-              <div key={dt.value} className="relative">
-                <label className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${uploadingDoc === dt.value ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50 hover:bg-muted/30'}`}>
-                  <Upload size={16} className="text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground text-center">{dt.label}</span>
-                  {existingDocs.length > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
-                      {existingDocs.length}
-                    </span>
-                  )}
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    disabled={!!uploadingDoc}
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(dt.value, file);
-                      e.target.value = '';
-                    }}
-                  />
-                </label>
-                {uploadingDoc === dt.value && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-xl">
-                    <span className="text-xs text-accent font-medium">Uploading…</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {/* Inline Preview */}
+        {previewDoc && (
+          <div className="mb-4 rounded-xl border border-border overflow-hidden bg-background">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/60 border-b border-border">
+              <p className="text-sm font-medium text-foreground truncate">{previewDoc.name}</p>
+              <button onClick={() => setPreviewDoc(null)} className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-foreground transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <iframe
+              src={previewDoc.url}
+              className="w-full border-0"
+              style={{ height: '60vh', minHeight: '300px' }}
+              title={previewDoc.name}
+            />
+          </div>
+        )}
 
-        {/* Uploaded documents list */}
+        {/* Document list */}
         {(documents as any[]).length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Uploaded Documents</p>
+          <div className="grid gap-2">
             {(documents as any[]).map((doc: any) => (
               <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
                 <FileText size={16} className="text-accent shrink-0" />
@@ -382,20 +339,20 @@ export default function LoanDetail() {
                     {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => downloadDocument(doc)} className="p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Download">
-                    <Download size={14} />
-                  </button>
-                  <button onClick={() => deleteDocument.mutate(doc)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Delete">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => previewDocument(doc)}
+                  disabled={loadingPreview === doc.id}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-medium disabled:opacity-50"
+                  title="Preview"
+                >
+                  <Eye size={14} /> {loadingPreview === doc.id ? 'Loading…' : 'View'}
+                </button>
               </div>
             ))}
           </div>
         )}
         {(documents as any[]).length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">No documents uploaded yet. Click above to upload.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">No documents available.</p>
         )}
       </div>
     </div>

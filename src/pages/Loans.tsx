@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { exportToCSV, parseCSV } from '@/lib/export-utils';
+import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { Search, Plus, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle } from 'lucide-react';
 
-type LoanStatusFilter = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
+type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 
 export default function Loans() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
+  const importRef = useRef<HTMLInputElement>(null);
 
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.branch_id],
@@ -51,6 +54,48 @@ export default function Loans() {
 
   const canEditStatus = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager';
 
+  const handleExport = () => {
+    if (filtered.length === 0) { toast.error('No data to export'); return; }
+    const rows = filtered.map((l: any) => ({
+      'Loan ID': l.id, 'Applicant': l.applicant_name, 'Mobile': l.mobile,
+      'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
+      'Bank': l.banks?.name || '', 'Branch': l.branches?.name || '',
+      'Loan Amount': l.loan_amount, 'EMI': l.emi, 'Status': l.status,
+    }));
+    exportToCSV(rows, 'loans');
+    toast.success('Loans exported as CSV!');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (rows.length === 0) { toast.error('No valid data found in CSV'); return; }
+      let imported = 0;
+      for (const row of rows) {
+        const id = row['Loan ID'] || `IMP-${Date.now()}-${imported}`;
+        const { error } = await supabase.from('loans').insert({
+          id,
+          applicant_name: row['Applicant'] || row['applicant_name'] || 'Unknown',
+          mobile: row['Mobile'] || row['mobile'] || '0000000000',
+          loan_amount: Number(row['Loan Amount'] || row['loan_amount'] || 0),
+          car_make: row['Car Make'] || row['car_make'] || '',
+          car_model: row['Car Model'] || row['car_model'] || '',
+          status: 'draft' as any,
+          created_by: user.id,
+        } as any);
+        if (!error) imported++;
+      }
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      toast.success(`${imported} loans imported successfully!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Import failed');
+    }
+    e.target.value = '';
+  };
+
   const filtered = loans.filter((l: any) => {
     const matchSearch = !search ||
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,9 +112,18 @@ export default function Loans() {
           <h1 className="text-2xl font-bold text-foreground">Loan Applications</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
-        <Link to="/loans/new" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
-          <Plus size={16} /> New Application
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={handleExport} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+            <Download size={16} /> Export
+          </button>
+          <button onClick={() => importRef.current?.click()} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+            <Upload size={16} /> Import CSV
+          </button>
+          <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+          <Link to="/loans/new" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+            <Plus size={16} /> New Application
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -99,8 +153,81 @@ export default function Loans() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="stat-card overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {isLoading ? (
+          <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground">No applications found</div>
+        ) : (
+          filtered.map((loan: any) => (
+            <div
+              key={loan.id}
+              onClick={() => navigate(`/loans/${loan.id}`)}
+              className="stat-card active:scale-[0.98] transition-transform cursor-pointer"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
+                  <p className="text-xs text-muted-foreground mono">{loan.loan_number || loan.id}</p>
+                </div>
+                <LoanStatusBadge status={loan.status} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Amount</p>
+                  <p className="font-bold text-foreground">{formatCurrency(Number(loan.loan_amount))}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">EMI</p>
+                  <p className="font-medium text-foreground">{formatCurrency(Number(loan.emi))}/mo</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vehicle</p>
+                  <p className="text-foreground truncate">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Bank</p>
+                  <p className="text-foreground truncate">{loan.banks?.name || '—'}</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-border flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => exportLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
+                >
+                  <Printer size={13} className="text-accent" /> PDF
+                </button>
+                <button
+                  onClick={() => downloadLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
+                >
+                  <Download size={13} className="text-accent" /> Save
+                </button>
+                <button
+                  onClick={() => shareLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-green-500/10 transition-colors"
+                >
+                  <MessageCircle size={13} className="text-green-500" /> Share
+                </button>
+                {canEditStatus && (
+                  <select
+                    value={loan.status}
+                    onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                    disabled={updateStatus.isPending}
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                  >
+                    {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="stat-card overflow-hidden hidden lg:block">
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
         ) : (
@@ -110,10 +237,10 @@ export default function Loans() {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan ID</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Vehicle</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden lg:table-cell">Bank</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
                   <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">EMI</th>
+                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                   {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Update</th>}
                   <th className="py-3 px-3"></th>
@@ -121,20 +248,20 @@ export default function Loans() {
               </thead>
               <tbody>
                 {filtered.map((loan: any) => (
-                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
-                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{loan.loan_number || loan.id}</td>
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
+                    <td className="py-3.5 px-3">
                       <p className="font-medium text-foreground">{loan.applicant_name}</p>
                       <p className="text-xs text-muted-foreground">{loan.mobile}</p>
                     </td>
-                    <td className="py-3.5 px-3 hidden md:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3">
                       <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
                       <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
                     </td>
-                    <td className="py-3.5 px-3 text-muted-foreground hidden lg:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{loan.banks?.name || '—'}</td>
-                    <td className="py-3.5 px-3 text-right font-medium text-foreground cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{formatCurrency(Number(loan.loan_amount))}</td>
-                    <td className="py-3.5 px-3 text-right text-muted-foreground hidden sm:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{formatCurrency(Number(loan.emi))}/mo</td>
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}><LoanStatusBadge status={loan.status} /></td>
+                    <td className="py-3.5 px-3 text-muted-foreground">{loan.banks?.name || '—'}</td>
+                    <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
+                    <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
+                    <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                     {canEditStatus && (
                       <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                         <select
@@ -147,7 +274,7 @@ export default function Loans() {
                         </select>
                       </td>
                     )}
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3">
                       <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent transition-colors" />
                     </td>
                   </tr>

@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
+import NotificationBell from './NotificationBell';
+
 
 interface NavItem {
   label: string;
@@ -144,13 +146,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Menu size={22} />
           </button>
           
-          <div className="flex-1" />
+          {/* Page title / User greeting */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate lg:text-base">
+              Hi, {user.full_name?.split(' ')[0] || user.email}
+            </p>
+            <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
+              {user.role ? ROLE_LABELS[user.role] : 'User'}
+            </p>
+          </div>
           
-          {/* Notification - Center on mobile */}
-          <button className="relative p-2 rounded-lg hover:bg-muted transition-colors">
-            <Bell size={20} className="text-muted-foreground" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
-          </button>
+          
+          {/* Notification Bell */}
+          <NotificationBell />
           
           {/* Mobile: Profile Dropdown */}
           <div className="lg:hidden relative">
