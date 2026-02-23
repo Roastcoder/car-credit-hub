@@ -29,11 +29,16 @@ export default function Login() {
       document.referrer.includes('android-app://');
     setIsStandalone(standalone);
 
-    // Check biometric availability
+    // Check biometric availability and auto-trigger if available
     (async () => {
       const available = await isBiometricAvailable();
       const hasCredential = hasBiometricCredential();
       setBiometricAvailable(available && hasCredential);
+      
+      // Auto-trigger fingerprint login if credential exists
+      if (available && hasCredential) {
+        handleBiometricLogin();
+      }
     })();
   }, []);
 
