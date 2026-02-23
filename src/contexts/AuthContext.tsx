@@ -107,9 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    // Use local scope so biometric refresh token stays valid on server
-    const hasBiometric = !!localStorage.getItem('biometric_credential_id');
-    await supabase.auth.signOut({ scope: hasBiometric ? 'local' : 'global' });
+    await supabase.auth.signOut({ scope: 'global' });
     setUser(null);
     setSession(null);
   };

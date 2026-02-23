@@ -9,7 +9,7 @@ import {
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
-import BiometricSetup from './BiometricSetup';
+
 
 interface NavItem {
   label: string;
@@ -155,8 +155,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </p>
           </div>
           
-          {/* Biometric Setup */}
-          <BiometricSetup />
           
           {/* Notification Bell */}
           <NotificationBell />

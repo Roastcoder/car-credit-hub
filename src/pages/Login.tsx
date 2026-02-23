@@ -2,15 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download, Fingerprint } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
-import {
-  isBiometricAvailable,
-  hasBiometricCredential,
-  authenticateBiometric,
-  getBiometricEmail,
-} from '@/lib/biometric-auth';
 
 export default function Login() {
   const { login } = useAuth();
@@ -20,26 +14,12 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricLoading, setBiometricLoading] = useState(false);
 
   useEffect(() => {
     const standalone = window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone ||
       document.referrer.includes('android-app://');
     setIsStandalone(standalone);
-
-    // Check biometric availability and auto-trigger if available
-    (async () => {
-      const available = await isBiometricAvailable();
-      const hasCredential = hasBiometricCredential();
-      setBiometricAvailable(available && hasCredential);
-      
-      // Auto-trigger fingerprint login if credential exists
-      if (available && hasCredential) {
-        handleBiometricLogin();
-      }
-    })();
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -49,59 +29,14 @@ export default function Login() {
     setLoading(true);
     setError('');
     
-    // Sign in directly to get the session with refresh token
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (err) {
       setError('Invalid email or password. Use the demo accounts below.');
     } else {
-      // Always update biometric refresh token if credential is registered
-      const credId = localStorage.getItem('biometric_credential_id');
-      if (credId && data.session?.refresh_token) {
-        localStorage.setItem('biometric_session', data.session.refresh_token);
-        localStorage.setItem('biometric_email', email);
-      }
       navigate('/dashboard');
     }
   };
-
-  const handleBiometricLogin = async () => {
-    setBiometricLoading(true);
-    setError('');
-    try {
-      const result = await authenticateBiometric();
-      if (!result) {
-        setError('Biometric authentication failed. Please login with email/password.');
-        setBiometricLoading(false);
-        return;
-      }
-
-      // Use the stored refresh token to restore the session
-      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession({
-        refresh_token: result.refreshToken,
-      });
-
-      if (sessionError) {
-        setError('Session expired. Please login with email/password — biometrics will re-enable automatically.');
-        setBiometricLoading(false);
-        return;
-      }
-
-      // Update stored refresh token with the new one for next time
-      if (sessionData.session?.refresh_token) {
-        localStorage.setItem('biometric_session', sessionData.session.refresh_token);
-      }
-
-      toast.success('Logged in with fingerprint!');
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Biometric login failed. Please use email/password.');
-    } finally {
-      setBiometricLoading(false);
-    }
-  };
-
-  const biometricEmail = getBiometricEmail();
 
   return (
     <div className="min-h-screen bg-primary flex">
@@ -217,32 +152,6 @@ export default function Login() {
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
-
-          {/* Biometric Login Button */}
-          {biometricAvailable && (
-            <>
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">or</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-              <button
-                onClick={handleBiometricLogin}
-                disabled={biometricLoading}
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold py-3.5 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-60 shadow-lg"
-              >
-                <Fingerprint size={22} />
-                <div className="text-left">
-                  <span className="block text-sm">
-                    {biometricLoading ? 'Authenticating...' : 'Login with Fingerprint'}
-                  </span>
-                  {biometricEmail && (
-                    <span className="block text-[10px] opacity-70">{biometricEmail}</span>
-                  )}
-                </div>
-              </button>
-            </>
-          )}
 
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
