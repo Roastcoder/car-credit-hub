@@ -1,5 +1,5 @@
 import { formatCurrency } from '@/lib/mock-data';
-import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
 
 interface LoanData {
   [key: string]: any;
@@ -153,53 +153,140 @@ export function exportLoanPDF(loan: LoanData) {
   setTimeout(() => win.print(), 500);
 }
 
-async function generatePDFBlob(loan: LoanData): Promise<Blob> {
-  const html = buildLoanHTML(loan);
-  
-  // Use an iframe to properly render the full HTML document
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.left = '-9999px';
-  iframe.style.width = '794px';
-  iframe.style.height = '1123px';
-  iframe.style.border = 'none';
-  document.body.appendChild(iframe);
+function generatePDFBlob(loan: LoanData): Blob {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const pw = 190; // printable width (A4 210 - 10*2 margins)
+  const lm = 10; // left margin
+  let y = 12;
 
-  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!iframeDoc) {
-    document.body.removeChild(iframe);
-    throw new Error('Could not create iframe document');
+  const colors = { primary: [26, 58, 107] as [number, number, number], dark: [26, 26, 46] as [number, number, number], gray: [136, 136, 136] as [number, number, number], light: [232, 236, 241] as [number, number, number], white: [255, 255, 255] as [number, number, number] };
+
+  // Header
+  doc.setFontSize(18); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.primary);
+  doc.text('Mehar Finance', lm, y);
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(...colors.gray);
+  doc.text('Vehicle Loan Solutions • Since 2015', lm, y + 5);
+
+  doc.setFontSize(7); doc.setTextColor(...colors.gray);
+  doc.text('Application ID', lm + pw, y - 4, { align: 'right' });
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.primary);
+  doc.text(String(loan.id || ''), lm + pw, y + 1, { align: 'right' });
+  doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(...colors.gray);
+  doc.text('Date', lm + pw, y + 5, { align: 'right' });
+  doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.primary);
+  doc.text(new Date().toLocaleDateString('en-IN'), lm + pw, y + 10, { align: 'right' });
+
+  y += 14;
+  doc.setDrawColor(...colors.primary); doc.setLineWidth(0.5); doc.line(lm, y, lm + pw, y);
+  y += 6;
+
+  // Title bar
+  doc.setFillColor(...colors.primary); doc.rect(lm, y, pw, 8, 'F');
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.white);
+  doc.text('Loan Application Details', lm + 4, y + 5.5);
+  doc.setFontSize(8); doc.text(fmt(loan.status).toUpperCase(), lm + pw - 4, y + 5.5, { align: 'right' });
+  y += 12;
+
+  // Helper to draw a 4-column section
+  function drawSection(title: string, fields: [string, string][]) {
+    // Check page break
+    const rowCount = Math.ceil(fields.length / 4);
+    const needed = 8 + rowCount * 7;
+    if (y + needed > 280) { doc.addPage(); y = 12; }
+
+    // Section title
+    doc.setFillColor(240, 244, 248); doc.rect(lm, y, pw, 6, 'F');
+    doc.setDrawColor(...colors.primary); doc.setLineWidth(0.4); doc.line(lm, y + 6, lm + pw, y + 6);
+    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.primary);
+    doc.text(title, lm + 2, y + 4.2);
+    y += 7;
+
+    const colW = pw / 4;
+    for (let i = 0; i < fields.length; i += 4) {
+      const rowFields = fields.slice(i, i + 4);
+      // Draw cells
+      for (let j = 0; j < 4; j++) {
+        const x = lm + j * colW;
+        doc.setDrawColor(...colors.light); doc.setLineWidth(0.2);
+        doc.rect(x, y, colW, 7);
+
+        if (rowFields[j]) {
+          doc.setFontSize(5.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...colors.gray);
+          doc.text(rowFields[j][0], x + 1.5, y + 2.5);
+          doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.dark);
+          doc.text(rowFields[j][1], x + 1.5, y + 5.8, { maxWidth: colW - 3 });
+        }
+      }
+      y += 7;
+    }
+    y += 2;
   }
 
-  iframeDoc.open();
-  iframeDoc.write(html);
-  iframeDoc.close();
+  drawSection('APPLICANT INFORMATION', [
+    ['Customer ID', fmt(loan.customer_id)], ['Loan Number', fmt(loan.loan_number)], ['Applicant Name', fmt(loan.applicant_name)], ['Mobile', fmt(loan.mobile)],
+    ['Co-Applicant', fmt(loan.co_applicant_name)], ['Co-App Mobile', fmt(loan.co_applicant_mobile)], ['Guarantor', fmt(loan.guarantor_name)], ['Guarantor Mobile', fmt(loan.guarantor_mobile)],
+    ['Address', fmt(loan.current_address || loan.address)], ['Village', fmt(loan.current_village)], ['District', fmt(loan.current_district)], ['', ''],
+  ]);
 
-  // Wait for content to render
-  await new Promise(r => setTimeout(r, 1000));
+  drawSection('VEHICLE DETAILS', [
+    ['Reg. No', fmt(loan.vehicle_number)], ['Maker', fmt(loan.maker_name || loan.car_make)], ['Model/Variant', fmt(loan.model_variant_name || loan.car_model)], ['Mfg Year', fmt(loan.mfg_year)],
+    ['Vertical', fmt(loan.vertical)], ['Scheme', fmt(loan.scheme)], ['Valuation', fmtCur(loan.valuation)], ['On Road Price', fmtCur(loan.on_road_price)],
+  ]);
 
-  const body = iframeDoc.body;
+  drawSection('LOAN & EMI DETAILS', [
+    ['Loan Amount', fmtCur(loan.loan_amount)], ['Grid', fmtCur(loan.grid)], ['LTV', loan.ltv ? loan.ltv + '%' : '—'], ['IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—')],
+    ['Tenure', loan.tenure ? loan.tenure + ' months' : '—'], ['EMI Mode', fmt(loan.emi_mode || 'Monthly')], ['Monthly EMI', fmtCur(loan.emi_amount || loan.emi)], ['Total EMI', fmt(loan.total_emi || loan.tenure)],
+    ['Total Interest', fmtCur(loan.total_interest)], ['First EMI Date', formatDate(loan.first_installment_due_date)], ['Down Payment', fmtCur(loan.down_payment)], ['Advance EMI', fmt(loan.advance_emi)],
+  ]);
 
-  const blob: Blob = await html2pdf()
-    .set({
-      margin: [10, 10, 10, 10],
-      filename: `Loan-${loan.id}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    })
-    .from(body)
-    .outputPdf('blob');
+  drawSection('FINANCIER & INSURANCE', [
+    ['Assigned Bank', fmt(loan.banks?.name)], ['Financier Exec.', fmt(loan.financier_executive_name)], ['Branch', fmt(loan.disburse_branch_name)], ['Branch Manager', fmt(loan.branch_manager_name)],
+    ['Insurance Co.', fmt(loan.insurance_company_name)], ['IDV', fmtCur(loan.idv)], ['Premium', fmtCur(loan.premium_amount)], ['Insurance Type', fmt(loan.insurance_type)],
+  ]);
 
-  document.body.removeChild(iframe);
-  return blob;
+  drawSection('DEDUCTIONS & DISBURSEMENT', [
+    ['File Charge', fmtCur(loan.file_charge)], ['Loan Suraksha', fmtCur(loan.loan_suraksha)], ['Stamping', fmtCur(loan.stamping)], ['Processing Fee', fmtCur(loan.processing_fee)],
+    ['Total Deduction', fmtCur(loan.total_deduction)], ['Net Disbursement', fmtCur(loan.net_disbursement_amount)], ['Payment Recd.', formatDate(loan.payment_received_date)], ['Disburse Date', formatDate(loan.financier_disburse_date)],
+  ]);
+
+  drawSection('IMPORTANT DATES', [
+    ['Login Date', formatDate(loan.login_date)], ['Approval Date', formatDate(loan.approval_date)], ['Disburse Date', formatDate(loan.financier_disburse_date)], ['TAT', loan.tat ? loan.tat + ' days' : '—'],
+    ['Agreement Date', formatDate(loan.agreement_date)], ['File Stage', fmt(loan.file_stage)], ['Created', formatDate(loan.created_at)], ['Last Updated', formatDate(loan.updated_at)],
+  ]);
+
+  drawSection('RTO DETAILS', [
+    ['RC Owner', fmt(loan.rc_owner_name)], ['RC Mfg Date', fmt(loan.rc_mfg_date)], ['HPN at Login', fmt(loan.hpn_at_login)], ['New Financier', fmt(loan.new_financier)],
+    ['RTO Agent', fmt(loan.rto_agent_name)], ['Agent Mobile', fmt(loan.agent_mobile_no)], ['DTO Location', fmt(loan.dto_location)], ['Challan', fmt(loan.challan)],
+  ]);
+
+  // Signature area
+  if (y + 25 > 280) { doc.addPage(); y = 12; }
+  y += 8;
+  const sigW = pw / 3;
+  const sigLabels = ['Applicant Signature', 'Co-Applicant Signature', 'Authorized Signatory'];
+  sigLabels.forEach((label, i) => {
+    const x = lm + i * sigW + sigW / 2;
+    doc.setDrawColor(51, 51, 51); doc.setLineWidth(0.3);
+    doc.line(lm + i * sigW + 5, y + 15, lm + (i + 1) * sigW - 5, y + 15);
+    doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(85, 85, 85);
+    doc.text(label, x, y + 19, { align: 'center' });
+  });
+  y += 24;
+
+  // Footer
+  doc.setDrawColor(...colors.light); doc.setLineWidth(0.3); doc.line(lm, y, lm + pw, y);
+  doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(...colors.gray);
+  doc.text(`Generated on ${new Date().toLocaleString('en-IN')} • Mehar Finance`, lm, y + 4);
+  doc.text('This is a system-generated document', lm + pw, y + 4, { align: 'right' });
+
+  return doc.output('blob');
 }
 
 export async function shareLoanPDF(loan: LoanData) {
   const text = `*Mehar Finance - Loan Application*\n\n*ID:* ${loan.id}\n*Applicant:* ${loan.applicant_name}\n*Mobile:* ${loan.mobile}\n*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}\n*Loan Amount:* ${fmtCur(loan.loan_amount)}\n*Status:* ${loan.status}\n*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}\n*Tenure:* ${loan.tenure} months`;
 
   try {
-    const pdfBlob = await generatePDFBlob(loan);
+    const pdfBlob = generatePDFBlob(loan);
     const pdfFile = new File([pdfBlob], `Loan-${loan.id}.pdf`, { type: 'application/pdf' });
 
     if (navigator.share && navigator.canShare) {
@@ -213,13 +300,12 @@ export async function shareLoanPDF(loan: LoanData) {
     // User cancelled or not supported
   }
 
-  // Fallback: WhatsApp text share
   const waText = `*Mehar Finance - Loan Application*%0A%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}%0A*Loan Amount:* ${fmtCur(loan.loan_amount)}%0A*Status:* ${loan.status}%0A*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}%0A*Tenure:* ${loan.tenure} months`;
   window.open(`https://wa.me/?text=${waText}`, '_blank');
 }
 
-export async function downloadLoanPDF(loan: LoanData) {
-  const pdfBlob = await generatePDFBlob(loan);
+export function downloadLoanPDF(loan: LoanData) {
+  const pdfBlob = generatePDFBlob(loan);
   const url = URL.createObjectURL(pdfBlob);
   const a = document.createElement('a');
   a.href = url;
