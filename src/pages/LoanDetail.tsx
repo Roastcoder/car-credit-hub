@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail } from 'lucide-react';
-import { exportLoanPDF, shareLoanPDF } from '@/lib/pdf-export';
+import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download } from 'lucide-react';
+import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
 const DOC_TYPES = [
@@ -135,6 +135,13 @@ export default function LoanDetail() {
           >
             <Printer size={16} className="text-accent" />
             Export PDF
+          </button>
+          <button
+            onClick={() => downloadLoanPDF(loan)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+          >
+            <Download size={16} className="text-accent" />
+            Download
           </button>
           <button
             onClick={() => shareLoanPDF(loan)}
