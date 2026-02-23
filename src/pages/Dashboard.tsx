@@ -36,8 +36,8 @@ export default function Dashboard() {
     queryKey: ['branch-info', user?.branch_id],
     queryFn: async () => {
       if (!user?.branch_id) return null;
-      const { data } = await supabase.from('branches').select('*').eq('id', user.branch_id).single();
-      return data;
+      const { data } = await supabase.from('branches' as any).select('*').eq('id', user.branch_id).single();
+      return data as any;
     },
     enabled: !!user?.branch_id,
   });

@@ -24,18 +24,18 @@ export default function BranchManagement() {
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches').select('*').order('name');
-      return data ?? [];
+      const { data } = await supabase.from('branches' as any).select('*').order('name');
+      return (data ?? []) as any[];
     },
   });
 
   const saveBranch = useMutation({
     mutationFn: async (data: any) => {
       if (editingBranch) {
-        const { error } = await supabase.from('branches').update(data).eq('id', editingBranch.id);
+        const { error } = await supabase.from('branches' as any).update(data).eq('id', editingBranch.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('branches').insert([data]);
+        const { error } = await supabase.from('branches' as any).insert([data]);
         if (error) throw error;
       }
     },
@@ -50,7 +50,7 @@ export default function BranchManagement() {
 
   const deleteBranch = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('branches').delete().eq('id', id);
+      const { error } = await supabase.from('branches' as any).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

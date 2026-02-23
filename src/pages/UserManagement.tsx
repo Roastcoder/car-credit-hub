@@ -40,7 +40,7 @@ export default function UserManagement() {
         .select('*');
 
       const { data: branchesData } = await supabase
-        .from('branches')
+        .from('branches' as any)
         .select('id, name');
 
       console.log('Profiles:', profilesData?.length, 'Roles:', rolesData?.length);
@@ -48,7 +48,7 @@ export default function UserManagement() {
       return (profilesData ?? []).map((p: any) => ({
         ...p,
         role: rolesData?.find((r: any) => r.user_id === p.id)?.role ?? null,
-        branch_name: branchesData?.find((b: any) => b.id === p.branch_id)?.name ?? null,
+        branch_name: (branchesData as any[])?.find((b: any) => b.id === p.branch_id)?.name ?? null,
       }));
     },
     enabled: !!user,

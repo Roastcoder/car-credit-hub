@@ -20,8 +20,8 @@ export default function Signup() {
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-signup'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches').select('*').eq('is_active', true).order('name');
-      return data ?? [];
+      const { data } = await supabase.from('branches' as any).select('*').eq('is_active', true).order('name');
+      return (data ?? []) as any[];
     },
   });
 
@@ -34,7 +34,8 @@ export default function Signup() {
     setLoading(true);
     
     try {
-      const { error, data } = await signUp(email, password, fullName);
+      const result = await signUp(email, password, fullName);
+      const error = result.error;
       if (error) {
         toast.error(error);
         setLoading(false);
@@ -47,7 +48,7 @@ export default function Signup() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // Update profile with branch_id
-        await supabase.from('profiles').update({ branch_id: branchId }).eq('id', user.id);
+        await supabase.from('profiles').update({ branch_id: branchId } as any).eq('id', user.id);
         // Assign employee role by default
         await supabase.from('user_roles').insert({ user_id: user.id, role: 'employee' });
       }

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { Search, Plus, ChevronRight } from 'lucide-react';
 
-type LoanStatusFilter = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
+type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 
 export default function Loans() {
   const navigate = useNavigate();

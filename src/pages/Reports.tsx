@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 const CHART_COLORS = ['#2dd4bf', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#6b7280', '#ec4899'];
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft', submitted: 'Submitted', under_review: 'Under Review',
+  submitted: 'Submitted', under_review: 'Under Review',
   approved: 'Approved', rejected: 'Rejected', disbursed: 'Disbursed', cancelled: 'Cancelled'
 };
 
