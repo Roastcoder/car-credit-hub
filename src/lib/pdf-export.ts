@@ -221,25 +221,43 @@ export function exportLoanPDF(loan: LoanData) {
 
 async function generatePDFBlob(loan: LoanData): Promise<Blob> {
   const html = buildLoanHTML(loan);
-  const container = document.createElement('div');
-  container.innerHTML = html;
-  container.style.position = 'fixed';
-  container.style.left = '-9999px';
-  container.style.width = '794px';
-  document.body.appendChild(container);
+  
+  // Use an iframe to properly render the full HTML document
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.left = '-9999px';
+  iframe.style.width = '794px';
+  iframe.style.height = '1123px';
+  iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!iframeDoc) {
+    document.body.removeChild(iframe);
+    throw new Error('Could not create iframe document');
+  }
+
+  iframeDoc.open();
+  iframeDoc.write(html);
+  iframeDoc.close();
+
+  // Wait for content to render
+  await new Promise(r => setTimeout(r, 1000));
+
+  const body = iframeDoc.body;
 
   const blob: Blob = await html2pdf()
     .set({
       margin: [10, 10, 10, 10],
       filename: `Loan-${loan.id}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     })
-    .from(container)
+    .from(body)
     .outputPdf('blob');
 
-  document.body.removeChild(container);
+  document.body.removeChild(iframe);
   return blob;
 }
 
