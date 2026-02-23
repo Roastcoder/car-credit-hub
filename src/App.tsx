@@ -18,6 +18,8 @@ import BrokerManagement from "@/pages/BrokerManagement";
 import BranchManagement from "@/pages/BranchManagement";
 import Commission from "@/pages/Commission";
 import Reports from "@/pages/Reports";
+import AddLead from "@/pages/AddLead";
+import LeadsList from "@/pages/LeadsList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +49,8 @@ function AppRoutes() {
       <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
       <Route path="/loans/new" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
+      <Route path="/add-lead" element={<ProtectedRoute><AddLead /></ProtectedRoute>} />
+      <Route path="/leads-list" element={<ProtectedRoute><LeadsList /></ProtectedRoute>} />
       <Route path="/pdd" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />

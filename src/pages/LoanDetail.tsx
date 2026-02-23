@@ -111,6 +111,18 @@ export default function LoanDetail() {
     },
   });
 
+  const deleteLoan = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('loans').delete().eq('id', id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Loan application deleted');
+      navigate('/loans');
+    },
+    onError: () => toast.error('Failed to delete loan'),
+  });
+
   const downloadDocument = async (doc: any) => {
     const { data } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 60);
     if (data?.signedUrl) window.open(data.signedUrl, '_blank');
@@ -160,16 +172,31 @@ export default function LoanDetail() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
-          <select
-            value={loan.status}
-            onChange={e => updateStatus.mutate(e.target.value)}
-            disabled={updateStatus.isPending}
-            className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
-          >
-            {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        )}
+        <div className="flex items-center gap-2">
+          {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
+            <select
+              value={loan.status}
+              onChange={e => updateStatus.mutate(e.target.value)}
+              disabled={updateStatus.isPending}
+              className="px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground focus:outline-none focus:border-accent"
+            >
+              {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          )}
+          {(user?.role === 'admin' || user?.role === 'super_admin') && (
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
+                  deleteLoan.mutate();
+                }
+              }}
+              disabled={deleteLoan.isPending}
+              className="px-3 py-2 rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Status Pipeline */}
