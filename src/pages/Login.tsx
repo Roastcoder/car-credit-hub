@@ -48,19 +48,18 @@ export default function Login() {
     if (!password) { setError('Please enter your password'); return; }
     setLoading(true);
     setError('');
-    const { error: err } = await login(email, password);
+    
+    // Sign in directly to get the session with refresh token
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (err) {
       setError('Invalid email or password. Use the demo accounts below.');
     } else {
-      // Update biometric refresh token if biometrics are enabled
-      if (hasBiometricCredential()) {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (s?.refresh_token) {
-          localStorage.setItem('biometric_session', s.refresh_token);
-          localStorage.setItem('biometric_email', email);
-          toast.success('Biometric re-enabled with new session!');
-        }
+      // Always update biometric refresh token if credential is registered
+      const credId = localStorage.getItem('biometric_credential_id');
+      if (credId && data.session?.refresh_token) {
+        localStorage.setItem('biometric_session', data.session.refresh_token);
+        localStorage.setItem('biometric_email', email);
       }
       navigate('/dashboard');
     }
@@ -78,15 +77,19 @@ export default function Login() {
       }
 
       // Use the stored refresh token to restore the session
-      const { error: sessionError } = await supabase.auth.refreshSession({
+      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession({
         refresh_token: result.refreshToken,
       });
 
       if (sessionError) {
-        // Clear stale biometric data so user isn't stuck
         setError('Session expired. Please login with email/password — biometrics will re-enable automatically.');
         setBiometricLoading(false);
         return;
+      }
+
+      // Update stored refresh token with the new one for next time
+      if (sessionData.session?.refresh_token) {
+        localStorage.setItem('biometric_session', sessionData.session.refresh_token);
       }
 
       toast.success('Logged in with fingerprint!');

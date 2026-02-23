@@ -35,10 +35,7 @@ export default function BiometricSetup() {
       const success = await registerBiometric(user.id, user.email, refreshToken);
       if (success) {
         setEnabled(true);
-        toast.success('Fingerprint enabled! Redirecting to login...');
-        // Log out and redirect so fingerprint prompt appears
-        await logout();
-        navigate('/login');
+        toast.success('Fingerprint login enabled! You can now use fingerprint on next login.');
       } else {
         toast.error('Failed to set up fingerprint. Please try again.');
       }
