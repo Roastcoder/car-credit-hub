@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/mock-data';
+import { exportToCSV } from '@/lib/export-utils';
 import { CreditCard, Download, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import MobileStatCarousel from '@/components/MobileStatCarousel';
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ReactNode; label: string }> = {
   paid: { bg: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle2 size={10} />, label: 'Paid' },
@@ -15,7 +17,20 @@ export default function Commission() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const handleExportReport = () => {
-    toast.success('Commission report exported successfully!');
+    if ((commissions as any[]).length === 0) { toast.error('No data to export'); return; }
+    const rows = (commissions as any[]).map((c: any) => ({
+      'ID': c.id,
+      'Loan': c.loans?.applicant_name || '',
+      'Loan ID': c.loan_id,
+      'Broker': c.brokers?.name || '',
+      'Loan Amount': c.loans?.loan_amount || 0,
+      'Commission Rate': `${c.commission_rate}%`,
+      'Commission Amount': c.commission_amount,
+      'Status': c.status,
+      'Paid Date': c.paid_date || '',
+    }));
+    exportToCSV(rows, 'commission-report');
+    toast.success('Commission report exported as CSV!');
   };
 
   const { data: commissions = [], isLoading } = useQuery({
@@ -47,19 +62,12 @@ export default function Commission() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="stat-card flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><CreditCard size={20} className="text-accent" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{formatCurrency(totalCommission)}</p><p className="text-xs text-muted-foreground">Total Commission</p></div>
-        </div>
-        <div className="stat-card flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center"><CheckCircle2 size={20} className="text-emerald-600" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{formatCurrency(paidCommission)}</p><p className="text-xs text-muted-foreground">Paid Out</p></div>
-        </div>
-        <div className="stat-card flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center"><Clock size={20} className="text-amber-600" /></div>
-          <div><p className="text-2xl font-bold text-foreground">{formatCurrency(pendingCommission)}</p><p className="text-xs text-muted-foreground">Pending</p></div>
-        </div>
+      <div className="mb-6">
+        <MobileStatCarousel items={[
+          { icon: <CreditCard size={16} />, label: 'Total Commission', value: formatCurrency(totalCommission) },
+          { icon: <CheckCircle2 size={16} />, label: 'Paid Out', value: formatCurrency(paidCommission) },
+          { icon: <Clock size={16} />, label: 'Pending', value: formatCurrency(pendingCommission) },
+        ]} />
       </div>
 
       <div className="stat-card mb-4">

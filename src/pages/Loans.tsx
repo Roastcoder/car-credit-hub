@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { exportToCSV, parseCSV } from '@/lib/export-utils';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { Search, Plus, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload } from 'lucide-react';
 
 type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 
@@ -16,6 +17,7 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
+  const importRef = useRef<HTMLInputElement>(null);
 
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.branch_id],
@@ -51,6 +53,48 @@ export default function Loans() {
 
   const canEditStatus = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager';
 
+  const handleExport = () => {
+    if (filtered.length === 0) { toast.error('No data to export'); return; }
+    const rows = filtered.map((l: any) => ({
+      'Loan ID': l.id, 'Applicant': l.applicant_name, 'Mobile': l.mobile,
+      'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
+      'Bank': l.banks?.name || '', 'Branch': l.branches?.name || '',
+      'Loan Amount': l.loan_amount, 'EMI': l.emi, 'Status': l.status,
+    }));
+    exportToCSV(rows, 'loans');
+    toast.success('Loans exported as CSV!');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (rows.length === 0) { toast.error('No valid data found in CSV'); return; }
+      let imported = 0;
+      for (const row of rows) {
+        const id = row['Loan ID'] || `IMP-${Date.now()}-${imported}`;
+        const { error } = await supabase.from('loans').insert({
+          id,
+          applicant_name: row['Applicant'] || row['applicant_name'] || 'Unknown',
+          mobile: row['Mobile'] || row['mobile'] || '0000000000',
+          loan_amount: Number(row['Loan Amount'] || row['loan_amount'] || 0),
+          car_make: row['Car Make'] || row['car_make'] || '',
+          car_model: row['Car Model'] || row['car_model'] || '',
+          status: 'draft' as any,
+          created_by: user.id,
+        } as any);
+        if (!error) imported++;
+      }
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      toast.success(`${imported} loans imported successfully!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Import failed');
+    }
+    e.target.value = '';
+  };
+
   const filtered = loans.filter((l: any) => {
     const matchSearch = !search ||
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,9 +111,18 @@ export default function Loans() {
           <h1 className="text-2xl font-bold text-foreground">Loan Applications</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
-        <Link to="/loans/new" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
-          <Plus size={16} /> New Application
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={handleExport} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+            <Download size={16} /> Export
+          </button>
+          <button onClick={() => importRef.current?.click()} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+            <Upload size={16} /> Import CSV
+          </button>
+          <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+          <Link to="/loans/new" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+            <Plus size={16} /> New Application
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
