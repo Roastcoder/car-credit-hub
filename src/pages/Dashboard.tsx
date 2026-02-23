@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import StatCard from '@/components/StatCard';
+import MobileStatCarousel from '@/components/MobileStatCarousel';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
@@ -117,12 +117,14 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        <StatCard label="Total Applications" value={String(totalLoans)} change="+12% this month" changeType="positive" icon={<FileText size={20} />} />
-        <StatCard label="Loan Volume" value={formatCurrency(totalVolume)} change="+8.5% this month" changeType="positive" icon={<IndianRupee size={20} />} />
-        <StatCard label="Disbursed" value={formatCurrency(disbursedAmount)} change={`${disbursed.length} loans`} changeType="neutral" icon={<CheckCircle2 size={20} />} />
-        <StatCard label="Under Review" value={String(pendingReview)} change="Needs attention" changeType="negative" icon={<Clock size={20} />} />
+      {/* Stats - Mobile Carousel */}
+      <div className="mb-6">
+        <MobileStatCarousel items={[
+          { icon: <FileText size={16} />, label: 'Total Applications', value: String(totalLoans), sub: '+12% this month', subColor: 'text-emerald-500' },
+          { icon: <IndianRupee size={16} />, label: 'Loan Volume', value: formatCurrency(totalVolume), sub: '+8.5% this month', subColor: 'text-emerald-500' },
+          { icon: <CheckCircle2 size={16} />, label: 'Disbursed', value: formatCurrency(disbursedAmount), sub: `${disbursed.length} loans` },
+          { icon: <Clock size={16} />, label: 'Under Review', value: String(pendingReview), sub: 'Needs attention', subColor: 'text-destructive' },
+        ]} />
       </div>
 
       {/* Charts */}
