@@ -60,6 +60,9 @@ export default function CreateLoan() {
     // RTO Details
     rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
+    // RTO Papers Checkboxes
+    rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
+    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false,
     // EMI Details
     emiAmount: '', totalEmi: '', totalInterest: '', firstEmiAmount: '', firstInstallmentDueDate: '',
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '', advanceEmi: '',
@@ -459,7 +462,44 @@ export default function CreateLoan() {
                 <div className="md:col-span-3"><label className={labelClass}>RTO Work Description</label><textarea className={inputClass} rows={2} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} placeholder="HPN" /></div>
                 <div><label className={labelClass}>Challan</label><select className={inputClass} value={form.challan} onChange={e => update('challan', e.target.value)}><option value="No">No</option><option value="Yes">Yes</option></select></div>
                 <div><label className={labelClass}>FC</label><select className={inputClass} value={form.fc} onChange={e => update('fc', e.target.value)}><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                <div className="md:col-span-3"><label className={labelClass}>RTO Papers</label><textarea className={inputClass} rows={2} value={form.rtoPapers} onChange={e => update('rtoPapers', e.target.value)} placeholder="RC NOC Permit Pollution 29-30 form Sell Agreement RC owners KYC Stamp Papers and etc." /></div>
+                
+                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Papers Checklist</h3></div>
+                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoRC} onChange={e => setForm({...form, rtoRC: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">RC Copy</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoNOC} onChange={e => setForm({...form, rtoNOC: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">NOC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoPermit} onChange={e => setForm({...form, rtoPermit: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">Permit</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoPollution} onChange={e => setForm({...form, rtoPollution: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">Pollution</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rto2930Form} onChange={e => setForm({...form, rto2930Form: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">29-30 Form</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoSellAgreement} onChange={e => setForm({...form, rtoSellAgreement: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">Sell Agreement</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoRCOwnerKYC} onChange={e => setForm({...form, rtoRCOwnerKYC: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">RC Owner KYC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.rtoStampPapers} onChange={e => setForm({...form, rtoStampPapers: e.target.checked})} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm text-foreground">Stamp Papers</span>
+                  </label>
+                </div>
+                
+                <div className="md:col-span-3"><label className={labelClass}>RTO Papers (Additional Notes)</label><textarea className={inputClass} rows={2} value={form.rtoPapers} onChange={e => update('rtoPapers', e.target.value)} placeholder="Any additional RTO papers or notes" /></div>
               </div>
             </div>
           )}
