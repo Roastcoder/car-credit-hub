@@ -8,6 +8,7 @@ import { ROLE_LABELS } from '@/lib/auth';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
+import FeatureCarousel from '@/components/FeatureCarousel';
 
 const STATUS_CHART_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#6b7280'];
 
@@ -64,6 +65,9 @@ export default function Dashboard() {
 
   return (
     <div>
+      {/* Feature Carousel Banner */}
+      <FeatureCarousel />
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">
           Welcome, {user.full_name || user.email}
