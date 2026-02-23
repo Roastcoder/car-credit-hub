@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowRight, Mail, Lock, Shield, BarChart3, Users, Zap, Download, Fingerprint } from 'lucide-react';
+import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
+import {
+  isBiometricAvailable,
+  hasBiometricCredential,
+  authenticateBiometric,
+  getBiometricEmail,
+} from '@/lib/biometric-auth';
 
 export default function Login() {
   const { login } = useAuth();
@@ -12,13 +20,21 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
-  React.useEffect(() => {
-    // Check if app is running in standalone mode (installed)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      (window.navigator as any).standalone || 
-                      document.referrer.includes('android-app://');
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone ||
+      document.referrer.includes('android-app://');
     setIsStandalone(standalone);
+
+    // Check biometric availability
+    (async () => {
+      const available = await isBiometricAvailable();
+      const hasCredential = hasBiometricCredential();
+      setBiometricAvailable(available && hasCredential);
+    })();
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,6 +51,39 @@ export default function Login() {
       navigate('/dashboard');
     }
   };
+
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true);
+    setError('');
+    try {
+      const result = await authenticateBiometric();
+      if (!result) {
+        setError('Biometric authentication failed. Please login with email/password.');
+        setBiometricLoading(false);
+        return;
+      }
+
+      // Use the stored refresh token to restore the session
+      const { error: sessionError } = await supabase.auth.refreshSession({
+        refresh_token: result.refreshToken,
+      });
+
+      if (sessionError) {
+        setError('Session expired. Please login with email/password to re-enable biometrics.');
+        setBiometricLoading(false);
+        return;
+      }
+
+      toast.success('Logged in with fingerprint!');
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Biometric login failed. Please use email/password.');
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  const biometricEmail = getBiometricEmail();
 
   return (
     <div className="min-h-screen bg-primary flex">
@@ -95,6 +144,33 @@ export default function Login() {
 
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-4 sm:mb-6">Sign in to your account</p>
+
+          {/* Biometric Login Button */}
+          {biometricAvailable && (
+            <button
+              onClick={handleBiometricLogin}
+              disabled={biometricLoading}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold py-3.5 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-60 mb-4 shadow-lg"
+            >
+              <Fingerprint size={22} />
+              <div className="text-left">
+                <span className="block text-sm">
+                  {biometricLoading ? 'Authenticating...' : 'Login with Fingerprint'}
+                </span>
+                {biometricEmail && (
+                  <span className="block text-[10px] opacity-70">{biometricEmail}</span>
+                )}
+              </div>
+            </button>
+          )}
+
+          {biometricAvailable && (
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">or sign in with email</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
 
           {/* Mobile APK Download - Only show if not installed */}
           {!isStandalone && (
