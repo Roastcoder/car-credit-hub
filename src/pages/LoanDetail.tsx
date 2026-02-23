@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, Printer, MessageCircle, Mail } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail } from 'lucide-react';
 import { exportLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -69,13 +70,17 @@ export default function LoanDetail() {
   });
 
 
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
+
   const previewDocument = async (doc: any) => {
-    const { data } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 300);
+    setLoadingPreview(doc.id);
+    const { data, error } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 300);
+    setLoadingPreview(null);
     if (data?.signedUrl) {
-      // Open in new tab for inline preview (works for images, PDFs)
-      window.open(data.signedUrl, '_blank');
+      setPreviewDoc({ url: data.signedUrl, name: doc.file_name });
     } else {
-      toast.error('Could not load document preview');
+      toast.error('Document not found in storage');
     }
   };
 
@@ -298,9 +303,27 @@ export default function LoanDetail() {
           <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{(documents as any[]).length} files</span>
         </div>
 
-        {/* Uploaded documents list */}
+        {/* Inline Preview */}
+        {previewDoc && (
+          <div className="mb-4 rounded-xl border border-border overflow-hidden bg-background">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/60 border-b border-border">
+              <p className="text-sm font-medium text-foreground truncate">{previewDoc.name}</p>
+              <button onClick={() => setPreviewDoc(null)} className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-foreground transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <iframe
+              src={previewDoc.url}
+              className="w-full border-0"
+              style={{ height: '60vh', minHeight: '300px' }}
+              title={previewDoc.name}
+            />
+          </div>
+        )}
+
+        {/* Document list */}
         {(documents as any[]).length > 0 && (
-          <div className="space-y-2">
+          <div className="grid gap-2">
             {(documents as any[]).map((doc: any) => (
               <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
                 <FileText size={16} className="text-accent shrink-0" />
@@ -312,8 +335,13 @@ export default function LoanDetail() {
                     {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                   </p>
                 </div>
-                <button onClick={() => previewDocument(doc)} className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors text-xs" title="Preview">
-                  <Eye size={14} /> View
+                <button
+                  onClick={() => previewDocument(doc)}
+                  disabled={loadingPreview === doc.id}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-medium disabled:opacity-50"
+                  title="Preview"
+                >
+                  <Eye size={14} /> {loadingPreview === doc.id ? 'Loading…' : 'View'}
                 </button>
               </div>
             ))}
