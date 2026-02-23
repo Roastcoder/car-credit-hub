@@ -1,4 +1,5 @@
 import { formatCurrency } from '@/lib/mock-data';
+import html2pdf from 'html2pdf.js';
 
 interface LoanData {
   [key: string]: any;
@@ -218,24 +219,46 @@ export function exportLoanPDF(loan: LoanData) {
   setTimeout(() => win.print(), 500);
 }
 
-export async function shareLoanPDF(loan: LoanData) {
+async function generatePDFBlob(loan: LoanData): Promise<Blob> {
   const html = buildLoanHTML(loan);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.width = '794px';
+  document.body.appendChild(container);
+
+  const blob: Blob = await html2pdf()
+    .set({
+      margin: [10, 10, 10, 10],
+      filename: `Loan-${loan.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    })
+    .from(container)
+    .outputPdf('blob');
+
+  document.body.removeChild(container);
+  return blob;
+}
+
+export async function shareLoanPDF(loan: LoanData) {
   const text = `*Mehar Finance - Loan Application*\n\n*ID:* ${loan.id}\n*Applicant:* ${loan.applicant_name}\n*Mobile:* ${loan.mobile}\n*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}\n*Loan Amount:* ${fmtCur(loan.loan_amount)}\n*Status:* ${loan.status}\n*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}\n*Tenure:* ${loan.tenure} months`;
 
-  // Try Web Share API with HTML file attachment
-  if (navigator.share && navigator.canShare) {
-    try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const file = new File([blob], `Loan-${loan.id}.html`, { type: 'text/html' });
-      const shareData: ShareData = { title: `Loan Application - ${loan.id}`, text, files: [file] };
+  try {
+    const pdfBlob = await generatePDFBlob(loan);
+    const pdfFile = new File([pdfBlob], `Loan-${loan.id}.pdf`, { type: 'application/pdf' });
 
+    if (navigator.share && navigator.canShare) {
+      const shareData: ShareData = { title: `Loan Application - ${loan.id}`, text, files: [pdfFile] };
       if (navigator.canShare(shareData)) {
         await navigator.share(shareData);
         return;
       }
-    } catch (e) {
-      // User cancelled or not supported
     }
+  } catch (e) {
+    // User cancelled or not supported
   }
 
   // Fallback: WhatsApp text share
@@ -243,13 +266,12 @@ export async function shareLoanPDF(loan: LoanData) {
   window.open(`https://wa.me/?text=${waText}`, '_blank');
 }
 
-export function downloadLoanPDF(loan: LoanData) {
-  const html = buildLoanHTML(loan);
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
+export async function downloadLoanPDF(loan: LoanData) {
+  const pdfBlob = await generatePDFBlob(loan);
+  const url = URL.createObjectURL(pdfBlob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Loan-${loan.id}-${loan.applicant_name?.replace(/\s+/g, '_') || 'Application'}.html`;
+  a.download = `Loan-${loan.id}-${loan.applicant_name?.replace(/\s+/g, '_') || 'Application'}.pdf`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
