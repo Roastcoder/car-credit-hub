@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail } from 'lucide-react';
-import { exportLoanPDF } from '@/lib/pdf-export';
+import { exportLoanPDF, shareLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
 const DOC_TYPES = [
@@ -137,10 +137,7 @@ export default function LoanDetail() {
             Export PDF
           </button>
           <button
-            onClick={() => {
-              const text = `*Mehar Finance - Loan Application*%0A%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Vehicle:* ${(loan as any).maker_name || loan.car_make || ''} ${(loan as any).model_variant_name || loan.car_model || ''}%0A*Loan Amount:* ${formatCurrency(Number(loan.loan_amount))}%0A*Status:* ${loan.status}%0A*EMI:* ${formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))}%0A*Tenure:* ${loan.tenure} months`;
-              window.open(`https://wa.me/?text=${text}`, '_blank');
-            }}
+            onClick={() => shareLoanPDF(loan)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-green-500/10 hover:border-green-500 transition-colors"
           >
             <MessageCircle size={16} className="text-green-500" />

@@ -20,11 +20,8 @@ function fmtCur(val: any): string {
   return formatCurrency(n);
 }
 
-export function exportLoanPDF(loan: LoanData) {
-  const win = window.open('', '_blank');
-  if (!win) return;
-
-  const html = `<!DOCTYPE html>
+function buildLoanHTML(loan: LoanData): string {
+  return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Loan Application - ${loan.id}</title>
 <style>
   @page { size: A4; margin: 18mm 20mm; }
@@ -210,8 +207,38 @@ export function exportLoanPDF(loan: LoanData) {
 </div>
 
 </body></html>`;
+}
 
+export function exportLoanPDF(loan: LoanData) {
+  const win = window.open('', '_blank');
+  if (!win) return;
+  const html = buildLoanHTML(loan);
   win.document.write(html);
   win.document.close();
   setTimeout(() => win.print(), 500);
+}
+
+export async function shareLoanPDF(loan: LoanData) {
+  const html = buildLoanHTML(loan);
+  const text = `*Mehar Finance - Loan Application*\n\n*ID:* ${loan.id}\n*Applicant:* ${loan.applicant_name}\n*Mobile:* ${loan.mobile}\n*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}\n*Loan Amount:* ${fmtCur(loan.loan_amount)}\n*Status:* ${loan.status}\n*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}\n*Tenure:* ${loan.tenure} months`;
+
+  // Try Web Share API with HTML file attachment
+  if (navigator.share && navigator.canShare) {
+    try {
+      const blob = new Blob([html], { type: 'text/html' });
+      const file = new File([blob], `Loan-${loan.id}.html`, { type: 'text/html' });
+      const shareData: ShareData = { title: `Loan Application - ${loan.id}`, text, files: [file] };
+
+      if (navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch (e) {
+      // User cancelled or not supported
+    }
+  }
+
+  // Fallback: WhatsApp text share
+  const waText = `*Mehar Finance - Loan Application*%0A%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}%0A*Loan Amount:* ${fmtCur(loan.loan_amount)}%0A*Status:* ${loan.status}%0A*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}%0A*Tenure:* ${loan.tenure} months`;
+  window.open(`https://wa.me/?text=${waText}`, '_blank');
 }
