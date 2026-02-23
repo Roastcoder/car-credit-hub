@@ -152,8 +152,63 @@ export default function Loans() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="stat-card overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-3">
+        {isLoading ? (
+          <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground">No applications found</div>
+        ) : (
+          filtered.map((loan: any) => (
+            <div
+              key={loan.id}
+              onClick={() => navigate(`/loans/${loan.id}`)}
+              className="stat-card active:scale-[0.98] transition-transform cursor-pointer"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
+                  <p className="text-xs text-muted-foreground mono">{loan.loan_number || loan.id}</p>
+                </div>
+                <LoanStatusBadge status={loan.status} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Amount</p>
+                  <p className="font-bold text-foreground">{formatCurrency(Number(loan.loan_amount))}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">EMI</p>
+                  <p className="font-medium text-foreground">{formatCurrency(Number(loan.emi))}/mo</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vehicle</p>
+                  <p className="text-foreground truncate">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Bank</p>
+                  <p className="text-foreground truncate">{loan.banks?.name || '—'}</p>
+                </div>
+              </div>
+              {canEditStatus && (
+                <div className="mt-3 pt-3 border-t border-border" onClick={e => e.stopPropagation()}>
+                  <select
+                    value={loan.status}
+                    onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                    disabled={updateStatus.isPending}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                  >
+                    {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="stat-card overflow-hidden hidden lg:block">
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
         ) : (
@@ -163,10 +218,10 @@ export default function Loans() {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan ID</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Vehicle</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden lg:table-cell">Bank</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
                   <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">EMI</th>
+                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                   {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Update</th>}
                   <th className="py-3 px-3"></th>
@@ -174,20 +229,20 @@ export default function Loans() {
               </thead>
               <tbody>
                 {filtered.map((loan: any) => (
-                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group">
-                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{loan.loan_number || loan.id}</td>
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
+                    <td className="py-3.5 px-3">
                       <p className="font-medium text-foreground">{loan.applicant_name}</p>
                       <p className="text-xs text-muted-foreground">{loan.mobile}</p>
                     </td>
-                    <td className="py-3.5 px-3 hidden md:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3">
                       <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
                       <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
                     </td>
-                    <td className="py-3.5 px-3 text-muted-foreground hidden lg:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{loan.banks?.name || '—'}</td>
-                    <td className="py-3.5 px-3 text-right font-medium text-foreground cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{formatCurrency(Number(loan.loan_amount))}</td>
-                    <td className="py-3.5 px-3 text-right text-muted-foreground hidden sm:table-cell cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>{formatCurrency(Number(loan.emi))}/mo</td>
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}><LoanStatusBadge status={loan.status} /></td>
+                    <td className="py-3.5 px-3 text-muted-foreground">{loan.banks?.name || '—'}</td>
+                    <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
+                    <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
+                    <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                     {canEditStatus && (
                       <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                         <select
@@ -200,7 +255,7 @@ export default function Loans() {
                         </select>
                       </td>
                     )}
-                    <td className="py-3.5 px-3 cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <td className="py-3.5 px-3">
                       <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent transition-colors" />
                     </td>
                   </tr>
