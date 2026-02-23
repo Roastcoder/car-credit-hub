@@ -48,6 +48,13 @@ export default function Login() {
     if (err) {
       setError('Invalid email or password. Use the demo accounts below.');
     } else {
+      // Update biometric refresh token if biometrics are enabled
+      if (hasBiometricCredential()) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.refresh_token) {
+          localStorage.setItem('biometric_session', session.refresh_token);
+        }
+      }
       navigate('/dashboard');
     }
   };
