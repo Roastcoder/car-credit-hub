@@ -361,11 +361,10 @@ export default function CreateLoan() {
                       className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                       value={leadSearch || form.customerId}
                       onChange={(e) => {
-                        setLeadSearch(e.target.value);
+                        const value = e.target.value;
+                        setLeadSearch(value);
+                        setForm(f => ({ ...f, customerId: value }));
                         setShowLeadDropdown(true);
-                        if (!e.target.value) {
-                          setForm(f => ({ ...f, customerId: '' }));
-                        }
                       }}
                       onFocus={() => setShowLeadDropdown(true)}
                       placeholder="Search by ID, name or phone..."
