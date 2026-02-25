@@ -12,16 +12,7 @@ export default function CreateLoan() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState(0);
 
-  const steps = [
-    { id: 'customer', label: 'Customer Details', icon: '1' },
-    { id: 'vehicle', label: 'Vehicle & Loan', icon: '2' },
-    { id: 'emi', label: 'EMI & Financier', icon: '3' },
-    { id: 'insurance', label: 'Insurance & RTO', icon: '4' },
-    { id: 'deduction', label: 'Deduction & Disbursement', icon: '5' },
-    { id: 'documents', label: 'Documents', icon: '6' },
-  ];
 
   const { data: banks = [] } = useQuery({
     queryKey: ['banks-list'],
@@ -336,66 +327,24 @@ export default function CreateLoan() {
     createLoan.mutate();
   };
 
-  const handleNext = () => currentStep < steps.length - 1 && setCurrentStep(currentStep + 1);
-  const handlePrev = () => currentStep > 0 && setCurrentStep(currentStep - 1);
-
   const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
   const labelClass = "block text-xs font-medium text-foreground/70 mb-1.5";
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4">
+    <div className="w-full mx-auto px-4">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft size={16} /> Back
       </button>
 
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-foreground mb-2">New Loan Application</h1>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="hidden sm:inline">Step {currentStep + 1} of {steps.length}:</span>
-          <span className="font-medium text-foreground">{steps[currentStep].label}</span>
-          <span className="ml-auto text-xs bg-accent/10 text-accent px-2 py-1 rounded-full">
-            {Math.round(((currentStep + 1) / steps.length) * 100)}% Complete
-          </span>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-6 bg-card rounded-lg p-3 border border-border">
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-          {steps.map((step, idx) => (
-            <div key={step.id} className="flex flex-col items-center flex-shrink-0 relative">
-              <button
-                type="button"
-                onClick={() => setCurrentStep(idx)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all relative z-10 ${
-                  idx === currentStep ? 'bg-accent text-accent-foreground scale-110 shadow-lg ring-4 ring-accent/20' :
-                  idx < currentStep ? 'bg-accent/80 text-accent-foreground hover:bg-accent' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {idx < currentStep ? '✓' : step.icon}
-              </button>
-              <span className={`text-[10px] mt-1.5 text-center max-w-[70px] leading-tight ${
-                idx === currentStep ? 'text-accent font-semibold' : 
-                idx < currentStep ? 'text-accent/70' : 'text-muted-foreground'
-              }`}>
-                {step.label}
-              </span>
-              {idx < steps.length - 1 && (
-                <div className={`absolute top-5 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 -z-0 ${
-                  idx < currentStep ? 'bg-accent' : 'bg-border'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6">
-          {/* Step 0: Customer Details */}
-          {currentStep === 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
+        <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
+          {/* Customer Details */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClass}>Customer ID</label>
@@ -512,12 +461,10 @@ export default function CreateLoan() {
                 )}
               </div>
             </div>
-          )}
 
-          {/* Step 1: Vehicle & Loan */}
-          {currentStep === 1 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
+          {/* Vehicle & Loan */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative">
                   <label className={labelClass}>Vehicle Reg. No</label>
@@ -552,12 +499,10 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} placeholder="Enter monthly income" /></div>
               </div>
             </div>
-          )}
 
-          {/* Step 2: EMI & Financier */}
-          {currentStep === 2 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
+          {/* EMI & Financier */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="e.g., 12.5" /></div>
                 <div><label className={labelClass}>Tenure *</label><select required className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)}>{[12, 18, 24, 36, 48, 60, 72, 84].map(t => <option key={t} value={t}>{t} MONTH</option>)}</select></div>
@@ -591,12 +536,10 @@ export default function CreateLoan() {
                 )}
               </div>
             </div>
-          )}
 
-          {/* Step 3: Insurance & RTO */}
-          {currentStep === 3 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
+          {/* Insurance & RTO */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                 <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
@@ -608,12 +551,10 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
               </div>
             </div>
-          )}
 
-          {/* Step 4: Deduction & Disbursement */}
-          {currentStep === 4 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Deduction & Disbursement</h2>
+          {/* Deduction & Disbursement */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Deduction & Disbursement</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} /></div>
                 <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
@@ -625,12 +566,10 @@ export default function CreateLoan() {
                 <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} /></div>
               </div>
             </div>
-          )}
 
-          {/* Step 5: Documents */}
-          {currentStep === 5 && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
+          {/* Documents */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
               
               {/* Customer Documents */}
               <div className="mb-6">
@@ -678,55 +617,32 @@ export default function CreateLoan() {
                 </div>
               </div>
             </div>
-          )}
-
-
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8 pb-20 sm:pb-8">
+        {/* Submit Button */}
+        <div className="flex justify-end gap-3 pb-8">
           <button 
             type="button" 
-            onClick={handlePrev} 
-            disabled={currentStep === 0} 
-            className="px-6 py-3 rounded-xl border-2 border-border font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted transition-all order-2 sm:order-1"
+            onClick={() => navigate(-1)} 
+            className="px-6 py-3 rounded-xl border-2 border-border font-semibold hover:bg-muted transition-all"
           >
-            ← Previous
+            Cancel
           </button>
-          <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
-            <button 
-              type="button" 
-              onClick={() => navigate(-1)} 
-              className="px-6 py-3 rounded-xl border-2 border-border font-semibold hover:bg-muted transition-all"
-            >
-              Cancel
-            </button>
-            {currentStep < steps.length - 1 ? (
-              <button 
-                type="button" 
-                onClick={handleNext} 
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-accent/90 text-accent-foreground font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-              >
-                Next →
-              </button>
-            ) : (
-              <button 
-                type="submit" 
-                disabled={createLoan.isPending} 
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100"
-              >
-                {createLoan.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Creating...
-                  </span>
-                ) : '✓ Create Application'}
-              </button>
-            )}
-          </div>
+          <button 
+            type="submit" 
+            disabled={createLoan.isPending} 
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100"
+          >
+            {createLoan.isPending ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Creating...
+              </span>
+            ) : '✓ Create Application'}
+          </button>
         </div>
       </form>
     </div>
