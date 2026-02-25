@@ -141,11 +141,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain bg-white rounded p-0.5" />
           </div>
           
-          {/* Mobile: Hamburger Menu button */}
-          <button className="lg:hidden text-foreground" onClick={() => setSidebarOpen(true)}>
-            <Menu size={22} />
-          </button>
-          
           {/* Page title / User greeting */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate lg:text-base">
