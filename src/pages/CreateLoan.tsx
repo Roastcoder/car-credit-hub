@@ -75,6 +75,8 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
+      // Note: This API works on localhost but may fail in production due to CORS.
+      // Contact API owner to whitelist: https://car-credit-hub.lovable.app
       const response = await fetch('https://n8n.finonest.com/api/v1/idv/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
