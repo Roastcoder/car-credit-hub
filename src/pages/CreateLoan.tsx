@@ -105,7 +105,8 @@ export default function CreateLoan() {
           rcOwnerName: raw.owner_name || '',
           rcMfgDate: rc.manufacturing_date || raw.manufacturing_date_formatted || raw.manufacturing_date || '',
           rcExpiryDate: raw.fit_up_to || raw.tax_upto || '',
-          hpnAtLogin: raw.financer || '',
+          hpnAtLogin: rc.financed ? (raw.financer || 'Financed') : 'Not Financed',
+          isFinanced: rc.financed ? 'Yes' : 'No',
           fc: raw.fit_up_to ? 'Yes' : 'No',
           
           // Customer Details (only if empty)
@@ -149,7 +150,7 @@ export default function CreateLoan() {
     // Income Details
     incomeSource: '', monthlyIncome: '',
     // RTO Details
-    rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', newFinancier: '', rtoDocsHandoverDate: '',
+    rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
     // RTO Papers Checkboxes
     rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
