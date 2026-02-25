@@ -62,7 +62,7 @@ export default function CreateLoan() {
   }, []);
 
   const filteredLeads = useMemo(() => {
-    if (!leadSearch.trim()) return leads;
+    if (!leadSearch || !leadSearch.trim()) return leads;
     const search = leadSearch.toLowerCase();
     return leads.filter((l: any) => 
       l.customer_id?.toLowerCase().includes(search) ||
