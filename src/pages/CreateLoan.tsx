@@ -77,6 +77,46 @@ export default function CreateLoan() {
     permanentAddress: false,
   });
 
+  const [fetchingVehicleData, setFetchingVehicleData] = useState(false);
+
+  const fetchVehicleDetails = async (rcNumber: string) => {
+    if (!rcNumber || rcNumber.length < 8) return;
+    
+    setFetchingVehicleData(true);
+    try {
+      const response = await fetch('https://n8n.finonest.com/api/v1/idv/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rc_number: rcNumber }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.rc_details) {
+        const rc = data.rc_details;
+        const idv = data.idv_calculation;
+        
+        setForm(f => ({
+          ...f,
+          makerName: rc.make || '',
+          modelVariantName: rc.model || '',
+          mfgYear: rc.manufacturing_date?.split('-')[0] || '',
+          rcOwnerName: rc.raw_data?.owner_name || '',
+          loanAmount: idv?.fair_market_retail_value ? String(Math.round(idv.fair_market_retail_value)) : f.loanAmount,
+        }));
+        
+        toast.success('Vehicle details fetched successfully!');
+      } else {
+        toast.error('Could not fetch vehicle details');
+      }
+    } catch (error) {
+      console.error('Error fetching vehicle details:', error);
+      toast.error('Failed to fetch vehicle details');
+    } finally {
+      setFetchingVehicleData(false);
+    }
+  };
+
   const [form, setForm] = useState({
     // Customer Details
     customerId: '', customerName: '', mobile: '', coApplicantName: '', coApplicantMobile: '',
@@ -134,6 +174,11 @@ export default function CreateLoan() {
         sourcingPersonName: lead.sourcing_person_name || '',
         ourBranch: lead.our_branch || '',
       }));
+      
+      // Auto-fetch vehicle details if RC number exists
+      if (lead.vehicle_no && lead.vehicle_no.length >= 8) {
+        fetchVehicleDetails(lead.vehicle_no);
+      }
     } else {
       update('customerId', customerId);
     }
@@ -451,7 +496,26 @@ export default function CreateLoan() {
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Vehicle Reg. No</label><input className={inputClass} value={form.vehicleNumber} onChange={e => update('vehicleNumber', e.target.value.toUpperCase())} /></div>
+                <div className="relative">
+                  <label className={labelClass}>Vehicle Reg. No</label>
+                  <input 
+                    className={inputClass} 
+                    value={form.vehicleNumber} 
+                    onChange={e => {
+                      const value = e.target.value.toUpperCase();
+                      update('vehicleNumber', value);
+                      if (value.length >= 8) {
+                        fetchVehicleDetails(value);
+                      }
+                    }}
+                    placeholder="e.g., RJ60SW9525"
+                  />
+                  {fetchingVehicleData && (
+                    <div className="absolute right-3 top-8">
+                      <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
                 <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
