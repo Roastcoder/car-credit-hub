@@ -4,7 +4,7 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ROLE_LABELS } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  LogOut, Menu, X, Car, Bell, CreditCard, Shield, ChevronLeft, ChevronRight, MapPin, UserPlus
+  LogOut, Menu, X, Car, Bell, CreditCard, Shield, ChevronLeft, ChevronRight, MapPin, UserPlus, Settings
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -23,13 +23,14 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loan Applications', path: '/loans', icon: <FileText size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Create Loan', path: '/loans/new', icon: <Car size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'PDD Tracking', path: '/pdd', icon: <Shield size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'Reports', path: '/reports', icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin', 'manager'] },
+  { label: 'Commission', path: '/commission', icon: <CreditCard size={18} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={18} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
-  { label: 'Branches', path: '/branches', icon: <MapPin size={18} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={18} />, roles: ['super_admin', 'admin'] },
-  { label: 'Commission', path: '/commission', icon: <CreditCard size={18} />, roles: ['super_admin', 'admin', 'broker'] },
-  { label: 'Reports', path: '/reports', icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin', 'manager'] },
-  { label: 'PDD Tracking', path: '/pdd', icon: <Shield size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'Branches', path: '/branches', icon: <MapPin size={18} />, roles: ['super_admin', 'admin', 'manager'] },
+  { label: 'Permissions', path: '/permissions', icon: <Settings size={18} />, roles: ['super_admin', 'admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
