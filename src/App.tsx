@@ -20,6 +20,7 @@ import Commission from "@/pages/Commission";
 import Reports from "@/pages/Reports";
 import AddLead from "@/pages/AddLead";
 import LeadsList from "@/pages/LeadsList";
+import LeadDetail from "@/pages/LeadDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ function AppRoutes() {
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
       <Route path="/add-lead" element={<ProtectedRoute><AddLead /></ProtectedRoute>} />
       <Route path="/leads-list" element={<ProtectedRoute><LeadsList /></ProtectedRoute>} />
+      <Route path="/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
       <Route path="/pdd" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />

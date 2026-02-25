@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, Plus, ArrowRight, Copy, Check } from 'lucide-react';
+import { Search, Plus, ArrowRight, Copy, Check, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LeadsList() {
@@ -116,13 +116,22 @@ export default function LeadsList() {
                       )}
                     </td>
                     <td className="py-3 px-3">
-                      <button 
-                        onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
-                        className="p-1.5 rounded-lg hover:bg-accent/10 text-accent transition-colors"
-                        title="Convert to Loan"
-                      >
-                        <ArrowRight size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => navigate(`/leads/${lead.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 transition-colors"
+                          title="View Lead"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button 
+                          onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-accent/10 text-accent transition-colors"
+                          title="Convert to Loan"
+                        >
+                          <ArrowRight size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
