@@ -265,8 +265,8 @@ export default function CreateLoan() {
   const handleNext = () => currentStep < steps.length - 1 && setCurrentStep(currentStep + 1);
   const handlePrev = () => currentStep > 0 && setCurrentStep(currentStep - 1);
 
-  const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
-  const labelClass = "block text-xs font-semibold text-foreground/70 mb-2 uppercase tracking-wide";
+  const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
+  const labelClass = "block text-xs font-semibold text-foreground/80 mb-2 uppercase tracking-wide";
 
   return (
     <div className="w-full max-w-full mx-auto px-4">
@@ -274,30 +274,43 @@ export default function CreateLoan() {
         <ArrowLeft size={16} /> Back
       </button>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">New Loan Application</h1>
-        <p className="text-muted-foreground">Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">New Loan Application</h1>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="hidden sm:inline">Step {currentStep + 1} of {steps.length}:</span>
+          <span className="font-medium text-foreground">{steps[currentStep].label}</span>
+          <span className="ml-auto text-xs bg-accent/10 text-accent px-2 py-1 rounded-full">
+            {Math.round(((currentStep + 1) / steps.length) * 100)}% Complete
+          </span>
+        </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-8 bg-card rounded-xl p-4 border border-border">
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
           {steps.map((step, idx) => (
-            <div key={step.id} className="flex flex-col items-center flex-1">
+            <div key={step.id} className="flex flex-col items-center flex-shrink-0 relative">
               <button
                 type="button"
                 onClick={() => setCurrentStep(idx)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                  idx === currentStep ? 'bg-accent text-accent-foreground scale-110 shadow-lg' :
-                  idx < currentStep ? 'bg-accent/30 text-accent' : 'bg-muted text-muted-foreground'
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all relative z-10 ${
+                  idx === currentStep ? 'bg-accent text-accent-foreground scale-110 shadow-lg ring-4 ring-accent/20' :
+                  idx < currentStep ? 'bg-accent/80 text-accent-foreground hover:bg-accent' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
-                {step.icon}
+                {idx < currentStep ? '✓' : step.icon}
               </button>
-              <span className={`text-xs mt-2 text-center hidden sm:block ${idx === currentStep ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+              <span className={`text-[10px] sm:text-xs mt-2 text-center max-w-[80px] leading-tight ${
+                idx === currentStep ? 'text-accent font-semibold' : 
+                idx < currentStep ? 'text-accent/70' : 'text-muted-foreground'
+              }`}>
                 {step.label}
               </span>
-              {idx < steps.length - 1 && <div className={`absolute h-0.5 w-full top-5 left-1/2 -z-10 ${idx < currentStep ? 'bg-accent' : 'bg-border'}`} style={{width: 'calc(100% / 9)'}} />}
+              {idx < steps.length - 1 && (
+                <div className={`absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-0.5 -z-0 ${
+                  idx < currentStep ? 'bg-accent' : 'bg-border'
+                }`} />
+              )}
             </div>
           ))}
         </div>
@@ -535,15 +548,46 @@ export default function CreateLoan() {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button type="button" onClick={handlePrev} disabled={currentStep === 0} className="px-6 py-3 rounded-xl border-2 border-border font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted transition-all">← Previous</button>
-          <div className="flex gap-3">
-            <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 rounded-xl border-2 border-border font-semibold hover:bg-muted transition-all">Cancel</button>
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8 pb-20 sm:pb-8">
+          <button 
+            type="button" 
+            onClick={handlePrev} 
+            disabled={currentStep === 0} 
+            className="px-6 py-3 rounded-xl border-2 border-border font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted transition-all order-2 sm:order-1"
+          >
+            ← Previous
+          </button>
+          <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
+            <button 
+              type="button" 
+              onClick={() => navigate(-1)} 
+              className="px-6 py-3 rounded-xl border-2 border-border font-semibold hover:bg-muted transition-all"
+            >
+              Cancel
+            </button>
             {currentStep < steps.length - 1 ? (
-              <button type="button" onClick={handleNext} className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-accent/90 text-accent-foreground font-bold shadow-lg hover:shadow-xl transition-all">Next →</button>
+              <button 
+                type="button" 
+                onClick={handleNext} 
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-accent/90 text-accent-foreground font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              >
+                Next →
+              </button>
             ) : (
-              <button type="submit" disabled={createLoan.isPending} className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-accent/90 text-accent-foreground font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-60">
-                {createLoan.isPending ? 'Creating...' : 'Create Application'}
+              <button 
+                type="submit" 
+                disabled={createLoan.isPending} 
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100"
+              >
+                {createLoan.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Creating...
+                  </span>
+                ) : '✓ Create Application'}
               </button>
             )}
           </div>
