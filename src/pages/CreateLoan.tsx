@@ -271,17 +271,17 @@ export default function CreateLoan() {
   const handleNext = () => currentStep < steps.length - 1 && setCurrentStep(currentStep + 1);
   const handlePrev = () => currentStep > 0 && setCurrentStep(currentStep - 1);
 
-  const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
-  const labelClass = "block text-xs font-semibold text-foreground/80 mb-2 uppercase tracking-wide";
+  const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
+  const labelClass = "block text-xs font-medium text-foreground/70 mb-1.5";
 
   return (
-    <div className="w-full max-w-full mx-auto px-4">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+    <div className="w-full max-w-5xl mx-auto px-4">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft size={16} /> Back
       </button>
 
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">New Loan Application</h1>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-foreground mb-2">New Loan Application</h1>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="hidden sm:inline">Step {currentStep + 1} of {steps.length}:</span>
           <span className="font-medium text-foreground">{steps[currentStep].label}</span>
@@ -292,28 +292,28 @@ export default function CreateLoan() {
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-8 bg-card rounded-xl p-4 border border-border">
+      <div className="mb-6 bg-card rounded-lg p-3 border border-border">
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
           {steps.map((step, idx) => (
             <div key={step.id} className="flex flex-col items-center flex-shrink-0 relative">
               <button
                 type="button"
                 onClick={() => setCurrentStep(idx)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all relative z-10 ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all relative z-10 ${
                   idx === currentStep ? 'bg-accent text-accent-foreground scale-110 shadow-lg ring-4 ring-accent/20' :
                   idx < currentStep ? 'bg-accent/80 text-accent-foreground hover:bg-accent' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
                 {idx < currentStep ? '✓' : step.icon}
               </button>
-              <span className={`text-[10px] sm:text-xs mt-2 text-center max-w-[80px] leading-tight ${
+              <span className={`text-[10px] mt-1.5 text-center max-w-[70px] leading-tight ${
                 idx === currentStep ? 'text-accent font-semibold' : 
                 idx < currentStep ? 'text-accent/70' : 'text-muted-foreground'
               }`}>
                 {step.label}
               </span>
               {idx < steps.length - 1 && (
-                <div className={`absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-0.5 -z-0 ${
+                <div className={`absolute top-5 left-[calc(50%+20px)] w-[calc(100%-40px)] h-0.5 -z-0 ${
                   idx < currentStep ? 'bg-accent' : 'bg-border'
                 }`} />
               )}
@@ -323,11 +323,11 @@ export default function CreateLoan() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="bg-card rounded-2xl border border-border p-8 shadow-sm mb-6">
+        <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6">
           {/* Step 0: Customer Details */}
           {currentStep === 0 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Customer Details</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClass}>Customer ID</label>
@@ -335,7 +335,7 @@ export default function CreateLoan() {
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     <input
                       type="text"
-                      className="w-full pl-10 pr-10 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                       value={leadSearch || form.customerId}
                       onChange={(e) => {
                         setLeadSearch(e.target.value);
@@ -449,7 +449,7 @@ export default function CreateLoan() {
           {/* Step 1: Vehicle & Loan */}
           {currentStep === 1 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Vehicle & Loan Details</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Vehicle Reg. No</label><input className={inputClass} value={form.vehicleNumber} onChange={e => update('vehicleNumber', e.target.value.toUpperCase())} /></div>
                 <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
@@ -470,7 +470,7 @@ export default function CreateLoan() {
           {/* Step 2: EMI & Financier */}
           {currentStep === 2 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">EMI & Financier Details</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="e.g., 12.5" /></div>
                 <div><label className={labelClass}>Tenure *</label><select required className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)}>{[12, 18, 24, 36, 48, 60, 72, 84].map(t => <option key={t} value={t}>{t} MONTH</option>)}</select></div>
@@ -509,7 +509,7 @@ export default function CreateLoan() {
           {/* Step 3: Insurance & RTO */}
           {currentStep === 3 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Insurance & RTO Details</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                 <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
@@ -526,7 +526,7 @@ export default function CreateLoan() {
           {/* Step 4: Deduction & Disbursement */}
           {currentStep === 4 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Deduction & Disbursement</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Deduction & Disbursement</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} /></div>
                 <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
@@ -543,7 +543,7 @@ export default function CreateLoan() {
           {/* Step 5: Documents */}
           {currentStep === 5 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Documents</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
               
               {/* Customer Documents */}
               <div className="mb-6">
