@@ -75,11 +75,15 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
-      const response = await fetch('/api/v1/idv/gemini', {
+      const response = await fetch('https://n8n.finonest.com/api/v1/idv/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rc_number: rcNumber }),
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       const data = await response.json();
       console.log('RC API Response:', data);
