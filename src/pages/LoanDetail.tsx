@@ -69,6 +69,20 @@ export default function LoanDetail() {
     onError: () => toast.error('Failed to update status'),
   });
 
+  const deleteLoan = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('loans').delete().eq('id', id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['loans-dashboard'] });
+      toast.success('Loan application deleted');
+      navigate('/loans');
+    },
+    onError: () => toast.error('Failed to delete loan'),
+  });
+
 
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
@@ -162,14 +176,27 @@ export default function LoanDetail() {
             Email
           </button>
           {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
-            <select
-              value={loan.status}
-              onChange={e => updateStatus.mutate(e.target.value)}
-              disabled={updateStatus.isPending}
-              className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-            >
-              {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+            <>
+              <select
+                value={loan.status}
+                onChange={e => updateStatus.mutate(e.target.value)}
+                disabled={updateStatus.isPending}
+                className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+              >
+                {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <button
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
+                    deleteLoan.mutate();
+                  }
+                }}
+                disabled={deleteLoan.isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500 bg-card text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </>
           )}
         </div>
       </div>

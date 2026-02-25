@@ -63,8 +63,8 @@ export default function CreateLoan() {
   }, [leads, leadSearch]);
 
   const [showOptionalFields, setShowOptionalFields] = useState({
-    coApplicant: true,
-    guarantor: true,
+    coApplicant: false,
+    guarantor: false,
     permanentAddress: false,
   });
 
@@ -75,12 +75,9 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
-      // Use proxy in development, direct URL in production
-      const apiUrl = import.meta.env.DEV 
-        ? '/api/v1/idv/gemini' 
-        : 'https://n8n.finonest.com/api/v1/idv/gemini';
-      
-      const response = await fetch(apiUrl, {
+      // Note: This API works on localhost but may fail in production due to CORS.
+      // Contact API owner to whitelist: https://car-credit-hub.lovable.app
+      const response = await fetch('https://n8n.finonest.com/api/v1/idv/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rc_number: rcNumber }),
@@ -338,7 +335,6 @@ export default function CreateLoan() {
 
   const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all";
   const labelClass = "block text-xs font-medium text-foreground/70 mb-1.5";
-  const gridClass = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4";
 
   return (
     <div className="w-full mx-auto px-4">
@@ -351,10 +347,11 @@ export default function CreateLoan() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Customer Details */}
-        <div className="bg-card rounded-lg border border-border p-6 shadow-sm mb-6">
-          <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
+          {/* Customer Details */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClass}>Customer ID</label>
                   <div className="relative">
@@ -412,29 +409,56 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                 <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
                 
-                <div><label className={labelClass}>Co-Applicant Name</label><input className={inputClass} value={form.coApplicantName} onChange={e => update('coApplicantName', e.target.value)} /></div>
-                <div><label className={labelClass}>Co-Applicant Mobile</label><input className={inputClass} value={form.coApplicantMobile} onChange={e => update('coApplicantMobile', e.target.value)} maxLength={10} /></div>
-                <div><label className={labelClass}>Guarantor Name</label><input className={inputClass} value={form.guarantorName} onChange={e => update('guarantorName', e.target.value)} /></div>
-                <div><label className={labelClass}>Guarantor Mobile</label><input className={inputClass} value={form.guarantorMobile} onChange={e => update('guarantorMobile', e.target.value)} maxLength={10} /></div>
+                {/* Co-Applicant Section */}
+                <div className="md:col-span-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowOptionalFields(s => ({ ...s, coApplicant: !s.coApplicant }))}
+                    className="flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
+                  >
+                    {showOptionalFields.coApplicant ? '−' : '+'} Add Co-Applicant Details
+                  </button>
+                </div>
+                {showOptionalFields.coApplicant && (
+                  <>
+                    <div><label className={labelClass}>Co-Applicant Name</label><input className={inputClass} value={form.coApplicantName} onChange={e => update('coApplicantName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Co-Applicant Mobile</label><input className={inputClass} value={form.coApplicantMobile} onChange={e => update('coApplicantMobile', e.target.value)} maxLength={10} /></div>
+                  </>
+                )}
                 
-                <div className="sm:col-span-2 lg:col-span-4"><h3 className="font-semibold text-foreground mb-3 mt-4">Current Address</h3></div>
-                <div className="sm:col-span-2 lg:col-span-4"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
+                {/* Guarantor Section */}
+                <div className="md:col-span-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowOptionalFields(s => ({ ...s, guarantor: !s.guarantor }))}
+                    className="flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
+                  >
+                    {showOptionalFields.guarantor ? '−' : '+'} Add Guarantor Details
+                  </button>
+                </div>
+                {showOptionalFields.guarantor && (
+                  <>
+                    <div><label className={labelClass}>Guarantor Name</label><input className={inputClass} value={form.guarantorName} onChange={e => update('guarantorName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Guarantor Mobile</label><input className={inputClass} value={form.guarantorMobile} onChange={e => update('guarantorMobile', e.target.value)} maxLength={10} /></div>
+                  </>
+                )}
+                
+                <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
+                <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
                 <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
                 <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.currentTehsil} onChange={e => update('currentTehsil', e.target.value)} /></div>
                 <div><label className={labelClass}>District</label><input className={inputClass} value={form.currentDistrict} onChange={e => update('currentDistrict', e.target.value)} /></div>
                 <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.currentPincode} onChange={e => update('currentPincode', e.target.value)} maxLength={6} /></div>
-                
-                <div className="sm:col-span-2 lg:col-span-4 mt-4">
+                <div className="md:col-span-3 mt-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={form.sameAsCurrentAddress} onChange={e => handleSameAddress(e.target.checked)} className="w-4 h-4 rounded border-border" />
                     <span className="text-sm font-medium text-foreground">Same As Current Address</span>
                   </label>
                 </div>
-                
                 {!form.sameAsCurrentAddress && (
                   <>
-                    <div className="sm:col-span-2 lg:col-span-4"><h3 className="font-semibold text-foreground mb-3">Permanent Address</h3></div>
-                    <div className="sm:col-span-2 lg:col-span-4"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.permanentAddress} onChange={e => update('permanentAddress', e.target.value)} /></div>
+                    <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Permanent Address</h3></div>
+                    <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.permanentAddress} onChange={e => update('permanentAddress', e.target.value)} /></div>
                     <div><label className={labelClass}>Village</label><input className={inputClass} value={form.permanentVillage} onChange={e => update('permanentVillage', e.target.value)} /></div>
                     <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.permanentTehsil} onChange={e => update('permanentTehsil', e.target.value)} /></div>
                     <div><label className={labelClass}>District</label><input className={inputClass} value={form.permanentDistrict} onChange={e => update('permanentDistrict', e.target.value)} /></div>
@@ -447,7 +471,7 @@ export default function CreateLoan() {
           {/* Vehicle & Loan */}
           <div>
             <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
-              <div className={gridClass}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative">
                   <label className={labelClass}>Vehicle Reg. No</label>
                   <input 
