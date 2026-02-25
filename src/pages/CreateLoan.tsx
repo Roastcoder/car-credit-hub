@@ -16,15 +16,11 @@ export default function CreateLoan() {
 
   const steps = [
     { id: 'customer', label: 'Customer Details', icon: '1' },
-    { id: 'income', label: 'Income & Agriculture', icon: '2' },
-    { id: 'vehicle', label: 'Loan & Vehicle Details', icon: '3' },
-    { id: 'emi', label: 'EMI Details', icon: '4' },
-    { id: 'financier', label: 'Financier Details', icon: '5' },
-    { id: 'insurance', label: 'Insurance Details', icon: '6' },
-    { id: 'deduction', label: 'Deduction & Disbursement', icon: '7' },
-    { id: 'rto', label: 'RTO', icon: '8' },
-    { id: 'documents', label: 'Documents', icon: '9' },
-    { id: 'others', label: 'Others', icon: '10' },
+    { id: 'vehicle', label: 'Vehicle & Loan', icon: '2' },
+    { id: 'emi', label: 'EMI & Financier', icon: '3' },
+    { id: 'insurance', label: 'Insurance & RTO', icon: '4' },
+    { id: 'deduction', label: 'Deduction & Disbursement', icon: '5' },
+    { id: 'documents', label: 'Documents', icon: '6' },
   ];
 
   const { data: banks = [] } = useQuery({
@@ -82,17 +78,11 @@ export default function CreateLoan() {
     currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentPincode: '',
     sameAsCurrentAddress: false,
     permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentPincode: '',
-    // Additional fields for DB mapping
-    fileSignDate: '', disburseDate: '', productName: '', model: '', productCode: '',
-    hpnAfterPdd: '', rtoRcHandoverDate: '', forClosure: 'No', customerTrackCompany: '',
     // Loan & Vehicle Details
-    loanNumber: '', grid: '', loanAmount: '', actualLoanAmount: '', ltv: '', loanTypeVehicle: '',
+    loanNumber: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
     vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', vertical: '', scheme: '',
     // Income Details
-    incomeSource: '', monthlyIncome: '', nipIp: 'nip',
-    previousTrackDetails: '', loanType: '', trackStatus: '', record: '',
-    // Agriculture Details
-    agriculture: '',
+    incomeSource: '', monthlyIncome: '',
     // RTO Details
     rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
@@ -100,26 +90,15 @@ export default function CreateLoan() {
     rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
     rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false,
     // EMI Details
-    emiAmount: '', totalEmi: '', totalInterest: '', firstEmiAmount: '', firstInstallmentDueDate: '',
-    irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '', advanceEmi: '',
-    principalAmount: '', processingFee: '', bounceCharges: '', penaltyCharges: '',
+    irr: '', tenure: '60', emiStartDate: '', emiEndDate: '',
     // Financier Details
-    financierName: '', assignedBankId: '', financierExecutiveName: '', financierTeamVertical: '',
-    disburseBranchName: '', branchManagerName: '', assignedBrokerId: '', financierLoanId: '',
-    financierContactNo: '', financierEmail: '', financierAddress: '', sanctionAmount: '',
-    sanctionDate: '', agreementDate: '', agreementNumber: '',
+    assignedBankId: '', assignedBrokerId: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
-    insuranceCompanyName: '', insuredName: '', idv: '', insuranceTransfer: '', insuranceHpn: '',
-    insuranceMadeBy: '', premiumAmount: '', insuranceDate: '', insuranceRenewalDate: '',
-    insurancePolicyNumber: '', insuranceType: '', insuranceCoverageAmount: '', insuranceAgentName: '',
-    insuranceAgentContact: '', insuranceNominee: '', insuranceStatus: '',
+    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '',
     // Deductions & Disbursement Details
-    fileCharge: '', loanSuraksha: '', stamping: '', valuation: '', deferralCharges: '', gst: '',
-    documentationCharges: '', otherCharges: '', totalDeduction: '',
-    netReceivedAmount: '', netDisbursementAmount: '', firstPaymentCredited: '', holdAmount: '', paymentReceivedDate: '',
+    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '',
     // Others
-    loginDate: '', approvalDate: '', financierDisburseDate: '', tat: '', bookingMode: '', sourcingPersonName: '',
-    bookingMonth: '', bookingYear: '', meharDisburseDate: '', remark: '', fileStage: '', fileStatus: 'submitted',
+    loginDate: '', approvalDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
     // Documents
     aadharFront: null, aadharBack: null, panCard: null, drivingLicence: null, lightBill: null,
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
@@ -212,16 +191,8 @@ export default function CreateLoan() {
         // Income
         income_source: form.incomeSource || null,
         monthly_income: Number(form.monthlyIncome) || null,
-        nip_ip: form.nipIp || 'nip',
-        previous_track_details: form.previousTrackDetails || null,
-        loan_type: form.loanType || null,
-        track_status: form.trackStatus || null,
-        record: form.record || null,
-        agriculture: form.agriculture || null,
         // Loan & Vehicle
-        grid: Number(form.grid) || null,
         loan_amount: Number(form.loanAmount) || 0,
-        actual_loan_amount: Number(form.actualLoanAmount) || null,
         ltv: Number(form.ltv) || null,
         loan_type_vehicle: form.loanTypeVehicle || null,
         vehicle_number: form.vehicleNumber || null,
@@ -231,113 +202,40 @@ export default function CreateLoan() {
         vertical: form.vertical || null,
         scheme: form.scheme || null,
         // EMI
-        emi_amount: Number(form.emiAmount) || emi || null,
-        total_emi: Number(form.totalEmi) || Number(form.tenure) || null,
-        total_interest: Number(form.totalInterest) || (totalInterest > 0 ? totalInterest : null),
-        first_emi_amount: Number(form.firstEmiAmount) || emi || null,
-        first_installment_due_date: form.firstInstallmentDueDate || null,
+        emi_amount: emi || null,
+        total_emi: Number(form.tenure) || null,
+        total_interest: (totalInterest > 0 ? totalInterest : null),
         irr: Number(form.irr) || null,
         tenure: Number(form.tenure) || 60,
-        emi_mode: form.emiMode || 'Monthly',
         emi_start_date: form.emiStartDate || null,
         emi_end_date: form.emiEndDate || null,
-        advance_emi: Number(form.advanceEmi) || null,
-        principal_amount: Number(form.principalAmount) || null,
         processing_fee: Number(form.processingFee) || null,
-        bounce_charges: Number(form.bounceCharges) || null,
-        penalty_charges: Number(form.penaltyCharges) || null,
         emi: emi || null,
         interest_rate: Number(form.irr) || null,
         // Financier
         assigned_bank_id: form.assignedBankId || null,
         assigned_broker_id: form.assignedBrokerId || null,
-        financier_executive_name: form.financierExecutiveName || null,
-        financier_team_vertical: form.financierTeamVertical || null,
-        disburse_branch_name: form.disburseBranchName || null,
-        branch_manager_name: form.branchManagerName || null,
-        financier_loan_id: form.financierLoanId || null,
-        financier_contact_no: form.financierContactNo || null,
-        financier_email: form.financierEmail || null,
-        financier_address: form.financierAddress || null,
         sanction_amount: Number(form.sanctionAmount) || null,
         sanction_date: form.sanctionDate || null,
-        agreement_date: form.agreementDate || null,
-        agreement_number: form.agreementNumber || null,
         // Insurance
         insurance_company_name: form.insuranceCompanyName || null,
-        insured_name: form.insuredName || null,
-        idv: Number(form.idv) || null,
-        insurance_transfer: form.insuranceTransfer || null,
-        insurance_hpn: form.insuranceHpn || null,
-        insurance_made_by: form.insuranceMadeBy || null,
         premium_amount: Number(form.premiumAmount) || null,
         insurance_date: form.insuranceDate || null,
-        insurance_renewal_date: form.insuranceRenewalDate || null,
         insurance_policy_number: form.insurancePolicyNumber || null,
-        insurance_type: form.insuranceType || null,
-        insurance_coverage_amount: Number(form.insuranceCoverageAmount) || null,
-        insurance_agent_name: form.insuranceAgentName || null,
-        insurance_agent_contact: form.insuranceAgentContact || null,
-        insurance_nominee: form.insuranceNominee || null,
-        insurance_status: form.insuranceStatus || null,
         // Deductions
-        file_charge: Number(form.fileCharge) || null,
-        loan_suraksha: Number(form.loanSuraksha) || null,
-        stamping: Number(form.stamping) || null,
-        valuation: Number(form.valuation) || null,
-        deferral_charges: Number(form.deferralCharges) || null,
-        gst: Number(form.gst) || null,
-        documentation_charges: Number(form.documentationCharges) || null,
-        other_charges: Number(form.otherCharges) || null,
+        processing_fee: Number(form.processingFee) || null,
         total_deduction: Number(form.totalDeduction) || null,
-        net_received_amount: Number(form.netReceivedAmount) || null,
         net_disbursement_amount: Number(form.netDisbursementAmount) || null,
-        first_payment_credited: form.firstPaymentCredited || null,
-        hold_amount: Number(form.holdAmount) || null,
         payment_received_date: form.paymentReceivedDate || null,
         // RTO
         rc_owner_name: form.rcOwnerName || null,
-        rc_mfg_date: form.rcMfgDate || null,
-        rc_expiry_date: form.rcExpiryDate || null,
-        hpn_at_login: form.hpnAtLogin || null,
-        hpn_after_pdd: form.hpnAfterPdd || null,
-        new_financier: form.newFinancier || null,
-        rto_docs_handover_date: form.rtoDocsHandoverDate || null,
-        rto_rc_handover_date: form.rtoRcHandoverDate || null,
         rto_agent_name: form.rtoAgentName || null,
         agent_mobile_no: form.agentMobileNo || null,
-        dto_location: form.dtoLocation || null,
-        rto_work_description: form.rtoWorkDescription || null,
-        challan: form.challan || 'No',
-        fc: form.fc || 'No',
-        for_closure: form.forClosure || 'No',
-        rto_papers: form.rtoPapers || null,
-        rto_rc: form.rtoRC,
-        rto_noc: form.rtoNOC,
-        rto_permit: form.rtoPermit,
-        rto_pollution: form.rtoPollution,
-        rto_2930_form: form.rto2930Form,
-        rto_sell_agreement: form.rtoSellAgreement,
-        rto_rc_owner_kyc: form.rtoRCOwnerKYC,
-        rto_stamp_papers: form.rtoStampPapers,
         // Others
         login_date: form.loginDate || null,
         approval_date: form.approvalDate || null,
-        file_sign_date: form.fileSignDate || null,
-        disburse_date: form.disburseDate || null,
-        financier_disburse_date: form.financierDisburseDate || null,
-        mehar_disburse_date: form.meharDisburseDate || null,
-        tat: Number(form.tat) || null,
-        booking_mode: form.bookingMode || null,
         sourcing_person_name: form.sourcingPersonName || null,
-        booking_month: form.bookingMonth || null,
-        booking_year: form.bookingYear || null,
         remark: form.remark || null,
-        file_stage: form.fileStage || null,
-        customer_track_company: form.customerTrackCompany || null,
-        product_name: form.productName || null,
-        model_year: form.model || null,
-        product_code: form.productCode || null,
         status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) as any || 'submitted',
         created_by: user?.id,
       }]).select().single();
@@ -494,60 +392,37 @@ export default function CreateLoan() {
             </div>
           )}
 
-          {/* Step 1: Income & Agriculture */}
+          {/* Step 1: Vehicle & Loan */}
           {currentStep === 1 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Income & Agriculture Details</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Income Source</label><input className={inputClass} value={form.incomeSource} onChange={e => update('incomeSource', e.target.value)} /></div>
-                <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} /></div>
-                <div><label className={labelClass}>NIP / IP</label><select className={inputClass} value={form.nipIp} onChange={e => update('nipIp', e.target.value)}><option value="nip">NIP</option><option value="ip">IP</option></select></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Repayment Track Details</h3></div>
-                <div><label className={labelClass}>Previous Track Details</label><input className={inputClass} value={form.previousTrackDetails} onChange={e => update('previousTrackDetails', e.target.value)} placeholder="NA" /></div>
-                <div><label className={labelClass}>Loan Type</label><input className={inputClass} value={form.loanType} onChange={e => update('loanType', e.target.value)} placeholder="NA" /></div>
-                <div><label className={labelClass}>Track Status</label><select className={inputClass} value={form.trackStatus} onChange={e => update('trackStatus', e.target.value)}><option value="">Select</option><option value="Closed">Closed</option><option value="Active">Active</option><option value="Overdue">Overdue</option></select></div>
-                <div><label className={labelClass}>Record</label><input className={inputClass} value={form.record} onChange={e => update('record', e.target.value)} placeholder="ETR" /></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Agriculture Details</h3></div>
-                <div className="md:col-span-3"><label className={labelClass}>Agriculture</label><input className={inputClass} value={form.agriculture} onChange={e => update('agriculture', e.target.value)} placeholder="JAMAMANDI" /></div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Loan & Vehicle */}
-          {currentStep === 2 && (
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Loan & Vehicle Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
-                <div><label className={labelClass}>Grid (₹)</label><input type="number" className={inputClass} value={form.grid} onChange={e => update('grid', e.target.value)} /></div>
-                <div><label className={labelClass}>Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Actual Loan Amount (₹)</label><input type="number" className={inputClass} value={form.actualLoanAmount} onChange={e => update('actualLoanAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
-                <div><label className={labelClass}>Loan Type (Vehicle Basis)</label><select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}><option value="">Select</option><option value="New Vehicle Loan">New Vehicle Loan</option><option value="Used Vehicle Loan">Used Vehicle Loan</option></select></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Vehicle Details</h3></div>
-                <div><label className={labelClass}>Reg. No</label><input className={inputClass} value={form.vehicleNumber} onChange={e => update('vehicleNumber', e.target.value.toUpperCase())} /></div>
+                <div><label className={labelClass}>Vehicle Reg. No</label><input className={inputClass} value={form.vehicleNumber} onChange={e => update('vehicleNumber', e.target.value.toUpperCase())} /></div>
                 <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
-                <div><label className={labelClass}>Model / Variant Name</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
-                <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2025" /></div>
+                <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
+                <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
                 <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV">PV</option><option value="CV">CV</option></select></div>
                 <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option></select></div>
+                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
+                <div><label className={labelClass}>Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+                <div><label className={labelClass}>Loan Type</label><select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}><option value="">Select</option><option value="New Vehicle Loan">New Vehicle Loan</option><option value="Used Vehicle Loan">Used Vehicle Loan</option></select></div>
+                <div><label className={labelClass}>Income Source</label><input className={inputClass} value={form.incomeSource} onChange={e => update('incomeSource', e.target.value)} /></div>
+                <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} /></div>
               </div>
             </div>
           )}
 
-          {/* Step 3: EMI Details */}
-          {currentStep === 3 && (
+          {/* Step 2: EMI & Financier */}
+          {currentStep === 2 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">EMI Details</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">EMI & Financier Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>EMI Amount (₹)</label><input type="number" className={inputClass} value={form.emiAmount} onChange={e => update('emiAmount', e.target.value)} placeholder="12683" /></div>
-                <div><label className={labelClass}>Total EMI</label><input type="number" className={inputClass} value={form.totalEmi} onChange={e => update('totalEmi', e.target.value)} placeholder="24" /></div>
-                <div><label className={labelClass}>Total Interest (₹)</label><input type="number" className={inputClass} value={form.totalInterest} onChange={e => update('totalInterest', e.target.value)} placeholder="74392" /></div>
-                <div><label className={labelClass}>First EMI Amount (₹)</label><input type="number" className={inputClass} value={form.firstEmiAmount} onChange={e => update('firstEmiAmount', e.target.value)} placeholder="12683" /></div>
-                <div><label className={labelClass}>First Installment Due Date</label><input type="date" className={inputClass} value={form.firstInstallmentDueDate} onChange={e => update('firstInstallmentDueDate', e.target.value)} /></div>
-                <div><label className={labelClass}>IRR (%)</label><input type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="28.50" /></div>
+                <div><label className={labelClass}>IRR (%)</label><input type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} /></div>
                 <div><label className={labelClass}>Tenure</label><select className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)}>{[12, 18, 24, 36, 48, 60, 72, 84].map(t => <option key={t} value={t}>{t} MONTH</option>)}</select></div>
-                <div><label className={labelClass}>EMI Mode</label><select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}><option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option></select></div>
+                <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
+                <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
+                <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
               </div>
               {emi > 0 && (
                 <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border-2 border-accent/20">
@@ -559,138 +434,52 @@ export default function CreateLoan() {
                   </div>
                 </div>
               )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Financier Details</h3></div>
+                <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker</option>{(brokers as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
+              </div>
             </div>
           )}
 
-          {/* Step 4: Financier */}
+          {/* Step 3: Insurance & RTO */}
+          {currentStep === 3 && (
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-6">Insurance & RTO Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
+                <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Insurance Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
+                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Details</h3></div>
+                <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
+                <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
+                <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Deduction & Disbursement */}
           {currentStep === 4 && (
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Financier Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
-                <div><label className={labelClass}>Financier Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} placeholder="MANOJ KUMAR" /></div>
-                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV">PV</option><option value="CV">CV</option></select></div>
-                <div><label className={labelClass}>Disburse Branch Name</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} placeholder="BIKANER" /></div>
-                <div><label className={labelClass}>Branch Manager Name</label><input className={inputClass} value={form.branchManagerName} onChange={e => update('branchManagerName', e.target.value)} placeholder="SHER SINGH" /></div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Insurance */}
-          {currentStep === 5 && (
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Insurance Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Insurance Company Name</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} placeholder="TATA AIG INSURANCE" /></div>
-                <div><label className={labelClass}>Insured Name</label><input className={inputClass} value={form.insuredName} onChange={e => update('insuredName', e.target.value)} placeholder="JAGDISH" /></div>
-                <div><label className={labelClass}>IDV (₹)</label><input type="number" className={inputClass} value={form.idv} onChange={e => update('idv', e.target.value)} placeholder="269280" /></div>
-                <div><label className={labelClass}>Insurance Transfer</label><select className={inputClass} value={form.insuranceTransfer} onChange={e => update('insuranceTransfer', e.target.value)}><option value="">Select</option><option value="Done">Done</option><option value="Pending">Pending</option></select></div>
-                <div><label className={labelClass}>Insurance HPN</label><input className={inputClass} value={form.insuranceHpn} onChange={e => update('insuranceHpn', e.target.value)} placeholder="NA" /></div>
-                <div><label className={labelClass}>Insurance Made By</label><select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}><option value="">Select</option><option value="Customer">Customer</option><option value="Company">Company</option><option value="Agent">Agent</option></select></div>
-                <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} placeholder="17974" /></div>
-                <div><label className={labelClass}>Insurance Start Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Insurance Renewal Date</label><input type="date" className={inputClass} value={form.insuranceRenewalDate} onChange={e => update('insuranceRenewalDate', e.target.value)} /></div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 6: Deduction & Disbursement */}
-          {currentStep === 6 && (
-            <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Deduction & Disbursement</h2>
-              
-              {/* Deductions Details */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Deductions Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div><label className={labelClass}>File Charge (₹)</label><input type="number" className={inputClass} value={form.fileCharge} onChange={e => update('fileCharge', e.target.value)} placeholder="7300" /></div>
-                  <div><label className={labelClass}>Loan Suraksha (₹)</label><input type="number" className={inputClass} value={form.loanSuraksha} onChange={e => update('loanSuraksha', e.target.value)} placeholder="3250" /></div>
-                  <div><label className={labelClass}>Stamping (₹)</label><input type="number" className={inputClass} value={form.stamping} onChange={e => update('stamping', e.target.value)} placeholder="1200" /></div>
-                  <div><label className={labelClass}>Valuation (₹)</label><input type="number" className={inputClass} value={form.valuation} onChange={e => update('valuation', e.target.value)} placeholder="0" /></div>
-                  <div><label className={labelClass}>Deferral Charges (₹)</label><input type="number" className={inputClass} value={form.deferralCharges} onChange={e => update('deferralCharges', e.target.value)} placeholder="0" /></div>
-                  <div><label className={labelClass}>GST (₹)</label><input type="number" className={inputClass} value={form.gst} onChange={e => update('gst', e.target.value)} placeholder="0" /></div>
-                  <div><label className={labelClass}>Documentation Charges (₹)</label><input type="number" className={inputClass} value={form.documentationCharges} onChange={e => update('documentationCharges', e.target.value)} placeholder="1251" /></div>
-                  <div><label className={labelClass}>Other Charges (₹)</label><input type="number" className={inputClass} value={form.otherCharges} onChange={e => update('otherCharges', e.target.value)} placeholder="0" /></div>
-                  <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} placeholder="13001" /></div>
-                </div>
-              </div>
-
-              {/* Disbursement Details */}
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Disbursement Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className={labelClass}>Net Received Amount (₹)</label><input type="number" className={inputClass} value={form.netReceivedAmount} onChange={e => update('netReceivedAmount', e.target.value)} placeholder="216999" /></div>
-                  <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} placeholder="216999" /></div>
-                  <div><label className={labelClass}>1st Payment Credited</label><input className={inputClass} value={form.firstPaymentCredited} onChange={e => update('firstPaymentCredited', e.target.value)} placeholder="100% in Favor of MAPL" /></div>
-                  <div><label className={labelClass}>Hold Amount (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} placeholder="0" /></div>
-                  <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 7: RTO */}
-          {currentStep === 7 && (
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">RTO Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} placeholder="JAGDISH" /></div>
-                <div><label className={labelClass}>RC Mfg. Date</label><input type="month" className={inputClass} value={form.rcMfgDate} onChange={e => update('rcMfgDate', e.target.value)} /></div>
-                <div><label className={labelClass}>RC Expiry Date</label><input type="date" className={inputClass} value={form.rcExpiryDate} onChange={e => update('rcExpiryDate', e.target.value)} /></div>
-                <div><label className={labelClass}>HPN at time of login</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="NA" /></div>
-                <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} placeholder="KAMAL FINANCE" /></div>
-                <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Work Details</h3></div>
-                <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} placeholder="DHANESH" /></div>
-                <div><label className={labelClass}>Agent Mobile No</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} placeholder="6367966369" /></div>
-                <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} placeholder="BIKANER" /></div>
-                <div className="md:col-span-3"><label className={labelClass}>RTO Work Description</label><textarea className={inputClass} rows={2} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} placeholder="HPN" /></div>
-                <div><label className={labelClass}>Challan</label><select className={inputClass} value={form.challan} onChange={e => update('challan', e.target.value)}><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                <div><label className={labelClass}>FC</label><select className={inputClass} value={form.fc} onChange={e => update('fc', e.target.value)}><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Papers Checklist</h3></div>
-                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoRC} onChange={e => setForm({...form, rtoRC: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">RC Copy</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoNOC} onChange={e => setForm({...form, rtoNOC: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">NOC</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoPermit} onChange={e => setForm({...form, rtoPermit: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">Permit</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoPollution} onChange={e => setForm({...form, rtoPollution: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">Pollution</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rto2930Form} onChange={e => setForm({...form, rto2930Form: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">29-30 Form</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoSellAgreement} onChange={e => setForm({...form, rtoSellAgreement: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">Sell Agreement</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoRCOwnerKYC} onChange={e => setForm({...form, rtoRCOwnerKYC: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">RC Owner KYC</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.rtoStampPapers} onChange={e => setForm({...form, rtoStampPapers: e.target.checked})} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm text-foreground">Stamp Papers</span>
-                  </label>
-                </div>
-                
-                <div className="md:col-span-3"><label className={labelClass}>RTO Papers (Additional Notes)</label><textarea className={inputClass} rows={2} value={form.rtoPapers} onChange={e => update('rtoPapers', e.target.value)} placeholder="Any additional RTO papers or notes" /></div>
+                <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} /></div>
+                <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
+                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
+                <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
+                <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
+                <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
+                <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} /></div>
               </div>
             </div>
           )}
 
-          {/* Step 8: Documents */}
-          {currentStep === 8 && (
+          {/* Step 5: Documents */}
+          {currentStep === 5 && (
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Documents</h2>
               
@@ -742,26 +531,7 @@ export default function CreateLoan() {
             </div>
           )}
 
-          {/* Step 9: Others */}
-          {currentStep === 9 && (
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Other Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Financer Disburse Date</label><input type="date" className={inputClass} value={form.financierDisburseDate} onChange={e => update('financierDisburseDate', e.target.value)} /></div>
-                <div><label className={labelClass}>TAT (Days)</label><input type="number" className={inputClass} value={form.tat} onChange={e => update('tat', e.target.value)} placeholder="16" /></div>
-                <div><label className={labelClass}>Booking Mode</label><select className={inputClass} value={form.bookingMode} onChange={e => update('bookingMode', e.target.value)}><option value="">Select</option><option value="Self">Self</option><option value="Broker">Broker</option><option value="Agent">Agent</option></select></div>
-                <div><label className={labelClass}>Sourcing Person Name</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
-                <div><label className={labelClass}>Booking Month</label><select className={inputClass} value={form.bookingMonth} onChange={e => update('bookingMonth', e.target.value)}><option value="">Select</option><option value="Jan">Jan</option><option value="Feb">Feb</option><option value="Mar">Mar</option><option value="Apr">Apr</option><option value="May">May</option><option value="Jun">Jun</option><option value="Jul">Jul</option><option value="Aug">Aug</option><option value="Sep">Sep</option><option value="Oct">Oct</option><option value="Nov">Nov</option><option value="Dec">Dec</option></select></div>
-                <div><label className={labelClass}>Booking Year</label><input type="number" className={inputClass} value={form.bookingYear} onChange={e => update('bookingYear', e.target.value)} placeholder="2026" min="2020" max="2030" /></div>
-                <div><label className={labelClass}>Mehar Disburse Date</label><input type="date" className={inputClass} value={form.meharDisburseDate} onChange={e => update('meharDisburseDate', e.target.value)} /></div>
-                <div><label className={labelClass}>File Stage</label><select className={inputClass} value={form.fileStage} onChange={e => update('fileStage', e.target.value)}><option value="">Select</option><option value="Login">Login</option><option value="Approval">Approval</option><option value="Disburse">Disburse</option><option value="Closed">Closed</option></select></div>
-                <div><label className={labelClass}>File Status</label><select className={inputClass} value={form.fileStatus} onChange={e => update('fileStatus', e.target.value)}><option value="submitted">Submitted</option><option value="under_review">Under Review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="disbursed">Disbursed</option></select></div>
-                <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} placeholder="Enter any additional remarks" /></div>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Navigation Buttons */}
