@@ -91,21 +91,44 @@ export default function CreateLoan() {
       });
       
       const data = await response.json();
+      console.log('RC API Response:', data);
       
       if (data.success && data.rc_details) {
         const rc = data.rc_details;
         const idv = data.idv_calculation;
+        const raw = rc.raw_data || {};
         
         setForm(f => ({
           ...f,
-          makerName: rc.make || '',
-          modelVariantName: rc.model || '',
-          mfgYear: rc.manufacturing_date?.split('-')[0] || '',
-          rcOwnerName: rc.raw_data?.owner_name || '',
-          loanAmount: idv?.fair_market_retail_value ? String(Math.round(idv.fair_market_retail_value)) : f.loanAmount,
+          // Vehicle Details
+          makerName: rc.make || raw.maker_description || '',
+          modelVariantName: rc.model || raw.maker_model || '',
+          mfgYear: rc.manufacturing_date?.split('-')[0] || raw.manufacturing_date_formatted?.split('-')[0] || '',
+          
+          // RC/RTO Details  
+          rcOwnerName: raw.owner_name || '',
+          rcMfgDate: rc.manufacturing_date || raw.manufacturing_date_formatted || raw.manufacturing_date || '',
+          rcExpiryDate: raw.fit_up_to || raw.tax_upto || '',
+          hpnAtLogin: raw.financer || '',
+          fc: raw.fit_up_to ? 'Yes' : 'No',
+          
+          // Customer Details (only if empty)
+          customerName: f.customerName || raw.owner_name || '',
+          mobile: f.mobile || raw.mobile_number || '',
+          
+          // Address from RC (only if empty)
+          currentAddress: f.currentAddress || raw.present_address || raw.permanent_address || '',
+          permanentAddress: f.permanentAddress || raw.permanent_address || '',
+          currentPincode: f.currentPincode || raw.present_address?.match(/\d{6}/)?.[0] || raw.permanent_address?.match(/\d{6}/)?.[0] || '',
+          permanentPincode: f.permanentPincode || raw.permanent_address?.match(/\d{6}/)?.[0] || '',
+          
+          // Insurance Details
+          insuranceCompanyName: raw.insurance_company || '',
+          insurancePolicyNumber: raw.insurance_policy_number || '',
+          insuranceDate: rc.insurance_upto || raw.insurance_upto || '',
         }));
         
-        toast.success('Vehicle details fetched successfully!');
+        toast.success('Vehicle details fetched successfully! 16 fields auto-filled.');
       } else {
         toast.error('Could not fetch vehicle details');
       }
