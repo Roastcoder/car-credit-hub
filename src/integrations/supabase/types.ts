@@ -185,6 +185,106 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          aadhar_number: string | null
+          address: string | null
+          branch_id: string | null
+          converted_to_loan: boolean | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_name: string
+          district: string | null
+          financier_name: string | null
+          id: string
+          irr_requested: number | null
+          loan_amount_required: number | null
+          loan_id: string | null
+          manager_name: string | null
+          our_branch: string | null
+          pan_number: string | null
+          phone_no: string
+          pin_code: string | null
+          sourcing_person_name: string | null
+          tehsil: string | null
+          updated_at: string
+          vehicle_no: string | null
+        }
+        Insert: {
+          aadhar_number?: string | null
+          address?: string | null
+          branch_id?: string | null
+          converted_to_loan?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name: string
+          district?: string | null
+          financier_name?: string | null
+          id?: string
+          irr_requested?: number | null
+          loan_amount_required?: number | null
+          loan_id?: string | null
+          manager_name?: string | null
+          our_branch?: string | null
+          pan_number?: string | null
+          phone_no: string
+          pin_code?: string | null
+          sourcing_person_name?: string | null
+          tehsil?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Update: {
+          aadhar_number?: string | null
+          address?: string | null
+          branch_id?: string | null
+          converted_to_loan?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          district?: string | null
+          financier_name?: string | null
+          id?: string
+          irr_requested?: number | null
+          loan_amount_required?: number | null
+          loan_id?: string | null
+          manager_name?: string | null
+          our_branch?: string | null
+          pan_number?: string | null
+          phone_no?: string
+          pin_code?: string | null
+          sourcing_person_name?: string | null
+          tehsil?: string | null
+          updated_at?: string
+          vehicle_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_documents: {
         Row: {
           created_at: string
@@ -362,10 +462,18 @@ export type Database = {
           rc_owner_name: string | null
           record: string | null
           remark: string | null
+          rto_2930_form: boolean | null
           rto_agent_name: string | null
           rto_docs_handover_date: string | null
+          rto_noc: boolean | null
           rto_papers: string | null
+          rto_permit: boolean | null
+          rto_pollution: boolean | null
+          rto_rc: boolean | null
           rto_rc_handover_date: string | null
+          rto_rc_owner_kyc: boolean | null
+          rto_sell_agreement: boolean | null
+          rto_stamp_papers: boolean | null
           rto_work_description: string | null
           sanction_amount: number | null
           sanction_date: string | null
@@ -512,10 +620,18 @@ export type Database = {
           rc_owner_name?: string | null
           record?: string | null
           remark?: string | null
+          rto_2930_form?: boolean | null
           rto_agent_name?: string | null
           rto_docs_handover_date?: string | null
+          rto_noc?: boolean | null
           rto_papers?: string | null
+          rto_permit?: boolean | null
+          rto_pollution?: boolean | null
+          rto_rc?: boolean | null
           rto_rc_handover_date?: string | null
+          rto_rc_owner_kyc?: boolean | null
+          rto_sell_agreement?: boolean | null
+          rto_stamp_papers?: boolean | null
           rto_work_description?: string | null
           sanction_amount?: number | null
           sanction_date?: string | null
@@ -662,10 +778,18 @@ export type Database = {
           rc_owner_name?: string | null
           record?: string | null
           remark?: string | null
+          rto_2930_form?: boolean | null
           rto_agent_name?: string | null
           rto_docs_handover_date?: string | null
+          rto_noc?: boolean | null
           rto_papers?: string | null
+          rto_permit?: boolean | null
+          rto_pollution?: boolean | null
+          rto_rc?: boolean | null
           rto_rc_handover_date?: string | null
+          rto_rc_owner_kyc?: boolean | null
+          rto_sell_agreement?: boolean | null
+          rto_stamp_papers?: boolean | null
           rto_work_description?: string | null
           sanction_amount?: number | null
           sanction_date?: string | null

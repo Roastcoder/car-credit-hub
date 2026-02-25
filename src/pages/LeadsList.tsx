@@ -13,7 +13,7 @@ export default function LeadsList() {
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads', user?.branch_id],
     queryFn: async () => {
-      let query = supabase.from('leads').select('*');
+      let query = supabase.from('leads' as any).select('*');
       
       if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
         query = query.eq('branch_id', user.branch_id);
@@ -63,19 +63,23 @@ export default function LeadsList() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Customer</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Phone</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Vehicle</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Loan Amount</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Branch</th>
-                  <th className="text-center py-3 px-3 font-medium text-muted-foreground">Status</th>
-                  <th className="py-3 px-3"></th>
-                </tr>
+                 <tr className="border-b border-border">
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">ID</th>
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Customer</th>
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Phone</th>
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Vehicle</th>
+                   <th className="text-right py-3 px-3 font-medium text-muted-foreground">Loan Amount</th>
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Branch</th>
+                   <th className="text-center py-3 px-3 font-medium text-muted-foreground">Status</th>
+                   <th className="py-3 px-3"></th>
+                 </tr>
               </thead>
               <tbody>
                 {filtered.map((lead: any) => (
                   <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-3">
+                      <p className="text-xs font-mono text-accent">{lead.customer_id || '—'}</p>
+                    </td>
                     <td className="py-3 px-3">
                       <p className="font-medium text-foreground">{lead.customer_name}</p>
                       <p className="text-xs text-muted-foreground">{lead.district}</p>
