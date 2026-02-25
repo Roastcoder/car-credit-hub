@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 export default function CreateLoan() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,6 +40,14 @@ export default function CreateLoan() {
     queryFn: async () => {
       const { data } = await supabase.from('brokers').select('id, name').eq('is_active', true).order('name');
       return data ?? [];
+    },
+  });
+
+  const { data: leads = [] } = useQuery({
+    queryKey: ['leads-for-dropdown'],
+    queryFn: async () => {
+      const { data } = await supabase.from('leads' as any).select('*').order('created_at', { ascending: false });
+      return (data ?? []) as any[];
     },
   });
 
@@ -98,6 +107,29 @@ export default function CreateLoan() {
 
   const update = (key: string, val: string | File | null) => setForm(f => ({ ...f, [key]: val }));
 
+  const handleLeadSelect = (customerId: string) => {
+    const lead = leads.find((l: any) => l.customer_id === customerId);
+    if (lead) {
+      setForm(f => ({
+        ...f,
+        customerId: lead.customer_id || '',
+        customerName: lead.customer_name || '',
+        mobile: lead.phone_no || '',
+        currentAddress: lead.address || '',
+        currentTehsil: lead.tehsil || '',
+        currentDistrict: lead.district || '',
+        currentPincode: lead.pin_code || '',
+        vehicleNumber: lead.vehicle_no || '',
+        loanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
+        irr: lead.irr_requested ? String(lead.irr_requested) : '',
+        sourcingPersonName: lead.sourcing_person_name || '',
+        ourBranch: lead.our_branch || '',
+      }));
+    } else {
+      update('customerId', customerId);
+    }
+  };
+
   const handleSameAddress = (checked: boolean) => {
     setForm(f => ({
       ...f,
@@ -134,74 +166,96 @@ export default function CreateLoan() {
       const loanId = form.loanNumber || generateLoanId();
       const { data, error } = await supabase.from('loans').insert([{
         id: loanId,
-        // Application Details
         loan_number: loanId,
+        customer_id: form.customerId || null,
         applicant_name: form.customerName,
         mobile: form.mobile,
-        co_applicant_name: form.coApplicantName,
-        co_applicant_mobile: form.coApplicantMobile,
-        guarantor_name: form.guarantorName,
-        guarantor_mobile: form.guarantorMobile,
-        current_address: form.currentAddress,
-        permanent_address: form.permanentAddress,
-        login_date: form.loginDate || null,
-        file_sign_date: form.fileSignDate || null,
-        approval_date: form.approvalDate || null,
-        disburse_date: form.disburseDate || null,
-        disburse_branch_name: form.disburseBranchName,
-        our_branch: form.ourBranch,
-        remark: form.remark,
-        // Vehicle & Product
-        vehicle_number: form.vehicleNumber,
-        product_name: form.productName,
-        model_year: form.model,
-        vertical: form.vertical,
-        product_code: form.productCode,
-        // Loan Details
-        loan_amount: Number(form.loanAmount),
-        grid: Number(form.grid) || null,
-        ltv: Number(form.ltv) || null,
+        co_applicant_name: form.coApplicantName || null,
+        co_applicant_mobile: form.coApplicantMobile || null,
+        guarantor_name: form.guarantorName || null,
+        guarantor_mobile: form.guarantorMobile || null,
+        current_address: form.currentAddress || null,
+        current_village: form.currentVillage || null,
+        current_tehsil: form.currentTehsil || null,
+        current_district: form.currentDistrict || null,
+        current_pincode: form.currentPincode || null,
+        permanent_address: form.permanentAddress || null,
+        permanent_village: form.permanentVillage || null,
+        permanent_tehsil: form.permanentTehsil || null,
+        permanent_district: form.permanentDistrict || null,
+        permanent_pincode: form.permanentPincode || null,
+        our_branch: form.ourBranch || null,
         // Income
-        income_source: form.incomeSource,
+        income_source: form.incomeSource || null,
         monthly_income: Number(form.monthlyIncome) || null,
-        nip_ip: form.nipIp,
-        // Agriculture
-        agriculture: form.agriculture,
-        // RTO
-        rc_owner_name: form.rcOwnerName,
-        rc_mfg_date: form.rcMfgDate,
-        rc_expiry_date: form.rcExpiryDate || null,
-        hpn_at_login: form.hpnAtLogin,
-        hpn_after_pdd: form.hpnAfterPdd,
-        rto_rc_handover_date: form.rtoRcHandoverDate || null,
-        rto_agent_name: form.rtoAgentName,
-        agent_mobile_no: form.agentMobileNo,
-        dto_location: form.dtoLocation,
-        challan: form.challan,
-        rto_papers: form.rtoPapers,
-        for_closure: form.forClosure,
-        // EMI & Financier
-        emi_amount: Number(form.emiAmount) || emi,
-        total_emi: Number(form.totalEmi) || Number(form.tenure),
-        total_interest: Number(form.totalInterest) || totalInterest,
-        first_emi_amount: Number(form.firstEmiAmount) || emi,
+        nip_ip: form.nipIp || 'nip',
+        previous_track_details: form.previousTrackDetails || null,
+        loan_type: form.loanType || null,
+        track_status: form.trackStatus || null,
+        record: form.record || null,
+        agriculture: form.agriculture || null,
+        // Loan & Vehicle
+        grid: Number(form.grid) || null,
+        loan_amount: Number(form.loanAmount) || 0,
+        actual_loan_amount: Number(form.actualLoanAmount) || null,
+        ltv: Number(form.ltv) || null,
+        loan_type_vehicle: form.loanTypeVehicle || null,
+        vehicle_number: form.vehicleNumber || null,
+        maker_name: form.makerName || null,
+        model_variant_name: form.modelVariantName || null,
+        mfg_year: form.mfgYear || null,
+        vertical: form.vertical || null,
+        scheme: form.scheme || null,
+        // EMI
+        emi_amount: Number(form.emiAmount) || emi || null,
+        total_emi: Number(form.totalEmi) || Number(form.tenure) || null,
+        total_interest: Number(form.totalInterest) || (totalInterest > 0 ? totalInterest : null),
+        first_emi_amount: Number(form.firstEmiAmount) || emi || null,
         first_installment_due_date: form.firstInstallmentDueDate || null,
-        irr: Number(form.irr),
-        tenure: Number(form.tenure),
-        emi_mode: form.emiMode,
-        emi: emi,
-        interest_rate: Number(form.irr),
-        customer_track_company: form.customerTrackCompany,
+        irr: Number(form.irr) || null,
+        tenure: Number(form.tenure) || 60,
+        emi_mode: form.emiMode || 'Monthly',
+        emi_start_date: form.emiStartDate || null,
+        emi_end_date: form.emiEndDate || null,
+        advance_emi: Number(form.advanceEmi) || null,
+        principal_amount: Number(form.principalAmount) || null,
+        processing_fee: Number(form.processingFee) || null,
+        bounce_charges: Number(form.bounceCharges) || null,
+        penalty_charges: Number(form.penaltyCharges) || null,
+        emi: emi || null,
+        interest_rate: Number(form.irr) || null,
+        // Financier
         assigned_bank_id: form.assignedBankId || null,
         assigned_broker_id: form.assignedBrokerId || null,
+        financier_executive_name: form.financierExecutiveName || null,
+        financier_team_vertical: form.financierTeamVertical || null,
+        disburse_branch_name: form.disburseBranchName || null,
+        branch_manager_name: form.branchManagerName || null,
+        financier_loan_id: form.financierLoanId || null,
+        financier_contact_no: form.financierContactNo || null,
+        financier_email: form.financierEmail || null,
+        financier_address: form.financierAddress || null,
+        sanction_amount: Number(form.sanctionAmount) || null,
+        sanction_date: form.sanctionDate || null,
+        agreement_date: form.agreementDate || null,
+        agreement_number: form.agreementNumber || null,
         // Insurance
-        insurance_company_name: form.insuranceCompanyName,
-        insured_name: form.insuredName,
+        insurance_company_name: form.insuranceCompanyName || null,
+        insured_name: form.insuredName || null,
         idv: Number(form.idv) || null,
-        insurance_transfer: form.insuranceTransfer,
-        insurance_hpn: form.insuranceHpn,
+        insurance_transfer: form.insuranceTransfer || null,
+        insurance_hpn: form.insuranceHpn || null,
+        insurance_made_by: form.insuranceMadeBy || null,
+        premium_amount: Number(form.premiumAmount) || null,
         insurance_date: form.insuranceDate || null,
         insurance_renewal_date: form.insuranceRenewalDate || null,
+        insurance_policy_number: form.insurancePolicyNumber || null,
+        insurance_type: form.insuranceType || null,
+        insurance_coverage_amount: Number(form.insuranceCoverageAmount) || null,
+        insurance_agent_name: form.insuranceAgentName || null,
+        insurance_agent_contact: form.insuranceAgentContact || null,
+        insurance_nominee: form.insuranceNominee || null,
+        insurance_status: form.insuranceStatus || null,
         // Deductions
         file_charge: Number(form.fileCharge) || null,
         loan_suraksha: Number(form.loanSuraksha) || null,
@@ -211,7 +265,55 @@ export default function CreateLoan() {
         gst: Number(form.gst) || null,
         documentation_charges: Number(form.documentationCharges) || null,
         other_charges: Number(form.otherCharges) || null,
-        // Status
+        total_deduction: Number(form.totalDeduction) || null,
+        net_received_amount: Number(form.netReceivedAmount) || null,
+        net_disbursement_amount: Number(form.netDisbursementAmount) || null,
+        first_payment_credited: form.firstPaymentCredited || null,
+        hold_amount: Number(form.holdAmount) || null,
+        payment_received_date: form.paymentReceivedDate || null,
+        // RTO
+        rc_owner_name: form.rcOwnerName || null,
+        rc_mfg_date: form.rcMfgDate || null,
+        rc_expiry_date: form.rcExpiryDate || null,
+        hpn_at_login: form.hpnAtLogin || null,
+        hpn_after_pdd: form.hpnAfterPdd || null,
+        new_financier: form.newFinancier || null,
+        rto_docs_handover_date: form.rtoDocsHandoverDate || null,
+        rto_rc_handover_date: form.rtoRcHandoverDate || null,
+        rto_agent_name: form.rtoAgentName || null,
+        agent_mobile_no: form.agentMobileNo || null,
+        dto_location: form.dtoLocation || null,
+        rto_work_description: form.rtoWorkDescription || null,
+        challan: form.challan || 'No',
+        fc: form.fc || 'No',
+        for_closure: form.forClosure || 'No',
+        rto_papers: form.rtoPapers || null,
+        rto_rc: form.rtoRC,
+        rto_noc: form.rtoNOC,
+        rto_permit: form.rtoPermit,
+        rto_pollution: form.rtoPollution,
+        rto_2930_form: form.rto2930Form,
+        rto_sell_agreement: form.rtoSellAgreement,
+        rto_rc_owner_kyc: form.rtoRCOwnerKYC,
+        rto_stamp_papers: form.rtoStampPapers,
+        // Others
+        login_date: form.loginDate || null,
+        approval_date: form.approvalDate || null,
+        file_sign_date: form.fileSignDate || null,
+        disburse_date: form.disburseDate || null,
+        financier_disburse_date: form.financierDisburseDate || null,
+        mehar_disburse_date: form.meharDisburseDate || null,
+        tat: Number(form.tat) || null,
+        booking_mode: form.bookingMode || null,
+        sourcing_person_name: form.sourcingPersonName || null,
+        booking_month: form.bookingMonth || null,
+        booking_year: form.bookingYear || null,
+        remark: form.remark || null,
+        file_stage: form.fileStage || null,
+        customer_track_company: form.customerTrackCompany || null,
+        product_name: form.productName || null,
+        model_year: form.model || null,
+        product_code: form.productCode || null,
         status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) as any || 'submitted',
         created_by: user?.id,
       }]).select().single();
@@ -286,7 +388,7 @@ export default function CreateLoan() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Customer Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Customer ID</label><input className={inputClass} value={form.customerId} onChange={e => update('customerId', e.target.value)} /></div>
+                <div><label className={labelClass}>Customer ID</label><select className={inputClass} value={form.customerId} onChange={e => handleLeadSelect(e.target.value)}><option value="">Select Customer (from Leads)</option>{leads.map((l: any) => <option key={l.id} value={l.customer_id}>{l.customer_id} — {l.customer_name} ({l.phone_no})</option>)}</select></div>
                 <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                 <div><label className={labelClass}>Co-Applicant Name</label><input className={inputClass} value={form.coApplicantName} onChange={e => update('coApplicantName', e.target.value)} /></div>

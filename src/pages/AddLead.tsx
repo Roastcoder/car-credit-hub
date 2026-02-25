@@ -39,7 +39,7 @@ export default function AddLead() {
 
   const createLead = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from('leads').insert([{
+      const { error } = await supabase.from('leads' as any).insert([{
         ...data,
         created_by: user?.id,
         branch_id: user?.branch_id,
