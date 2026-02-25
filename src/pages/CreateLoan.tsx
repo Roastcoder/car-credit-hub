@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, calculateEMI, formatCurrency } from '@/lib/mock-data';
-import { ArrowLeft, Calculator } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CreateLoan() {
@@ -50,6 +50,30 @@ export default function CreateLoan() {
       return (data ?? []) as any[];
     },
   });
+
+  const [leadSearch, setLeadSearch] = useState('');
+  const [showLeadDropdown, setShowLeadDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowLeadDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredLeads = useMemo(() => {
+    if (!leadSearch.trim()) return leads;
+    const search = leadSearch.toLowerCase();
+    return leads.filter((l: any) => 
+      l.customer_id?.toLowerCase().includes(search) ||
+      l.customer_name?.toLowerCase().includes(search) ||
+      l.phone_no?.includes(search)
+    );
+  }, [leads, leadSearch]);
 
   const [form, setForm] = useState({
     // Customer Details
@@ -388,7 +412,59 @@ export default function CreateLoan() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Customer Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Customer ID</label><select className={inputClass} value={form.customerId} onChange={e => handleLeadSelect(e.target.value)}><option value="">Select Customer (from Leads)</option>{leads.map((l: any) => <option key={l.id} value={l.customer_id}>{l.customer_id} — {l.customer_name} ({l.phone_no})</option>)}</select></div>
+                <div className="relative" ref={dropdownRef}>
+                  <label className={labelClass}>Customer ID</label>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="text"
+                      className="w-full pl-10 pr-10 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      value={leadSearch || form.customerId}
+                      onChange={(e) => {
+                        setLeadSearch(e.target.value);
+                        setShowLeadDropdown(true);
+                        if (!e.target.value) {
+                          setForm(f => ({ ...f, customerId: '' }));
+                        }
+                      }}
+                      onFocus={() => setShowLeadDropdown(true)}
+                      placeholder="Search by ID, name or phone..."
+                    />
+                    {leadSearch && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLeadSearch('');
+                          setForm(f => ({ ...f, customerId: '' }));
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {showLeadDropdown && filteredLeads.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredLeads.slice(0, 10).map((l: any) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => {
+                            handleLeadSelect(l.customer_id);
+                            setLeadSearch(l.customer_id);
+                            setShowLeadDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-0"
+                        >
+                          <div className="font-medium text-foreground text-sm">{l.customer_name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            <span className="font-mono text-accent">{l.customer_id}</span> • {l.phone_no}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                 <div><label className={labelClass}>Co-Applicant Name</label><input className={inputClass} value={form.coApplicantName} onChange={e => update('coApplicantName', e.target.value)} /></div>

@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, Plus, ArrowRight } from 'lucide-react';
+import { Search, Plus, ArrowRight, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function LeadsList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads', user?.branch_id],
@@ -78,7 +80,25 @@ export default function LeadsList() {
                 {filtered.map((lead: any) => (
                   <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                     <td className="py-3 px-3">
-                      <p className="text-xs font-mono text-accent">{lead.customer_id || '—'}</p>
+                      <button
+                        onClick={() => {
+                          if (lead.customer_id) {
+                            navigator.clipboard.writeText(lead.customer_id);
+                            setCopiedId(lead.customer_id);
+                            toast.success('Customer ID copied!');
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }
+                        }}
+                        className="flex items-center gap-1.5 text-xs font-mono text-accent hover:text-accent/80 transition-colors group"
+                        title="Click to copy"
+                      >
+                        <span>{lead.customer_id || '—'}</span>
+                        {lead.customer_id && (
+                          copiedId === lead.customer_id ? 
+                            <Check size={12} className="text-green-600" /> : 
+                            <Copy size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </button>
                     </td>
                     <td className="py-3 px-3">
                       <p className="font-medium text-foreground">{lead.customer_name}</p>
