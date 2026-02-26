@@ -294,7 +294,6 @@ export default function CreateLoan() {
         insurance_date: form.insuranceDate || null,
         insurance_policy_number: form.insurancePolicyNumber || null,
         // Deductions
-        processing_fee: Number(form.processingFee) || null,
         total_deduction: Number(form.totalDeduction) || null,
         net_disbursement_amount: Number(form.netDisbursementAmount) || null,
         payment_received_date: form.paymentReceivedDate || null,

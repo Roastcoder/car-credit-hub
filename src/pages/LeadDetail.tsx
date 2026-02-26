@@ -12,12 +12,12 @@ export default function LeadDetail() {
     queryKey: ['lead', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('leads' as any)
+        .from('leads')
         .select('*')
         .eq('id', id!)
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!id,
   });
@@ -92,8 +92,7 @@ export default function LeadDetail() {
             <h3 className="text-sm font-semibold text-foreground">Vehicle Details</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Vehicle Number" value={lead.vehicle_no} />
-            <Field label="Vehicle Type" value={lead.vehicle_type} />
+             <Field label="Vehicle Number" value={lead.vehicle_no} />
           </div>
         </div>
 
