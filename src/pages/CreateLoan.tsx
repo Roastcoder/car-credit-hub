@@ -53,7 +53,7 @@ export default function CreateLoan() {
   }, []);
 
   const filteredLeads = useMemo(() => {
-    if (!leadSearch || !leadSearch.trim()) return leads;
+    if (!leadSearch || !leadSearch.trim()) return [];
     const search = leadSearch.toLowerCase();
     return leads.filter((l: any) => 
       l.customer_id?.toLowerCase().includes(search) ||
@@ -176,31 +176,26 @@ export default function CreateLoan() {
 
   const update = (key: string, val: string | File | null) => setForm(f => ({ ...f, [key]: val }));
 
-  const handleLeadSelect = (customerId: string) => {
-    const lead = leads.find((l: any) => l.customer_id === customerId);
-    if (lead) {
-      setForm(f => ({
-        ...f,
-        customerId: lead.customer_id || '',
-        customerName: lead.customer_name || '',
-        mobile: lead.phone_no || '',
-        currentAddress: lead.address || '',
-        currentTehsil: lead.tehsil || '',
-        currentDistrict: lead.district || '',
-        currentPincode: lead.pin_code || '',
-        vehicleNumber: lead.vehicle_no || '',
-        loanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
-        irr: lead.irr_requested ? String(lead.irr_requested) : '',
-        sourcingPersonName: lead.sourcing_person_name || '',
-        ourBranch: lead.our_branch || '',
-      }));
-      
-      // Auto-fetch vehicle details if RC number exists
-      if (lead.vehicle_no && lead.vehicle_no.length >= 8) {
-        fetchVehicleDetails(lead.vehicle_no);
-      }
-    } else {
-      update('customerId', customerId);
+  const handleLeadSelect = (lead: any) => {
+    setForm(f => ({
+      ...f,
+      customerId: lead.customer_id || '',
+      customerName: lead.customer_name || '',
+      mobile: lead.phone_no || '',
+      currentAddress: lead.address || '',
+      currentTehsil: lead.tehsil || '',
+      currentDistrict: lead.district || '',
+      currentPincode: lead.pin_code || '',
+      vehicleNumber: lead.vehicle_no || '',
+      loanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
+      irr: lead.irr_requested ? String(lead.irr_requested) : '',
+      sourcingPersonName: lead.sourcing_person_name || '',
+      ourBranch: lead.our_branch || '',
+    }));
+    
+    // Auto-fetch vehicle details if RC number exists
+    if (lead.vehicle_no && lead.vehicle_no.length >= 8) {
+      fetchVehicleDetails(lead.vehicle_no);
     }
   };
 
@@ -388,7 +383,7 @@ export default function CreateLoan() {
                           key={l.id}
                           type="button"
                           onClick={() => {
-                            handleLeadSelect(l.customer_id);
+                            handleLeadSelect(l);
                             setLeadSearch(l.customer_id);
                             setShowLeadDropdown(false);
                           }}
