@@ -12,10 +12,11 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      '/api/v1': {
+      '/api': {
         target: 'https://n8n.finonest.com',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path,
       },
     },
   },

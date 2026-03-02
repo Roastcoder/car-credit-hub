@@ -97,8 +97,8 @@ export default function Login() {
               ))}
             </div>
 
-            {/* APK Download */}
-            <div className="mt-8">
+            {/* APK Download - Desktop only */}
+            <div className="mt-8 hidden lg:block">
               <a
                 href="/mehar-finance.apk"
                 download

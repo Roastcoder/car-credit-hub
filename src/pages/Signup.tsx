@@ -114,7 +114,7 @@ export default function Signup() {
               ))}
             </div>
 
-            <div className="mt-8">
+            <div className="mt-8 hidden lg:block">
               <a
                 href="/mehar-finance.apk"
                 download

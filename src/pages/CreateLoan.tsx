@@ -75,57 +75,81 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
-      const apiUrl = import.meta.env.DEV ? '/api/v1/idv/gemini' : 'https://n8n.finonest.com/api/v1/idv/gemini';
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rc_number: rcNumber }),
-      });
+      // Check cache first
+      const { data: cached } = await supabase
+        .from('rc_cache' as any)
+        .select('api_response')
+        .eq('rc_number', rcNumber.toUpperCase())
+        .single();
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let rcData;
+      
+      if (cached) {
+        console.log('Using cached RC data');
+        toast.info('Loading from database...');
+        rcData = (cached as any).api_response;
+      } else {
+        console.log('Fetching from API');
+        toast.info('Fetching from API...');
+        const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
+          },
+          body: JSON.stringify({ id_number: rcNumber, enrich: true }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        rcData = await response.json();
+        
+        // Store in cache
+        await supabase.from('rc_cache' as any).insert({
+          rc_number: rcNumber.toUpperCase(),
+          api_response: rcData
+        });
       }
       
-      const data = await response.json();
-      console.log('RC API Response:', data);
+      console.log('RC API Response:', rcData);
       
-      if (data.success && data.rc_details) {
-        const rc = data.rc_details;
-        const idv = data.idv_calculation;
-        const raw = rc.raw_data || {};
+      if (rcData.success && rcData.data) {
+        const rc = rcData.data;
         
         setForm(f => ({
           ...f,
           // Vehicle Details
-          makerName: rc.make || raw.maker_description || '',
-          modelVariantName: rc.model || raw.maker_model || '',
-          mfgYear: rc.manufacturing_date?.split('-')[0] || raw.manufacturing_date_formatted?.split('-')[0] || '',
+          makerName: rc.maker_model || rc.vehicle_manufacturer_name || '',
+          modelVariantName: rc.model || rc.vehicle_model || '',
+          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || '',
           
           // RC/RTO Details  
-          rcOwnerName: raw.owner_name || '',
-          rcMfgDate: rc.manufacturing_date || raw.manufacturing_date_formatted || raw.manufacturing_date || '',
-          rcExpiryDate: raw.fit_up_to || raw.tax_upto || '',
-          hpnAtLogin: rc.financed ? (raw.financer || 'Financed') : 'Not Financed',
-          isFinanced: rc.financed ? 'Yes' : 'No',
-          fc: raw.fit_up_to ? 'Yes' : 'No',
+          rcOwnerName: rc.owner_name || '',
+          rcMfgDate: rc.manufacturing_date || rc.registration_date || '',
+          rcExpiryDate: rc.fitness_upto || rc.tax_upto || '',
+          hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
+          isFinanced: rc.financer ? 'Yes' : 'No',
+          fc: rc.fitness_upto ? 'Yes' : 'No',
           
           // Customer Details (only if empty)
-          customerName: f.customerName || raw.owner_name || '',
-          mobile: f.mobile || raw.mobile_number || '',
+          customerName: f.customerName || rc.owner_name || '',
+          mobile: f.mobile || rc.mobile_number || '',
           
           // Address from RC (only if empty)
-          currentAddress: f.currentAddress || raw.present_address || raw.permanent_address || '',
-          permanentAddress: f.permanentAddress || raw.permanent_address || '',
-          currentPincode: f.currentPincode || raw.present_address?.match(/\d{6}/)?.[0] || raw.permanent_address?.match(/\d{6}/)?.[0] || '',
-          permanentPincode: f.permanentPincode || raw.permanent_address?.match(/\d{6}/)?.[0] || '',
+          currentAddress: f.currentAddress || rc.present_address || rc.permanent_address || '',
+          permanentAddress: f.permanentAddress || rc.permanent_address || '',
+          currentPincode: f.currentPincode || rc.present_address?.match(/\d{6}/)?.[0] || rc.permanent_address?.match(/\d{6}/)?.[0] || '',
+          permanentPincode: f.permanentPincode || rc.permanent_address?.match(/\d{6}/)?.[0] || '',
           
           // Insurance Details
-          insuranceCompanyName: raw.insurance_company || '',
-          insurancePolicyNumber: raw.insurance_policy_number || '',
-          insuranceDate: rc.insurance_upto || raw.insurance_upto || '',
+          insuranceCompanyName: rc.insurance_company || '',
+          insurancePolicyNumber: rc.insurance_policy_number || '',
+          insuranceDate: rc.insurance_upto || '',
         }));
         
-        toast.success('Vehicle details fetched successfully! 16 fields auto-filled.');
+        toast.success('Vehicle details fetched successfully!');
       } else {
         toast.error('Could not fetch vehicle details');
       }
@@ -141,11 +165,11 @@ export default function CreateLoan() {
     // Customer Details
     customerId: '', customerName: '', mobile: '', coApplicantName: '', coApplicantMobile: '',
     guarantorName: '', guarantorMobile: '', ourBranch: '',
-    currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentPincode: '',
+    currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
     sameAsCurrentAddress: false,
-    permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentPincode: '',
+    permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
     // Loan & Vehicle Details
-    loanNumber: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
+    loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
     vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', vertical: '', scheme: '',
     // Income Details
     incomeSource: '', monthlyIncome: '',
@@ -158,7 +182,7 @@ export default function CreateLoan() {
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
-    assignedBankId: '', assignedBrokerId: '', sanctionAmount: '', sanctionDate: '',
+    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
     insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '',
     // Deductions & Disbursement Details
@@ -208,6 +232,7 @@ export default function CreateLoan() {
         permanentVillage: f.currentVillage,
         permanentTehsil: f.currentTehsil,
         permanentDistrict: f.currentDistrict,
+        permanentState: f.currentState,
         permanentPincode: f.currentPincode,
       } : {})
     }));
@@ -441,6 +466,7 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
                 <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.currentTehsil} onChange={e => update('currentTehsil', e.target.value)} /></div>
                 <div><label className={labelClass}>District</label><input className={inputClass} value={form.currentDistrict} onChange={e => update('currentDistrict', e.target.value)} /></div>
+                <div><label className={labelClass}>State</label><input className={inputClass} value={form.currentState} onChange={e => update('currentState', e.target.value)} /></div>
                 <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.currentPincode} onChange={e => update('currentPincode', e.target.value)} maxLength={6} /></div>
                 <div className="md:col-span-3 mt-4">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -455,6 +481,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Village</label><input className={inputClass} value={form.permanentVillage} onChange={e => update('permanentVillage', e.target.value)} /></div>
                     <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.permanentTehsil} onChange={e => update('permanentTehsil', e.target.value)} /></div>
                     <div><label className={labelClass}>District</label><input className={inputClass} value={form.permanentDistrict} onChange={e => update('permanentDistrict', e.target.value)} /></div>
+                    <div><label className={labelClass}>State</label><input className={inputClass} value={form.permanentState} onChange={e => update('permanentState', e.target.value)} /></div>
                     <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.permanentPincode} onChange={e => update('permanentPincode', e.target.value)} maxLength={6} /></div>
                   </>
                 )}
@@ -488,14 +515,13 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
-                <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV">PV</option><option value="CV">CV</option><option value="Tractor">Tractor</option></select></div>
-                <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="SVSH">SVSH</option></select></div>
+                <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV (Car)">PV (Car)</option><option value="CV">CV</option><option value="Tractor">Tractor</option></select></div>
+                <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option></select></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
+                <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} placeholder="Optional" /></div>
                 <div><label className={labelClass}>Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} placeholder="Enter loan amount" /></div>
                 <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} placeholder="Optional" /></div>
                 <div><label className={labelClass}>Loan Type</label><select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}><option value="">Select</option><option value="New Vehicle Loan">New Vehicle Loan</option><option value="Used Vehicle Loan">Used Vehicle Loan</option></select></div>
-                <div><label className={labelClass}>Income Source</label><input className={inputClass} value={form.incomeSource} onChange={e => update('incomeSource', e.target.value)} placeholder="e.g., Salary, Business" /></div>
-                <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} placeholder="Enter monthly income" /></div>
               </div>
             </div>
 
@@ -526,7 +552,10 @@ export default function CreateLoan() {
               )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                 <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Financier Details</h3></div>
-                <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier Name</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                <div><label className={labelClass}>Financier Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} placeholder="Financier Executive Name" /></div>
+                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Select Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV">PV</option><option value="CV">CV</option><option value="Tractor">Tractor</option></select></div>
+                <div><label className={labelClass}>Disburse Branch Name</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} placeholder="Disburse Branch Name" /></div>
                 <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker (Optional)</option>{(brokers as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
                 {form.assignedBankId && (
                   <>
