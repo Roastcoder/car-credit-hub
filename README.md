@@ -44,7 +44,8 @@ A modern loan management system built with React, TypeScript, and Vite.
 - **Routing**: React Router v6
 - **Forms**: React Hook Form + Zod
 - **Charts**: Recharts
-- **Database**: Supabase (PostgreSQL)
+- **Backend**: PHP REST API
+- **Database**: MySQL
 
 ## 📁 Project Structure
 
@@ -65,14 +66,11 @@ A modern loan management system built with React, TypeScript, and Vite.
 │   ├── contexts/           # React contexts
 │   │   └── AuthContext.tsx
 │   ├── hooks/              # Custom hooks
-│   ├── lib/                # Utilities
-│   │   ├── auth.ts
-│   │   ├── utils.ts
-│   │   └── mock-data.ts
-│   └── integrations/       # External integrations
-│       └── supabase/
+│   └── lib/                # Utilities
+│       ├── auth.ts
+│       ├── utils.ts
+│       └── mock-data.ts
 ├── public/                 # Static assets
-├── supabase/              # Database migrations
 ├── Dockerfile             # Docker configuration
 ├── nginx.conf             # Nginx configuration
 └── package.json
@@ -106,8 +104,7 @@ docker run -p 80:80 car-credit-hub
 Create `.env` file:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
+VITE_API_URL=http://localhost:8000/api
 ```
 
 ## 📦 Features
@@ -125,15 +122,4 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
 
 Deploy on Coolify by connecting your Git repository. The Dockerfile will be auto-detected.
 
-## 👨‍💻 About Me
 
-Built by **Mehar Singh** - Full Stack Developer
-
-- 🌐 Portfolio: [meharsingh.dev](https://meharsingh.dev)
-- 💼 LinkedIn: [linkedin.com/in/meharsingh](https://linkedin.com/in/meharsingh)
-- 📧 Email: mehar@example.com
-- 🐙 GitHub: [github.com/meharsingh](https://github.com/meharsingh)
-
-## 📄 License
-
-MIT
