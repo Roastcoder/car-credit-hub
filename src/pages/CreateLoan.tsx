@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, calculateEMI, formatCurrency } from '@/lib/mock-data';
 import { ArrowLeft, Calculator, Search, X } from 'lucide-react';

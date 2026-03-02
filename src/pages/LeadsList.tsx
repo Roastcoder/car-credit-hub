@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Plus, ArrowRight, Copy, Check, Eye } from 'lucide-react';
 import { toast } from 'sonner';

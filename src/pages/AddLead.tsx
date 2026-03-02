@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';

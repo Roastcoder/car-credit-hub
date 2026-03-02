@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { toast } from 'sonner';
 import { ROLE_LABELS } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';

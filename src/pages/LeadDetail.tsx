@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { ArrowLeft, User, Car, IndianRupee, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/mock-data';
 

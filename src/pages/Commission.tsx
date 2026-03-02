@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { formatCurrency } from '@/lib/mock-data';
 import { exportToCSV } from '@/lib/export-utils';
 import { CreditCard, Download, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';

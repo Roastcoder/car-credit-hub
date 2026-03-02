@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { Session, User } from '@supabase/supabase-js';
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'bank' | 'broker' | 'employee';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Mail, Lock, User, Building2, Shield, BarChart3, Users, Zap, Download, Eye, EyeOff } from 'lucide-react';
 import logo from '@/assets/logo.png';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
 import { Users, Search, Shield, Edit } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';

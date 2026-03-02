@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { formatCurrency } from '@/lib/mock-data';
 import { UserCheck, Search, Plus, FileText, IndianRupee, Edit } from 'lucide-react';
 import { BrokerFormModal } from '@/components/BrokerFormModal';

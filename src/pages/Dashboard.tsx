@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 
 import LoanStatusBadge from '@/components/LoanStatusBadge';
