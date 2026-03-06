@@ -17,8 +17,15 @@ export default function CreateLoan() {
   const { data: banks = [] } = useQuery({
     queryKey: ['banks-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('banks').select('id, name').eq('is_active', true).order('name');
-      return data ?? [];
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
     },
   });
 
