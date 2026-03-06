@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-20 lg:h-24 lg:mt-4 lg:mx-4 glass-panel border border-white/40 dark:border-white/10 rounded-2xl lg:rounded-[2rem] flex items-center px-6 gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/40 dark:bg-slate-900/40">
+        <header className="h-20 lg:h-24 lg:mt-4 lg:mx-4 glass-panel border border-white/20 dark:border-white/5 rounded-2xl lg:rounded-[2rem] flex items-center px-6 gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/5 dark:bg-black/10 backdrop-blur-xl">
           {/* Mobile: Logo */}
           <div className="lg:hidden flex items-center gap-2">
             <div className="glass-card rounded-xl p-1.5 shadow-sm">
@@ -183,8 +183,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 top-14 w-60 glass-panel border border-white/50 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all">
-                  <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-black/20">
+                <div className="absolute right-0 top-14 w-60 glass-panel border border-white/20 dark:border-white/5 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all backdrop-blur-2xl bg-white/10 dark:bg-black/20">
+                  <div className="p-4 border-b border-white/10">
                     <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || 'User'}</p>
                     <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
