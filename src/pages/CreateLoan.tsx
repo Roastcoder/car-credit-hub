@@ -623,31 +623,7 @@ export default function CreateLoan() {
                 </div>
               </div>
 
-              {/* Co-Applicant Documents */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Co Applicant Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className={labelClass}>Co Applicant Aadhar Card Front</label><input type="file" className={inputClass} onChange={e => update('coAadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Co Applicant Aadhar Card Back</label><input type="file" className={inputClass} onChange={e => update('coAadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Co Applicant Pan Card</label><input type="file" className={inputClass} onChange={e => update('coPanCard', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Co Applicant Photo</label><input type="file" className={inputClass} onChange={e => update('coPhoto', e.target.files?.[0] || null)} accept="image/*" /></div>
-                </div>
-              </div>
-
-              {/* Guarantor Documents */}
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Guarantor Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className={labelClass}>Guarantor Aadhar Card Front</label><input type="file" className={inputClass} onChange={e => update('guarantorAadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Guarantor Aadhar Card Back</label><input type="file" className={inputClass} onChange={e => update('guarantorAadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Guarantor Pan Card</label><input type="file" className={inputClass} onChange={e => update('guarantorPanCard', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Rc Of Guarantor (Front)</label><input type="file" className={inputClass} onChange={e => update('guarantorRcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Rc Of Guarantor (Back)</label><input type="file" className={inputClass} onChange={e => update('guarantorRcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Guarantor Photo</label><input type="file" className={inputClass} onChange={e => update('guarantorPhoto', e.target.files?.[0] || null)} accept="image/*" /></div>
-                </div>
-              </div>
             </div>
-        </div>
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3 pb-8">
@@ -674,6 +650,7 @@ export default function CreateLoan() {
             ) : '✓ Create Application'}
           </button>
         </div>
+          </div>
       </form>
     </div>
   );

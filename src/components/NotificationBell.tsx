@@ -41,57 +41,34 @@ export default function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('notifications' as any)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
-      return (data ?? []) as unknown as Notification[];
+      return [];
     },
     enabled: !!user,
-    refetchInterval: 15000,
   });
 
-  // Realtime subscription
   useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel('notifications-realtime')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    // Realtime disabled for now
   }, [user?.id, queryClient]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markAsRead = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from('notifications' as any).update({ is_read: true } as any).eq('id', id);
+      // Disabled
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
-      if (unreadIds.length === 0) return;
-      for (const id of unreadIds) {
-        await supabase.from('notifications' as any).update({ is_read: true } as any).eq('id', id);
-      }
+      // Disabled
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const deleteNotification = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from('notifications' as any).delete().eq('id', id);
+      // Disabled
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });

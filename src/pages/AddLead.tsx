@@ -32,19 +32,28 @@ export default function AddLead() {
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches').select('*').eq('is_active', true).order('name');
-      return data ?? [];
+      try {
+        const response = await fetch('http://localhost:5000/api/branches');
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
     },
   });
 
   const createLead = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from('leads' as any).insert([{
-        ...data,
-        created_by: user?.id,
-        branch_id: user?.branch_id,
-      }]);
-      if (error) throw error;
+      const response = await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create lead');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });

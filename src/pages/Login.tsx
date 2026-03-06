@@ -30,9 +30,9 @@ export default function Login() {
     setLoading(true);
     setError('');
     
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+    const result = await login(email, password);
     setLoading(false);
-    if (err) {
+    if (result.error) {
       setError('Invalid email or password. Please try again.');
     } else {
       navigate('/dashboard');

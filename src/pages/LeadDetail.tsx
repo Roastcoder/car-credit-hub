@@ -11,13 +11,17 @@ export default function LeadDetail() {
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('id', id!)
-        .single();
-      if (error) throw error;
-      return data as any;
+      try {
+        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        if (!response.ok) throw new Error('Lead not found');
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
     },
     enabled: !!id,
   });

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, Plus, ArrowRight, Copy, Check, Eye } from 'lucide-react';
+import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LeadsList() {
@@ -11,18 +11,43 @@ export default function LeadsList() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const deleteLead = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to delete lead');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Lead deleted successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to delete lead');
+    },
+  });
 
   const { data: leads = [], isLoading } = useQuery({
-    queryKey: ['leads', user?.branch_id],
+    queryKey: ['leads'],
     queryFn: async () => {
-      let query = supabase.from('leads' as any).select('*');
-      
-      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
-        query = query.eq('branch_id', user.branch_id);
+      try {
+        const response = await fetch('http://localhost:5000/api/leads', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
       }
-      
-      const { data } = await query.order('created_at', { ascending: false });
-      return data ?? [];
     },
     enabled: !!user,
   });
@@ -131,6 +156,15 @@ export default function LeadsList() {
                         >
                           <ArrowRight size={16} />
                         </button>
+                        {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                          <button 
+                            onClick={() => setDeleteConfirm(lead.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors"
+                            title="Delete Lead"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -143,6 +177,39 @@ export default function LeadsList() {
           </div>
         )}
       </div>
+
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Delete Lead</h3>
+                <p className="text-sm text-muted-foreground mt-1">Are you sure you want to delete this lead?</p>
+              </div>
+              <button onClick={() => setDeleteConfirm(null)} className="p-1 rounded-lg hover:bg-muted">
+                <X size={20} className="text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button 
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  deleteLead.mutate(deleteConfirm);
+                  setDeleteConfirm(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

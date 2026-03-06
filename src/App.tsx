@@ -41,8 +41,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, isLoading } = useAuth();
-  if (isLoading) return null;
+  const auth = useAuth();
+  if (!auth || auth.isLoading) return null;
+  const { user } = auth;
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />

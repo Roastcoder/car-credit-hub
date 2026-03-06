@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 let authToken: string | null = localStorage.getItem('auth_token');
 
@@ -28,7 +28,8 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      const error = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(error.error || 'API Error');
     }
 
     return response.json();
@@ -57,25 +58,112 @@ export const api = {
   },
 };
 
+// Auth API
+export const authAPI = {
+  login: (email: string, password: string) => api.post('/auth/login', { email, password }),
+  signup: (name: string, email: string, password: string, role?: string) => 
+    api.post('/auth/signup', { name, email, password, role }),
+  getProfile: () => api.get('/auth/profile'),
+};
+
+// Loans API
+export const loansAPI = {
+  getAll: (params?: any) => api.get('/loans' + (params ? `?${new URLSearchParams(params)}` : '')),
+  getById: (id: number) => api.get(`/loans/${id}`),
+  create: (data: any) => api.post('/loans', data),
+  update: (id: number, data: any) => api.put(`/loans/${id}`, data),
+  delete: (id: number) => api.delete(`/loans/${id}`),
+};
+
+// Banks API
+export const banksAPI = {
+  getAll: () => api.get('/banks'),
+  getById: (id: number) => api.get(`/banks/${id}`),
+  create: (data: any) => api.post('/banks', data),
+  update: (id: number, data: any) => api.put(`/banks/${id}`, data),
+  delete: (id: number) => api.delete(`/banks/${id}`),
+};
+
+// Brokers API
+export const brokersAPI = {
+  getAll: () => api.get('/brokers'),
+  getById: (id: number) => api.get(`/brokers/${id}`),
+  create: (data: any) => api.post('/brokers', data),
+  update: (id: number, data: any) => api.put(`/brokers/${id}`, data),
+  delete: (id: number) => api.delete(`/brokers/${id}`),
+};
+
+// Users API
+export const usersAPI = {
+  getAll: () => api.get('/users'),
+  getById: (id: number) => api.get(`/users/${id}`),
+  create: (data: any) => api.post('/users', data),
+  update: (id: number, data: any) => api.put(`/users/${id}`, data),
+  delete: (id: number) => api.delete(`/users/${id}`),
+};
+
+// Leads API
+export const leadsAPI = {
+  getAll: () => api.get('/leads'),
+  getById: (id: number) => api.get(`/leads/${id}`),
+  create: (data: any) => api.post('/leads', data),
+  update: (id: number, data: any) => api.put(`/leads/${id}`, data),
+  delete: (id: number) => api.delete(`/leads/${id}`),
+};
+
+// Commissions API
+export const commissionsAPI = {
+  getAll: () => api.get('/commissions'),
+  getById: (id: number) => api.get(`/commissions/${id}`),
+  create: (data: any) => api.post('/commissions', data),
+  update: (id: number, data: any) => api.put(`/commissions/${id}`, data),
+  delete: (id: number) => api.delete(`/commissions/${id}`),
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+};
+
+// Reports API
+export const reportsAPI = {
+  loans: (params?: any) => api.get('/reports/loans' + (params ? `?${new URLSearchParams(params)}` : '')),
+  commissions: (params?: any) => api.get('/reports/commissions' + (params ? `?${new URLSearchParams(params)}` : '')),
+  sales: () => api.get('/reports/sales'),
+};
+
+// Branches API
+export const branchesAPI = {
+  getAll: () => api.get('/branches'),
+  getById: (id: number) => api.get(`/branches/${id}`),
+  create: (data: any) => api.post('/branches', data),
+  update: (id: number, data: any) => api.put(`/branches/${id}`, data),
+  delete: (id: number) => api.delete(`/branches/${id}`),
+};
+
+// Legacy supabase compatibility
 export const supabase = {
   auth: {
     signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
-      const data = await api.post('/auth.php?action=login', { email, password });
-      if (data.token) {
-        api.setToken(data.token);
+      try {
+        const data = await authAPI.login(email, password);
+        if (data.token) {
+          api.setToken(data.token);
+        }
+        return { data: { user: data.user }, error: null };
+      } catch (error: any) {
+        return { data: { user: null }, error: { message: error.message } };
       }
-      return { data: { user: data.user }, error: data.error ? { message: data.error } : null };
     },
     signUp: async ({ email, password, options }: any) => {
-      const data = await api.post('/auth.php?action=signup', {
-        email,
-        password,
-        full_name: options?.data?.full_name,
-      });
-      return { error: data.error ? { message: data.error } : null };
+      try {
+        await authAPI.signup(options?.data?.full_name || 'User', email, password);
+        return { error: null };
+      } catch (error: any) {
+        return { error: { message: error.message } };
+      }
     },
     signOut: async () => {
-      await api.post('/auth.php?action=logout', {});
       api.setToken(null);
       return {};
     },
@@ -86,44 +174,4 @@ export const supabase = {
       return { data: { subscription: { unsubscribe: () => {} } } };
     },
   },
-  from: (table: string) => ({
-    select: (columns = '*') => ({
-      eq: (column: string, value: any) => ({
-        single: async () => {
-          const data = await api.get(`/${table}.php?${column}=${value}`);
-          return { data, error: null };
-        },
-        order: (column: string, options: any) => ({
-          limit: (n: number) => ({
-            single: async () => {
-              const data = await api.get(`/${table}.php?${column}=${value}`);
-              return { data, error: null };
-            },
-          }),
-        }),
-      }),
-      order: (column: string, options: any) => ({
-        limit: async (n: number) => {
-          const data = await api.get(`/${table}.php`);
-          return { data, error: null };
-        },
-      }),
-    }),
-    insert: async (data: any) => {
-      const result = await api.post(`/${table}.php`, data);
-      return { error: result.success ? null : { message: 'Insert failed' } };
-    },
-    update: async (data: any) => ({
-      eq: async (column: string, value: any) => {
-        const result = await api.put(`/${table}.php?id=${value}`, data);
-        return { error: result.success ? null : { message: 'Update failed' } };
-      },
-    }),
-    delete: () => ({
-      eq: async (column: string, value: any) => {
-        const result = await api.delete(`/${table}.php?id=${value}`);
-        return { error: result.success ? null : { message: 'Delete failed' } };
-      },
-    }),
-  }),
 };
