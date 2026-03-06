@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
 import { Users, Search, Shield, Edit } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
@@ -21,35 +20,11 @@ export default function UserManagement() {
   const { data: profiles = [], isLoading, refetch, error } = useQuery({
     queryKey: ['users-management', user?.branch_id],
     queryFn: async () => {
-      let profilesQuery = supabase.from('profiles').select('*');
-      
-      // Filter by branch unless admin
-      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
-        profilesQuery = profilesQuery.eq('branch_id', user.branch_id);
-      }
-      
-      const { data: profilesData, error: profileError } = await profilesQuery.order('created_at', { ascending: false });
-      
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        throw profileError;
-      }
-
-      const { data: rolesData } = await supabase
-        .from('user_roles')
-        .select('*');
-
-      const { data: branchesData } = await supabase
-        .from('branches' as any)
-        .select('id, name');
-
-      console.log('Profiles:', profilesData?.length, 'Roles:', rolesData?.length);
-
-      return (profilesData ?? []).map((p: any) => ({
-        ...p,
-        role: rolesData?.find((r: any) => r.user_id === p.id)?.role ?? null,
-        branch_name: (branchesData as any[])?.find((b: any) => b.id === p.branch_id)?.name ?? null,
-      }));
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch users');
+      return res.json();
     },
     enabled: !!user,
   });

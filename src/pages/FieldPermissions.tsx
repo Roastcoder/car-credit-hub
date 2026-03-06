@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +30,11 @@ export default function FieldPermissions() {
   const { data: permissions = {}, isLoading } = useQuery({
     queryKey: ['field-permissions'],
     queryFn: async () => {
-      const { data } = await supabase.from('field_permissions').select('*').single();
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch permissions');
+      const data = await res.json();
       return data?.permissions || {};
     },
   });
@@ -40,12 +43,16 @@ export default function FieldPermissions() {
 
   const savePermissions = useMutation({
     mutationFn: async (perms: any) => {
-      const { error } = await supabase.from('field_permissions').upsert({
-        id: 1,
-        permissions: perms,
-        updated_at: new Date().toISOString(),
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ permissions: perms }),
       });
-      if (error) throw error;
+      if (!res.ok) throw new Error('Failed to save permissions');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-permissions'] });

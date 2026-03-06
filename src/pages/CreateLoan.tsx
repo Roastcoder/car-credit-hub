@@ -97,18 +97,17 @@ export default function CreateLoan() {
     setFetchingVehicleData(true);
     try {
       // Check cache first
-      const { data: cached } = await supabase
-        .from('rc_cache' as any)
-        .select('api_response')
-        .eq('rc_number', rcNumber.toUpperCase())
-        .single();
+      const cacheRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache/${rcNumber.toUpperCase()}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
       
       let rcData;
       
-      if (cached) {
+      if (cacheRes.ok) {
         console.log('Using cached RC data');
         toast.info('Loading from database...');
-        rcData = (cached as any).api_response;
+        const cached = await cacheRes.json();
+        rcData = cached.api_response;
       } else {
         console.log('Fetching from API');
         toast.info('Fetching from API...');
@@ -128,9 +127,16 @@ export default function CreateLoan() {
         rcData = await response.json();
         
         // Store in cache
-        await supabase.from('rc_cache' as any).insert({
-          rc_number: rcNumber.toUpperCase(),
-          api_response: rcData
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            rc_number: rcNumber.toUpperCase(),
+            api_response: rcData
+          }),
         });
       }
       
@@ -279,79 +285,78 @@ export default function CreateLoan() {
   const createLoan = useMutation({
     mutationFn: async () => {
       const loanId = form.loanNumber || generateLoanId();
-      const { data, error } = await supabase.from('loans').insert([{
-        id: loanId,
-        loan_number: loanId,
-        customer_id: form.customerId || null,
-        applicant_name: form.customerName,
-        mobile: form.mobile,
-        co_applicant_name: form.coApplicantName || null,
-        co_applicant_mobile: form.coApplicantMobile || null,
-        guarantor_name: form.guarantorName || null,
-        guarantor_mobile: form.guarantorMobile || null,
-        current_address: form.currentAddress || null,
-        current_village: form.currentVillage || null,
-        current_tehsil: form.currentTehsil || null,
-        current_district: form.currentDistrict || null,
-        current_pincode: form.currentPincode || null,
-        permanent_address: form.permanentAddress || null,
-        permanent_village: form.permanentVillage || null,
-        permanent_tehsil: form.permanentTehsil || null,
-        permanent_district: form.permanentDistrict || null,
-        permanent_pincode: form.permanentPincode || null,
-        our_branch: form.ourBranch || null,
-        // Income
-        income_source: form.incomeSource || null,
-        monthly_income: Number(form.monthlyIncome) || null,
-        // Loan & Vehicle
-        loan_amount: Number(form.loanAmount) || 0,
-        ltv: Number(form.ltv) || null,
-        loan_type_vehicle: form.loanTypeVehicle || null,
-        vehicle_number: form.vehicleNumber || null,
-        maker_name: form.makerName || null,
-        model_variant_name: form.modelVariantName || null,
-        mfg_year: form.mfgYear || null,
-        vertical: form.vertical || null,
-        scheme: form.scheme || null,
-        // EMI
-        emi_amount: emi || null,
-        total_emi: Number(form.tenure) || null,
-        total_interest: (totalInterest > 0 ? totalInterest : null),
-        irr: Number(form.irr) || null,
-        tenure: Number(form.tenure) || 60,
-        emi_start_date: form.emiStartDate || null,
-        emi_end_date: form.emiEndDate || null,
-        processing_fee: Number(form.processingFee) || null,
-        emi: emi || null,
-        interest_rate: Number(form.irr) || null,
-        // Financier
-        assigned_bank_id: form.assignedBankId || null,
-        assigned_broker_id: form.assignedBrokerId || null,
-        sanction_amount: Number(form.sanctionAmount) || null,
-        sanction_date: form.sanctionDate || null,
-        // Insurance
-        insurance_company_name: form.insuranceCompanyName || null,
-        premium_amount: Number(form.premiumAmount) || null,
-        insurance_date: form.insuranceDate || null,
-        insurance_policy_number: form.insurancePolicyNumber || null,
-        // Deductions
-        total_deduction: Number(form.totalDeduction) || null,
-        net_disbursement_amount: Number(form.netDisbursementAmount) || null,
-        payment_received_date: form.paymentReceivedDate || null,
-        // RTO
-        rc_owner_name: form.rcOwnerName || null,
-        rto_agent_name: form.rtoAgentName || null,
-        agent_mobile_no: form.agentMobileNo || null,
-        // Others
-        login_date: form.loginDate || null,
-        approval_date: form.approvalDate || null,
-        sourcing_person_name: form.sourcingPersonName || null,
-        remark: form.remark || null,
-        status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) as any || 'submitted',
-        created_by: user?.id,
-      }]).select().single();
-      if (error) throw error;
-      return data;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          id: loanId,
+          loan_number: loanId,
+          customer_id: form.customerId || null,
+          applicant_name: form.customerName,
+          mobile: form.mobile,
+          co_applicant_name: form.coApplicantName || null,
+          co_applicant_mobile: form.coApplicantMobile || null,
+          guarantor_name: form.guarantorName || null,
+          guarantor_mobile: form.guarantorMobile || null,
+          current_address: form.currentAddress || null,
+          current_village: form.currentVillage || null,
+          current_tehsil: form.currentTehsil || null,
+          current_district: form.currentDistrict || null,
+          current_pincode: form.currentPincode || null,
+          permanent_address: form.permanentAddress || null,
+          permanent_village: form.permanentVillage || null,
+          permanent_tehsil: form.permanentTehsil || null,
+          permanent_district: form.permanentDistrict || null,
+          permanent_pincode: form.permanentPincode || null,
+          our_branch: form.ourBranch || null,
+          income_source: form.incomeSource || null,
+          monthly_income: Number(form.monthlyIncome) || null,
+          loan_amount: Number(form.loanAmount) || 0,
+          ltv: Number(form.ltv) || null,
+          loan_type_vehicle: form.loanTypeVehicle || null,
+          vehicle_number: form.vehicleNumber || null,
+          maker_name: form.makerName || null,
+          model_variant_name: form.modelVariantName || null,
+          mfg_year: form.mfgYear || null,
+          vertical: form.vertical || null,
+          scheme: form.scheme || null,
+          emi_amount: emi || null,
+          total_emi: Number(form.tenure) || null,
+          total_interest: (totalInterest > 0 ? totalInterest : null),
+          irr: Number(form.irr) || null,
+          tenure: Number(form.tenure) || 60,
+          emi_start_date: form.emiStartDate || null,
+          emi_end_date: form.emiEndDate || null,
+          processing_fee: Number(form.processingFee) || null,
+          emi: emi || null,
+          interest_rate: Number(form.irr) || null,
+          assigned_bank_id: form.assignedBankId || null,
+          assigned_broker_id: form.assignedBrokerId || null,
+          sanction_amount: Number(form.sanctionAmount) || null,
+          sanction_date: form.sanctionDate || null,
+          insurance_company_name: form.insuranceCompanyName || null,
+          premium_amount: Number(form.premiumAmount) || null,
+          insurance_date: form.insuranceDate || null,
+          insurance_policy_number: form.insurancePolicyNumber || null,
+          total_deduction: Number(form.totalDeduction) || null,
+          net_disbursement_amount: Number(form.netDisbursementAmount) || null,
+          payment_received_date: form.paymentReceivedDate || null,
+          rc_owner_name: form.rcOwnerName || null,
+          rto_agent_name: form.rtoAgentName || null,
+          agent_mobile_no: form.agentMobileNo || null,
+          login_date: form.loginDate || null,
+          approval_date: form.approvalDate || null,
+          sourcing_person_name: form.sourcingPersonName || null,
+          remark: form.remark || null,
+          status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) || 'submitted',
+          created_by: user?.id,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create loan');
+      return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });

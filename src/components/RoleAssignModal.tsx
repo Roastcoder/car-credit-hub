@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/api';
 import { toast } from 'sonner';
 import { ROLE_LABELS } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
@@ -20,8 +19,11 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches' as any).select('*').eq('is_active', true).order('name');
-      return (data ?? []) as any[];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch branches');
+      return res.json();
     },
   });
 
@@ -36,17 +38,15 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     e.preventDefault();
     setLoading(true);
     try {
-      // Update profile with branch_id
-      await supabase.from('profiles').update({ branch_id: branchId || null } as any).eq('id', user.id);
-      
-      // Update or insert role
-      const { data: existingRole } = await supabase.from('user_roles').select('*').eq('user_id', user.id).single();
-      
-      if (existingRole) {
-        await supabase.from('user_roles').update({ role }).eq('user_id', user.id);
-      } else {
-        await supabase.from('user_roles').insert({ user_id: user.id, role });
-      }
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ role, branch_id: branchId || null }),
+      });
+      if (!res.ok) throw new Error('Failed to update user');
       
       toast.success('User updated successfully!');
       onSuccess();

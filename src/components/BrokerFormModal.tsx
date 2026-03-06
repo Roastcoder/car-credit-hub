@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { supabase } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface BrokerFormModalProps {
@@ -25,13 +24,20 @@ export function BrokerFormModal({ open, onClose, onSuccess, broker }: BrokerForm
     e.preventDefault();
     setLoading(true);
     try {
-      if (broker) {
-        await supabase.from('brokers').update(form).eq('id', broker.id);
-        toast.success('Broker updated successfully!');
-      } else {
-        await supabase.from('brokers').insert([form]);
-        toast.success('Broker added successfully!');
-      }
+      const method = broker ? 'PUT' : 'POST';
+      const url = broker 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers/${broker.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Failed to save broker');
+      toast.success(broker ? 'Broker updated successfully!' : 'Broker added successfully!');
       onSuccess();
       onClose();
     } catch (error) {

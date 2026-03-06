@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { formatCurrency } from '@/lib/mock-data';
 import { exportToCSV } from '@/lib/export-utils';
 import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
@@ -20,8 +19,11 @@ export default function Reports() {
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-reports'],
     queryFn: async () => {
-      const { data } = await supabase.from('loans').select('*, banks(name), brokers(name)');
-      return data ?? [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch loans');
+      return res.json();
     },
   });
 

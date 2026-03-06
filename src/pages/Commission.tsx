@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { formatCurrency } from '@/lib/mock-data';
 import { exportToCSV } from '@/lib/export-utils';
 import { CreditCard, Download, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';
@@ -36,11 +35,11 @@ export default function Commission() {
   const { data: commissions = [], isLoading } = useQuery({
     queryKey: ['commissions'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('commissions')
-        .select('*, brokers(name), loans(applicant_name, loan_amount)')
-        .order('created_at', { ascending: false });
-      return data ?? [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/commissions`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch commissions');
+      return res.json();
     },
   });
 

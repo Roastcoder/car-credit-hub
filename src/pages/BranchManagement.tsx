@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { Plus, Building2, MapPin, Phone, Mail, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,20 +23,30 @@ export default function BranchManagement() {
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const { data } = await supabase.from('branches' as any).select('*').order('name');
-      return (data ?? []) as any[];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch branches');
+      return res.json();
     },
   });
 
   const saveBranch = useMutation({
     mutationFn: async (data: any) => {
-      if (editingBranch) {
-        const { error } = await supabase.from('branches' as any).update(data).eq('id', editingBranch.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('branches' as any).insert([data]);
-        if (error) throw error;
-      }
+      const method = editingBranch ? 'PUT' : 'POST';
+      const url = editingBranch 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${editingBranch.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to save branch');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
@@ -50,8 +59,12 @@ export default function BranchManagement() {
 
   const deleteBranch = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('branches' as any).delete().eq('id', id);
-      if (error) throw error;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete branch');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });

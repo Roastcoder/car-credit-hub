@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { supabase } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface BankFormModalProps {
@@ -25,13 +24,20 @@ export function BankFormModal({ open, onClose, onSuccess, bank }: BankFormModalP
     e.preventDefault();
     setLoading(true);
     try {
-      if (bank) {
-        await supabase.from('banks').update(form).eq('id', bank.id);
-        toast.success('Bank updated successfully!');
-      } else {
-        await supabase.from('banks').insert([form]);
-        toast.success('Bank added successfully!');
-      }
+      const method = bank ? 'PUT' : 'POST';
+      const url = bank 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks/${bank.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Failed to save bank');
+      toast.success(bank ? 'Bank updated successfully!' : 'Bank added successfully!');
       onSuccess();
       onClose();
     } catch (error) {

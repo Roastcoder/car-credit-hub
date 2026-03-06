@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
@@ -28,13 +27,11 @@ export default function LoanDetail() {
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('loans')
-        .select('*, banks(name), brokers(name, commission_rate)')
-        .eq('id', id!)
-        .single();
-      if (error) throw error;
-      return data;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch loan');
+      return res.json();
     },
     enabled: !!id,
   });
@@ -42,23 +39,27 @@ export default function LoanDetail() {
   const { data: documents = [], refetch: refetchDocs } = useQuery({
     queryKey: ['loan-documents', id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('loan_documents')
-        .select('*')
-        .eq('loan_id', id!)
-        .order('created_at', { ascending: false });
-      return data ?? [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) return [];
+      return res.json();
     },
     enabled: !!id,
   });
 
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
-      const { error } = await supabase
-        .from('loans')
-        .update({ status: newStatus as any })
-        .eq('id', id!);
-      if (error) throw error;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loan', id] });
@@ -71,8 +72,12 @@ export default function LoanDetail() {
 
   const deleteLoan = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('loans').delete().eq('id', id!);
-      if (error) throw error;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete loan');
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
@@ -89,12 +94,20 @@ export default function LoanDetail() {
 
   const previewDocument = async (doc: any) => {
     setLoadingPreview(doc.id);
-    const { data, error } = await supabase.storage.from('loan-documents').createSignedUrl(doc.storage_path, 300);
-    setLoadingPreview(null);
-    if (data?.signedUrl) {
-      setPreviewDoc({ url: data.signedUrl, name: doc.file_name });
-    } else {
-      toast.error('Document not found in storage');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${doc.id}/preview`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewDoc({ url: data.signedUrl, name: doc.file_name });
+      } else {
+        toast.error('Document not found in storage');
+      }
+    } catch (error) {
+      toast.error('Failed to load document');
+    } finally {
+      setLoadingPreview(null);
     }
   };
 

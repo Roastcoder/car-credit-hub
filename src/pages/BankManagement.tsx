@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { formatCurrency } from '@/lib/mock-data';
 import { Building2, Search, Plus, TrendingUp, FileText, Edit } from 'lucide-react';
 import { BankFormModal } from '@/components/BankFormModal';
@@ -13,16 +12,22 @@ export default function BankManagement() {
   const { data: banks = [], isLoading, refetch } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
-      const { data } = await supabase.from('banks').select('*').order('name');
-      return data ?? [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch banks');
+      return res.json();
     },
   });
 
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-for-banks'],
     queryFn: async () => {
-      const { data } = await supabase.from('loans').select('assigned_bank_id, loan_amount, status');
-      return data ?? [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch loans');
+      return res.json();
     },
   });
 
