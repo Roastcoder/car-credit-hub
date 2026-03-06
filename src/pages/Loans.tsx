@@ -23,18 +23,19 @@ export default function Loans() {
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.branch_id],
     queryFn: async () => {
-      let query = supabase
-        .from('loans')
-        .select('*, banks(name), brokers(name), branches(name)');
-      
-      // Filter by branch unless admin
-      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
-        query = query.eq('branch_id', user.branch_id);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
       }
-      
-      const { data } = await query.order('created_at', { ascending: false });
-      return data ?? [];
     },
+    enabled: !!user,
   });
 
   const updateStatus = useMutation({

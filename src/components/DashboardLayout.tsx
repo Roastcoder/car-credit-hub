@@ -50,8 +50,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     navigate('/login');
   };
 
-  const initials = user.full_name
-    ? user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const initials = user.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : user.email.slice(0, 2).toUpperCase();
 
   return (
@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.full_name || 'User'}</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name || 'User'}</p>
                 <p className="text-xs text-sidebar-muted">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {/* Page title / User greeting */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate lg:text-base">
-              Hi, {user.full_name?.split(' ')[0] || 'User'}
+              Hi, {user.name?.split(' ')[0] || 'User'}
             </p>
             <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
               {user.role ? ROLE_LABELS[user.role] : 'User'}
@@ -169,7 +169,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                 <div className="absolute right-0 top-12 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
                   <div className="p-3 border-b border-border">
-                    <p className="text-sm font-medium text-foreground truncate">{user.full_name || 'User'}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{user.name || 'User'}</p>
                     <p className="text-xs text-muted-foreground">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
                   <button 
