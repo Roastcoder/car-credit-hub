@@ -186,12 +186,7 @@ export default function CreateLoan() {
           // Insurance Details
           insuranceCompanyName: rc.insurance_company || '',
           insurancePolicyNumber: rc.insurance_policy_number || '',
-          insuranceDate: rc.insurance_upto ? (rc.insurance_upto.includes('/') ? 
-            (() => {
-              const [month, year] = rc.insurance_upto.split('/');
-              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-              return date.toISOString().split('T')[0];
-            })() : rc.insurance_upto) : '',
+          insuranceDate: rc.insurance_upto || '',
         }));
         
         toast.success('Vehicle details fetched successfully!');
@@ -616,7 +611,7 @@ export default function CreateLoan() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                 <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Insurance Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
                 <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Details</h3></div>
                 <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
