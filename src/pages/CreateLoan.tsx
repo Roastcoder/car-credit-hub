@@ -32,16 +32,30 @@ export default function CreateLoan() {
   const { data: brokers = [] } = useQuery({
     queryKey: ['brokers-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('brokers').select('id, name').eq('is_active', true).order('name');
-      return data ?? [];
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
     },
   });
 
   const { data: leads = [] } = useQuery({
     queryKey: ['leads-for-dropdown'],
     queryFn: async () => {
-      const { data } = await supabase.from('leads' as any).select('*').order('created_at', { ascending: false });
-      return (data ?? []) as any[];
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
     },
   });
 
