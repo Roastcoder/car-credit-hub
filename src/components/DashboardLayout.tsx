@@ -62,23 +62,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-16' : 'w-64'} bg-sidebar flex flex-col transition-all duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-16' : 'w-64'} bg-gradient-to-b from-slate-900 to-slate-800 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-xl`}>
         {/* Logo */}
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-4'} h-16 border-b border-sidebar-border`}>
-          <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10'} w-auto object-contain bg-white rounded p-1`} />
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-4'} h-16 border-b border-slate-700/50 bg-slate-800/50`}>
+          <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10'} w-auto object-contain bg-white rounded-lg p-1 shadow-sm`} />
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-sidebar-foreground truncate">Mehar Finance</p>
-              <p className="text-[10px] text-sidebar-muted">Car Loan Portal</p>
+              <p className="text-sm font-bold text-white truncate">Mehar Finance</p>
+              <p className="text-[10px] text-slate-300">Car Loan Portal</p>
             </div>
           )}
-          <button className="lg:hidden ml-auto text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden ml-auto text-white hover:text-slate-300 transition-colors" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
           {filteredNav.map(item => {
             const active = location.pathname === item.path;
             return (
@@ -87,20 +87,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 title={collapsed ? item.label : undefined}
-                className={`sidebar-link ${collapsed ? 'justify-center px-0' : ''} ${active ? 'sidebar-link-active' : 'sidebar-link-inactive'}`}
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${collapsed ? 'justify-center px-2' : ''} ${
+                  active 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
               >
-                {item.icon}
-                {!collapsed && <span>{item.label}</span>}
+                <span className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}>
+                  {item.icon}
+                </span>
+                {!collapsed && <span className="truncate">{item.label}</span>}
+                {!collapsed && active && (
+                  <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-75" />
+                )}
               </Link>
             );
           })}
         </nav>
 
         {/* Collapse toggle (desktop only) */}
-        <div className="hidden lg:flex justify-center py-2 border-t border-sidebar-border">
+        <div className="hidden lg:flex justify-center py-3 border-t border-slate-700/50">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -108,24 +117,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* User */}
-        <div className={`px-2 pb-4 border-t border-sidebar-border pt-4 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <div className={`px-3 pb-4 border-t border-slate-700/50 pt-4 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {!collapsed && (
-            <div className="flex items-center gap-3 px-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary font-semibold text-sm shrink-0">
+            <div className="flex items-center gap-3 px-3 py-2 mb-3 rounded-xl bg-slate-800/50">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm shrink-0 shadow-lg">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name || 'User'}</p>
-                <p className="text-xs text-sidebar-muted">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
+                <p className="text-xs text-slate-300">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
               </div>
             </div>
           )}
           {collapsed ? (
-            <button onClick={handleLogout} title="Logout" className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors">
+            <button onClick={handleLogout} title="Logout" className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
               <LogOut size={18} />
             </button>
           ) : (
-            <button onClick={handleLogout} className="sidebar-link sidebar-link-inactive w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 w-full">
               <LogOut size={18} />
               Logout
             </button>

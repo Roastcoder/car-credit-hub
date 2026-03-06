@@ -96,54 +96,24 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
-      // Check cache first
-      const cacheRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache/${rcNumber.toUpperCase()}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      console.log('Fetching from API');
+      toast.info('Fetching from API...');
+      const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
+        },
+        body: JSON.stringify({ id_number: rcNumber, enrich: true }),
       });
       
-      let rcData;
-      
-      if (cacheRes.ok) {
-        console.log('Using cached RC data');
-        toast.info('Loading from database...');
-        const cached = await cacheRes.json();
-        rcData = cached.api_response;
-      } else {
-        console.log('Fetching from API');
-        toast.info('Fetching from API...');
-        const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
-          },
-          body: JSON.stringify({ id_number: rcNumber, enrich: true }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        rcData = await response.json();
-        
-        // Store in cache
-        try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            },
-            body: JSON.stringify({
-              rc_number: rcNumber.toUpperCase(),
-              api_response: rcData
-            }),
-          });
-        } catch (e) {
-          console.log('Cache save failed, continuing...');
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const rcData = await response.json();
       console.log('RC API Response:', rcData);
+      console.log('RC Data fields:', Object.keys(rcData.data || {}));
       
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
@@ -151,9 +121,9 @@ export default function CreateLoan() {
         setForm(f => ({
           ...f,
           // Vehicle Details
-          makerName: rc.maker_model || rc.vehicle_manufacturer_name || '',
-          modelVariantName: rc.model || rc.vehicle_model || '',
-          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || '',
+          makerName: rc.maker_model || rc.vehicle_manufacturer_name || rc.manufacturer || rc.make || '',
+          modelVariantName: rc.model || rc.vehicle_model || rc.variant || rc.model_name || rc.vehicle_class || '',
+          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || rc.manufacturing_year || rc.model_year || '',
           
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
