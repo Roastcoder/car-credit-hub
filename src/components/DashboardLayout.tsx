@@ -90,8 +90,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 title={collapsed ? item.label : undefined}
                 className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${active
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
                   }`}
               >
                 <span className={`${active ? 'text-white drop-shadow-sm' : 'text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
@@ -146,49 +146,57 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 gap-4 shrink-0">
+        <header className="h-20 lg:h-24 lg:mt-4 lg:mx-4 glass-panel border border-white/40 dark:border-white/10 rounded-2xl lg:rounded-[2rem] flex items-center px-6 gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/40 dark:bg-slate-900/40">
           {/* Mobile: Logo */}
           <div className="lg:hidden flex items-center gap-2">
-            <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain bg-white rounded p-0.5" />
+            <div className="glass-card rounded-xl p-1.5 shadow-sm">
+              <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
+            </div>
           </div>
 
           {/* Page title / User greeting */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate lg:text-base">
-              Hi, {user.name?.split(' ')[0] || 'User'}
-            </p>
-            <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
-              {user.role ? ROLE_LABELS[user.role] : 'User'}
-            </p>
+          <div className="flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-10 lg:h-12">
+            <div>
+              <p className="text-base font-bold text-gray-900 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
+                Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || 'User'}</span>
+              </p>
+              <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 font-medium truncate tracking-wide">
+                {user.role ? ROLE_LABELS[user.role] : 'User'}
+              </p>
+            </div>
           </div>
 
 
           {/* Notification Bell */}
-          <NotificationBell />
+          <div className="glass-card rounded-xl p-2 shadow-sm border border-white/40 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/10 transition-colors">
+            <NotificationBell />
+          </div>
 
           {/* Mobile: Profile Dropdown */}
           <div className="lg:hidden relative">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-semibold text-sm"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all"
             >
               {initials}
             </button>
             {profileOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 top-12 w-56 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-                  <div className="p-3 border-b border-border">
-                    <p className="text-sm font-medium text-foreground truncate">{user.name || 'User'}</p>
-                    <p className="text-xs text-muted-foreground">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
+                <div className="absolute right-0 top-14 w-60 glass-panel border border-white/50 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all">
+                  <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-black/20">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || 'User'}</p>
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
-                  <button
-                    onClick={() => { handleLogout(); setProfileOpen(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
+                  <div className="p-2">
+                    <button
+                      onClick={() => { handleLogout(); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 rounded-xl transition-all"
+                    >
+                      <LogOut size={18} />
+                      Logout
+                    </button>
+                  </div>
                 </div>
               </>
             )}
