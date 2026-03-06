@@ -153,7 +153,7 @@ export default function CreateLoan() {
           // Vehicle Details
           makerName: rc.maker_model || rc.vehicle_manufacturer_name || '',
           modelVariantName: rc.model || rc.vehicle_model || '',
-          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || '',
+          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || '',
           
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
