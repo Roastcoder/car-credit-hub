@@ -24,7 +24,7 @@ export default function BranchManagement() {
     queryKey: ['branches'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch branches');
       return res.json();
@@ -41,7 +41,7 @@ export default function BranchManagement() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify(data),
       });
@@ -61,7 +61,7 @@ export default function BranchManagement() {
     mutationFn: async (id: string) => {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to delete branch');
       return res.json();

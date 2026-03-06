@@ -98,7 +98,7 @@ export default function CreateLoan() {
     try {
       // Check cache first
       const cacheRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache/${rcNumber.toUpperCase()}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       
       let rcData;
@@ -131,7 +131,7 @@ export default function CreateLoan() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           },
           body: JSON.stringify({
             rc_number: rcNumber.toUpperCase(),
@@ -289,7 +289,7 @@ export default function CreateLoan() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
           id: loanId,
