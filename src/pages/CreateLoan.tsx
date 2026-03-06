@@ -567,12 +567,12 @@ export default function CreateLoan() {
                 )}
               </div>
               {emi > 0 && (
-                <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border-2 border-accent/20">
-                  <div className="flex items-center gap-2 mb-4"><Calculator size={18} className="text-accent" /><span className="text-accent font-bold">EMI Calculator</span></div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Monthly EMI</p><p className="text-xl font-bold text-accent">{formatCurrency(emi)}</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Interest</p><p className="text-xl font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Payable</p><p className="text-xl font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
+                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20">
+                  <div className="flex items-center gap-2 mb-3"><Calculator size={16} className="text-accent" /><span className="text-accent font-semibold text-sm">EMI Calculator</span></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Monthly EMI</p><p className="text-lg font-bold text-accent break-all">{formatCurrency(emi)}</p></div>
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalPayable)}</p></div>
                   </div>
                 </div>
               )}
