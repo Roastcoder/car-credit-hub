@@ -18,17 +18,15 @@ export default function Dashboard() {
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-dashboard', user?.branch_id],
     queryFn: async () => {
-      let query = supabase
-        .from('loans')
-        .select('*, banks(name), brokers(name)');
-      
-      // Filter by branch unless admin
-      if (user?.role !== 'super_admin' && user?.role !== 'admin' && user?.branch_id) {
-        query = query.eq('branch_id', user.branch_id);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
       }
-      
-      const { data } = await query.order('created_at', { ascending: false }).limit(50);
-      return data ?? [];
     },
     enabled: !!user,
   });
@@ -37,8 +35,15 @@ export default function Dashboard() {
     queryKey: ['branch-info', user?.branch_id],
     queryFn: async () => {
       if (!user?.branch_id) return null;
-      const { data } = await supabase.from('branches' as any).select('*').eq('id', user.branch_id).single();
-      return data as any;
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${user.branch_id}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+      } catch {
+        return null;
+      }
     },
     enabled: !!user?.branch_id,
   });
