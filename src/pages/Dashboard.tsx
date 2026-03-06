@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
-import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin } from 'lucide-react';
+import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 import FeatureCarousel from '@/components/FeatureCarousel';
@@ -69,134 +69,162 @@ export default function Dashboard() {
   }));
 
   return (
-    <div>
-      {/* Feature Carousel Banner */}
-      <FeatureCarousel />
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        {[
-          { icon: <FileText size={16} />, label: 'Total Applications', value: String(totalLoans), sub: '+12% this month', subColor: 'text-emerald-500' },
-          { icon: <IndianRupee size={16} />, label: 'Loan Volume', value: formatCurrency(totalVolume), sub: '+8.5% this month', subColor: 'text-emerald-500' },
-          { icon: <CheckCircle2 size={16} />, label: 'Disbursed', value: formatCurrency(disbursedAmount), sub: `${disbursed.length} loans` },
-          { icon: <Clock size={16} />, label: 'Under Review', value: String(pendingReview), sub: 'Needs attention', subColor: 'text-destructive' },
-        ].map((item, i) => (
-          <div key={i} className="stat-card">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-accent">{item.icon}</span>
-              <span className="text-xs text-muted-foreground">{item.label}</span>
-            </div>
-            <p className="text-xl font-bold text-foreground">{item.value}</p>
-            {item.sub && <p className={`text-xs mt-1 ${item.subColor || 'text-muted-foreground'}`}>{item.sub}</p>}
-          </div>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 mb-6">
-        <div className="stat-card">
-          <h3 className="font-semibold text-foreground mb-4">Bank-wise Distribution (₹ Lakhs)</h3>
-          <div className="h-64">
-            {bankData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={bankData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} />
-                  <Bar dataKey="amount" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
-            )}
-          </div>
+    <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10 text-text-main-light dark:text-text-main-dark">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-gray-800/60 transition-colors">
+            <span className="text-text-muted-light dark:text-text-muted-dark">Current Month</span>
+          </button>
         </div>
 
-        <div className="stat-card">
-          <h3 className="font-semibold text-foreground mb-4">Status Breakdown</h3>
-          <div className="h-64">
-            {statusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
-                    {statusData.map((_, i) => (
-                      <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
-            )}
-          </div>
+        {/* Feature Carousel Banner - Keep Existing */}
+        <div className="mb-6">
+          <FeatureCarousel />
         </div>
-      </div>
 
-      {/* Recent Loans - Mobile Cards */}
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-foreground">Recent Applications</h3>
-          <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
-        </div>
-        {loans.length === 0 ? (
-          <div className="stat-card text-center py-8 text-muted-foreground text-sm">
-            No applications yet. <Link to="/loans/new" className="text-accent hover:underline">Create your first loan →</Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {loans.slice(0, 5).map((loan: any) => (
-              <Link key={loan.id} to={`/loans/${loan.id}`} className="stat-card block active:scale-[0.98] transition-transform">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
-                    <p className="text-xs text-muted-foreground">{loan.car_make} {loan.car_model}</p>
-                  </div>
-                  <LoanStatusBadge status={loan.status} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground mono">{loan.id}</p>
-                  <p className="font-bold text-foreground text-sm">{formatCurrency(Number(loan.loan_amount))}</p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Chart Section */}
+          <div className="stat-card lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Bank-wise Distribution (₹ Lakhs)</h2>
+              </div>
+              <Link to="/loans" className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+                View Loans <ChevronRight size={16} />
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Loans - Desktop Table */}
-      <div className="stat-card hidden lg:block">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-foreground">Recent Applications</h3>
-          <Link to="/loans" className="text-sm text-accent font-medium hover:underline">View all →</Link>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">ID</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Applicant</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Car</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Amount</th>
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loans.slice(0, 5).map((loan: any) => (
-                <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => {}}>
-                  <td className="py-3 px-2 mono text-xs text-accent font-medium">{loan.id}</td>
-                  <td className="py-3 px-2 font-medium text-foreground">{loan.applicant_name}</td>
-                  <td className="py-3 px-2 text-muted-foreground">{loan.car_make} {loan.car_model}</td>
-                  <td className="py-3 px-2 font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
-                  <td className="py-3 px-2"><LoanStatusBadge status={loan.status} /></td>
-                </tr>
-              ))}
-              {loans.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">No applications yet. <Link to="/loans/new" className="text-accent hover:underline">Create your first loan →</Link></td></tr>
+            </div>
+            <div className="flex-1 flex min-h-[250px] w-full h-[250px]">
+              {bankData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={bankData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '13px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="amount" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Action Cards */}
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                  Total Loan Volume
+                </h2>
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path className="dark:stroke-blue-900/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#dbeafe" strokeWidth="3"></path>
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeDasharray="75, 100" strokeWidth="3"></path>
+                    </svg>
+                    <span className="absolute text-primary"><IndianRupee size={16} /></span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-primary">{formatCurrency(totalVolume)}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Total Processed</div>
+                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{totalLoans} Applications</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <h2 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Disbursed Amount</h2>
+              <div className="flex items-end gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(disbursedAmount)}</span>
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <CheckCircle2 size={14} className="text-emerald-500" />
+                <span>{disbursed.length} applications completed</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <h2 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Under Review</h2>
+              <div className="flex items-end gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">{pendingReview}</span>
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <Clock size={14} className="text-amber-500" />
+                <span>Applications needing attention</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="stat-card">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                  Status Breakdown
+                </h2>
+              </div>
+            </div>
+            <div className="flex-1 flex min-h-[220px] w-full h-[220px]">
+              {statusData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
+                      {statusData.map((_, i) => (
+                        <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} itemStyle={{ color: '#1e293b' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+              )}
+            </div>
+            {statusData.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-4 mt-4 text-sm">
+                {statusData.map((entry, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_CHART_COLORS[index % STATUS_CHART_COLORS.length] }}></span>
+                    <span className="text-gray-600 dark:text-gray-300">{entry.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="stat-card flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Recent Applications</h2>
+              <Link to="/loans" className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+                View all <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full text-sm">
+                <tbody>
+                  {loans.slice(0, 5).map((loan: any) => (
+                    <tr key={loan.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-white/40 dark:hover:bg-gray-800/40 transition-colors">
+                      <td className="py-3 px-2">
+                        <div className="font-medium text-gray-800 dark:text-gray-200">{loan.applicant_name}</div>
+                        <div className="text-xs text-gray-500">{loan.car_make} {loan.car_model}</div>
+                      </td>
+                      <td className="py-3 px-2 font-medium text-gray-800 dark:text-gray-200">{formatCurrency(Number(loan.loan_amount))}</td>
+                      <td className="py-3 px-2 text-right"><LoanStatusBadge status={loan.status} /></td>
+                    </tr>
+                  ))}
+                  {loans.length === 0 && (
+                    <tr><td colSpan={3} className="py-8 text-center text-gray-500">No applications yet. <Link to="/loans/new" className="text-primary hover:underline">Create your first loan →</Link></td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
