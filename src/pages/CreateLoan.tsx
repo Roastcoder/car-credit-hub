@@ -96,22 +96,53 @@ export default function CreateLoan() {
     
     setFetchingVehicleData(true);
     try {
-      console.log('Fetching from API');
-      toast.info('Fetching from API...');
-      const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
-        },
-        body: JSON.stringify({ id_number: rcNumber, enrich: true }),
+      // Check cache first
+      const cacheRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache/${rcNumber.toUpperCase()}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      let rcData;
       
-      const rcData = await response.json();
+      if (cacheRes.ok) {
+        console.log('Using cached RC data');
+        toast.info('Loading from database...');
+        const cached = await cacheRes.json();
+        rcData = cached.api_response;
+      } else {
+        console.log('Fetching from API');
+        toast.info('Fetching from API...');
+        const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
+          },
+          body: JSON.stringify({ id_number: rcNumber, enrich: true }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        rcData = await response.json();
+        
+        // Store in cache
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/rc-cache`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            },
+            body: JSON.stringify({
+              rc_number: rcNumber.toUpperCase(),
+              api_response: rcData
+            }),
+          });
+        } catch (e) {
+          console.log('Cache save failed, continuing...');
+        }
+      }
       console.log('RC API Response:', rcData);
       
       if (rcData.success && rcData.data) {
@@ -127,7 +158,17 @@ export default function CreateLoan() {
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
           rcMfgDate: rc.manufacturing_date || rc.registration_date || '',
-          rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ? '' : rc.fitness_upto) : rc.tax_upto ? (rc.tax_upto.includes('/') ? '' : rc.tax_upto) : '',
+          rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ? 
+            (() => {
+              const [month, year] = rc.fitness_upto.split('/');
+              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+              return date.toISOString().split('T')[0];
+            })() : rc.fitness_upto) : rc.tax_upto ? (rc.tax_upto.includes('/') ? 
+            (() => {
+              const [month, year] = rc.tax_upto.split('/');
+              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+              return date.toISOString().split('T')[0];
+            })() : rc.tax_upto) : '',
           hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
           isFinanced: rc.financer ? 'Yes' : 'No',
           fc: rc.fitness_upto ? 'Yes' : 'No',
@@ -145,7 +186,12 @@ export default function CreateLoan() {
           // Insurance Details
           insuranceCompanyName: rc.insurance_company || '',
           insurancePolicyNumber: rc.insurance_policy_number || '',
-          insuranceDate: rc.insurance_upto ? (rc.insurance_upto.includes('/') ? '' : rc.insurance_upto) : '',
+          insuranceDate: rc.insurance_upto ? (rc.insurance_upto.includes('/') ? 
+            (() => {
+              const [month, year] = rc.insurance_upto.split('/');
+              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+              return date.toISOString().split('T')[0];
+            })() : rc.insurance_upto) : '',
         }));
         
         toast.success('Vehicle details fetched successfully!');
