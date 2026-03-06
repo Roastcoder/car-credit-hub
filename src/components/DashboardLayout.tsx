@@ -62,23 +62,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-16' : 'w-64'} bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-72'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-4 lg:mr-2 rounded-[2.5rem] lg:h-[calc(100vh-2rem)]`}>
         {/* Logo */}
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-4'} h-16 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm`}>
-          <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10'} w-auto object-contain bg-white rounded-lg p-1 shadow-lg`} />
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
+          <div className="glass-card rounded-2xl p-2 shadow-sm">
+            <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10 w-10'} object-contain`} />
+          </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">Mehar Finance</p>
-              <p className="text-[10px] text-slate-300">Car Loan Portal</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white truncate tracking-tight">Mehar Finance</p>
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Portal</p>
             </div>
           )}
-          <button className="lg:hidden ml-auto text-white hover:text-slate-300 transition-colors" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden ml-auto text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 relative z-10">
           {filteredNav.map(item => {
             const active = location.pathname === item.path;
             return (
@@ -87,18 +89,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 title={collapsed ? item.label : undefined}
-                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${collapsed ? 'justify-center px-2' : ''} ${
-                  active 
-                    ? 'bg-blue-600/90 backdrop-blur-sm text-white shadow-lg border border-blue-500/30' 
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50 backdrop-blur-sm'
-                }`}
+                className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${active
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                  }`}
               >
-                <span className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}>
+                <span className={`${active ? 'text-white drop-shadow-sm' : 'text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
                   {item.icon}
                 </span>
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                {!collapsed && <span className="truncate tracking-wide">{item.label}</span>}
                 {!collapsed && active && (
-                  <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-75" />
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm" />
                 )}
               </Link>
             );
@@ -106,35 +107,35 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Collapse toggle (desktop only) */}
-        <div className="hidden lg:flex justify-center py-3 border-t border-slate-700/50">
+        <div className="hidden lg:flex justify-center py-4 border-t border-white/20 dark:border-white/5">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 backdrop-blur-sm transition-all duration-200"
+            className="p-2.5 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/20 dark:hover:border-white/10"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
         </div>
 
         {/* User */}
-        <div className={`px-3 pb-4 border-t border-slate-700/50 pt-4 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <div className={`px-4 pb-6 pt-6 border-t border-white/20 dark:border-white/5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {!collapsed && (
-            <div className="flex items-center gap-3 px-3 py-2 mb-3 rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm shrink-0 shadow-lg">
+            <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
-                <p className="text-xs text-slate-300">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || 'User'}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
               </div>
             </div>
           )}
           {collapsed ? (
-            <button onClick={handleLogout} title="Logout" className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/20 backdrop-blur-sm transition-colors">
-              <LogOut size={18} />
+            <button onClick={handleLogout} title="Logout" className="p-3 rounded-2xl text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 border border-transparent hover:border-red-200 dark:hover:border-red-800/30">
+              <LogOut size={20} />
             </button>
           ) : (
-            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/20 backdrop-blur-sm transition-all duration-200 w-full">
+            <button onClick={handleLogout} className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-red-600 dark:text-red-400 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 transition-all duration-300 w-full border border-red-200 dark:border-red-900/50 hover:border-transparent hover:shadow-lg hover:shadow-red-500/20">
               <LogOut size={18} />
               Logout
             </button>
@@ -150,7 +151,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="lg:hidden flex items-center gap-2">
             <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain bg-white rounded p-0.5" />
           </div>
-          
+
           {/* Page title / User greeting */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate lg:text-base">
@@ -160,14 +161,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               {user.role ? ROLE_LABELS[user.role] : 'User'}
             </p>
           </div>
-          
-          
+
+
           {/* Notification Bell */}
           <NotificationBell />
-          
+
           {/* Mobile: Profile Dropdown */}
           <div className="lg:hidden relative">
-            <button 
+            <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-semibold text-sm"
             >
@@ -181,7 +182,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     <p className="text-sm font-medium text-foreground truncate">{user.name || 'User'}</p>
                     <p className="text-xs text-muted-foreground">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => { handleLogout(); setProfileOpen(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                   >

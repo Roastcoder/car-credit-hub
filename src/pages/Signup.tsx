@@ -38,7 +38,7 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    
+
     try {
       const result = await signUp(email, password, fullName);
       if (result.error) {
@@ -46,7 +46,7 @@ export default function Signup() {
         setLoading(false);
         return;
       }
-      
+
       setLoading(false);
       toast.success('Account created! Please login.');
       navigate('/login');
@@ -64,47 +64,45 @@ export default function Signup() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-transparent font-sans">
       {/* ─── LEFT PANEL ─── */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)' }}>
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #3B82F6, transparent)' }} />
-        <div className="absolute bottom-20 left-10 w-60 h-60 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #EF4444, transparent)' }} />
-        <div className="absolute top-1/2 right-10 w-40 h-40 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #3B82F6, transparent)' }} />
-
-        <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden glass-panel m-4 lg:mr-2 rounded-[2.5rem]">
+        <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full h-full">
           <div className="flex items-center gap-3.5">
-            <div className="bg-white rounded-2xl p-2.5 shadow-xl shadow-black/20">
+            <div className="glass-card rounded-2xl p-2.5 shadow-xl">
               <img src={logo} alt="Mehar Finance" className="h-12 w-auto object-contain" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Mehar Finance</h2>
-              <p className="text-blue-300/70 text-xs font-medium tracking-wide uppercase">Car Loan Solutions</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Mehar Finance</h2>
+              <p className="text-blue-600 dark:text-blue-400 text-xs font-semibold tracking-wide uppercase">Car Loan Solutions</p>
             </div>
           </div>
 
           <div className="flex-1 flex flex-col justify-center -mt-8">
             <div className="mb-2">
-              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/20">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                 Management Portal
               </span>
             </div>
-            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-white leading-[1.15] mb-4 tracking-tight">
+            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-gray-900 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
               Car Loan Sales<br />
-              <span className="bg-gradient-to-r from-blue-400 to-red-400 bg-clip-text text-transparent">& Management</span>
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                & Management
+              </span>
             </h1>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-8">
+            <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
               Complete loan lifecycle management — from lead generation to disbursement, all in one powerful platform.
             </p>
 
             <div className="space-y-3.5">
               {features.map(f => (
                 <div key={f.title} className="flex items-start gap-3 group">
-                  <div className="shrink-0 w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-blue-400 group-hover:bg-blue-500/15 group-hover:border-blue-500/20 transition-all duration-300">
+                  <div className="shrink-0 w-9 h-9 rounded-xl glass-card flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-white/40 dark:group-hover:bg-white/10 transition-all duration-300 shadow-sm border border-white/50 dark:border-white/10">
                     {f.icon}
                   </div>
                   <div className="pt-0.5">
-                    <h3 className="text-white text-sm font-semibold mb-0.5">{f.title}</h3>
-                    <p className="text-slate-500 text-xs leading-relaxed">{f.desc}</p>
+                    <h3 className="text-gray-900 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
+                    <p className="text-gray-600 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -114,81 +112,81 @@ export default function Signup() {
               <a
                 href="/mehar-finance.apk"
                 download
-                className="inline-flex items-center gap-2.5 bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.1] hover:border-white/[0.18] text-white font-medium py-2.5 px-5 rounded-xl transition-all duration-300 text-sm"
+                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-900 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
               >
-                <Download size={16} className="text-blue-400" />
+                <Download size={16} className="text-blue-600 dark:text-blue-400" />
                 Download Android App
               </a>
             </div>
           </div>
 
-          <p className="text-slate-600 text-xs">© 2025 Mehar Finance. All rights reserved.</p>
+          <p className="text-gray-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
         </div>
       </div>
 
       {/* ─── RIGHT PANEL ─── */}
-      <div className="flex-1 flex items-center justify-center p-5 sm:p-8 bg-slate-50 dark:bg-slate-900/50">
+      <div className="flex-1 flex items-center justify-center p-5 sm:p-8 bg-transparent">
         <div className="w-full max-w-[420px]">
           {/* Mobile header */}
           <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="bg-white rounded-2xl p-3 shadow-lg shadow-black/5 mb-3 border border-slate-100">
+            <div className="glass-card rounded-2xl p-3 shadow-lg mb-3">
               <img src={logo} alt="Mehar Finance" className="h-11 w-auto object-contain" />
             </div>
-            <h2 className="text-lg font-bold text-foreground">Mehar Finance</h2>
-            <p className="text-xs text-muted-foreground">Car Loan Portal</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Mehar Finance</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Car Loan Portal</p>
           </div>
 
           {/* Card */}
-          <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl shadow-black/[0.04] border border-slate-200/70 dark:border-slate-700/50 p-7 sm:p-8">
+          <div className="glass-card p-7 sm:p-8 shadow-xl">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground tracking-tight">Create Account</h2>
-              <p className="text-sm text-muted-foreground mt-1">Join Mehar Finance team</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">Create Account</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">Join Mehar Finance team</p>
             </div>
 
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name</label>
+                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Full Name</label>
                 <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-foreground text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Email Address</label>
+                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Email Address</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-foreground text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
+                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Password</label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-foreground text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -196,17 +194,17 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Branch</label>
+                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Branch</label>
                 <div className="relative">
-                  <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none shadow-sm backdrop-blur-md font-medium"
                   >
                     <option value="">Select your branch</option>
                     {branches.map((branch: any) => (
-                      <option key={branch.id} value={branch.id}>
+                      <option key={branch.id} value={branch.id} className="text-gray-900 bg-white dark:bg-slate-800 dark:text-white">
                         {branch.name} ({branch.code})
                       </option>
                     ))}
@@ -217,8 +215,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-xl text-white text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 hover:translate-y-[-1px] active:translate-y-0"
-                style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' }}
+                className="w-full flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl text-white text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 bg-gradient-to-r from-blue-600 to-indigo-600 border border-white/20"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -234,17 +231,17 @@ export default function Signup() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-700/50 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-6 pt-5 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                 Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline underline-offset-2">
+                <Link to="/login" className="text-blue-700 dark:text-blue-400 font-bold hover:underline underline-offset-2">
                   Sign In
                 </Link>
               </p>
             </div>
           </div>
 
-          <p className="text-center text-xs text-slate-400 mt-5">
+          <p className="text-center text-xs text-gray-500 dark:text-slate-400 mt-5 font-medium drop-shadow-sm">
             Secured with end-to-end encryption
           </p>
         </div>
