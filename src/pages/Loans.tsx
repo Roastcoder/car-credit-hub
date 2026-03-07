@@ -113,16 +113,16 @@ export default function Loans() {
           <h1 className="text-2xl font-bold text-foreground">Loan Applications</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-hide">
-          <button onClick={handleExport} className="whitespace-nowrap flex-shrink-0 flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
-            <Download size={16} /> Export
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-hide mt-3 sm:mt-0">
+          <button onClick={handleExport} className="whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 bg-muted text-foreground font-medium py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl hover:bg-muted/80 transition-opacity text-xs sm:text-sm">
+            <Download size={14} className="sm:w-4 sm:h-4" /> Export
           </button>
-          <button onClick={() => importRef.current?.click()} className="whitespace-nowrap flex-shrink-0 flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
-            <Upload size={16} /> Import CSV
+          <button onClick={() => importRef.current?.click()} className="whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 sm:gap-2 bg-muted text-foreground font-medium py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl hover:bg-muted/80 transition-opacity text-xs sm:text-sm">
+            <Upload size={14} className="sm:w-4 sm:h-4" /> Import CSV
           </button>
           <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-          <Link to="/loans/new" className="whitespace-nowrap flex-shrink-0 inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
-            <Plus size={16} /> New Application
+          <Link to="/loans/new" className="whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 bg-accent text-accent-foreground font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm">
+            <Plus size={14} className="sm:w-4 sm:h-4" /> New Application
           </Link>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function Loans() {
             className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center mt-1 sm:mt-0">
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'all' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
