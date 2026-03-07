@@ -12,23 +12,31 @@ export const subscribeUserToPush = async (): Promise<PushSubscription | null> =>
     return null;
   }
 
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || '')
-  });
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || '')
+    });
 
-  // Send subscription to backend
-  await fetch(`${import.meta.env.VITE_API_URL}/notifications/subscribe`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify(subscription)
-  });
+    const token = localStorage.getItem('token');
+    if (!token) return subscription;
 
-  return subscription;
+    // Send subscription to backend
+    await fetch(`${import.meta.env.VITE_API_URL}/notifications/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(subscription)
+    });
+
+    return subscription;
+  } catch (error) {
+    console.error('Push subscription error:', error);
+    return null;
+  }
 };
 
 const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
