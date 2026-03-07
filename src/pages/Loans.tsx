@@ -53,13 +53,8 @@ export default function Loans() {
 
   const handleExport = () => {
     if (filtered.length === 0) { toast.error('No data to export'); return; }
-    const rows = filtered.map((l: any) => ({
-      'Loan ID': l.id, 'Applicant': l.applicant_name, 'Mobile': l.mobile,
-      'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
-      'Bank': l.banks?.name || '', 'Branch': l.branches?.name || '',
-      'Loan Amount': l.loan_amount, 'EMI': l.emi, 'Status': l.status,
-    }));
-    exportToCSV(rows, 'loans');
+    // Export complete loan data with all fields
+    exportToCSV(filtered, 'loans');
     toast.success('Loans exported as CSV!');
   };
 

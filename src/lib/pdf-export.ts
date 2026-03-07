@@ -43,6 +43,7 @@ function buildLoanHTML(loan: LoanData): string {
   
   .hdr-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #1a3a6b; padding-bottom: 6px; }
   .hdr-table td { vertical-align: middle; padding: 4px; }
+  .logo { height: 40px; width: auto; }
   .company-name { font-size: 18px; font-weight: 800; color: #1a3a6b; }
   .company-sub { font-size: 9px; color: #666; }
   .hdr-right { text-align: right; }
@@ -71,6 +72,7 @@ function buildLoanHTML(loan: LoanData): string {
 <table class="hdr-table">
   <tr>
     <td style="width:70%">
+      <img src="/logo.png" alt="Mehar Finance" class="logo" onerror="this.style.display='none'"/>
       <span class="company-name">Mehar Finance</span><br/>
       <span class="company-sub">Vehicle Loan Solutions &bull; Since 2015</span>
     </td>
@@ -94,37 +96,49 @@ function buildLoanHTML(loan: LoanData): string {
   ${sectionTitle('&#128100;', 'Applicant Information')}
   ${row4('Customer ID', fmt(loan.customer_id), 'Loan Number', fmt(loan.loan_number), 'Applicant Name', fmt(loan.applicant_name), 'Mobile', fmt(loan.mobile))}
   ${row4('Co-Applicant', fmt(loan.co_applicant_name), 'Co-App Mobile', fmt(loan.co_applicant_mobile), 'Guarantor', fmt(loan.guarantor_name), 'Guarantor Mobile', fmt(loan.guarantor_mobile))}
+  ${row4('Our Branch', fmt(loan.our_branch), 'Income Source', fmt(loan.income_source), 'Monthly Income', fmtCur(loan.monthly_income), '', '')}
   <tr>
-    <td class="lbl">Address</td><td class="val" colspan="3">${fmt(loan.current_address || loan.address)}</td>
+    <td class="lbl">Current Address</td><td class="val" colspan="3">${fmt(loan.current_address || loan.address)}</td>
     <td class="lbl">Village</td><td class="val">${fmt(loan.current_village)}</td>
-    <td class="lbl">District</td><td class="val">${fmt(loan.current_district)}</td>
+    <td class="lbl">Tehsil</td><td class="val">${fmt(loan.current_tehsil)}</td>
   </tr>
+  ${row4('District', fmt(loan.current_district), 'State', fmt(loan.current_state), 'Pincode', fmt(loan.current_pincode), '', '')}
+  <tr>
+    <td class="lbl">Permanent Address</td><td class="val" colspan="3">${fmt(loan.permanent_address)}</td>
+    <td class="lbl">Perm. Village</td><td class="val">${fmt(loan.permanent_village)}</td>
+    <td class="lbl">Perm. Tehsil</td><td class="val">${fmt(loan.permanent_tehsil)}</td>
+  </tr>
+  ${row4('Perm. District', fmt(loan.permanent_district), 'Perm. State', fmt(loan.permanent_state), 'Perm. Pincode', fmt(loan.permanent_pincode), '', '')}
 
   ${sectionTitle('&#128663;', 'Vehicle Details')}
   ${row4('Reg. No', fmt(loan.vehicle_number), 'Maker', fmt(loan.maker_name || loan.car_make), 'Model/Variant', fmt(loan.model_variant_name || loan.car_model), 'Mfg Year', fmt(loan.mfg_year))}
-  ${row4('Vertical', fmt(loan.vertical), 'Scheme', fmt(loan.scheme), 'Valuation', fmtCur(loan.valuation), 'On Road Price', fmtCur(loan.on_road_price))}
+  ${row4('Vertical', fmt(loan.vertical), 'Scheme', fmt(loan.scheme), 'Loan Type', fmt(loan.loan_type_vehicle), '')}
 
   ${sectionTitle('&#128176;', 'Loan & EMI Details')}
-  ${row4('Loan Amount', fmtCur(loan.loan_amount), 'Grid', fmtCur(loan.grid), 'LTV', loan.ltv ? loan.ltv + '%' : '—', 'IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—'))}
-  ${row4('Tenure', loan.tenure ? loan.tenure + ' months' : '—', 'EMI Mode', fmt(loan.emi_mode || 'Monthly'), 'Monthly EMI', fmtCur(loan.emi_amount || loan.emi), 'Total EMI', fmt(loan.total_emi || loan.tenure))}
-  ${row4('Total Interest', fmtCur(loan.total_interest), 'First EMI Date', formatDate(loan.first_installment_due_date), 'Down Payment', fmtCur(loan.down_payment), 'Advance EMI', fmt(loan.advance_emi))}
+  ${row4('Purpose Loan Amt', fmtCur(loan.purpose_loan_amount), 'Actual Loan Amt', fmtCur(loan.loan_amount), 'LTV', loan.ltv ? loan.ltv + '%' : '—', 'IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—'))}
+  ${row4('Tenure', loan.tenure_months || loan.tenure ? (loan.tenure_months || loan.tenure) + ' months' : '—', 'EMI Mode', fmt(loan.emi_mode || 'Monthly'), 'Monthly EMI', fmtCur(loan.emi_amount || loan.emi), 'Total Interest', fmtCur(loan.total_interest))}
+  ${row4('EMI Start Date', formatDate(loan.emi_start_date), 'EMI End Date', formatDate(loan.emi_end_date), 'Processing Fee', fmtCur(loan.processing_fee), '')}
 
   ${sectionTitle('&#127974;', 'Financier & Insurance')}
-  ${row4('Assigned Bank', fmt(loan.banks?.name), 'Financier Exec.', fmt(loan.financier_executive_name), 'Branch', fmt(loan.disburse_branch_name), 'Branch Manager', fmt(loan.branch_manager_name))}
-  ${row4('Insurance Co.', fmt(loan.insurance_company_name), 'IDV', fmtCur(loan.idv), 'Premium', fmtCur(loan.premium_amount), 'Insurance Type', fmt(loan.insurance_type))}
+  ${row4('Financier Name', fmt(loan.bank_name || loan.assigned_bank_name || loan.banks?.name), 'Executive Name', fmt(loan.financier_executive_name), 'Team Vertical', fmt(loan.financier_team_vertical), 'Disburse Branch', fmt(loan.disburse_branch_name))}
+  ${row4('Broker', fmt(loan.assigned_broker_name || loan.brokers?.name), 'Sanction Amount', fmtCur(loan.sanction_amount), 'Sanction Date', formatDate(loan.sanction_date), '')}
+  ${row4('Insurance Co.', fmt(loan.insurance_company_name), 'Premium', fmtCur(loan.premium_amount), 'Insurance Expiry', formatDate(loan.insurance_date), 'Policy Number', fmt(loan.insurance_policy_number))}
+  ${row4('Insurance Made By', fmt(loan.insurance_made_by), 'Reminder Enabled', loan.insurance_reminder_enabled ? 'Yes' : 'No', '', '')}
 
   ${sectionTitle('&#128203;', 'Deductions & Disbursement')}
-  ${row4('File Charge', fmtCur(loan.file_charge), 'Loan Suraksha', fmtCur(loan.loan_suraksha), 'Stamping', fmtCur(loan.stamping), 'Processing Fee', fmtCur(loan.processing_fee))}
-  ${row4('Total Deduction', fmtCur(loan.total_deduction), 'Net Disbursement', fmtCur(loan.net_disbursement_amount), 'Payment Recd.', formatDate(loan.payment_received_date), 'Disburse Date', formatDate(loan.financier_disburse_date))}
+  ${row4('Mehar Deduction', fmtCur(loan.mehar_deduction), 'Mehar PF', fmtCur(loan.mehar_pf), 'Total Deduction', fmtCur(loan.total_deduction), '')}
+  ${row4('Hold Amount', fmtCur(loan.hold_amount), 'Net Seed Amount', fmtCur(loan.net_seed_amount), 'Payment In Favour', fmt(loan.payment_in_favour), 'Net Disbursement', fmtCur(loan.net_disbursement_amount))}
+  ${row4('Payment Received', formatDate(loan.payment_received_date), '', '', '', '')}
 
   ${sectionTitle('&#128197;', 'Important Dates')}
-  ${row4('Login Date', formatDate(loan.login_date), 'Approval Date', formatDate(loan.approval_date), 'Disburse Date', formatDate(loan.financier_disburse_date), 'TAT', loan.tat ? loan.tat + ' days' : '—')}
-  ${row4('Agreement Date', formatDate(loan.agreement_date), 'File Stage', fmt(loan.file_stage), 'Created', formatDate(loan.created_at), 'Last Updated', formatDate(loan.updated_at))}
+  ${row4('Login Date', formatDate(loan.login_date), 'Approval Date', formatDate(loan.approval_date), 'Sourcing Person', fmt(loan.sourcing_person_name), '')}
+  ${row4('Created', formatDate(loan.created_at), 'Last Updated', formatDate(loan.updated_at), '', '')}
 
   ${sectionTitle('&#128196;', 'RTO Details')}
-  ${row4('RC Owner', fmt(loan.rc_owner_name), 'RC Mfg Date', fmt(loan.rc_mfg_date), 'HPN at Login', fmt(loan.hpn_at_login), 'New Financier', fmt(loan.new_financier))}
-  ${row4('RTO Agent', fmt(loan.rto_agent_name), 'Agent Mobile', fmt(loan.agent_mobile_no), 'DTO Location', fmt(loan.dto_location), 'Challan', fmt(loan.challan))}
+  ${row4('RC Owner', fmt(loan.rc_owner_name), 'HPN Status', fmt(loan.hpn_at_login), 'RTO Agent', fmt(loan.rto_agent_name), 'Agent Mobile', fmt(loan.agent_mobile_no))}
 </table>
+
+${loan.remark ? `<div style="margin-top:8px;padding:8px;background:#f8f9fb;border-left:3px solid #1a3a6b;"><div style="font-size:8px;color:#888;text-transform:uppercase;margin-bottom:4px;">Remark</div><div style="font-size:10px;color:#1a1a2e;">${fmt(loan.remark)}</div></div>` : ''}
 
 <table class="sig-table">
   <tr>
@@ -225,38 +239,58 @@ function generatePDFBlob(loan: LoanData): Blob {
   drawSection('APPLICANT INFORMATION', [
     ['Customer ID', fmt(loan.customer_id)], ['Loan Number', fmt(loan.loan_number)], ['Applicant Name', fmt(loan.applicant_name)], ['Mobile', fmt(loan.mobile)],
     ['Co-Applicant', fmt(loan.co_applicant_name)], ['Co-App Mobile', fmt(loan.co_applicant_mobile)], ['Guarantor', fmt(loan.guarantor_name)], ['Guarantor Mobile', fmt(loan.guarantor_mobile)],
-    ['Address', fmt(loan.current_address || loan.address)], ['Village', fmt(loan.current_village)], ['District', fmt(loan.current_district)], ['', ''],
+    ['Our Branch', fmt(loan.our_branch)], ['Income Source', fmt(loan.income_source)], ['Monthly Income', fmtCur(loan.monthly_income)], ['', ''],
+    ['Current Address', fmt(loan.current_address || loan.address)], ['Village', fmt(loan.current_village)], ['Tehsil', fmt(loan.current_tehsil)], ['District', fmt(loan.current_district)],
+    ['State', fmt(loan.current_state)], ['Pincode', fmt(loan.current_pincode)], ['', ''], ['', ''],
+    ['Permanent Address', fmt(loan.permanent_address)], ['Perm. Village', fmt(loan.permanent_village)], ['Perm. Tehsil', fmt(loan.permanent_tehsil)], ['Perm. District', fmt(loan.permanent_district)],
+    ['Perm. State', fmt(loan.permanent_state)], ['Perm. Pincode', fmt(loan.permanent_pincode)], ['', ''], ['', ''],
   ]);
 
   drawSection('VEHICLE DETAILS', [
     ['Reg. No', fmt(loan.vehicle_number)], ['Maker', fmt(loan.maker_name || loan.car_make)], ['Model/Variant', fmt(loan.model_variant_name || loan.car_model)], ['Mfg Year', fmt(loan.mfg_year)],
-    ['Vertical', fmt(loan.vertical)], ['Scheme', fmt(loan.scheme)], ['Valuation', fmtCur(loan.valuation)], ['On Road Price', fmtCur(loan.on_road_price)],
+    ['Vertical', fmt(loan.vertical)], ['Scheme', fmt(loan.scheme)], ['Loan Type', fmt(loan.loan_type_vehicle)], ['', ''],
   ]);
 
   drawSection('LOAN & EMI DETAILS', [
-    ['Loan Amount', fmtCur(loan.loan_amount)], ['Grid', fmtCur(loan.grid)], ['LTV', loan.ltv ? loan.ltv + '%' : '—'], ['IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—')],
-    ['Tenure', loan.tenure ? loan.tenure + ' months' : '—'], ['EMI Mode', fmt(loan.emi_mode || 'Monthly')], ['Monthly EMI', fmtCur(loan.emi_amount || loan.emi)], ['Total EMI', fmt(loan.total_emi || loan.tenure)],
-    ['Total Interest', fmtCur(loan.total_interest)], ['First EMI Date', formatDate(loan.first_installment_due_date)], ['Down Payment', fmtCur(loan.down_payment)], ['Advance EMI', fmt(loan.advance_emi)],
+    ['Purpose Loan Amt', fmtCur(loan.purpose_loan_amount)], ['Actual Loan Amt', fmtCur(loan.loan_amount)], ['LTV', loan.ltv ? loan.ltv + '%' : '—'], ['IRR', loan.irr ? loan.irr + '%' : (loan.interest_rate ? loan.interest_rate + '%' : '—')],
+    ['Tenure', loan.tenure_months || loan.tenure ? (loan.tenure_months || loan.tenure) + ' months' : '—'], ['EMI Mode', fmt(loan.emi_mode || 'Monthly')], ['Monthly EMI', fmtCur(loan.emi_amount || loan.emi)], ['Total Interest', fmtCur(loan.total_interest)],
+    ['EMI Start Date', formatDate(loan.emi_start_date)], ['EMI End Date', formatDate(loan.emi_end_date)], ['Processing Fee', fmtCur(loan.processing_fee)], ['', ''],
   ]);
 
   drawSection('FINANCIER & INSURANCE', [
-    ['Assigned Bank', fmt(loan.banks?.name)], ['Financier Exec.', fmt(loan.financier_executive_name)], ['Branch', fmt(loan.disburse_branch_name)], ['Branch Manager', fmt(loan.branch_manager_name)],
-    ['Insurance Co.', fmt(loan.insurance_company_name)], ['IDV', fmtCur(loan.idv)], ['Premium', fmtCur(loan.premium_amount)], ['Insurance Type', fmt(loan.insurance_type)],
+    ['Financier Name', fmt(loan.bank_name || loan.assigned_bank_name || loan.banks?.name)], ['Executive Name', fmt(loan.financier_executive_name)], ['Team Vertical', fmt(loan.financier_team_vertical)], ['Disburse Branch', fmt(loan.disburse_branch_name)],
+    ['Broker', fmt(loan.assigned_broker_name || loan.brokers?.name)], ['Sanction Amount', fmtCur(loan.sanction_amount)], ['Sanction Date', formatDate(loan.sanction_date)], ['', ''],
+    ['Insurance Co.', fmt(loan.insurance_company_name)], ['Premium', fmtCur(loan.premium_amount)], ['Insurance Expiry', formatDate(loan.insurance_date)], ['Policy Number', fmt(loan.insurance_policy_number)],
+    ['Insurance Made By', fmt(loan.insurance_made_by)], ['Reminder Enabled', loan.insurance_reminder_enabled ? 'Yes' : 'No'], ['', ''], ['', ''],
   ]);
 
   drawSection('DEDUCTIONS & DISBURSEMENT', [
-    ['File Charge', fmtCur(loan.file_charge)], ['Loan Suraksha', fmtCur(loan.loan_suraksha)], ['Stamping', fmtCur(loan.stamping)], ['Processing Fee', fmtCur(loan.processing_fee)],
-    ['Total Deduction', fmtCur(loan.total_deduction)], ['Net Disbursement', fmtCur(loan.net_disbursement_amount)], ['Payment Recd.', formatDate(loan.payment_received_date)], ['Disburse Date', formatDate(loan.financier_disburse_date)],
+    ['Mehar Deduction', fmtCur(loan.mehar_deduction)], ['Mehar PF', fmtCur(loan.mehar_pf)], ['Total Deduction', fmtCur(loan.total_deduction)], ['', ''],
+    ['Hold Amount', fmtCur(loan.hold_amount)], ['Net Seed Amount', fmtCur(loan.net_seed_amount)], ['Payment In Favour', fmt(loan.payment_in_favour)], ['Net Disbursement', fmtCur(loan.net_disbursement_amount)],
+    ['Payment Received', formatDate(loan.payment_received_date)], ['', ''], ['', ''], ['', ''],
   ]);
 
   drawSection('IMPORTANT DATES', [
-    ['Login Date', formatDate(loan.login_date)], ['Approval Date', formatDate(loan.approval_date)], ['Disburse Date', formatDate(loan.financier_disburse_date)], ['TAT', loan.tat ? loan.tat + ' days' : '—'],
-    ['Agreement Date', formatDate(loan.agreement_date)], ['File Stage', fmt(loan.file_stage)], ['Created', formatDate(loan.created_at)], ['Last Updated', formatDate(loan.updated_at)],
+    ['Login Date', formatDate(loan.login_date)], ['Approval Date', formatDate(loan.approval_date)], ['Sourcing Person', fmt(loan.sourcing_person_name)], ['', ''],
+    ['Created', formatDate(loan.created_at)], ['Last Updated', formatDate(loan.updated_at)], ['', ''], ['', ''],
   ]);
 
+  // Remark section if exists
+  if (loan.remark) {
+    if (y + 15 > 280) { doc.addPage(); y = 12; }
+    doc.setFillColor(240, 244, 248); doc.rect(lm, y, pw, 6, 'F');
+    doc.setDrawColor(...colors.primary); doc.setLineWidth(0.4); doc.line(lm, y + 6, lm + pw, y + 6);
+    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...colors.primary);
+    doc.text('REMARK', lm + 2, y + 4.2);
+    y += 8;
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(...colors.dark);
+    const remarkLines = doc.splitTextToSize(fmt(loan.remark), pw - 4);
+    doc.text(remarkLines, lm + 2, y);
+    y += remarkLines.length * 4 + 4;
+  }
+
   drawSection('RTO DETAILS', [
-    ['RC Owner', fmt(loan.rc_owner_name)], ['RC Mfg Date', fmt(loan.rc_mfg_date)], ['HPN at Login', fmt(loan.hpn_at_login)], ['New Financier', fmt(loan.new_financier)],
-    ['RTO Agent', fmt(loan.rto_agent_name)], ['Agent Mobile', fmt(loan.agent_mobile_no)], ['DTO Location', fmt(loan.dto_location)], ['Challan', fmt(loan.challan)],
+    ['RC Owner', fmt(loan.rc_owner_name)], ['HPN Status', fmt(loan.hpn_at_login)], ['RTO Agent', fmt(loan.rto_agent_name)], ['Agent Mobile', fmt(loan.agent_mobile_no)],
   ]);
 
   // Signature area
@@ -283,7 +317,7 @@ function generatePDFBlob(loan: LoanData): Blob {
 }
 
 export async function shareLoanPDF(loan: LoanData) {
-  const text = `*Mehar Finance - Loan Application*\n\n*ID:* ${loan.id}\n*Applicant:* ${loan.applicant_name}\n*Mobile:* ${loan.mobile}\n*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}\n*Loan Amount:* ${fmtCur(loan.loan_amount)}\n*Status:* ${loan.status}\n*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}\n*Tenure:* ${loan.tenure} months`;
+  const text = `*Mehar Finance - Loan Application*\n\n*ID:* ${loan.id}\n*Applicant:* ${loan.applicant_name}\n*Mobile:* ${loan.mobile}\n*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}\n*Loan Amount:* ${fmtCur(loan.loan_amount)}\n*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}\n*Tenure:* ${loan.tenure_months || loan.tenure} months\n*Status:* ${loan.status}\n*Bank:* ${loan.bank_name || loan.assigned_bank_name || '—'}\n*Branch:* ${loan.our_branch || '—'}\n\nGenerated by Mehar Finance`;
 
   try {
     const pdfBlob = generatePDFBlob(loan);
@@ -300,7 +334,7 @@ export async function shareLoanPDF(loan: LoanData) {
     // User cancelled or not supported
   }
 
-  const waText = `*Mehar Finance - Loan Application*%0A%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}%0A*Loan Amount:* ${fmtCur(loan.loan_amount)}%0A*Status:* ${loan.status}%0A*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}%0A*Tenure:* ${loan.tenure} months`;
+  const waText = `*Mehar Finance - Loan Application*%0A%0A*ID:* ${loan.id}%0A*Applicant:* ${loan.applicant_name}%0A*Mobile:* ${loan.mobile}%0A*Vehicle:* ${loan.maker_name || loan.car_make || ''} ${loan.model_variant_name || loan.car_model || ''}%0A*Loan Amount:* ${fmtCur(loan.loan_amount)}%0A*EMI:* ${fmtCur(loan.emi_amount || loan.emi)}%0A*Tenure:* ${loan.tenure_months || loan.tenure} months%0A*Status:* ${loan.status}%0A*Bank:* ${loan.bank_name || loan.assigned_bank_name || '—'}%0A*Branch:* ${loan.our_branch || '—'}%0A%0AGenerated by Mehar Finance`;
   window.open(`https://wa.me/?text=${waText}`, '_blank');
 }
 
