@@ -27,6 +27,12 @@ export const api = {
       headers,
     });
 
+    if (response.status === 401) {
+      this.setToken(null);
+      window.location.href = '/login';
+      throw new Error('Session expired. Please login again.');
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: response.statusText }));
       throw new Error(error.error || 'API Error');
