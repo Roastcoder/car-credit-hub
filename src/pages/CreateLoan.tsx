@@ -731,6 +731,7 @@ export default function CreateLoan() {
                   )}
                 </div>
               </div>
+            </div>
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3 pb-8">
