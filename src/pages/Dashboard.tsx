@@ -7,7 +7,6 @@ import { ROLE_LABELS } from '@/lib/auth';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
-import FeatureCarousel from '@/components/FeatureCarousel';
 
 const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
@@ -81,14 +80,10 @@ export default function Dashboard() {
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-4 pb-20 lg:p-8">
         <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-blue-950 dark:text-white">Dashboard</h1>
           <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-blue-900/60 transition-colors">
             <span className="text-text-muted-light dark:text-text-muted-dark">Current Month</span>
           </button>
-        </div>
-
-        {/* Feature Carousel Banner - Keep Existing */}
-        <div className="mb-6">
-          <FeatureCarousel />
         </div>
 
         <div className="grid grid-cols-1 flex-col-reverse lg:grid-cols-3 gap-6">
