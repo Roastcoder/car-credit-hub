@@ -107,7 +107,7 @@ export default function Loans() {
   });
 
   return (
-    <div>
+    <div className="pb-20 lg:pb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="hidden sm:block">
           <h1 className="text-2xl font-bold text-foreground">Loan Applications</h1>
@@ -155,7 +155,7 @@ export default function Loans() {
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-3">
+      <div className="lg:hidden space-y-3 pb-4">
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
         ) : filtered.length === 0 ? (

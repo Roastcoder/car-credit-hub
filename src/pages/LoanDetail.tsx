@@ -142,7 +142,7 @@ export default function LoanDetail() {
   const currentIdx = LOAN_STATUSES.findIndex(s => s.value === loan.status);
 
   return (
-    <div className="max-w-6xl mx-auto px-4">
+    <div className="max-w-6xl mx-auto px-4 pb-20 lg:pb-4">
       <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft size={16} /> Back to Applications
       </button>
