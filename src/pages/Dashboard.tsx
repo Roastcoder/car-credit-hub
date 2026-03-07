@@ -83,9 +83,9 @@ export default function Dashboard() {
           <FeatureCarousel />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 flex-col-reverse lg:grid-cols-3 gap-6">
           {/* Main Chart Section */}
-          <div className="stat-card lg:col-span-2">
+          <div className="stat-card lg:col-span-2 order-2 lg:order-1">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Bank-wise Distribution (₹ Lakhs)</h2>
@@ -111,7 +111,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-6 order-1 lg:order-2">
             {/* Action Cards */}
             <div className="stat-card col-span-2 lg:col-span-1">
               <div className="flex items-center justify-between mb-4">

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
+import { supabase, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { exportToCSV, parseCSV } from '@/lib/export-utils';
@@ -40,11 +40,7 @@ export default function Loans() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from('loans')
-        .update({ status: status as any })
-        .eq('id', id);
-      if (error) throw error;
+      await loansAPI.update(id as any, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
@@ -77,17 +73,21 @@ export default function Loans() {
       let imported = 0;
       for (const row of rows) {
         const id = row['Loan ID'] || `IMP-${Date.now()}-${imported}`;
-        const { error } = await supabase.from('loans').insert({
-          id,
-          applicant_name: row['Applicant'] || row['applicant_name'] || 'Unknown',
-          mobile: row['Mobile'] || row['mobile'] || '0000000000',
-          loan_amount: Number(row['Loan Amount'] || row['loan_amount'] || 0),
-          car_make: row['Car Make'] || row['car_make'] || '',
-          car_model: row['Car Model'] || row['car_model'] || '',
-          status: 'draft' as any,
-          created_by: user.id,
-        } as any);
-        if (!error) imported++;
+        try {
+          await loansAPI.create({
+            id,
+            applicant_name: row['Applicant'] || row['applicant_name'] || 'Unknown',
+            mobile: row['Mobile'] || row['mobile'] || '0000000000',
+            loan_amount: Number(row['Loan Amount'] || row['loan_amount'] || 0),
+            car_make: row['Car Make'] || row['car_make'] || '',
+            car_model: row['Car Model'] || row['car_model'] || '',
+            status: 'draft',
+            created_by: user.id,
+          });
+          imported++;
+        } catch (e) {
+          // Skip err
+        }
       }
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       toast.success(`${imported} loans imported successfully!`);
@@ -109,19 +109,19 @@ export default function Loans() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
+        <div className="hidden sm:block">
           <h1 className="text-2xl font-bold text-foreground">Loan Applications</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={handleExport} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 scrollbar-hide">
+          <button onClick={handleExport} className="whitespace-nowrap flex-shrink-0 flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
             <Download size={16} /> Export
           </button>
-          <button onClick={() => importRef.current?.click()} className="flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
+          <button onClick={() => importRef.current?.click()} className="whitespace-nowrap flex-shrink-0 flex items-center gap-2 bg-muted text-foreground font-medium py-2.5 px-4 rounded-xl hover:bg-muted/80 transition-opacity text-sm">
             <Upload size={16} /> Import CSV
           </button>
           <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-          <Link to="/loans/new" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+          <Link to="/loans/new" className="whitespace-nowrap flex-shrink-0 inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
             <Plus size={16} /> New Application
           </Link>
         </div>
