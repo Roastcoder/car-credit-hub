@@ -243,22 +243,20 @@ export default function LoanDetail() {
             <Field label="Loan Number" value={(loan as any).loan_number} />
             <Field label="Full Name" value={loan.applicant_name} />
             <Field label="Mobile" value={loan.mobile} />
-            <Field label="PAN" value={(loan as any).pan || ''} />
-            <Field label="Aadhaar" value={(loan as any).aadhaar || ''} />
-            <Field label="Co-Applicant" value={(loan as any).co_applicant_name || '—'} />
-            <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
-            <Field label="Guarantor" value={(loan as any).guarantor_name || '—'} />
-            <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
             <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
+            <Field label="Income Source" value={(loan as any).income_source || '—'} />
+            <Field label="Monthly Income" value={(loan as any).monthly_income ? formatCurrency(Number((loan as any).monthly_income)) : '—'} />
             <div className="col-span-2"><Field label="Current Address" value={(loan as any).current_address || loan.address || ''} /></div>
             <Field label="Village" value={(loan as any).current_village || ''} />
             <Field label="Tehsil" value={(loan as any).current_tehsil || ''} />
             <Field label="District" value={(loan as any).current_district || ''} />
+            <Field label="State" value={(loan as any).current_state || ''} />
             <Field label="Pincode" value={(loan as any).current_pincode || ''} />
             <div className="col-span-2"><Field label="Permanent Address" value={(loan as any).permanent_address || ''} /></div>
             <Field label="Perm. Village" value={(loan as any).permanent_village || ''} />
             <Field label="Perm. Tehsil" value={(loan as any).permanent_tehsil || ''} />
             <Field label="Perm. District" value={(loan as any).permanent_district || ''} />
+            <Field label="Perm. State" value={(loan as any).permanent_state || ''} />
             <Field label="Perm. Pincode" value={(loan as any).permanent_pincode || ''} />
           </div>
         </Section>
@@ -277,24 +275,27 @@ export default function LoanDetail() {
 
         <Section title="Loan & EMI Details" icon={<IndianRupee size={18} />}>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
+            <Field label="Purpose Loan Amount" value={(loan as any).purpose_loan_amount ? formatCurrency(Number((loan as any).purpose_loan_amount)) : '—'} />
+            <Field label="Actual Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
             <Field label="LTV" value={(loan as any).ltv ? `${(loan as any).ltv}%` : '—'} />
             <Field label="IRR" value={(loan as any).irr ? `${(loan as any).irr}%` : `${loan.interest_rate}%`} />
-            <Field label="Tenure" value={`${loan.tenure} months`} />
+            <Field label="Tenure" value={`${loan.tenure_months || loan.tenure} months`} />
+            <Field label="EMI Mode" value={(loan as any).emi_mode || 'Monthly'} />
             <Field label="Monthly EMI" value={formatCurrency(Number((loan as any).emi_amount || loan.emi))} />
             <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
             <Field label="EMI Start Date" value={(loan as any).emi_start_date ? new Date((loan as any).emi_start_date).toLocaleDateString('en-IN') : '—'} />
             <Field label="EMI End Date" value={(loan as any).emi_end_date ? new Date((loan as any).emi_end_date).toLocaleDateString('en-IN') : '—'} />
             <Field label="Processing Fee" value={(loan as any).processing_fee ? formatCurrency(Number((loan as any).processing_fee)) : '—'} />
-            <div className="col-span-2"><Field label="Income Source" value={(loan as any).income_source || '—'} /></div>
-            <Field label="Monthly Income" value={(loan as any).monthly_income ? formatCurrency(Number((loan as any).monthly_income)) : '—'} />
           </div>
         </Section>
 
         <Section title="Financier Details" icon={<Building2 size={18} />}>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Assigned Bank" value={(loan as any).banks?.name || '—'} />
-            <Field label="Assigned Broker" value={(loan as any).brokers?.name || '—'} />
+            <Field label="Financier Name" value={(loan as any).assigned_bank_name || (loan as any).banks?.name || '—'} />
+            <Field label="Executive Name" value={(loan as any).financier_executive_name || '—'} />
+            <Field label="Team Vertical" value={(loan as any).financier_team_vertical || '—'} />
+            <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
+            <Field label="Broker" value={(loan as any).assigned_broker_name || (loan as any).brokers?.name || '—'} />
             <Field label="Sanction Amount" value={(loan as any).sanction_amount ? formatCurrency(Number((loan as any).sanction_amount)) : '—'} />
             <Field label="Sanction Date" value={(loan as any).sanction_date ? new Date((loan as any).sanction_date).toLocaleDateString('en-IN') : '—'} />
           </div>
@@ -304,17 +305,30 @@ export default function LoanDetail() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Insurance Company" value={(loan as any).insurance_company_name || '—'} />
             <Field label="Premium" value={(loan as any).premium_amount ? formatCurrency(Number((loan as any).premium_amount)) : '—'} />
+            <Field label="Insurance Expiry" value={(loan as any).insurance_date ? new Date((loan as any).insurance_date).toLocaleDateString('en-IN') : '—'} />
             <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
-            <Field label="Insurance Date" value={(loan as any).insurance_date ? new Date((loan as any).insurance_date).toLocaleDateString('en-IN') : '—'} />
+            <Field label="Insurance Made By" value={(loan as any).insurance_made_by || '—'} />
+            <Field label="Reminder Enabled" value={(loan as any).insurance_reminder_enabled ? 'Yes' : 'No'} />
             <Field label="RC Owner" value={(loan as any).rc_owner_name || '—'} />
+            <Field label="HPN Status" value={(loan as any).hpn_at_login || '—'} />
             <Field label="RTO Agent" value={(loan as any).rto_agent_name || '—'} />
             <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
           </div>
         </Section>
 
-        <Section title="Deduction & Disbursement" icon={<IndianRupee size={18} />}>
+        <Section title="Deduction Details" icon={<IndianRupee size={18} />}>
           <div className="grid grid-cols-2 gap-4">
+            <Field label="Mehar Deduction" value={(loan as any).mehar_deduction ? formatCurrency(Number((loan as any).mehar_deduction)) : '—'} />
+            <Field label="Mehar PF" value={(loan as any).mehar_pf ? formatCurrency(Number((loan as any).mehar_pf)) : '—'} />
             <Field label="Total Deduction" value={(loan as any).total_deduction ? formatCurrency(Number((loan as any).total_deduction)) : '—'} />
+          </div>
+        </Section>
+
+        <Section title="Disbursement Details" icon={<IndianRupee size={18} />}>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Hold Amount (By Financier)" value={(loan as any).hold_amount ? formatCurrency(Number((loan as any).hold_amount)) : '—'} />
+            <Field label="Net (Seed Amount)" value={(loan as any).net_seed_amount ? formatCurrency(Number((loan as any).net_seed_amount)) : '—'} />
+            <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
             <Field label="Net Disbursement" value={(loan as any).net_disbursement_amount ? formatCurrency(Number((loan as any).net_disbursement_amount)) : '—'} />
             <Field label="Payment Received" value={(loan as any).payment_received_date ? new Date((loan as any).payment_received_date).toLocaleDateString('en-IN') : '—'} />
           </div>
