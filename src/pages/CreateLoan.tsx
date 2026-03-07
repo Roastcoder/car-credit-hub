@@ -215,7 +215,7 @@ export default function CreateLoan() {
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
   });
 
-  const update = (key: string, val: string | File | null) => setForm(f => ({ ...f, [key]: val }));
+  const update = (key: string, val: string | File | null | boolean) => setForm(f => ({ ...f, [key]: val }));
 
   const handleLeadSelect = (lead: any) => {
     setForm(f => ({
@@ -757,7 +757,7 @@ export default function CreateLoan() {
             ) : '✓ Create Application'}
           </button>
         </div>
-          </div>
+        </div>
       </form>
     </div>
   );
