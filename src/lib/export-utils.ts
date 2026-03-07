@@ -1,6 +1,6 @@
 export function exportToCSV(data: Record<string, any>[], filename: string) {
   if (data.length === 0) return;
-  
+
   // Comprehensive field mapping for loan applications
   const fieldMapping: Record<string, string> = {
     'id': 'Loan ID',
@@ -83,12 +83,12 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
     'updated_at': 'Updated At'
   };
 
-  // Get all unique keys from data
-  const allKeys = Array.from(new Set(data.flatMap(row => Object.keys(row))));
-  
+  // Only export fields explicitly defined in fieldMapping, in that exact order
+  const allKeys = Object.keys(fieldMapping);
+
   // Map to readable headers
-  const headers = allKeys.map(key => fieldMapping[key] || key);
-  
+  const headers = allKeys.map(key => fieldMapping[key]);
+
   const csvRows = [
     headers.join(','),
     ...data.map(row =>
@@ -99,7 +99,7 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
       }).join(',')
     ),
   ];
-  
+
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
