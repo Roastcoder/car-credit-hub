@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI, api } from '@/lib/api';
+import { requestNotificationPermission, subscribeUserToPush } from '@/lib/notifications';
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'bank' | 'broker' | 'employee';
 
@@ -54,6 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         api.setToken(data.token);
         setUser(data.user);
         setSession({ user: data.user });
+        
+        // Request notification permission after login (only if not already asked)
+        const hasAskedPermission = localStorage.getItem('notification_permission_asked');
+        if (!hasAskedPermission) {
+          setTimeout(async () => {
+            const permission = await requestNotificationPermission();
+            localStorage.setItem('notification_permission_asked', 'true');
+            if (permission === 'granted') {
+              await subscribeUserToPush().catch(err => console.log('Push subscription failed:', err));
+            }
+          }, 1000);
+        } else if (Notification.permission === 'granted') {
+          // Already granted, just subscribe
+          subscribeUserToPush().catch(err => console.log('Push subscription failed:', err));
+        }
       }
       return { error: null };
     } catch (error: any) {

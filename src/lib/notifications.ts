@@ -19,11 +19,11 @@ export const subscribeUserToPush = async (): Promise<PushSubscription | null> =>
       applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || '')
     });
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) return subscription;
 
     // Send subscription to backend
-    await fetch(`${import.meta.env.VITE_API_URL}/notifications/subscribe`, {
+    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
