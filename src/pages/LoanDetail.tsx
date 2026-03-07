@@ -291,7 +291,7 @@ export default function LoanDetail() {
 
         <Section title="Financier Details" icon={<Building2 size={18} />}>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Financier Name" value={(loan as any).assigned_bank_name || (loan as any).banks?.name || '—'} />
+            <Field label="Financier Name" value={(loan as any).bank_name || (loan as any).assigned_bank_name || '—'} />
             <Field label="Executive Name" value={(loan as any).financier_executive_name || '—'} />
             <Field label="Team Vertical" value={(loan as any).financier_team_vertical || '—'} />
             <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
