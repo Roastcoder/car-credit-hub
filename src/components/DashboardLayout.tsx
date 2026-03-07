@@ -70,11 +70,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-base font-bold text-gray-900 dark:text-white truncate tracking-tight">Mehar Finance</p>
+              <p className="text-base font-bold text-blue-950 dark:text-white truncate tracking-tight">Mehar Finance</p>
               <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Portal</p>
             </div>
           )}
-          <button className="lg:hidden ml-auto text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden ml-auto text-blue-500 hover:text-blue-950 dark:text-blue-400 dark:hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
         </div>
@@ -91,10 +91,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 title={collapsed ? item.label : undefined}
                 className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${active
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                  : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
                   }`}
               >
-                <span className={`${active ? 'text-white drop-shadow-sm' : 'text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
+                <span className={`${active ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
                   {item.icon}
                 </span>
                 {!collapsed && <span className="truncate tracking-wide">{item.label}</span>}
@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="hidden lg:flex justify-center py-4 border-t border-white/20 dark:border-white/5">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2.5 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/20 dark:hover:border-white/10"
+            className="p-2.5 rounded-xl text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/20 dark:hover:border-white/10"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -125,8 +125,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || 'User'}</p>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
+                <p className="text-xs font-medium text-blue-500 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
               </div>
             </div>
           )}
@@ -146,29 +146,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 lg:h-16 lg:mt-4 lg:mx-4 glass-panel border border-white/20 dark:border-white/5 rounded-2xl lg:rounded-[2rem] flex items-center px-6 gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/5 dark:bg-black/10 backdrop-blur-xl">
+        <header className="h-16 lg:h-16 lg:mt-4 lg:mx-4 glass-panel border-b border-white/20 dark:border-white/5 lg:border lg:rounded-[2rem] flex items-center px-4 lg:px-6 gap-3 lg:gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/5 dark:bg-black/10 backdrop-blur-xl">
           {/* Mobile: Logo */}
           <div className="lg:hidden flex items-center gap-2">
-            <div className="glass-card rounded-xl p-1.5 shadow-sm">
-              <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
-            </div>
+            <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
           </div>
 
           {/* Page title / User greeting */}
-          <div className="flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-8">
+          <div className="hidden lg:flex flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-8">
             <div>
-              <p className="text-base font-bold text-gray-900 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
+              <p className="text-base font-bold text-blue-950 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
                 Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || 'User'}</span>
               </p>
-              <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 font-medium truncate tracking-wide">
+              <p className="text-xs lg:text-sm text-blue-700 dark:text-blue-400 font-medium truncate tracking-wide">
                 {user.role ? ROLE_LABELS[user.role] : 'User'}
               </p>
             </div>
           </div>
+          <div className="flex-1 lg:hidden"></div>
 
 
           {/* Notification Bell */}
-          <div className="glass-card rounded-xl p-2 shadow-sm border border-white/40 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/10 transition-colors">
+          <div className="relative z-50">
             <NotificationBell />
           </div>
 
@@ -185,7 +184,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
                 <div className="absolute right-0 top-14 w-60 glass-panel border border-white/20 dark:border-white/5 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all backdrop-blur-2xl bg-white/10 dark:bg-black/20">
                   <div className="p-4 border-b border-white/10">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || 'User'}</p>
+                    <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
                     <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
                   <div className="p-2">
@@ -204,8 +203,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
-          <div className="animate-fade-in">
+        <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6">
+          <div className="animate-fade-in h-full">
             {children}
           </div>
         </main>

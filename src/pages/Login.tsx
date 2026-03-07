@@ -52,12 +52,10 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden glass-panel m-4 lg:mr-2 rounded-[2.5rem]">
         <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full h-full">
           {/* Logo + brand */}
-          <div className="flex items-center gap-3.5">
-            <div className="glass-card rounded-2xl p-2.5 shadow-xl">
-              <img src={logo} alt="Mehar Finance" className="h-12 w-auto object-contain" />
-            </div>
+          <div className="flex items-center gap-3.5 mb-2">
+            <img src={logo} alt="Mehar Finance" className="h-[3.5rem] w-auto object-contain drop-shadow-sm" />
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Mehar Finance</h2>
+              <h2 className="text-xl font-bold text-blue-950 dark:text-white tracking-tight">Mehar Finance</h2>
               <p className="text-blue-600 dark:text-blue-400 text-xs font-semibold tracking-wide uppercase">Car Loan Solutions</p>
             </div>
           </div>
@@ -69,13 +67,13 @@ export default function Login() {
                 Management Portal
               </span>
             </div>
-            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-gray-900 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
+            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-blue-950 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
               Car Loan Sales<br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 & Management
               </span>
             </h1>
-            <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
+            <p className="text-blue-700 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
               Complete loan lifecycle management — from lead generation to disbursement, all in one powerful platform.
             </p>
 
@@ -87,8 +85,8 @@ export default function Login() {
                     {f.icon}
                   </div>
                   <div className="pt-0.5">
-                    <h3 className="text-gray-900 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
-                    <p className="text-gray-600 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
+                    <h3 className="text-blue-950 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
+                    <p className="text-blue-700 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -99,7 +97,7 @@ export default function Login() {
               <a
                 href="/mehar-finance.apk"
                 download
-                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-900 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
+                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-blue-900/60 text-blue-950 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
               >
                 <Download size={16} className="text-blue-600 dark:text-blue-400" />
                 Download Android App
@@ -108,7 +106,7 @@ export default function Login() {
           </div>
 
           {/* Footer */}
-          <p className="text-gray-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
+          <p className="text-blue-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
         </div>
       </div>
 
@@ -117,18 +115,16 @@ export default function Login() {
         <div className="w-full max-w-[420px]">
           {/* Mobile header */}
           <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="glass-card rounded-2xl p-3 shadow-lg mb-3">
-              <img src={logo} alt="Mehar Finance" className="h-11 w-auto object-contain" />
-            </div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Mehar Finance</h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Car Loan Portal</p>
+            <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain drop-shadow-sm mb-3" />
+            <h2 className="text-lg font-bold text-blue-950 dark:text-white">Mehar Finance</h2>
+            <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">Car Loan Portal</p>
           </div>
 
           {/* Card */}
           <div className="glass-card p-7 sm:p-8 shadow-xl">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">Welcome back</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">Sign in to continue to your dashboard</p>
+              <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight drop-shadow-sm">Welcome back</h2>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">Sign in to continue to your dashboard</p>
             </div>
 
             {/* Mobile APK */}
@@ -152,34 +148,34 @@ export default function Login() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Email Address</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Email Address</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Password</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Password</label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     placeholder="Enter your password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 transition-colors"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -206,7 +202,7 @@ export default function Login() {
             </form>
 
             <div className="mt-6 pt-5 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">
                 Don't have an account?{' '}
                 <a href="/signup" className="text-blue-700 dark:text-blue-400 font-bold hover:underline underline-offset-2">
                   Sign Up
@@ -216,7 +212,7 @@ export default function Login() {
           </div>
 
           {/* Bottom trust */}
-          <p className="text-center text-xs text-gray-500 dark:text-slate-400 mt-5 font-medium drop-shadow-sm">
+          <p className="text-center text-xs text-blue-500 dark:text-slate-400 mt-5 font-medium drop-shadow-sm">
             Secured with end-to-end encryption
           </p>
         </div>

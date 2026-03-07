@@ -10,7 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Link } from 'react-router-dom';
 import FeatureCarousel from '@/components/FeatureCarousel';
 
-const STATUS_CHART_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#6b7280'];
+const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -69,11 +69,11 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10 text-text-main-light dark:text-text-main-dark">
-      <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+    <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
+      <div className="px-4 pt-4 pb-20 lg:p-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-gray-800/60 transition-colors">
+          <h1 className="text-3xl font-bold text-blue-950 dark:text-white">Dashboard</h1>
+          <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-blue-900/60 transition-colors">
             <span className="text-text-muted-light dark:text-text-muted-dark">Current Month</span>
           </button>
         </div>
@@ -88,9 +88,9 @@ export default function Dashboard() {
           <div className="stat-card lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Bank-wise Distribution (₹ Lakhs)</h2>
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Bank-wise Distribution (₹ Lakhs)</h2>
               </div>
-              <Link to="/loans" className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+              <Link to="/loans" className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
                 View Loans <ChevronRight size={16} />
               </Link>
             </div>
@@ -115,7 +115,7 @@ export default function Dashboard() {
             {/* Action Cards */}
             <div className="stat-card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                   Total Loan Volume
                 </h2>
               </div>
@@ -130,17 +130,17 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-primary">{formatCurrency(totalVolume)}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Total Processed</div>
-                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{totalLoans} Applications</div>
+                    <div className="text-sm text-blue-700 dark:text-blue-400">Total Processed</div>
+                    <div className="text-sm font-semibold text-blue-900 dark:text-blue-200">{totalLoans} Applications</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="stat-card">
-              <h2 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Disbursed Amount</h2>
+              <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">Disbursed Amount</h2>
               <div className="flex items-end gap-3 mb-1">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{formatCurrency(disbursedAmount)}</span>
+                <span className="text-3xl font-bold text-blue-950 dark:text-white">{formatCurrency(disbursedAmount)}</span>
               </div>
               <div className="text-sm text-muted-foreground flex items-center gap-1">
                 <CheckCircle2 size={14} className="text-emerald-500" />
@@ -148,9 +148,9 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="stat-card">
-              <h2 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Under Review</h2>
+              <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">Under Review</h2>
               <div className="flex items-end gap-3 mb-1">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{pendingReview}</span>
+                <span className="text-3xl font-bold text-blue-950 dark:text-white">{pendingReview}</span>
               </div>
               <div className="text-sm text-muted-foreground flex items-center gap-1">
                 <Clock size={14} className="text-amber-500" />
@@ -165,7 +165,7 @@ export default function Dashboard() {
           <div className="stat-card">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                   Status Breakdown
                 </h2>
               </div>
@@ -191,7 +191,7 @@ export default function Dashboard() {
                 {statusData.map((entry, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_CHART_COLORS[index % STATUS_CHART_COLORS.length] }}></span>
-                    <span className="text-gray-600 dark:text-gray-300">{entry.name}</span>
+                    <span className="text-blue-700 dark:text-blue-300">{entry.name}</span>
                   </div>
                 ))}
               </div>
@@ -200,8 +200,8 @@ export default function Dashboard() {
 
           <div className="stat-card flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Recent Applications</h2>
-              <Link to="/loans" className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Recent Applications</h2>
+              <Link to="/loans" className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
                 View all <ChevronRight size={16} />
               </Link>
             </div>
@@ -209,17 +209,17 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <tbody>
                   {loans.slice(0, 5).map((loan: any) => (
-                    <tr key={loan.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-white/40 dark:hover:bg-gray-800/40 transition-colors">
+                    <tr key={loan.id} className="border-b border-blue-100 dark:border-blue-900 last:border-0 hover:bg-white/40 dark:hover:bg-blue-900/40 transition-colors">
                       <td className="py-3 px-2">
-                        <div className="font-medium text-gray-800 dark:text-gray-200">{loan.applicant_name}</div>
-                        <div className="text-xs text-gray-500">{loan.car_make} {loan.car_model}</div>
+                        <div className="font-medium text-blue-900 dark:text-blue-200">{loan.applicant_name}</div>
+                        <div className="text-xs text-blue-500">{loan.car_make} {loan.car_model}</div>
                       </td>
-                      <td className="py-3 px-2 font-medium text-gray-800 dark:text-gray-200">{formatCurrency(Number(loan.loan_amount))}</td>
+                      <td className="py-3 px-2 font-medium text-blue-900 dark:text-blue-200">{formatCurrency(Number(loan.loan_amount))}</td>
                       <td className="py-3 px-2 text-right"><LoanStatusBadge status={loan.status} /></td>
                     </tr>
                   ))}
                   {loans.length === 0 && (
-                    <tr><td colSpan={3} className="py-8 text-center text-gray-500">No applications yet. <Link to="/loans/new" className="text-primary hover:underline">Create your first loan →</Link></td></tr>
+                    <tr><td colSpan={3} className="py-8 text-center text-blue-500">No applications yet. <Link to="/loans/new" className="text-primary hover:underline">Create your first loan →</Link></td></tr>
                   )}
                 </tbody>
               </table>

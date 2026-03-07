@@ -122,7 +122,7 @@ export default function BranchManagement() {
                 <Building2 size={18} className="text-accent" />
                 <h3 className="font-semibold text-foreground">{branch.name}</h3>
               </div>
-              <span className={`text-xs px-2 py-1 rounded ${branch.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+              <span className={`text-xs px-2 py-1 rounded ${branch.is_active ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-800'}`}>
                 {branch.is_active ? 'Active' : 'Inactive'}
               </span>
             </div>

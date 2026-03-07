@@ -7,7 +7,7 @@ const FEATURES = [
     icon: <FileText size={28} />,
     title: 'Loan Management',
     description: 'Track applications from submission to disbursement with real-time status updates.',
-    gradient: 'from-blue-600 to-cyan-500',
+    gradient: 'from-blue-800 to-blue-600',
     link: '/loans',
     cta: 'View Loans',
   },
@@ -15,7 +15,7 @@ const FEATURES = [
     icon: <BarChart3 size={28} />,
     title: 'Reports & Analytics',
     description: 'Get detailed insights on loan volume, bank distribution, and performance metrics.',
-    gradient: 'from-purple-600 to-pink-500',
+    gradient: 'from-blue-700 to-blue-500',
     link: '/reports',
     cta: 'View Reports',
   },
@@ -23,7 +23,7 @@ const FEATURES = [
     icon: <Users size={28} />,
     title: 'Broker Network',
     description: 'Manage your broker partnerships, track commissions, and monitor referrals.',
-    gradient: 'from-emerald-600 to-teal-500',
+    gradient: 'from-blue-600 to-blue-400',
     link: '/brokers',
     cta: 'Manage Brokers',
   },
@@ -31,7 +31,7 @@ const FEATURES = [
     icon: <Shield size={28} />,
     title: 'Secure & Reliable',
     description: 'Bank-grade security with role-based access and encrypted data.',
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'from-indigo-700 to-indigo-500',
     link: '/settings',
     cta: 'Settings',
   },
@@ -39,7 +39,7 @@ const FEATURES = [
     icon: <Zap size={28} />,
     title: 'Quick Disbursement',
     description: 'Streamlined workflow for faster loan processing and approval turnaround.',
-    gradient: 'from-rose-500 to-red-500',
+    gradient: 'from-indigo-600 to-indigo-400',
     link: '/loans/new',
     cta: 'New Application',
   },
@@ -89,9 +89,8 @@ export default function FeatureCarousel() {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`rounded-full transition-all duration-300 ${
-                  i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/40'
-                }`}
+                className={`rounded-full transition-all duration-300 ${i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/40'
+                  }`}
               />
             ))}
           </div>

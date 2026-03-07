@@ -101,11 +101,11 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 50%, #fef08a 100%);
+    background: linear-gradient(to bottom, #2563eb 0%, #60a5fa 60%, #eff6ff 100%);
     background-attachment: fixed;
   }
   .dark body {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    background: linear-gradient(to bottom, #0ea5e9 0%, #0369a1 60%, #0c4a6e 100%);
   }
 }
 

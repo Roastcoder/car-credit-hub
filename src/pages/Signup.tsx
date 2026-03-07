@@ -73,7 +73,7 @@ export default function Signup() {
               <img src={logo} alt="Mehar Finance" className="h-12 w-auto object-contain" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Mehar Finance</h2>
+              <h2 className="text-xl font-bold text-blue-950 dark:text-white tracking-tight">Mehar Finance</h2>
               <p className="text-blue-600 dark:text-blue-400 text-xs font-semibold tracking-wide uppercase">Car Loan Solutions</p>
             </div>
           </div>
@@ -84,13 +84,13 @@ export default function Signup() {
                 Management Portal
               </span>
             </div>
-            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-gray-900 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
+            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-blue-950 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
               Car Loan Sales<br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 & Management
               </span>
             </h1>
-            <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
+            <p className="text-blue-700 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
               Complete loan lifecycle management — from lead generation to disbursement, all in one powerful platform.
             </p>
 
@@ -101,8 +101,8 @@ export default function Signup() {
                     {f.icon}
                   </div>
                   <div className="pt-0.5">
-                    <h3 className="text-gray-900 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
-                    <p className="text-gray-600 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
+                    <h3 className="text-blue-950 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
+                    <p className="text-blue-700 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -112,7 +112,7 @@ export default function Signup() {
               <a
                 href="/mehar-finance.apk"
                 download
-                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-900 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
+                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-blue-900/60 text-blue-950 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
               >
                 <Download size={16} className="text-blue-600 dark:text-blue-400" />
                 Download Android App
@@ -120,7 +120,7 @@ export default function Signup() {
             </div>
           </div>
 
-          <p className="text-gray-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
+          <p className="text-blue-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
         </div>
       </div>
 
@@ -132,61 +132,61 @@ export default function Signup() {
             <div className="glass-card rounded-2xl p-3 shadow-lg mb-3">
               <img src={logo} alt="Mehar Finance" className="h-11 w-auto object-contain" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Mehar Finance</h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Car Loan Portal</p>
+            <h2 className="text-lg font-bold text-blue-950 dark:text-white">Mehar Finance</h2>
+            <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">Car Loan Portal</p>
           </div>
 
           {/* Card */}
           <div className="glass-card p-7 sm:p-8 shadow-xl">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">Create Account</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">Join Mehar Finance team</p>
+              <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight drop-shadow-sm">Create Account</h2>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">Join Mehar Finance team</p>
             </div>
 
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Full Name</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Full Name</label>
                 <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Email Address</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Email Address</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Password</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Password</label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 transition-colors"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -194,17 +194,17 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 drop-shadow-sm">Branch</label>
+                <label className="block text-sm font-bold text-blue-900 dark:text-blue-200 mb-1.5 drop-shadow-sm">Branch</label>
                 <div className="relative">
-                  <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400" />
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none shadow-sm backdrop-blur-md font-medium"
                   >
                     <option value="">Select your branch</option>
                     {branches.map((branch: any) => (
-                      <option key={branch.id} value={branch.id} className="text-gray-900 bg-white dark:bg-slate-800 dark:text-white">
+                      <option key={branch.id} value={branch.id} className="text-blue-950 bg-white dark:bg-slate-800 dark:text-white">
                         {branch.name} ({branch.code})
                       </option>
                     ))}
@@ -232,7 +232,7 @@ export default function Signup() {
             </form>
 
             <div className="mt-6 pt-5 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">
                 Already have an account?{' '}
                 <Link to="/login" className="text-blue-700 dark:text-blue-400 font-bold hover:underline underline-offset-2">
                   Sign In
@@ -241,7 +241,7 @@ export default function Signup() {
             </div>
           </div>
 
-          <p className="text-center text-xs text-gray-500 dark:text-slate-400 mt-5 font-medium drop-shadow-sm">
+          <p className="text-center text-xs text-blue-500 dark:text-slate-400 mt-5 font-medium drop-shadow-sm">
             Secured with end-to-end encryption
           </p>
         </div>

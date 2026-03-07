@@ -10,6 +10,7 @@ export interface AppUser {
   role: UserRole;
   phone?: string;
   status?: string;
+  branch_id?: number | string;
 }
 
 interface AuthContextType {
