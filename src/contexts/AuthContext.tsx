@@ -74,6 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.setToken(null);
     setUser(null);
     setSession(null);
+    // Clear all storage to prevent white screen
+    localStorage.clear();
+    sessionStorage.clear();
+    // Clear service worker cache
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+    }
   };
 
   return (

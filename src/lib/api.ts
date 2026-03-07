@@ -29,6 +29,10 @@ export const api = {
 
     if (response.status === 401) {
       this.setToken(null);
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      // Force reload to clear cache
       window.location.href = '/login';
       throw new Error('Session expired. Please login again.');
     }
