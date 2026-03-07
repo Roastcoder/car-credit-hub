@@ -45,7 +45,7 @@ export default function LeadDetail() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="max-w-4xl mx-auto px-4 pb-24">
       <button onClick={() => navigate('/leads-list')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft size={16} /> Back to Leads
       </button>
@@ -96,7 +96,7 @@ export default function LeadDetail() {
             <h3 className="text-sm font-semibold text-foreground">Vehicle Details</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <Field label="Vehicle Number" value={lead.vehicle_no} />
+            <Field label="Vehicle Number" value={lead.vehicle_no} />
           </div>
         </div>
 
