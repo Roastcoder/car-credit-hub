@@ -68,19 +68,31 @@ export default function NotificationBell() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      // Disabled
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/read-all`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const deleteNotification = useMutation({
     mutationFn: async (id: string) => {
-      // Disabled
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      // Auto-delete after 1 minute
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      }, 60000);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
