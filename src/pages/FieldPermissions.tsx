@@ -30,12 +30,16 @@ export default function FieldPermissions() {
   const { data: permissions = {}, isLoading } = useQuery({
     queryKey: ['field-permissions'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch permissions');
-      const data = await res.json();
-      return data?.permissions || {};
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        if (!res.ok) return {};
+        const data = await res.json();
+        return data?.permissions || {};
+      } catch {
+        return {};
+      }
     },
   });
 
@@ -43,22 +47,28 @@ export default function FieldPermissions() {
 
   const savePermissions = useMutation({
     mutationFn: async (perms: any) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({ permissions: perms }),
-      });
-      if (!res.ok) throw new Error('Failed to save permissions');
-      return res.json();
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+          body: JSON.stringify({ permissions: perms }),
+        });
+        if (!res.ok) throw new Error('Failed to save permissions');
+        return res.json();
+      } catch (err: any) {
+        throw new Error(err.message || 'Failed to save');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-permissions'] });
-      toast.success('Permissions saved');
+      toast.success('Permissions saved successfully');
     },
-    onError: () => toast.error('Failed to save permissions'),
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to save permissions');
+    },
   });
 
   const togglePermission = (role: string, field: string, type: 'view' | 'edit') => {
