@@ -111,9 +111,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-6">
             {/* Action Cards */}
-            <div className="stat-card">
+            <div className="stat-card col-span-2 lg:col-span-1">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                   Total Loan Volume
@@ -137,20 +137,20 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="stat-card">
-              <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">Disbursed Amount</h2>
-              <div className="flex items-end gap-3 mb-1">
-                <span className="text-3xl font-bold text-blue-950 dark:text-white">{formatCurrency(disbursedAmount)}</span>
+            <div className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center">
+              <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed Amount</h2>
+              <div className="flex items-end gap-2 mb-1">
+                <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{formatCurrency(disbursedAmount)}</span>
               </div>
               <div className="text-sm text-muted-foreground flex items-center gap-1">
                 <CheckCircle2 size={14} className="text-emerald-500" />
                 <span>{disbursed.length} applications completed</span>
               </div>
             </div>
-            <div className="stat-card">
-              <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">Under Review</h2>
-              <div className="flex items-end gap-3 mb-1">
-                <span className="text-3xl font-bold text-blue-950 dark:text-white">{pendingReview}</span>
+            <div className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center">
+              <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Under Review</h2>
+              <div className="flex items-end gap-2 mb-1">
+                <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{pendingReview}</span>
               </div>
               <div className="text-sm text-muted-foreground flex items-center gap-1">
                 <Clock size={14} className="text-amber-500" />
