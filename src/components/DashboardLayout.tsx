@@ -23,7 +23,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loan Applications', path: '/loans', icon: <FileText size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Create Loan', path: '/loans/new', icon: <Car size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'PDD Tracking', path: '/pdd', icon: <Shield size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={18} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={18} />, roles: ['super_admin', 'admin', 'manager'] },
