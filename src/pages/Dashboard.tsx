@@ -1,5 +1,4 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 
 import LoanStatusBadge from '@/components/LoanStatusBadge';
@@ -82,7 +81,6 @@ export default function Dashboard() {
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-4 pb-20 lg:p-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-blue-950 dark:text-white">Dashboard</h1>
           <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-blue-900/60 transition-colors">
             <span className="text-text-muted-light dark:text-text-muted-dark">Current Month</span>
           </button>
