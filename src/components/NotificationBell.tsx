@@ -41,9 +41,18 @@ export default function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      return [];
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
     },
     enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   useEffect(() => {
@@ -54,7 +63,10 @@ export default function NotificationBell() {
 
   const markAsRead = useMutation({
     mutationFn: async (id: string) => {
-      // Disabled
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
