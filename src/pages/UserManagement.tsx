@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
 import { Users, Search, Shield, Edit } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
+import { usersAPI } from '@/lib/api';
 
 export default function UserManagement() {
   const { user } = useAuth();
@@ -18,14 +19,8 @@ export default function UserManagement() {
   };
 
   const { data: profiles = [], isLoading, refetch, error } = useQuery({
-    queryKey: ['users-management', user?.branch_id],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch users');
-      return res.json();
-    },
+    queryKey: ['users-management'],
+    queryFn: () => usersAPI.getAll(),
     enabled: !!user,
   });
 

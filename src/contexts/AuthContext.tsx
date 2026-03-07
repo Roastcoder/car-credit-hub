@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string): Promise<{ error: string | null }> => {
     try {
-      await authAPI.signup(fullName, email, password);
+      await authAPI.signup(fullName, email, password, 'employee');
       return { error: null };
     } catch (error: any) {
       return { error: error.message };
