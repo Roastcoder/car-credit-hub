@@ -436,40 +436,6 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                 <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
                 
-                {/* Co-Applicant Section */}
-                <div className="md:col-span-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowOptionalFields(s => ({ ...s, coApplicant: !s.coApplicant }))}
-                    className="flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
-                  >
-                    {showOptionalFields.coApplicant ? '−' : '+'} Add Co-Applicant Details
-                  </button>
-                </div>
-                {showOptionalFields.coApplicant && (
-                  <>
-                    <div><label className={labelClass}>Co-Applicant Name</label><input className={inputClass} value={form.coApplicantName} onChange={e => update('coApplicantName', e.target.value)} /></div>
-                    <div><label className={labelClass}>Co-Applicant Mobile</label><input className={inputClass} value={form.coApplicantMobile} onChange={e => update('coApplicantMobile', e.target.value)} maxLength={10} /></div>
-                  </>
-                )}
-                
-                {/* Guarantor Section */}
-                <div className="md:col-span-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowOptionalFields(s => ({ ...s, guarantor: !s.guarantor }))}
-                    className="flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
-                  >
-                    {showOptionalFields.guarantor ? '−' : '+'} Add Guarantor Details
-                  </button>
-                </div>
-                {showOptionalFields.guarantor && (
-                  <>
-                    <div><label className={labelClass}>Guarantor Name</label><input className={inputClass} value={form.guarantorName} onChange={e => update('guarantorName', e.target.value)} /></div>
-                    <div><label className={labelClass}>Guarantor Mobile</label><input className={inputClass} value={form.guarantorMobile} onChange={e => update('guarantorMobile', e.target.value)} maxLength={10} /></div>
-                  </>
-                )}
-                
                 <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                 <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
                 <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
