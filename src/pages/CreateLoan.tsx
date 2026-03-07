@@ -194,15 +194,22 @@ export default function CreateLoan() {
     // Financier Details
     assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
-    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '',
+    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
     // Deductions & Disbursement Details
-    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '',
+    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', meharPf: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
     // Others
     loginDate: '', approvalDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
     // Documents
-    aadharFront: null, aadharBack: null, panCard: null, drivingLicence: null, lightBill: null,
+    aadharFront: null, aadharBack: null, panCard: null,
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
-    rentAgreement: null, customerPhoto: null, disbursementMemo: null, insurance: null, customerLedger: null,
+    customerPhoto: null, insurance: null, customerLedger: null,
+    // Other KYC Documents
+    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null,
+    // Document checkboxes
+    showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
+    showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
+    // Other KYC checkboxes
+    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false,
     coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
     guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
@@ -494,7 +501,7 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option></select></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
                 <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} placeholder="Optional" /></div>
-                <div><label className={labelClass}>Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} placeholder="Enter loan amount" /></div>
+                <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} placeholder="Enter loan amount" /></div>
                 <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} placeholder="Optional" /></div>
                 <div><label className={labelClass}>Loan Type</label><select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}><option value="">Select</option><option value="New Vehicle Loan">New Vehicle Loan</option><option value="Used Vehicle Loan">Used Vehicle Loan</option></select></div>
               </div>
@@ -549,6 +556,13 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
                 <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
                 <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
+                <div><label className={labelClass}>Insurance Made By</label><select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}><option value="">Select</option><option value="In House">In House</option><option value="Financier">Financier</option><option value="Customer">Customer</option><option value="Seller">Seller</option><option value="By Me">By Me</option><option value="Bank Recommended">Bank Recommended</option><option value="Broker Recommended">Broker Recommended</option><option value="Customer Choice">Customer Choice</option></select></div>
+                <div className="md:col-span-3 mt-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.insuranceReminderEnabled} onChange={e => update('insuranceReminderEnabled', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium text-foreground">Send Insurance Expiry Reminder to Admin/Manager</span>
+                  </label>
+                </div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Details</h3></div>
                 <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
                 <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
@@ -557,11 +571,23 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Deduction & Disbursement */}
+          {/* Deduction */}
           <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Deduction & Disbursement</h2>
+            <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+                <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharPf} onChange={e => update('meharPf', e.target.value)} /></div>
                 <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} /></div>
+              </div>
+            </div>
+
+          {/* Disbursement */}
+          <div>
+            <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Net (Seed Amount) (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
                 <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
                 <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
@@ -579,22 +605,131 @@ export default function CreateLoan() {
               {/* Customer Documents */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Customer Documents</h3>
+                
+                {/* Document Selection Checkboxes */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showAadhar} onChange={e => update('showAadhar', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Aadhar Card</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showPan} onChange={e => update('showPan', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Pan Card</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showBankStatement} onChange={e => update('showBankStatement', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Bank Statement</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showCheque} onChange={e => update('showCheque', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Cheque</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showRC} onChange={e => update('showRC', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">RC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showIncomeProof} onChange={e => update('showIncomeProof', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Income Proof</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showCustomerPhoto} onChange={e => update('showCustomerPhoto', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Customer Photo</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showInsurance} onChange={e => update('showInsurance', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Insurance</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showCustomerLedger} onChange={e => update('showCustomerLedger', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Customer Ledger</span>
+                  </label>
+                </div>
+
+                {/* Document Upload Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className={labelClass}>Aadhar Card Front</label><input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Aadhar Card Back</label><input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Pan Card</label><input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Driving Licence</label><input type="file" className={inputClass} onChange={e => update('drivingLicence', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Light Bill</label><input type="file" className={inputClass} onChange={e => update('lightBill', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Last 6 Month Bank Statement</label><input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Cheque</label><input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>RC (Front)</label><input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>RC (Back)</label><input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Income Proof</label><input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Rent Agreement</label><input type="file" className={inputClass} onChange={e => update('rentAgreement', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Customer Photo</label><input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" /></div>
-                  <div><label className={labelClass}>Disbursement Memo</label><input type="file" className={inputClass} onChange={e => update('disbursementMemo', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Insurance</label><input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                  <div><label className={labelClass}>Customer Ledger</label><input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  {form.showAadhar && (
+                    <>
+                      <div><label className={labelClass}>Aadhar Card Front</label><input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                      <div><label className={labelClass}>Aadhar Card Back</label><input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    </>
+                  )}
+                  {form.showPan && (
+                    <div><label className={labelClass}>Pan Card</label><input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showBankStatement && (
+                    <div><label className={labelClass}>Last 6 Month Bank Statement</label><input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showCheque && (
+                    <div><label className={labelClass}>Cheque</label><input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showRC && (
+                    <>
+                      <div><label className={labelClass}>RC (Front)</label><input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                      <div><label className={labelClass}>RC (Back)</label><input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    </>
+                  )}
+                  {form.showIncomeProof && (
+                    <div><label className={labelClass}>Income Proof</label><input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showCustomerPhoto && (
+                    <div><label className={labelClass}>Customer Photo</label><input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" /></div>
+                  )}
+                  {form.showInsurance && (
+                    <div><label className={labelClass}>Insurance</label><input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showCustomerLedger && (
+                    <div><label className={labelClass}>Customer Ledger</label><input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Other KYC Documents */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Other KYC / RTO Documents</h3>
+                
+                {/* Document Selection Checkboxes */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showRtoDocument} onChange={e => update('showRtoDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">RTO Document</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showNoc} onChange={e => update('showNoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">NOC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showThirdParty} onChange={e => update('showThirdParty', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">3rd Party</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showStamp} onChange={e => update('showStamp', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">Stamp</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">RC Document</span>
+                  </label>
+                </div>
+
+                {/* Document Upload Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {form.showRtoDocument && (
+                    <div><label className={labelClass}>RTO Document</label><input type="file" className={inputClass} onChange={e => update('rtoDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showNoc && (
+                    <div><label className={labelClass}>NOC</label><input type="file" className={inputClass} onChange={e => update('noc', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showThirdParty && (
+                    <div><label className={labelClass}>3rd Party</label><input type="file" className={inputClass} onChange={e => update('thirdParty', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showStamp && (
+                    <div><label className={labelClass}>Stamp</label><input type="file" className={inputClass} onChange={e => update('stamp', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                  {form.showRcDocument && (
+                    <div><label className={labelClass}>RC Document</label><input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                  )}
+                </div>
                 </div>
               </div>
 
