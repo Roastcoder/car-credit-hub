@@ -192,7 +192,7 @@ export default function Loans() {
                   <p className="text-foreground truncate">{loan.banks?.name || '—'}</p>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-border flex items-center gap-2" onClick={e => e.stopPropagation()}>
+              <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-2" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => exportLoanPDF(loan)}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
@@ -216,7 +216,7 @@ export default function Loans() {
                     value={loan.status}
                     onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
                     disabled={updateStatus.isPending}
-                    className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                    className="flex-1 min-w-[120px] px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
                   >
                     {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
