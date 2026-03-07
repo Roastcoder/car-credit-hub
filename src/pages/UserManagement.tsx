@@ -20,7 +20,14 @@ export default function UserManagement() {
 
   const { data: profiles = [], isLoading, refetch, error } = useQuery({
     queryKey: ['users-management'],
-    queryFn: () => usersAPI.getAll(),
+    queryFn: async () => {
+      try {
+        return await usersAPI.getAll();
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        return [];
+      }
+    },
     enabled: !!user,
   });
 
