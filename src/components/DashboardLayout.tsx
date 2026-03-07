@@ -4,7 +4,7 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ROLE_LABELS } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus
+  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -29,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={18} />, roles: ['super_admin', 'admin'] },
   { label: 'Branches', path: '/branches', icon: <MapPin size={18} />, roles: ['super_admin', 'admin', 'manager'] },
+  { label: 'Send Notification', path: '/broadcast', icon: <Send size={18} />, roles: ['super_admin', 'admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
