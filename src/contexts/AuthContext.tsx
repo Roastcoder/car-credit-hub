@@ -57,15 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession({ user: data.user });
         
         // Request notification permission after login (only if not already asked)
-        const hasAskedPermission = localStorage.getItem('notification_permission_asked');
-        if (!hasAskedPermission) {
+        if (Notification.permission === 'default') {
           setTimeout(async () => {
             const permission = await requestNotificationPermission();
-            localStorage.setItem('notification_permission_asked', 'true');
             if (permission === 'granted') {
               await subscribeUserToPush().catch(err => console.log('Push subscription failed:', err));
             }
-          }, 1000);
+          }, 1500);
         } else if (Notification.permission === 'granted') {
           // Already granted, just subscribe
           subscribeUserToPush().catch(err => console.log('Push subscription failed:', err));
