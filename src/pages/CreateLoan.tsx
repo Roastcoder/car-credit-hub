@@ -730,10 +730,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>RC Document</label><input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
                   )}
                 </div>
-                </div>
               </div>
-
-            </div>
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3 pb-8">
