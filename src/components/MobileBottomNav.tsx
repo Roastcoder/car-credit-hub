@@ -36,8 +36,8 @@ export default function MobileBottomNav() {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0 flex-1 ${active
-                  ? 'text-accent'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'text-accent'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               <span className={active ? 'scale-110' : ''}>{item.icon}</span>

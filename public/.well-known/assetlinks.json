@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.meharfinance.app",
+    "package_name": "com.meharadvisory.app.twa",
     "sha256_cert_fingerprints": [
       "BC:62:6B:48:06:67:5D:9E:9D:32:CB:F3:FE:6F:0E:BE:C6:B2:6E:AE:79:89:47:C9:81:E5:6D:61:78:11:1D:80"
     ]

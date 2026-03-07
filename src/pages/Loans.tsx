@@ -228,65 +228,67 @@ export default function Loans() {
       </div>
 
       {/* Desktop Table View */}
-      <div className="stat-card overflow-hidden hidden lg:block">
-        {isLoading ? (
-          <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan ID</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                  {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Update</th>}
-                  <th className="py-3 px-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((loan: any) => (
-                  <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
-                    <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
-                    <td className="py-3.5 px-3">
-                      <p className="font-medium text-foreground">{loan.applicant_name}</p>
-                      <p className="text-xs text-muted-foreground">{loan.mobile}</p>
-                    </td>
-                    <td className="py-3.5 px-3">
-                      <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
-                      <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
-                    </td>
-                    <td className="py-3.5 px-3 text-muted-foreground">{loan.banks?.name || '—'}</td>
-                    <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
-                    <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
-                    <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
-                    {canEditStatus && (
-                      <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
-                        <select
-                          value={loan.status}
-                          onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
-                          disabled={updateStatus.isPending}
-                          className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                        >
-                          {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                        </select>
-                      </td>
-                    )}
-                    <td className="py-3.5 px-3">
-                      <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent transition-colors" />
-                    </td>
+      <div className="hidden lg:block">
+        <div className="stat-card overflow-hidden">
+          {isLoading ? (
+            <div className="py-12 text-center text-muted-foreground text-sm">Loading applications…</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan ID</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                    {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Update</th>}
+                    <th className="py-3 px-3"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && !isLoading && (
-              <div className="py-12 text-center text-muted-foreground">No applications found</div>
-            )}
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {filtered.map((loan: any) => (
+                    <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                      <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
+                      <td className="py-3.5 px-3">
+                        <p className="font-medium text-foreground">{loan.applicant_name}</p>
+                        <p className="text-xs text-muted-foreground">{loan.mobile}</p>
+                      </td>
+                      <td className="py-3.5 px-3">
+                        <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>
+                        <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
+                      </td>
+                      <td className="py-3.5 px-3 text-muted-foreground">{loan.banks?.name || '—'}</td>
+                      <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
+                      <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
+                      <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
+                      {canEditStatus && (
+                        <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={loan.status}
+                            onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                            disabled={updateStatus.isPending}
+                            className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                          >
+                            {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                          </select>
+                        </td>
+                      )}
+                      <td className="py-3.5 px-3">
+                        <ChevronRight size={16} className="text-muted-foreground group-hover:text-accent transition-colors" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && !isLoading && (
+                <div className="py-12 text-center text-muted-foreground">No applications found</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
