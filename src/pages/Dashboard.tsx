@@ -7,13 +7,14 @@ import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { ROLE_LABELS } from '@/lib/auth';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FeatureCarousel from '@/components/FeatureCarousel';
 
 const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-dashboard', user?.branch_id],
@@ -70,7 +71,7 @@ export default function Dashboard() {
 
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
-      <div className="px-4 pt-4 pb-20 lg:p-8">
+      <div className="px-2 sm:px-4 pt-4 pb-20 lg:p-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-blue-950 dark:text-white">Dashboard</h1>
           <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/60 dark:hover:bg-blue-900/60 transition-colors">
@@ -113,7 +114,10 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-6 order-1 lg:order-2">
             {/* Action Cards */}
-            <div className="stat-card col-span-2 lg:col-span-1">
+            <div
+              onClick={() => navigate('/loans')}
+              className="stat-card col-span-2 lg:col-span-1 cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                   Total Loan Volume
@@ -137,7 +141,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center">
+            <div
+              onClick={() => navigate('/loans?status=disbursed')}
+              className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+            >
               <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed Amount</h2>
               <div className="flex items-end gap-2 mb-1">
                 <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{formatCurrency(disbursedAmount)}</span>
@@ -147,7 +154,10 @@ export default function Dashboard() {
                 <span>{disbursed.length} applications completed</span>
               </div>
             </div>
-            <div className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center">
+            <div
+              onClick={() => navigate('/loans?status=under_review')}
+              className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+            >
               <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Under Review</h2>
               <div className="flex items-end gap-2 mb-1">
                 <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{pendingReview}</span>
