@@ -18,6 +18,7 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
 
   const { data: loans = [], isLoading } = useQuery({
@@ -243,11 +244,7 @@ export default function Loans() {
                       Edit
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
-                          deleteLoan.mutate(loan.id);
-                        }
-                      }}
+                      onClick={() => setDeleteConfirm(loan.id)}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -321,11 +318,7 @@ export default function Loans() {
                               </svg>
                             </button>
                             <button
-                              onClick={() => {
-                                if (window.confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
-                                  deleteLoan.mutate(loan.id);
-                                }
-                              }}
+                              onClick={() => setDeleteConfirm(loan.id)}
                               className="p-1.5 rounded-md border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors"
                               title="Delete"
                             >
@@ -358,6 +351,46 @@ export default function Loans() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 border border-border" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Delete Loan Application</h3>
+                <p className="text-sm text-muted-foreground">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete this loan application? All associated data will be permanently removed.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground font-medium hover:bg-muted/80 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteLoan.mutate(deleteConfirm);
+                  setDeleteConfirm(null);
+                }}
+                disabled={deleteLoan.isPending}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleteLoan.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -101,15 +101,13 @@ export default function LoanDetail() {
   const previewDocument = async (doc: any) => {
     setLoadingPreview(doc.id);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${doc.id}/preview`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPreviewDoc({ url: data.signedUrl, name: doc.file_name });
-      } else {
-        toast.error('Document not found in storage');
-      }
+      // Use the file_url directly from the document
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const fileUrl = doc.file_url.startsWith('http') 
+        ? doc.file_url 
+        : `${baseUrl.replace('/api', '')}${doc.file_url}`;
+      
+      setPreviewDoc({ url: fileUrl, name: doc.document_name || doc.file_name });
     } catch (error) {
       toast.error('Failed to load document');
     } finally {
@@ -391,9 +389,9 @@ export default function LoanDetail() {
               <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
                 <FileText size={16} className="text-accent shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{doc.file_name}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{doc.document_name || doc.file_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {DOC_TYPES.find(d => d.value === doc.document_type)?.label} •{' '}
+                    {doc.document_type?.replace(/_/g, ' ').toUpperCase()} •{' '}
                     {new Date(doc.created_at).toLocaleDateString('en-IN')}
                     {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                   </p>

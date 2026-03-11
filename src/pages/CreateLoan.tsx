@@ -243,6 +243,9 @@ export default function CreateLoan() {
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
   });
 
+  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
+
   useEffect(() => {
     if (isEditMode && existingLoan) {
       // Helper function to format date from ISO to yyyy-MM-dd
@@ -443,6 +446,7 @@ export default function CreateLoan() {
     }
 
     console.log(`Uploading ${documents.length} documents for loan ${loanId}`);
+    setUploadingDocs(true);
 
     try {
       const formData = new FormData();
@@ -463,6 +467,7 @@ export default function CreateLoan() {
       if (response.ok) {
         const result = await response.json();
         console.log('Upload result:', result);
+        setUploadedDocs(result.uploaded || []);
         toast.success(result.message || `${documents.length} document(s) uploaded successfully`);
       } else {
         const error = await response.text();
@@ -472,6 +477,8 @@ export default function CreateLoan() {
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Error uploading documents');
+    } finally {
+      setUploadingDocs(false);
     }
   };
 
@@ -828,6 +835,83 @@ export default function CreateLoan() {
           {/* Documents */}
           <div>
             <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
+              
+              {/* Document Preview Box */}
+              {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
+                <div className="mb-6 p-4 rounded-xl border border-border bg-muted/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-foreground">Selected Documents</h3>
+                    <span className="text-xs text-muted-foreground bg-accent/10 px-2 py-1 rounded-full">
+                      {Object.values(form).filter(v => v instanceof File).length} files
+                    </span>
+                  </div>
+                  
+                  {uploadingDocs && (
+                    <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm text-blue-600 font-medium">Uploading documents...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {uploadedDocs.length > 0 && (
+                    <div className="mb-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-sm text-green-600 font-medium">{uploadedDocs.length} documents uploaded successfully</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { file: form.aadharFront, name: 'Aadhar Front', type: 'aadhar_front' },
+                      { file: form.aadharBack, name: 'Aadhar Back', type: 'aadhar_back' },
+                      { file: form.panCard, name: 'PAN Card', type: 'pan_card' },
+                      { file: form.bankStatement, name: 'Bank Statement', type: 'bank_statement' },
+                      { file: form.cheque, name: 'Cheque', type: 'cheque' },
+                      { file: form.rcFront, name: 'RC Front', type: 'rc_front' },
+                      { file: form.rcBack, name: 'RC Back', type: 'rc_back' },
+                      { file: form.incomeProof, name: 'Income Proof', type: 'income_proof' },
+                      { file: form.customerPhoto, name: 'Customer Photo', type: 'customer_photo' },
+                      { file: form.insurance, name: 'Insurance', type: 'insurance' },
+                      { file: form.customerLedger, name: 'Customer Ledger', type: 'customer_ledger' },
+                      { file: form.rtoDocument, name: 'RTO Document', type: 'rto_document' },
+                      { file: form.noc, name: 'NOC', type: 'noc' },
+                      { file: form.thirdParty, name: 'Third Party', type: 'third_party' },
+                      { file: form.stamp, name: 'Stamp', type: 'stamp' },
+                      { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
+                    ].filter(doc => doc.file).map((doc) => {
+                      const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
+                      return (
+                        <div key={doc.type} className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
+                          <div className="flex-shrink-0">
+                            {uploaded ? (
+                              <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{(doc.file as File).name}</p>
+                          </div>
+                          {uploaded && (
+                            <span className="text-[10px] text-green-600 font-medium">Uploaded</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
               {/* Customer Documents */}
               <div className="mb-6">
