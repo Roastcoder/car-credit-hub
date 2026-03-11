@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -378,27 +378,47 @@ export default function LoanDetail() {
             <div className="mb-4 rounded-xl border border-border overflow-hidden bg-background">
               <div className="flex items-center justify-between px-3 py-2 bg-muted/60 border-b border-border">
                 <p className="text-sm font-medium text-foreground truncate">{previewDoc.name}</p>
-                <button onClick={() => setPreviewDoc(null)} className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-foreground transition-colors">
-                  <X size={16} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={previewDoc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors text-xs font-medium"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink size={14} /> Open
+                  </a>
+                  <button onClick={() => setPreviewDoc(null)} className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-foreground transition-colors" title="Close Preview">
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
-              <iframe
-                src={previewDoc.url}
-                className="w-full border-0"
-                style={{ height: '60vh', minHeight: '300px' }}
-                title={previewDoc.name}
-              />
+              <div className="w-full bg-black/5 flex items-center justify-center p-4" style={{ height: '60vh', minHeight: '300px' }}>
+                {previewDoc.url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.name}
+                    className="max-w-full max-h-full object-contain rounded-md shadow-sm"
+                  />
+                ) : (
+                  <iframe
+                    src={previewDoc.url}
+                    className="w-full h-full border-0 rounded-md bg-white"
+                    title={previewDoc.name}
+                  />
+                )}
+              </div>
             </div>
           )}
 
           {!previewDoc && (documents as any[]).length > 0 && (
             <div className="grid gap-2">
               {(documents as any[]).map((doc: any) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                <div key={doc.id} className="flex items-center gap-2 sm:gap-3 p-3 rounded-lg bg-muted/40 overflow-hidden">
                   <FileText size={16} className="text-accent shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{doc.document_name || doc.file_name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {doc.document_type?.replace(/_/g, ' ').toUpperCase()} •{' '}
                       {new Date(doc.created_at).toLocaleDateString('en-IN')}
                       {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
@@ -407,10 +427,10 @@ export default function LoanDetail() {
                   <button
                     onClick={() => previewDocument(doc)}
                     disabled={loadingPreview === doc.id}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-medium disabled:opacity-50"
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-medium disabled:opacity-50"
                     title="Preview"
                   >
-                    <Eye size={14} /> {loadingPreview === doc.id ? 'Loading…' : 'View'}
+                    <Eye size={14} /> <span className="hidden sm:inline">{loadingPreview === doc.id ? 'Loading…' : 'View'}</span>
                   </button>
                 </div>
               ))}
