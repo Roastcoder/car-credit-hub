@@ -90,7 +90,7 @@ export default function CreateLoan() {
   const filteredLeads = useMemo(() => {
     if (!leadSearch || !leadSearch.trim()) return [];
     const search = leadSearch.toLowerCase();
-    return leads.filter((l: any) => 
+    return leads.filter((l: any) =>
       l.customer_id?.toLowerCase().includes(search) ||
       l.customer_name?.toLowerCase().includes(search) ||
       l.phone_no?.includes(search)
@@ -121,72 +121,72 @@ export default function CreateLoan() {
 
   const fetchVehicleDetails = async (rcNumber: string) => {
     if (!rcNumber || rcNumber.length < 8) return;
-    
+
     setFetchingVehicleData(true);
     try {
       console.log('Fetching from API');
       toast.info('Fetching from API...');
       const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
         },
         body: JSON.stringify({ id_number: rcNumber, enrich: true }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const rcData = await response.json();
       console.log('RC API Response:', rcData);
       console.log('RC Data fields:', Object.keys(rcData.data || {}));
-      
+
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
-        
+
         setForm(f => ({
           ...f,
           // Vehicle Details
           makerName: rc.maker_model || rc.vehicle_manufacturer_name || rc.manufacturer || rc.make || '',
           modelVariantName: rc.model || rc.vehicle_model || rc.variant || rc.model_name || rc.vehicle_class || '',
           mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || rc.manufacturing_year || rc.model_year || '',
-          
+
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
           rcMfgDate: formatDateToInput(rc.manufacturing_date || rc.registration_date),
-          rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ? 
+          rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ?
             (() => {
               const [month, year] = rc.fitness_upto.split('/');
               const date = new Date(parseInt(year), parseInt(month) - 1, 1);
               return date.toISOString().split('T')[0];
-            })() : formatDateToInput(rc.fitness_upto)) : rc.tax_upto ? (rc.tax_upto.includes('/') ? 
-            (() => {
-              const [month, year] = rc.tax_upto.split('/');
-              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-              return date.toISOString().split('T')[0];
-            })() : formatDateToInput(rc.tax_upto)) : '',
+            })() : formatDateToInput(rc.fitness_upto)) : rc.tax_upto ? (rc.tax_upto.includes('/') ?
+              (() => {
+                const [month, year] = rc.tax_upto.split('/');
+                const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+                return date.toISOString().split('T')[0];
+              })() : formatDateToInput(rc.tax_upto)) : '',
           hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
           isFinanced: rc.financer ? 'Yes' : 'No',
           fc: rc.fitness_upto ? 'Yes' : 'No',
-          
+
           // Customer Details (only if empty)
           customerName: f.customerName || rc.owner_name || '',
           mobile: f.mobile || rc.mobile_number || '',
-          
+
           // Address from RC (only if empty)
           currentAddress: f.currentAddress || rc.present_address || rc.permanent_address || '',
           permanentAddress: f.permanentAddress || rc.permanent_address || '',
           currentPincode: f.currentPincode || rc.present_address?.match(/\d{6}/)?.[0] || rc.permanent_address?.match(/\d{6}/)?.[0] || '',
           permanentPincode: f.permanentPincode || rc.permanent_address?.match(/\d{6}/)?.[0] || '',
-          
+
           // Insurance Details
           insuranceCompanyName: rc.insurance_company || '',
           insurancePolicyNumber: rc.insurance_policy_number || '',
           insuranceDate: formatDateToInput(rc.insurance_upto),
         }));
-        
+
         toast.success('Vehicle details fetched successfully!');
       } else {
         toast.error('Could not fetch vehicle details');
@@ -381,7 +381,7 @@ export default function CreateLoan() {
       sourcingPersonName: lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
     }));
-    
+
     // Auto-fetch vehicle details if RC number exists
     if (lead.vehicle_no && lead.vehicle_no.length >= 8) {
       fetchVehicleDetails(lead.vehicle_no);
@@ -450,7 +450,7 @@ export default function CreateLoan() {
 
     try {
       const formData = new FormData();
-      
+
       // Append all files with their field names
       documents.forEach(doc => {
         formData.append(doc.type, doc.file as File);
@@ -485,10 +485,10 @@ export default function CreateLoan() {
   const createLoan = useMutation({
     mutationFn: async () => {
       const loanId = form.loanNumber || generateLoanId();
-      const url = isEditMode 
+      const url = isEditMode
         ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`
         : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`;
-      
+
       const res = await fetch(url, {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
@@ -496,7 +496,6 @@ export default function CreateLoan() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          id: isEditMode ? id : loanId,
           loan_number: loanId,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
@@ -568,10 +567,10 @@ export default function CreateLoan() {
       });
       if (!res.ok) throw new Error('Failed to create loan');
       const data = await res.json();
-      
+
       // Upload documents after loan is created
       await uploadDocuments(isEditMode ? id! : data.id);
-      
+
       return data;
     },
     onSuccess: (data) => {
@@ -615,11 +614,11 @@ export default function CreateLoan() {
           <p className="text-muted-foreground text-sm">Loading loan details...</p>
         </div>
       ) : (
-      <form onSubmit={handleSubmit}>
-        <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
-          {/* Customer Details */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
+            {/* Customer Details */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClass}>Customer ID</label>
@@ -676,7 +675,7 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                 <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
-                
+
                 <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                 <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
                 <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
@@ -704,15 +703,15 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Vehicle & Loan */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
+            {/* Vehicle & Loan */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative">
                   <label className={labelClass}>Vehicle Reg. No</label>
-                  <input 
-                    className={inputClass} 
-                    value={form.vehicleNumber} 
+                  <input
+                    className={inputClass}
+                    value={form.vehicleNumber}
                     onChange={e => {
                       const value = e.target.value.toUpperCase();
                       update('vehicleNumber', value);
@@ -741,9 +740,9 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* EMI & Financier */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
+            {/* EMI & Financier */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="e.g., 12.5" /></div>
                 <div><label className={labelClass}>Tenure *</label><select required className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)}>{[12, 18, 24, 36, 48, 60, 72, 84].map(t => <option key={t} value={t}>{t} MONTH</option>)}</select></div>
@@ -782,9 +781,9 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Insurance & RTO */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
+            {/* Insurance & RTO */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                 <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
@@ -805,9 +804,9 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Deduction */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
+            {/* Deduction */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
                 <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharPf} onChange={e => update('meharPf', e.target.value)} /></div>
@@ -815,9 +814,9 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Disbursement */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
+            {/* Disbursement */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
                 <div><label className={labelClass}>Net (Seed Amount) (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
@@ -832,10 +831,10 @@ export default function CreateLoan() {
               </div>
             </div>
 
-          {/* Documents */}
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
-              
+            {/* Documents */}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
+
               {/* Document Preview Box */}
               {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
                 <div className="mb-6 p-4 rounded-xl border border-border bg-muted/30">
@@ -845,7 +844,7 @@ export default function CreateLoan() {
                       {Object.values(form).filter(v => v instanceof File).length} files
                     </span>
                   </div>
-                  
+
                   {uploadingDocs && (
                     <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                       <div className="flex items-center gap-2">
@@ -912,11 +911,11 @@ export default function CreateLoan() {
                   </div>
                 </div>
               )}
-              
+
               {/* Customer Documents */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Customer Documents</h3>
-                
+
                 {/* Document Selection Checkboxes */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1042,7 +1041,7 @@ export default function CreateLoan() {
               {/* Other KYC Documents */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Other KYC / RTO Documents</h3>
-                
+
                 {/* Document Selection Checkboxes */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1108,33 +1107,33 @@ export default function CreateLoan() {
               </div>
             </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end gap-3 pb-8">
-          <button 
-            type="button" 
-            onClick={() => navigate(-1)} 
-            className="px-4 py-2 rounded-lg border border-border font-medium hover:bg-muted transition-all text-sm"
-          >
-            Cancel
-          </button>
-          <button 
-            type="submit" 
-            disabled={createLoan.isPending} 
-            className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-all disabled:opacity-60 text-sm"
-          >
-            {createLoan.isPending ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                {isEditMode ? 'Updating...' : 'Creating...'}
-              </span>
-            ) : (isEditMode ? 'Update Application' : 'Create Application')}
-          </button>
-        </div>
-        </div>
-      </form>
+            {/* Submit Button */}
+            <div className="flex justify-end gap-3 pb-8">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-4 py-2 rounded-lg border border-border font-medium hover:bg-muted transition-all text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={createLoan.isPending}
+                className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-all disabled:opacity-60 text-sm"
+              >
+                {createLoan.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    {isEditMode ? 'Updating...' : 'Creating...'}
+                  </span>
+                ) : (isEditMode ? 'Update Application' : 'Create Application')}
+              </button>
+            </div>
+          </div>
+        </form>
       )}
     </div>
   );
