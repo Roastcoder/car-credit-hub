@@ -40,7 +40,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const result = await signUp(email, password, fullName);
+      const result = await signUp(email, password, fullName, branchId);
       if (result.error) {
         toast.error(result.error);
         setLoading(false);

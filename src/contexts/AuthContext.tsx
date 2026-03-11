@@ -19,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, branchId?: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string): Promise<{ error: string | null }> => {
+  const signUp = async (email: string, password: string, fullName: string, branchId?: string): Promise<{ error: string | null }> => {
     try {
-      await authAPI.signup(fullName, email, password, 'employee');
+      await authAPI.signup(fullName, email, password, 'employee', branchId);
       return { error: null };
     } catch (error: any) {
       return { error: error.message };

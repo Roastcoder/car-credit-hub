@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 export default function CreateLoan() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -27,6 +29,18 @@ export default function CreateLoan() {
         return [];
       }
     },
+  });
+
+  const { data: existingLoan, isLoading: loadingLoan } = useQuery({
+    queryKey: ['loan', id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch loan');
+      return res.json();
+    },
+    enabled: isEditMode,
   });
 
   const { data: brokers = [] } = useQuery({
@@ -215,6 +229,105 @@ export default function CreateLoan() {
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
   });
 
+  useEffect(() => {
+    if (isEditMode && existingLoan) {
+      setForm({
+        customerId: existingLoan.customer_id || '',
+        customerName: existingLoan.applicant_name || '',
+        mobile: existingLoan.mobile || '',
+        coApplicantName: existingLoan.co_applicant_name || '',
+        coApplicantMobile: existingLoan.co_applicant_mobile || '',
+        guarantorName: existingLoan.guarantor_name || '',
+        guarantorMobile: existingLoan.guarantor_mobile || '',
+        ourBranch: existingLoan.our_branch || '',
+        currentAddress: existingLoan.current_address || '',
+        currentVillage: existingLoan.current_village || '',
+        currentTehsil: existingLoan.current_tehsil || '',
+        currentDistrict: existingLoan.current_district || '',
+        currentState: existingLoan.current_state || '',
+        currentPincode: existingLoan.current_pincode || '',
+        sameAsCurrentAddress: false,
+        permanentAddress: existingLoan.permanent_address || '',
+        permanentVillage: existingLoan.permanent_village || '',
+        permanentTehsil: existingLoan.permanent_tehsil || '',
+        permanentDistrict: existingLoan.permanent_district || '',
+        permanentState: existingLoan.permanent_state || '',
+        permanentPincode: existingLoan.permanent_pincode || '',
+        loanNumber: existingLoan.loan_number || '',
+        purposeLoanAmount: existingLoan.purpose_loan_amount || '',
+        loanAmount: String(existingLoan.loan_amount || ''),
+        ltv: String(existingLoan.ltv || ''),
+        loanTypeVehicle: existingLoan.loan_type_vehicle || '',
+        vehicleNumber: existingLoan.vehicle_number || '',
+        makerName: existingLoan.maker_name || '',
+        modelVariantName: existingLoan.model_variant_name || '',
+        mfgYear: existingLoan.mfg_year || '',
+        vertical: existingLoan.vertical || '',
+        scheme: existingLoan.scheme || '',
+        incomeSource: existingLoan.income_source || '',
+        monthlyIncome: String(existingLoan.monthly_income || ''),
+        rcOwnerName: existingLoan.rc_owner_name || '',
+        rcMfgDate: existingLoan.rc_mfg_date || '',
+        rcExpiryDate: existingLoan.rc_expiry_date || '',
+        hpnAtLogin: existingLoan.hpn_at_login || '',
+        isFinanced: existingLoan.is_financed || '',
+        newFinancier: existingLoan.new_financier || '',
+        rtoDocsHandoverDate: existingLoan.rto_docs_handover_date || '',
+        rtoAgentName: existingLoan.rto_agent_name || '',
+        agentMobileNo: existingLoan.agent_mobile_no || '',
+        dtoLocation: existingLoan.dto_location || '',
+        rtoWorkDescription: existingLoan.rto_work_description || '',
+        challan: existingLoan.challan || 'No',
+        fc: existingLoan.fc || 'No',
+        rtoPapers: existingLoan.rto_papers || '',
+        rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
+        rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false,
+        irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
+        tenure: String(existingLoan.tenure || '60'),
+        emiMode: existingLoan.emi_mode || 'Monthly',
+        emiStartDate: existingLoan.emi_start_date || '',
+        emiEndDate: existingLoan.emi_end_date || '',
+        assignedBankId: existingLoan.assigned_bank_id || '',
+        assignedBrokerId: existingLoan.assigned_broker_id || '',
+        financierExecutiveName: existingLoan.financier_executive_name || '',
+        financierTeamVertical: existingLoan.financier_team_vertical || '',
+        disburseBranchName: existingLoan.disburse_branch_name || '',
+        sanctionAmount: String(existingLoan.sanction_amount || ''),
+        sanctionDate: existingLoan.sanction_date || '',
+        insuranceCompanyName: existingLoan.insurance_company_name || '',
+        premiumAmount: String(existingLoan.premium_amount || ''),
+        insuranceDate: existingLoan.insurance_date || '',
+        insurancePolicyNumber: existingLoan.insurance_policy_number || '',
+        insuranceMadeBy: existingLoan.insurance_made_by || '',
+        insuranceReminderEnabled: existingLoan.insurance_reminder_enabled || false,
+        processingFee: String(existingLoan.processing_fee || ''),
+        totalDeduction: String(existingLoan.total_deduction || ''),
+        netDisbursementAmount: String(existingLoan.net_disbursement_amount || ''),
+        paymentReceivedDate: existingLoan.payment_received_date || '',
+        meharDeduction: String(existingLoan.mehar_deduction || ''),
+        meharPf: String(existingLoan.mehar_pf || ''),
+        holdAmount: String(existingLoan.hold_amount || ''),
+        netSeedAmount: String(existingLoan.net_seed_amount || ''),
+        paymentInFavour: existingLoan.payment_in_favour || '',
+        loginDate: existingLoan.login_date || '',
+        approvalDate: existingLoan.approval_date || '',
+        sourcingPersonName: existingLoan.sourcing_person_name || '',
+        remark: existingLoan.remark || '',
+        fileStatus: existingLoan.status || 'submitted',
+        aadharFront: null, aadharBack: null, panCard: null,
+        bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
+        customerPhoto: null, insurance: null, customerLedger: null,
+        rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null,
+        showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
+        showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
+        showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false,
+        coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
+        guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
+        guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
+      });
+    }
+  }, [isEditMode, existingLoan]);
+
   const update = (key: string, val: string | File | null | boolean) => {
     setForm(f => {
       const newForm = { ...f, [key]: val };
@@ -282,14 +395,18 @@ export default function CreateLoan() {
   const createLoan = useMutation({
     mutationFn: async () => {
       const loanId = form.loanNumber || generateLoanId();
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
-        method: 'POST',
+      const url = isEditMode 
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`;
+      
+      const res = await fetch(url, {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          id: loanId,
+          id: isEditMode ? id : loanId,
           loan_number: loanId,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
@@ -365,13 +482,13 @@ export default function CreateLoan() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['loans-dashboard'] });
-      // Clear saved form data on success
+      queryClient.invalidateQueries({ queryKey: ['loan', id] });
       localStorage.removeItem('loan_form_draft');
-      toast.success('Loan application created successfully!');
-      navigate(`/loans/${data.id}`);
+      toast.success(isEditMode ? 'Loan application updated successfully!' : 'Loan application created successfully!');
+      navigate(`/loans/${isEditMode ? id : data.id}`);
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Failed to create loan');
+      toast.error(err.message || `Failed to ${isEditMode ? 'update' : 'create'} loan`);
     },
   });
 
@@ -394,9 +511,15 @@ export default function CreateLoan() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-foreground mb-2">New Loan Application</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{isEditMode ? 'Edit Loan Application' : 'New Loan Application'}</h1>
       </div>
 
+      {loadingLoan && isEditMode ? (
+        <div className="text-center py-20">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">Loading loan details...</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit}>
         <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
           {/* Customer Details */}
@@ -769,13 +892,14 @@ export default function CreateLoan() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Creating...
+                {isEditMode ? 'Updating...' : 'Creating...'}
               </span>
-            ) : 'Create Application'}
+            ) : (isEditMode ? 'Update Application' : 'Create Application')}
           </button>
         </div>
         </div>
       </form>
+      )}
     </div>
   );
 }

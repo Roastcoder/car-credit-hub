@@ -91,6 +91,12 @@ export default function LoanDetail() {
 
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDelete = () => {
+    deleteLoan.mutate();
+    setShowDeleteModal(false);
+  };
 
   const previewDocument = async (doc: any) => {
     setLoadingPreview(doc.id);
@@ -142,6 +148,7 @@ export default function LoanDetail() {
   const currentIdx = LOAN_STATUSES.findIndex(s => s.value === loan.status);
 
   return (
+    <>
     <div className="max-w-6xl mx-auto px-4 pb-20 lg:pb-4">
       <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft size={16} /> Back to Applications
@@ -194,19 +201,26 @@ export default function LoanDetail() {
                 value={loan.status}
                 onChange={e => updateStatus.mutate(e.target.value)}
                 disabled={updateStatus.isPending}
-                className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent transition-colors"
               >
-                {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                {LOAN_STATUSES.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
               </select>
               <button
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
-                    deleteLoan.mutate();
-                  }
-                }}
-                disabled={deleteLoan.isPending}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500 bg-card text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                onClick={() => navigate(`/loans/${id}/edit`)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
               >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 hover:border-red-500 transition-colors"
+              >
+                <X size={14} />
                 Delete
               </button>
             </>
@@ -346,7 +360,7 @@ export default function LoanDetail() {
         </Section>
       </div>
 
-      {/* Documents Section (Read-only) */}
+      {/* Documents Section */}
       <div className="stat-card">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-accent"><FileText size={18} /></span>
@@ -354,7 +368,6 @@ export default function LoanDetail() {
           <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{(documents as any[]).length} files</span>
         </div>
 
-        {/* Inline Preview */}
         {previewDoc && (
           <div className="mb-4 rounded-xl border border-border overflow-hidden bg-background">
             <div className="flex items-center justify-between px-3 py-2 bg-muted/60 border-b border-border">
@@ -372,7 +385,6 @@ export default function LoanDetail() {
           </div>
         )}
 
-        {/* Document list */}
         {(documents as any[]).length > 0 && (
           <div className="grid gap-2">
             {(documents as any[]).map((doc: any) => (
@@ -403,5 +415,52 @@ export default function LoanDetail() {
         )}
       </div>
     </div>
+
+    {/* Delete Confirmation Modal */}
+    {showDeleteModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+              <X size={24} className="text-red-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Delete Loan Application?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-1">
+                Are you sure you want to delete this loan application?
+              </p>
+              <p className="text-sm font-medium text-red-500">
+                This action cannot be undone.
+              </p>
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Application Details:</p>
+                <p className="text-sm font-medium text-foreground">{loan.id}</p>
+                <p className="text-xs text-muted-foreground mt-1">{loan.applicant_name} • {formatCurrency(Number(loan.loan_amount))}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 mt-6">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleteLoan.isPending}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteLoan.isPending}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deleteLoan.isPending ? 'Deleting...' : 'Delete Application'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
