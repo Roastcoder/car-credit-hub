@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { LayoutDashboard, FileText, Car, Users, UserPlus, BarChart3, MoreHorizontal, Building2, UserCheck, MapPin, CreditCard, Send, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Car, Users, UserPlus, BarChart3, MoreHorizontal, Building2, UserCheck, MapPin, CreditCard, Send, X, ClipboardCheck } from 'lucide-react';
 import { useState } from 'react';
 
 interface NavItem {
@@ -15,6 +15,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'New', path: '/loans/new', icon: <Car size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={20} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'manager'] },

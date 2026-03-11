@@ -128,7 +128,7 @@ export default function UserManagement() {
       </div>
 
       {/* Desktop Table View */}
-      <div className="stat-card hidden lg:block">
+      <div className="hidden lg:block stat-card">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground text-sm">Loading users…</div>
         ) : error ? (
