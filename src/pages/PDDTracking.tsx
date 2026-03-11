@@ -44,26 +44,31 @@ export default function PDDTracking() {
           loans.map((loan: any) => {
             return (
               <div key={loan.id} className="stat-card">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="mono text-xs text-accent font-medium">{loan.loan_number}</span>
-                    <p className="font-medium text-foreground">{loan.applicant_name}</p>
-                    <p className="text-xs text-muted-foreground">{loan.vehicle_number || '—'} • {loan.maker_name} {loan.model_variant_name}</p>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="mono text-xs text-accent font-medium bg-accent/10 px-2 py-0.5 rounded-md">{loan.loan_number}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${Number(loan.delay_days) > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                        {loan.delay_days || '0'} days delayed
+                      </span>
+                    </div>
+                    <p className="font-semibold text-foreground text-base truncate">{loan.applicant_name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{loan.vehicle_number || '—'} • {loan.maker_name} {loan.model_variant_name}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
                     <button
                       onClick={() => navigate(`/loans/${loan.id}`)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                      className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
                     >
                       <FileText size={14} />
-                      View Details
+                      View
                     </button>
                     <button
                       onClick={() => setEditingLoan(loan)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                      className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
                     >
                       <Edit2 size={14} />
-                      Edit PDD
+                      Edit
                     </button>
                     <button
                       onClick={() => {
@@ -75,192 +80,180 @@ export default function PDDTracking() {
                         }
                         setExpandedLoans(newExpanded);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                      className="col-span-2 sm:w-auto justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium transition-colors shadow-sm"
                     >
-                      {expandedLoans.has(loan.id) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      {expandedLoans.has(loan.id) ? 'Collapse' : 'Expand'}
+                      {expandedLoans.has(loan.id) ? (
+                        <>
+                          <ChevronUp size={14} className="text-muted-foreground" />
+                          <span className="text-muted-foreground">Collapse</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown size={14} className="text-accent" />
+                          <span className="text-accent">Expand</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
 
                 {expandedLoans.has(loan.id) && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
                   {/* Payment & Finance Details */}
-                  <div className="space-y-3">
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      Payment & Finance Details
+                      <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
+                      Payment & Finance
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Payment Received Date</p>
-                        <p className="font-medium text-foreground">{loan.payment_received_date ? new Date(loan.payment_received_date).toLocaleDateString('en-IN') : '—'}</p>
+                        <p className="text-muted-foreground mb-1">Payment Received</p>
+                        <p className="font-semibold text-foreground">{loan.payment_received_date ? new Date(loan.payment_received_date).toLocaleDateString('en-IN') : '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Financier in M-Parivahan</p>
-                        <p className="font-medium text-foreground">{loan.financier_m_parivahan || '—'}</p>
+                        <p className="text-muted-foreground mb-1">M-Parivahan Financier</p>
+                        <p className="font-semibold text-foreground">{loan.financier_m_parivahan || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Balance Payment Status</p>
-                        <p className="font-medium text-foreground">{loan.balance_payment_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Balance Status</p>
+                        <p className="font-semibold text-foreground">{loan.balance_payment_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">PDD Update at Finance Co.</p>
-                        <p className="font-medium text-foreground">{loan.pdd_update_finance_company || '—'}</p>
+                        <p className="text-muted-foreground mb-1">PDD at Fin. Co.</p>
+                        <p className="font-semibold text-foreground">{loan.pdd_update_finance_company || '—'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* FC Details */}
-                  <div className="space-y-3">
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
+                      <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
                       FC (Form C) Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">FC Deposited By</p>
-                        <p className="font-medium text-foreground">{loan.fc_deposited_by || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Deposited By</p>
+                        <p className="font-semibold text-foreground">{loan.fc_deposited_by || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">FC Deposit Date</p>
-                        <p className="font-medium text-foreground">{loan.fc_deposit_date ? new Date(loan.fc_deposit_date).toLocaleDateString('en-IN') : '—'}</p>
+                        <p className="text-muted-foreground mb-1">Deposit Date</p>
+                        <p className="font-semibold text-foreground">{loan.fc_deposit_date ? new Date(loan.fc_deposit_date).toLocaleDateString('en-IN') : '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">FC Receipt</p>
-                        <p className="font-medium text-foreground">{loan.fc_receipt || '—'}</p>
+                        <p className="text-muted-foreground mb-1">FC Receipt</p>
+                        <p className="font-semibold text-foreground">{loan.fc_receipt || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Zero Statement</p>
-                        <p className="font-medium text-foreground">{loan.zero_statement || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Zero Statement</p>
+                        <p className="font-semibold text-foreground">{loan.zero_statement || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Current Status of FC</p>
-                        <p className="font-medium text-foreground">{loan.current_fc_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Current FC Status</p>
+                        <p className="font-semibold text-foreground">{loan.current_fc_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Prev. Financier Account Status</p>
-                        <p className="font-medium text-foreground">{loan.prev_financier_account_status || '—'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* NOC Details */}
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      NOC Details
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">NOC Status</p>
-                        <p className="font-medium text-foreground">{loan.noc_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Who Checked NOC Status</p>
-                        <p className="font-medium text-foreground">{loan.noc_checked_by || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Previous DTO NOC</p>
-                        <p className="font-medium text-foreground">{loan.previous_dto_noc || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Prev. Financier Acc.</p>
+                        <p className="font-semibold text-foreground">{loan.prev_financier_account_status || '—'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* RTO Details */}
-                  <div className="space-y-3">
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      RTO Details
+                      <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+                      RTO & Document Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Paper Details</p>
-                        <p className="font-medium text-foreground">{loan.rto_paper_details || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Paper Details</p>
+                        <p className="font-semibold text-foreground">{loan.rto_paper_details || '—'}</p>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-muted-foreground mb-1">Pending Documents</p>
+                        <p className="font-semibold text-foreground truncate">{loan.pending_rto_documents || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Pending RTO Documents</p>
-                        <p className="font-medium text-foreground">{loan.pending_rto_documents || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Doc Location</p>
+                        <p className="font-semibold text-foreground">{loan.rto_docs_location || '—'}</p>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-muted-foreground mb-1">Work Description</p>
+                        <p className="font-semibold text-foreground truncate">{loan.rto_work_description || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Where Are RTO Docs</p>
-                        <p className="font-medium text-foreground">{loan.rto_docs_location || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Work Status</p>
+                        <p className="font-semibold text-foreground">{loan.rto_work_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Work Description</p>
-                        <p className="font-medium text-foreground">{loan.rto_work_description || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Location</p>
+                        <p className="font-semibold text-foreground">{loan.dto_location || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Work Status</p>
-                        <p className="font-medium text-foreground">{loan.rto_work_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Agent Name</p>
+                        <p className="font-semibold text-foreground">{loan.rto_agent_name || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">DTO Location</p>
-                        <p className="font-medium text-foreground">{loan.dto_location || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Agent Name</p>
-                        <p className="font-medium text-foreground">{loan.rto_agent_name || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Agent Mobile</p>
-                        <p className="font-medium text-foreground">{loan.rto_agent_mobile || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">RTO Mail</p>
-                        <p className="font-medium text-foreground">{loan.rto_mail || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Agent Contact</p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="font-semibold text-foreground">{loan.rto_agent_mobile || '—'}</p>
+                          {loan.rto_mail && <p className="text-muted-foreground truncate">{loan.rto_mail}</p>}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Vehicle Checks */}
-                  <div className="space-y-3">
+                  {/* Vehicle Checks & Timeline */}
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      Vehicle Checks
+                      <div className="w-1.5 h-4 bg-amber-500 rounded-full" />
+                      Checks & Timeline
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Pollution</p>
-                        <p className="font-medium text-foreground">{loan.pollution_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Pollution</p>
+                        <p className="font-semibold text-foreground">{loan.pollution_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Insurance</p>
-                        <p className="font-medium text-foreground">{loan.insurance_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Insurance</p>
+                        <p className="font-semibold text-foreground">{loan.insurance_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Vehicle Check</p>
-                        <p className="font-medium text-foreground">{loan.vehicle_check_status || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Vehicle Check</p>
+                        <p className="font-semibold text-foreground">{loan.vehicle_check_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Insurance Endorsement</p>
-                        <p className="font-medium text-foreground">{loan.insurance_endorsement || '—'}</p>
+                        <p className="text-muted-foreground mb-1">Police Case</p>
+                        <p className="font-semibold text-foreground">{loan.police_case_status || '—'}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Challan</p>
-                        <p className="font-medium text-foreground">{loan.challan_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Police Case</p>
-                        <p className="font-medium text-foreground">{loan.police_case_status || '—'}</p>
+                      <div className="border-t border-border/50 pt-3 col-span-2 mt-1">
+                        <div>
+                          <p className="text-muted-foreground mb-1">Commitment Date</p>
+                          <p className="font-semibold text-foreground">{loan.commitment_date ? new Date(loan.commitment_date).toLocaleDateString('en-IN') : '—'}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Timeline */}
-                  <div className="space-y-3">
+                  {/* NOC Details */}
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 md:col-span-2 lg:col-span-3">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      Timeline
+                      <div className="w-1.5 h-4 bg-purple-500 rounded-full" />
+                      NOC Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Commitment Date</p>
-                        <p className="font-medium text-foreground">{loan.commitment_date ? new Date(loan.commitment_date).toLocaleDateString('en-IN') : '—'}</p>
+                        <p className="text-muted-foreground mb-1">NOC Status</p>
+                        <p className="font-semibold text-foreground">{loan.noc_status || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Delay Days</p>
-                        <p className="font-medium text-foreground">{loan.delay_days || '0'} days</p>
+                        <p className="text-muted-foreground mb-1">Checked By</p>
+                        <p className="font-semibold text-foreground">{loan.noc_checked_by || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Previous DTO NOC</p>
+                        <p className="font-semibold text-foreground">{loan.previous_dto_noc || '—'}</p>
                       </div>
                     </div>
                   </div>
