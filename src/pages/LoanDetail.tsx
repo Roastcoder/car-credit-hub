@@ -88,14 +88,83 @@ export default function LoanDetail() {
     onError: () => toast.error('Failed to delete loan'),
   });
 
+  const deleteDocument = useMutation({
+    mutationFn: async (docId: string) => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete document');
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchDocs();
+      toast.success('Document deleted successfully');
+    },
+    onError: () => toast.error('Failed to delete document'),
+  });
+
+  const uploadDocument = useMutation({
+    mutationFn: async ({ file, documentType }: { file: File, documentType: string }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('document_type', documentType);
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to upload document');
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchDocs();
+      toast.success('Document uploaded successfully');
+    },
+    onError: () => toast.error('Failed to upload document'),
+  });
+
 
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
 
   const handleDelete = () => {
     deleteLoan.mutate();
     setShowDeleteModal(false);
+  };
+
+  const handleDeleteDoc = (docId: string) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      deleteDocument.mutate(docId);
+    }
+  };
+
+  const handleReuploadDoc = async (e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+
+    // Set loading
+    setUploadingDocId(docId);
+
+    try {
+      // 1. First delete the existing document
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+
+      // 2. Upload the new document
+      await uploadDocument.mutateAsync({ file, documentType: docType });
+    } catch (error) {
+      toast.error('Failed to re-upload document');
+    } finally {
+      setUploadingDocId(null);
+      // Reset input value
+      e.target.value = '';
+    }
   };
 
   const previewDocument = async (doc: any) => {
@@ -414,7 +483,7 @@ export default function LoanDetail() {
           {!previewDoc && (documents as any[]).length > 0 && (
             <div className="grid gap-2">
               {(documents as any[]).map((doc: any) => (
-                <div key={doc.id} className="flex items-center gap-2 sm:gap-3 p-3 rounded-lg bg-muted/40 overflow-hidden">
+                <div key={doc.id} className="flex items-center gap-2 sm:gap-3 p-3 rounded-lg bg-muted/40 overflow-hidden group">
                   <FileText size={16} className="text-accent shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{doc.document_name || doc.file_name}</p>
@@ -423,6 +492,35 @@ export default function LoanDetail() {
                       {new Date(doc.created_at).toLocaleDateString('en-IN')}
                       {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                     </p>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity mr-2">
+                    {uploadingDocId === doc.id ? (
+                      <span className="text-xs text-muted-foreground">Uploading...</span>
+                    ) : (
+                      <>
+                        <label className="cursor-pointer p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Re-upload">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,.pdf"
+                            onChange={(e) => handleReuploadDoc(e, doc.id, doc.document_type)}
+                          />
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </label>
+                        <button
+                          onClick={() => handleDeleteDoc(doc.id)}
+                          disabled={deleteDocument.isPending}
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                          title="Delete"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                   <button
                     onClick={() => previewDocument(doc)}
