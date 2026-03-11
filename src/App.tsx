@@ -21,6 +21,7 @@ import AddLead from "@/pages/AddLead";
 import LeadsList from "@/pages/LeadsList";
 import LeadDetail from "@/pages/LeadDetail";
 import BroadcastNotification from "@/pages/BroadcastNotification";
+import PDDTracking from "@/pages/PDDTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFound />} />
