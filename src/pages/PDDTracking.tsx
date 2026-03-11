@@ -1,29 +1,91 @@
-import { CheckCircle2, Clock, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { formatCurrency } from '@/lib/mock-data';
 import { useState } from 'react';
 import PDDEditModal from '@/components/PDDEditModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-const statusIcon = (status: string) => {
-  if (status === 'completed') return <CheckCircle2 size={16} className="text-success" />;
-  if (status === 'overdue') return <AlertTriangle size={16} className="text-destructive" />;
-  return <Clock size={16} className="text-warning" />;
+const getPddStatusStyles = (status?: string) => {
+  if (status === 'approved') {
+    return 'bg-green-500/10 text-green-600';
+  }
+  if (status === 'rejected') {
+    return 'bg-red-500/10 text-red-600';
+  }
+  if (status === 'pending_approval') {
+    return 'bg-amber-500/10 text-amber-600';
+  }
+  return 'bg-muted text-muted-foreground';
 };
 
 export default function PDDTracking() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
   const [editingLoan, setEditingLoan] = useState<any>(null);
   const { data: loans = [], isLoading, refetch } = useQuery({
-    queryKey: ['pdd-loans'],
+    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id],
     queryFn: async () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
-      return await response.json();
+      const data = await response.json();
+
+      if (user?.role === 'employee') {
+        return data.filter((loan: any) => loan.created_by === user.id);
+      }
+      if (user?.role === 'manager') {
+        return data.filter((loan: any) => loan.branch_id === user.branch_id);
+      }
+      return data;
     },
+    enabled: !!user,
+  });
+  const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin';
+
+  const approvePdd = useMutation({
+    mutationFn: async (loanId: number) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/approve`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to approve PDD');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pdd-loans'] });
+      toast.success('PDD approved');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const rejectPdd = useMutation({
+    mutationFn: async ({ loanId, reason }: { loanId: number; reason: string }) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ reason })
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to reject PDD');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pdd-loans'] });
+      toast.success('PDD rejected');
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   if (isLoading) {
@@ -51,9 +113,26 @@ export default function PDDTracking() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${Number(loan.delay_days) > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
                         {loan.delay_days || '0'} days delayed
                       </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getPddStatusStyles(loan.pdd_status)}`}>
+                        {(loan.pdd_status || 'pending').replace(/_/g, ' ')}
+                      </span>
                     </div>
                     <p className="font-semibold text-foreground text-base truncate">{loan.applicant_name}</p>
                     <p className="text-sm text-muted-foreground truncate">{loan.vehicle_number || '—'} • {loan.maker_name} {loan.model_variant_name}</p>
+                    {(loan.pdd_submitted_by_name || loan.pdd_rejection_reason) && (
+                      <div className="mt-2 space-y-1">
+                        {loan.pdd_submitted_by_name && (
+                          <p className="text-xs text-muted-foreground">
+                            Submitted by {loan.pdd_submitted_by_name}
+                          </p>
+                        )}
+                        {loan.pdd_rejection_reason && (
+                          <p className="text-xs text-red-600">
+                            Rejection reason: {loan.pdd_rejection_reason}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
                     <button
@@ -70,6 +149,30 @@ export default function PDDTracking() {
                       <Edit2 size={14} />
                       Edit
                     </button>
+                    {canApprovePdd && loan.pdd_status === 'pending_approval' && (
+                      <>
+                        <button
+                          onClick={() => approvePdd.mutate(loan.id)}
+                          disabled={approvePdd.isPending || rejectPdd.isPending}
+                          className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-green-500/40 bg-green-500/10 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors shadow-sm disabled:opacity-50"
+                        >
+                          <CheckCircle2 size={14} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            const reason = window.prompt('Enter rejection reason for this PDD');
+                            if (!reason) return;
+                            rejectPdd.mutate({ loanId: loan.id, reason });
+                          }}
+                          disabled={approvePdd.isPending || rejectPdd.isPending}
+                          className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-red-500/40 bg-red-500/10 text-xs font-medium text-red-600 hover:bg-red-500/20 transition-colors shadow-sm disabled:opacity-50"
+                        >
+                          <AlertTriangle size={14} />
+                          Reject
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => {
                         const newExpanded = new Set(expandedLoans);
