@@ -175,6 +175,28 @@ export const MOCK_LOANS: LoanApplication[] = [
 ];
 
 export const BANKS = ['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak Mahindra Bank', 'Yes Bank', 'IndusInd Bank', 'Bajaj Finserv'];
+
+export const FINANCERS = [
+  'Kogta Financial',
+  'SK Finance', 
+  'Cholamandalam Investment',
+  'ITI Finance',
+  'Singhi Finance',
+  'HDB Finance',
+  'MAS Finance',
+  'Status Leasing Finance',
+  'Sundram Finance',
+  'Kisan Finance',
+  'IKF Finance',
+  'MMFSL',
+  'AU Small Finance Bank',
+  'Ambit Finvest',
+  'Bajaj Finance',
+  'Tata Capital',
+  'Kotak Mahindra',
+  'Kamal Finserve'
+];
+
 export const CAR_MAKES = ['Maruti Suzuki', 'Hyundai', 'Tata', 'Kia', 'MG', 'Toyota', 'Honda', 'Mahindra', 'Skoda', 'Volkswagen'];
 
 export function formatCurrency(amount: number): string {

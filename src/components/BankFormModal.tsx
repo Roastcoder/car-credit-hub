@@ -16,7 +16,7 @@ export function BankFormModal({ open, onClose, onSuccess, bank }: BankFormModalP
     email: bank?.email || '',
     phone: bank?.phone || '',
     interest_rate: bank?.interest_rate || '',
-    is_active: bank?.is_active ?? true,
+    status: bank?.status || 'active',
   });
   const [loading, setLoading] = useState(false);
 
@@ -74,9 +74,12 @@ export function BankFormModal({ open, onClose, onSuccess, bank }: BankFormModalP
             <label className="block text-sm font-medium mb-1.5">Interest Rate (%) *</label>
             <input required type="number" step="0.1" className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={form.interest_rate} onChange={e => setForm({...form, interest_rate: e.target.value})} />
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({...form, is_active: e.target.checked})} />
-            <label htmlFor="is_active" className="text-sm font-medium">Active</label>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Status</label>
+            <select className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium">Cancel</button>

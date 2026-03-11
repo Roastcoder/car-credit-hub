@@ -151,6 +151,15 @@ export const branchesAPI = {
   delete: (id: number) => api.delete(`/branches/${id}`),
 };
 
+// Financers API
+export const financersAPI = {
+  getAll: () => api.get('/financers'),
+  getById: (id: number) => api.get(`/financers/${id}`),
+  create: (data: any) => api.post('/financers', data),
+  update: (id: number, data: any) => api.put(`/financers/${id}`, data),
+  delete: (id: number) => api.delete(`/financers/${id}`),
+};
+
 // Legacy supabase compatibility
 export const supabase = {
   auth: {
