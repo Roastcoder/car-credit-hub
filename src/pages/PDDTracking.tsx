@@ -44,6 +44,7 @@ export default function PDDTracking() {
     },
     enabled: !!user,
   });
+  const canEditPdd = user?.role === 'employee' || user?.role === 'manager';
   const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin';
 
   const approvePdd = useMutation({
@@ -142,13 +143,15 @@ export default function PDDTracking() {
                       <FileText size={14} />
                       View
                     </button>
-                    <button
-                      onClick={() => setEditingLoan(loan)}
-                      className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
-                    >
-                      <Edit2 size={14} />
-                      Edit
-                    </button>
+                    {canEditPdd && (
+                      <button
+                        onClick={() => setEditingLoan(loan)}
+                        className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
+                      >
+                        <Edit2 size={14} />
+                        {user?.role === 'employee' ? 'Submit' : 'Edit'}
+                      </button>
+                    )}
                     {canApprovePdd && loan.pdd_status === 'pending_approval' && (
                       <>
                         <button

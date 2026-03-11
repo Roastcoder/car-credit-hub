@@ -8,9 +8,11 @@ import { exportToCSV, parseCSV } from '@/lib/export-utils';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
+import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle } from 'lucide-react';
 
 type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
+type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
 
 export default function Loans() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
+  const [pddStatusFilter, setPddStatusFilter] = useState<PDDStatusFilter>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
 
@@ -124,7 +127,9 @@ export default function Loans() {
       l.id?.toLowerCase().includes(search.toLowerCase()) ||
       l.car_model?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || l.status === statusFilter;
-    return matchSearch && matchStatus;
+    const loanPddStatus = l.pdd_status || 'pending';
+    const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
+    return matchSearch && matchStatus && matchPddStatus;
   });
 
   return (
@@ -175,6 +180,19 @@ export default function Loans() {
         </div>
       </div>
 
+      <div className="flex gap-2 flex-wrap items-center mb-4">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">PDD</span>
+        {(['all', 'pending', 'pending_approval', 'approved', 'rejected'] as PDDStatusFilter[]).map((status) => (
+          <button
+            key={status}
+            onClick={() => setPddStatusFilter(status)}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pddStatusFilter === status ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+          >
+            {status === 'all' ? 'All PDD' : status.replace(/_/g, ' ')}
+          </button>
+        ))}
+      </div>
+
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-3 pb-4">
         {isLoading ? (
@@ -193,7 +211,10 @@ export default function Loans() {
                   <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
                   <p className="text-xs text-muted-foreground mono">{loan.loan_number || loan.id}</p>
                 </div>
-                <LoanStatusBadge status={loan.status} />
+                <div className="flex flex-col items-end gap-1">
+                  <LoanStatusBadge status={loan.status} />
+                  <PDDStatusBadge status={loan.pdd_status} />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -285,6 +306,7 @@ export default function Loans() {
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
                     {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
                     <th className="py-3 px-3"></th>
                   </tr>
@@ -305,6 +327,7 @@ export default function Loans() {
                       <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
                       <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
+                      <td className="py-3.5 px-3"><PDDStatusBadge status={loan.pdd_status} /></td>
                       {canEditStatus && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">

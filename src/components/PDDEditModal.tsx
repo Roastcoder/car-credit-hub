@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PDDEditModalProps {
   loan: any;
@@ -9,6 +10,7 @@ interface PDDEditModalProps {
 }
 
 export default function PDDEditModal({ loan, isOpen, onClose, onSuccess }: PDDEditModalProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     payment_received_date: loan.payment_received_date?.split('T')[0] || '',
     financier_m_parivahan: loan.financier_m_parivahan || '',
@@ -42,6 +44,7 @@ export default function PDDEditModal({ loan, isOpen, onClose, onSuccess }: PDDEd
     delay_days: loan.delay_days || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEmployee = user?.role === 'employee';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +76,7 @@ export default function PDDEditModal({ loan, isOpen, onClose, onSuccess }: PDDEd
       <div className="bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Edit PDD Details</h2>
+            <h2 className="text-lg font-semibold text-foreground">{isEmployee ? 'Edit and Submit PDD Details' : 'Edit PDD Details'}</h2>
             <p className="text-xs text-muted-foreground">{loan.loan_number} • {loan.applicant_name}</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -252,7 +255,7 @@ export default function PDDEditModal({ loan, isOpen, onClose, onSuccess }: PDDEd
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={isSubmitting} className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? (isEmployee ? 'Submitting...' : 'Saving...') : (isEmployee ? 'Submit for Approval' : 'Save Changes')}
           </button>
         </div>
       </div>

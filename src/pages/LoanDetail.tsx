@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
+import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
@@ -242,6 +243,7 @@ export default function LoanDetail() {
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">{(loan as any).loan_number || loan.id}</h1>
               <LoanStatusBadge status={loan.status as any} />
+              <PDDStatusBadge status={(loan as any).pdd_status} />
             </div>
             <p className="text-sm text-muted-foreground mt-1">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
           </div>
@@ -440,6 +442,22 @@ export default function LoanDetail() {
               <div className="col-span-2"><Field label="Remark" value={(loan as any).remark || '—'} /></div>
               <Field label="Created" value={new Date(loan.created_at).toLocaleDateString('en-IN')} />
               <Field label="Last Updated" value={new Date(loan.updated_at).toLocaleDateString('en-IN')} />
+            </div>
+          </Section>
+
+          <Section title="PDD Approval" icon={<FileText size={18} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[11px] text-muted-foreground mb-1">PDD Status</p>
+                <PDDStatusBadge status={(loan as any).pdd_status} />
+              </div>
+              <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
+              <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleDateString('en-IN') : '—'} />
+              <Field label="Approved By" value={(loan as any).approved_by_name || (loan as any).pdd_approved_by_name || '—'} />
+              <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleDateString('en-IN') : '—'} />
+              <div className="col-span-2">
+                <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+              </div>
             </div>
           </Section>
         </div>
