@@ -102,13 +102,19 @@ export default function LoanDetail() {
     setLoadingPreview(doc.id);
     try {
       // Use the file_url directly from the document
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      // Remove /api from the end to get base URL
+      const baseUrl = apiUrl.replace(/\/api$/, '');
+      
+      // Construct full URL
       const fileUrl = doc.file_url.startsWith('http') 
         ? doc.file_url 
-        : `${baseUrl.replace('/api', '')}${doc.file_url}`;
+        : `${baseUrl}${doc.file_url}`;
       
+      console.log('Preview URL:', fileUrl);
       setPreviewDoc({ url: fileUrl, name: doc.document_name || doc.file_name });
     } catch (error) {
+      console.error('Preview error:', error);
       toast.error('Failed to load document');
     } finally {
       setLoadingPreview(null);
@@ -384,7 +390,7 @@ export default function LoanDetail() {
           </div>
         )}
 
-        {(documents as any[]).length > 0 && (
+        {!previewDoc && (documents as any[]).length > 0 && (
           <div className="grid gap-2">
             {(documents as any[]).map((doc: any) => (
               <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
@@ -409,7 +415,7 @@ export default function LoanDetail() {
             ))}
           </div>
         )}
-        {(documents as any[]).length === 0 && (
+        {!previewDoc && (documents as any[]).length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">No documents available.</p>
         )}
       </div>
