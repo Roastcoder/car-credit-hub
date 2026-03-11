@@ -493,35 +493,37 @@ export default function LoanDetail() {
                       {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
                     </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity mr-2">
-                    {uploadingDocId === doc.id ? (
-                      <span className="text-xs text-muted-foreground">Uploading...</span>
-                    ) : (
-                      <>
-                        <label className="cursor-pointer p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Re-upload">
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,.pdf"
-                            onChange={(e) => handleReuploadDoc(e, doc.id, doc.document_type)}
-                          />
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                          </svg>
-                        </label>
-                        <button
-                          onClick={() => handleDeleteDoc(doc.id)}
-                          disabled={deleteDocument.isPending}
-                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
-                          title="Delete"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                    <div className="shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity mr-2">
+                      {uploadingDocId === doc.id ? (
+                        <span className="text-xs text-muted-foreground">Uploading...</span>
+                      ) : (
+                        <>
+                          <label className="cursor-pointer p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Re-upload">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleReuploadDoc(e, doc.id, doc.document_type)}
+                            />
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                          </label>
+                          <button
+                            onClick={() => handleDeleteDoc(doc.id)}
+                            disabled={deleteDocument.isPending}
+                            className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                            title="Delete"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                   <button
                     onClick={() => previewDocument(doc)}
                     disabled={loadingPreview === doc.id}
