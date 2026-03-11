@@ -1,7 +1,9 @@
-import { CheckCircle2, Clock, AlertTriangle, Edit2, FileText } from 'lucide-react';
+import { CheckCircle2, Clock, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/lib/mock-data';
+import { useState } from 'react';
+import PDDEditModal from '@/components/PDDEditModal';
 
 const statusIcon = (status: string) => {
   if (status === 'completed') return <CheckCircle2 size={16} className="text-success" />;
@@ -11,7 +13,9 @@ const statusIcon = (status: string) => {
 
 export default function PDDTracking() {
   const navigate = useNavigate();
-  const { data: loans = [], isLoading } = useQuery({
+  const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
+  const [editingLoan, setEditingLoan] = useState<any>(null);
+  const { data: loans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans'],
     queryFn: async () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
@@ -55,15 +59,31 @@ export default function PDDTracking() {
                       View Details
                     </button>
                     <button
-                      onClick={() => navigate(`/loans/${loan.id}/edit`)}
+                      onClick={() => setEditingLoan(loan)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
                     >
                       <Edit2 size={14} />
                       Edit PDD
                     </button>
+                    <button
+                      onClick={() => {
+                        const newExpanded = new Set(expandedLoans);
+                        if (newExpanded.has(loan.id)) {
+                          newExpanded.delete(loan.id);
+                        } else {
+                          newExpanded.add(loan.id);
+                        }
+                        setExpandedLoans(newExpanded);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                    >
+                      {expandedLoans.has(loan.id) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {expandedLoans.has(loan.id) ? 'Collapse' : 'Expand'}
+                    </button>
                   </div>
                 </div>
 
+                {expandedLoans.has(loan.id) && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Payment & Finance Details */}
                   <div className="space-y-3">
@@ -245,11 +265,21 @@ export default function PDDTracking() {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
             );
           })
         )}
       </div>
+
+      {editingLoan && (
+        <PDDEditModal
+          loan={editingLoan}
+          isOpen={!!editingLoan}
+          onClose={() => setEditingLoan(null)}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 }

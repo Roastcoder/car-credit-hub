@@ -50,8 +50,12 @@ export default function MobileBottomNav() {
     primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/loans/new'];
   }
 
+  // Ensure moreNav only contains items NOT present in the primaryNav
   const primaryNav = filteredNav.filter(item => primaryNavPaths.includes(item.path));
-  const moreNav = filteredNav.filter(item => !primaryNavPaths.includes(item.path));
+  
+  // Create an array of the actual rendered primary paths to make sure we filter correctly
+  const renderedPrimaryPaths = primaryNav.map(item => item.path);
+  const moreNav = filteredNav.filter(item => !renderedPrimaryPaths.includes(item.path));
 
   return (
     <>
@@ -108,10 +112,11 @@ export default function MobileBottomNav() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setShowMore(false)}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${active
-                        ? 'bg-accent text-accent-foreground shadow-md'
-                        : 'text-foreground hover:bg-muted'
-                        }`}
+                      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
+                        active
+                          ? 'bg-accent text-accent-foreground shadow-md'
+                          : 'text-foreground active:bg-muted'
+                      }`}
                     >
                       <span className={active ? 'scale-110' : ''}>{item.icon}</span>
                       <span className="text-sm font-medium">{item.label}</span>
