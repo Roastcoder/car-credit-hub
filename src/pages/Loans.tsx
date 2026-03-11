@@ -32,7 +32,7 @@ export default function Loans() {
         });
         if (!response.ok) return [];
         const data = await response.json();
-        
+
         // Filter based on role
         if (user?.role === 'employee') {
           return data.filter((l: any) => l.created_by === user.id);
@@ -185,7 +185,7 @@ export default function Loans() {
           filtered.map((loan: any) => (
             <div
               key={loan.id}
-              onClick={() => navigate(`/loans/${loan.id}`)}
+              onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}
               className="stat-card active:scale-[0.98] transition-transform cursor-pointer"
             >
               <div className="flex items-start justify-between mb-3">
@@ -235,7 +235,7 @@ export default function Loans() {
                 {canEditStatus && (
                   <>
                     <button
-                      onClick={() => navigate(`/loans/${loan.id}/edit`)}
+                      onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,7 +291,7 @@ export default function Loans() {
                 </thead>
                 <tbody>
                   {filtered.map((loan: any) => (
-                    <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.id}`)}>
+                    <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}>
                       <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
                       <td className="py-3.5 px-3">
                         <p className="font-medium text-foreground">{loan.applicant_name}</p>
@@ -309,7 +309,7 @@ export default function Loans() {
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => navigate(`/loans/${loan.id}/edit`)}
+                              onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
                               className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
                               title="Edit"
                             >
