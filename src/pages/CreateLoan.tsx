@@ -105,6 +105,20 @@ export default function CreateLoan() {
 
   const [fetchingVehicleData, setFetchingVehicleData] = useState(false);
 
+  const formatDateToInput = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
+    try {
+      // If already in yyyy-MM-dd format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+      // Parse and convert to yyyy-MM-dd
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
   const fetchVehicleDetails = async (rcNumber: string) => {
     if (!rcNumber || rcNumber.length < 8) return;
     
@@ -141,18 +155,18 @@ export default function CreateLoan() {
           
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
-          rcMfgDate: rc.manufacturing_date || rc.registration_date || '',
+          rcMfgDate: formatDateToInput(rc.manufacturing_date || rc.registration_date),
           rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ? 
             (() => {
               const [month, year] = rc.fitness_upto.split('/');
               const date = new Date(parseInt(year), parseInt(month) - 1, 1);
               return date.toISOString().split('T')[0];
-            })() : rc.fitness_upto) : rc.tax_upto ? (rc.tax_upto.includes('/') ? 
+            })() : formatDateToInput(rc.fitness_upto)) : rc.tax_upto ? (rc.tax_upto.includes('/') ? 
             (() => {
               const [month, year] = rc.tax_upto.split('/');
               const date = new Date(parseInt(year), parseInt(month) - 1, 1);
               return date.toISOString().split('T')[0];
-            })() : rc.tax_upto) : '',
+            })() : formatDateToInput(rc.tax_upto)) : '',
           hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
           isFinanced: rc.financer ? 'Yes' : 'No',
           fc: rc.fitness_upto ? 'Yes' : 'No',
@@ -170,7 +184,7 @@ export default function CreateLoan() {
           // Insurance Details
           insuranceCompanyName: rc.insurance_company || '',
           insurancePolicyNumber: rc.insurance_policy_number || '',
-          insuranceDate: rc.insurance_upto || '',
+          insuranceDate: formatDateToInput(rc.insurance_upto),
         }));
         
         toast.success('Vehicle details fetched successfully!');
@@ -231,6 +245,17 @@ export default function CreateLoan() {
 
   useEffect(() => {
     if (isEditMode && existingLoan) {
+      // Helper function to format date from ISO to yyyy-MM-dd
+      const formatDate = (dateStr: string | null | undefined) => {
+        if (!dateStr) return '';
+        try {
+          const date = new Date(dateStr);
+          return date.toISOString().split('T')[0];
+        } catch {
+          return '';
+        }
+      };
+
       setForm({
         customerId: existingLoan.customer_id || '',
         customerName: existingLoan.applicant_name || '',
@@ -267,12 +292,12 @@ export default function CreateLoan() {
         incomeSource: existingLoan.income_source || '',
         monthlyIncome: String(existingLoan.monthly_income || ''),
         rcOwnerName: existingLoan.rc_owner_name || '',
-        rcMfgDate: existingLoan.rc_mfg_date || '',
-        rcExpiryDate: existingLoan.rc_expiry_date || '',
+        rcMfgDate: formatDate(existingLoan.rc_mfg_date),
+        rcExpiryDate: formatDate(existingLoan.rc_expiry_date),
         hpnAtLogin: existingLoan.hpn_at_login || '',
         isFinanced: existingLoan.is_financed || '',
         newFinancier: existingLoan.new_financier || '',
-        rtoDocsHandoverDate: existingLoan.rto_docs_handover_date || '',
+        rtoDocsHandoverDate: formatDate(existingLoan.rto_docs_handover_date),
         rtoAgentName: existingLoan.rto_agent_name || '',
         agentMobileNo: existingLoan.agent_mobile_no || '',
         dtoLocation: existingLoan.dto_location || '',
@@ -285,32 +310,32 @@ export default function CreateLoan() {
         irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
         tenure: String(existingLoan.tenure || '60'),
         emiMode: existingLoan.emi_mode || 'Monthly',
-        emiStartDate: existingLoan.emi_start_date || '',
-        emiEndDate: existingLoan.emi_end_date || '',
+        emiStartDate: formatDate(existingLoan.emi_start_date),
+        emiEndDate: formatDate(existingLoan.emi_end_date),
         assignedBankId: existingLoan.assigned_bank_id || '',
         assignedBrokerId: existingLoan.assigned_broker_id || '',
         financierExecutiveName: existingLoan.financier_executive_name || '',
         financierTeamVertical: existingLoan.financier_team_vertical || '',
         disburseBranchName: existingLoan.disburse_branch_name || '',
         sanctionAmount: String(existingLoan.sanction_amount || ''),
-        sanctionDate: existingLoan.sanction_date || '',
+        sanctionDate: formatDate(existingLoan.sanction_date),
         insuranceCompanyName: existingLoan.insurance_company_name || '',
         premiumAmount: String(existingLoan.premium_amount || ''),
-        insuranceDate: existingLoan.insurance_date || '',
+        insuranceDate: formatDate(existingLoan.insurance_date),
         insurancePolicyNumber: existingLoan.insurance_policy_number || '',
         insuranceMadeBy: existingLoan.insurance_made_by || '',
         insuranceReminderEnabled: existingLoan.insurance_reminder_enabled || false,
         processingFee: String(existingLoan.processing_fee || ''),
         totalDeduction: String(existingLoan.total_deduction || ''),
         netDisbursementAmount: String(existingLoan.net_disbursement_amount || ''),
-        paymentReceivedDate: existingLoan.payment_received_date || '',
+        paymentReceivedDate: formatDate(existingLoan.payment_received_date),
         meharDeduction: String(existingLoan.mehar_deduction || ''),
         meharPf: String(existingLoan.mehar_pf || ''),
         holdAmount: String(existingLoan.hold_amount || ''),
         netSeedAmount: String(existingLoan.net_seed_amount || ''),
         paymentInFavour: existingLoan.payment_in_favour || '',
-        loginDate: existingLoan.login_date || '',
-        approvalDate: existingLoan.approval_date || '',
+        loginDate: formatDate(existingLoan.login_date),
+        approvalDate: formatDate(existingLoan.approval_date),
         sourcingPersonName: existingLoan.sourcing_person_name || '',
         remark: existingLoan.remark || '',
         fileStatus: existingLoan.status || 'submitted',
@@ -390,6 +415,64 @@ export default function CreateLoan() {
     const year = new Date().getFullYear();
     const num = Math.floor(Math.random() * 9000) + 1000;
     return `CL-${year}-${num}`;
+  };
+
+  const uploadDocuments = async (loanId: string) => {
+    const documents = [
+      { file: form.aadharFront, type: 'aadhar_front', name: 'Aadhar Front' },
+      { file: form.aadharBack, type: 'aadhar_back', name: 'Aadhar Back' },
+      { file: form.panCard, type: 'pan_card', name: 'PAN Card' },
+      { file: form.bankStatement, type: 'bank_statement', name: 'Bank Statement' },
+      { file: form.cheque, type: 'cheque', name: 'Cheque' },
+      { file: form.rcFront, type: 'rc_front', name: 'RC Front' },
+      { file: form.rcBack, type: 'rc_back', name: 'RC Back' },
+      { file: form.incomeProof, type: 'income_proof', name: 'Income Proof' },
+      { file: form.customerPhoto, type: 'customer_photo', name: 'Customer Photo' },
+      { file: form.insurance, type: 'insurance', name: 'Insurance' },
+      { file: form.customerLedger, type: 'customer_ledger', name: 'Customer Ledger' },
+      { file: form.rtoDocument, type: 'rto_document', name: 'RTO Document' },
+      { file: form.noc, type: 'noc', name: 'NOC' },
+      { file: form.thirdParty, type: 'third_party', name: 'Third Party' },
+      { file: form.stamp, type: 'stamp', name: 'Stamp' },
+      { file: form.rcDocument, type: 'rc_document', name: 'RC Document' },
+    ].filter(doc => doc.file !== null);
+
+    if (documents.length === 0) {
+      console.log('No documents to upload');
+      return;
+    }
+
+    console.log(`Uploading ${documents.length} documents for loan ${loanId}`);
+
+    try {
+      const formData = new FormData();
+      
+      // Append all files with their field names
+      documents.forEach(doc => {
+        formData.append(doc.type, doc.file as File);
+      });
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents/multiple`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Upload result:', result);
+        toast.success(result.message || `${documents.length} document(s) uploaded successfully`);
+      } else {
+        const error = await response.text();
+        console.error('Upload failed:', error);
+        toast.error('Failed to upload documents');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Error uploading documents');
+    }
   };
 
   const createLoan = useMutation({
@@ -477,7 +560,12 @@ export default function CreateLoan() {
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
-      return res.json();
+      const data = await res.json();
+      
+      // Upload documents after loan is created
+      await uploadDocuments(isEditMode ? id! : data.id);
+      
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
@@ -789,36 +877,80 @@ export default function CreateLoan() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {form.showAadhar && (
                     <>
-                      <div><label className={labelClass}>Aadhar Card Front</label><input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                      <div><label className={labelClass}>Aadhar Card Back</label><input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                      <div>
+                        <label className={labelClass}>Aadhar Card Front</label>
+                        <input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                        {form.aadharFront && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharFront as File).name}</p>}
+                      </div>
+                      <div>
+                        <label className={labelClass}>Aadhar Card Back</label>
+                        <input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                        {form.aadharBack && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharBack as File).name}</p>}
+                      </div>
                     </>
                   )}
                   {form.showPan && (
-                    <div><label className={labelClass}>Pan Card</label><input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Pan Card</label>
+                      <input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.panCard && <p className="text-xs text-green-600 mt-1">✓ {(form.panCard as File).name}</p>}
+                    </div>
                   )}
                   {form.showBankStatement && (
-                    <div><label className={labelClass}>Last 6 Month Bank Statement</label><input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Last 6 Month Bank Statement</label>
+                      <input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.bankStatement && <p className="text-xs text-green-600 mt-1">✓ {(form.bankStatement as File).name}</p>}
+                    </div>
                   )}
                   {form.showCheque && (
-                    <div><label className={labelClass}>Cheque</label><input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Cheque</label>
+                      <input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.cheque && <p className="text-xs text-green-600 mt-1">✓ {(form.cheque as File).name}</p>}
+                    </div>
                   )}
                   {form.showRC && (
                     <>
-                      <div><label className={labelClass}>RC (Front)</label><input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
-                      <div><label className={labelClass}>RC (Back)</label><input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                      <div>
+                        <label className={labelClass}>RC (Front)</label>
+                        <input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                        {form.rcFront && <p className="text-xs text-green-600 mt-1">✓ {(form.rcFront as File).name}</p>}
+                      </div>
+                      <div>
+                        <label className={labelClass}>RC (Back)</label>
+                        <input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                        {form.rcBack && <p className="text-xs text-green-600 mt-1">✓ {(form.rcBack as File).name}</p>}
+                      </div>
                     </>
                   )}
                   {form.showIncomeProof && (
-                    <div><label className={labelClass}>Income Proof</label><input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Income Proof</label>
+                      <input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.incomeProof && <p className="text-xs text-green-600 mt-1">✓ {(form.incomeProof as File).name}</p>}
+                    </div>
                   )}
                   {form.showCustomerPhoto && (
-                    <div><label className={labelClass}>Customer Photo</label><input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" /></div>
+                    <div>
+                      <label className={labelClass}>Customer Photo</label>
+                      <input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" />
+                      {form.customerPhoto && <p className="text-xs text-green-600 mt-1">✓ {(form.customerPhoto as File).name}</p>}
+                    </div>
                   )}
                   {form.showInsurance && (
-                    <div><label className={labelClass}>Insurance</label><input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Insurance</label>
+                      <input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.insurance && <p className="text-xs text-green-600 mt-1">✓ {(form.insurance as File).name}</p>}
+                    </div>
                   )}
                   {form.showCustomerLedger && (
-                    <div><label className={labelClass}>Customer Ledger</label><input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Customer Ledger</label>
+                      <input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.customerLedger && <p className="text-xs text-green-600 mt-1">✓ {(form.customerLedger as File).name}</p>}
+                    </div>
                   )}
                 </div>
               </div>
@@ -854,19 +986,39 @@ export default function CreateLoan() {
                 {/* Document Upload Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {form.showRtoDocument && (
-                    <div><label className={labelClass}>RTO Document</label><input type="file" className={inputClass} onChange={e => update('rtoDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>RTO Document</label>
+                      <input type="file" className={inputClass} onChange={e => update('rtoDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.rtoDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.rtoDocument as File).name}</p>}
+                    </div>
                   )}
                   {form.showNoc && (
-                    <div><label className={labelClass}>NOC</label><input type="file" className={inputClass} onChange={e => update('noc', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>NOC</label>
+                      <input type="file" className={inputClass} onChange={e => update('noc', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.noc && <p className="text-xs text-green-600 mt-1">✓ {(form.noc as File).name}</p>}
+                    </div>
                   )}
                   {form.showThirdParty && (
-                    <div><label className={labelClass}>3rd Party</label><input type="file" className={inputClass} onChange={e => update('thirdParty', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>3rd Party</label>
+                      <input type="file" className={inputClass} onChange={e => update('thirdParty', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.thirdParty && <p className="text-xs text-green-600 mt-1">✓ {(form.thirdParty as File).name}</p>}
+                    </div>
                   )}
                   {form.showStamp && (
-                    <div><label className={labelClass}>Stamp</label><input type="file" className={inputClass} onChange={e => update('stamp', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>Stamp</label>
+                      <input type="file" className={inputClass} onChange={e => update('stamp', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.stamp && <p className="text-xs text-green-600 mt-1">✓ {(form.stamp as File).name}</p>}
+                    </div>
                   )}
                   {form.showRcDocument && (
-                    <div><label className={labelClass}>RC Document</label><input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" /></div>
+                    <div>
+                      <label className={labelClass}>RC Document</label>
+                      <input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.rcDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.rcDocument as File).name}</p>}
+                    </div>
                   )}
                 </div>
               </div>

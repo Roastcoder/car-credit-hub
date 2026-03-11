@@ -58,6 +58,22 @@ export default function Loans() {
     onError: () => toast.error('Failed to update status'),
   });
 
+  const deleteLoan = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete loan');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      toast.success('Loan deleted successfully');
+    },
+    onError: () => toast.error('Failed to delete loan'),
+  });
+
   const canEditStatus = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager';
 
   const handleExport = () => {
@@ -216,14 +232,38 @@ export default function Loans() {
                   <MessageCircle size={13} className="text-green-500" /> Share
                 </button>
                 {canEditStatus && (
-                  <select
-                    value={loan.status}
-                    onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
-                    disabled={updateStatus.isPending}
-                    className="flex-1 min-w-[120px] px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                  >
-                    {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
+                  <>
+                    <button
+                      onClick={() => navigate(`/loans/${loan.id}/edit`)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
+                          deleteLoan.mutate(loan.id);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                    <select
+                      value={loan.status}
+                      onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                      disabled={updateStatus.isPending}
+                      className="flex-1 min-w-[120px] px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                    >
+                      {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                  </>
                 )}
               </div>
             </div>
@@ -248,7 +288,7 @@ export default function Loans() {
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                    {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Update</th>}
+                    {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
                     <th className="py-3 px-3"></th>
                   </tr>
                 </thead>
@@ -270,14 +310,38 @@ export default function Loans() {
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                       {canEditStatus && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={loan.status}
-                            onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
-                            disabled={updateStatus.isPending}
-                            className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                          >
-                            {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => navigate(`/loans/${loan.id}/edit`)}
+                              className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
+                              title="Edit"
+                            >
+                              <svg className="w-3.5 h-3.5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this loan application? This action cannot be undone.')) {
+                                  deleteLoan.mutate(loan.id);
+                                }
+                              }}
+                              className="p-1.5 rounded-md border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                              title="Delete"
+                            >
+                              <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                            <select
+                              value={loan.status}
+                              onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                              disabled={updateStatus.isPending}
+                              className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                            >
+                              {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+                          </div>
                         </td>
                       )}
                       <td className="py-3.5 px-3">
