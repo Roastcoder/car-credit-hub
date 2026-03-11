@@ -215,7 +215,14 @@ export default function CreateLoan() {
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
   });
 
-  const update = (key: string, val: string | File | null | boolean) => setForm(f => ({ ...f, [key]: val }));
+  const update = (key: string, val: string | File | null | boolean) => {
+    setForm(f => {
+      const newForm = { ...f, [key]: val };
+      // Save to localStorage
+      localStorage.setItem('loan_form_draft', JSON.stringify(newForm));
+      return newForm;
+    });
+  };
 
   const handleLeadSelect = (lead: any) => {
     setForm(f => ({
@@ -358,6 +365,8 @@ export default function CreateLoan() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['loans-dashboard'] });
+      // Clear saved form data on success
+      localStorage.removeItem('loan_form_draft');
       toast.success('Loan application created successfully!');
       navigate(`/loans/${data.id}`);
     },
