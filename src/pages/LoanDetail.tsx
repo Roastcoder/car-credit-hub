@@ -129,6 +129,8 @@ export default function LoanDetail() {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
 
   const handleDelete = () => {
@@ -136,10 +138,17 @@ export default function LoanDetail() {
     setShowDeleteModal(false);
   };
 
-  const handleDeleteDoc = (docId: string) => {
-    if (window.confirm("Are you sure you want to delete this document?")) {
-      deleteDocument.mutate(docId);
+  const handleDeleteDoc = (doc: any) => {
+    setDocToDelete(doc);
+    setShowDeleteDocModal(true);
+  };
+
+  const confirmDeleteDoc = () => {
+    if (docToDelete) {
+      deleteDocument.mutate(docToDelete.id);
     }
+    setShowDeleteDocModal(false);
+    setDocToDelete(null);
   };
 
   const handleReuploadDoc = async (e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
@@ -462,17 +471,17 @@ export default function LoanDetail() {
                   </button>
                 </div>
               </div>
-              <div className="w-full bg-black/5 flex items-center justify-center p-4" style={{ height: '60vh', minHeight: '300px' }}>
+              <div className="w-full bg-black/5 flex items-center justify-center p-2 sm:p-4 rounded-b-xl overflow-hidden min-h-[300px]" style={{ height: 'max(50vh, 300px)' }}>
                 {previewDoc.url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
                   <img
                     src={previewDoc.url}
                     alt={previewDoc.name}
-                    className="max-w-full max-h-full object-contain rounded-md shadow-sm"
+                    className="max-w-full max-h-full object-contain rounded-md"
                   />
                 ) : (
                   <iframe
                     src={previewDoc.url}
-                    className="w-full h-full border-0 rounded-md bg-white"
+                    className="w-full h-[60vh] min-h-[400px] border-0 rounded-md bg-white"
                     title={previewDoc.name}
                   />
                 )}
@@ -481,54 +490,59 @@ export default function LoanDetail() {
           )}
 
           {!previewDoc && (documents as any[]).length > 0 && (
-            <div className="grid gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(documents as any[]).map((doc: any) => (
-                <div key={doc.id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg bg-muted/40 group">
-                  <FileText size={14} className="text-accent shrink-0 sm:w-4 sm:h-4" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">{doc.document_name || doc.file_name}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                      {doc.document_type?.replace(/_/g, ' ').toUpperCase()} •{' '}
-                      {new Date(doc.created_at).toLocaleDateString('en-IN')}
-                      {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
-                    </p>
-                  </div>
-                  {(user?.role === 'admin' || user?.role === 'super_admin') && uploadingDocId !== doc.id && (
-                    <div className="shrink-0 flex items-center gap-1">
-                      <label className="cursor-pointer p-1 sm:p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Re-upload">
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*,.pdf"
-                          onChange={(e) => handleReuploadDoc(e, doc.id, doc.document_type)}
-                        />
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                      </label>
-                      <button
-                        onClick={() => handleDeleteDoc(doc.id)}
-                        disabled={deleteDocument.isPending}
-                        className="p-1 sm:p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
-                        title="Delete"
-                      >
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                <div key={doc.id} className="flex flex-col sm:flex-row flex-wrap sm:flex-nowrap items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-lg bg-muted/40 group">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0 w-full sm:w-auto">
+                    <FileText size={16} className="text-accent shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{doc.document_name || doc.file_name}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {doc.document_type?.replace(/_/g, ' ').toUpperCase()} •{' '}
+                        {new Date(doc.created_at).toLocaleDateString('en-IN')}
+                        {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(0)} KB`}
+                      </p>
                     </div>
-                  )}
-                  {uploadingDocId === doc.id && (
-                    <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">Uploading...</span>
-                  )}
-                  <button
-                    onClick={() => previewDocument(doc)}
-                    disabled={loadingPreview === doc.id}
-                    className="shrink-0 flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-[10px] sm:text-xs font-medium disabled:opacity-50"
-                    title="Preview"
-                  >
-                    <Eye size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">{loadingPreview === doc.id ? 'Loading…' : 'View'}</span><span className="sm:hidden">View</span>
-                  </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-end mt-1 sm:mt-0 border-t sm:border-t-0 border-border/50 pt-2 sm:pt-0">
+                    {(user?.role === 'admin' || user?.role === 'super_admin') && uploadingDocId !== doc.id && (
+                      <div className="flex items-center gap-1">
+                        <label className="cursor-pointer p-1.5 rounded-md hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors" title="Re-upload">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,.pdf"
+                            onChange={(e) => handleReuploadDoc(e, doc.id, doc.document_type)}
+                          />
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </label>
+                        <button
+                          onClick={() => handleDeleteDoc(doc)}
+                          disabled={deleteDocument.isPending}
+                          className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                          title="Delete"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                    {uploadingDocId === doc.id && (
+                      <span className="text-xs text-muted-foreground shrink-0 px-2">Uploading...</span>
+                    )}
+                    <button
+                      onClick={() => previewDocument(doc)}
+                      disabled={loadingPreview === doc.id}
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-medium disabled:opacity-50 ml-1"
+                      title="Preview"
+                    >
+                      <Eye size={14} /> <span>{loadingPreview === doc.id ? 'Loading…' : 'View'}</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -579,6 +593,55 @@ export default function LoanDetail() {
                 className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleteLoan.isPending ? 'Deleting...' : 'Delete Application'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Document Confirmation Modal */}
+      {showDeleteDocModal && docToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                <FileText size={24} className="text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Document?
+                </h3>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Are you sure you want to delete this document?
+                </p>
+                <p className="text-sm font-medium text-red-500">
+                  This action cannot be undone.
+                </p>
+                <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Document Details:</p>
+                  <p className="text-sm font-medium text-foreground">{docToDelete.document_name || docToDelete.file_name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{docToDelete.document_type?.replace(/_/g, ' ').toUpperCase()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowDeleteDocModal(false);
+                  setDocToDelete(null);
+                }}
+                disabled={deleteDocument.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteDoc}
+                disabled={deleteDocument.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleteDocument.isPending ? 'Deleting...' : 'Delete Document'}
               </button>
             </div>
           </div>
