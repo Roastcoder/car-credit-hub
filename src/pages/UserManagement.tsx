@@ -81,7 +81,7 @@ export default function UserManagement() {
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-3">
+      <div className="block lg:hidden space-y-3">
         {isLoading ? (
           <div className="py-8 text-center text-muted-foreground text-sm">Loading users…</div>
         ) : error ? (
