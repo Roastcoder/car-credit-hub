@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { loansAPI } from '@/lib/api';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { getRolePermissions } from '@/lib/permissions';
 import { RemarksModal } from '@/components/RemarksModal';
@@ -60,23 +61,9 @@ export default function LoanDetail() {
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
       console.log('Updating status to:', newStatus, 'for loan ID:', id);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      console.log('Status update response:', res.status, res.statusText);
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Status update failed:', errorText);
-        throw new Error(`Failed to update status: ${res.status} ${res.statusText}`);
-      }
-      const result = await res.json();
-      console.log('Status update result:', result);
-      return result;
+      // Use the same approach as Loans page - via loansAPI.update
+      await loansAPI.update(id as any, { status: newStatus });
+      return { message: 'Status updated successfully' };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loan', id] });

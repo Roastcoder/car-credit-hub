@@ -1,6 +1,8 @@
 import WorkflowStatus from '@/components/WorkflowStatus';
 import { WorkflowStatusTrail } from '@/components/WorkflowStatusTrail';
 import { CompactWorkflowTrail } from '@/components/CompactWorkflowTrail';
+import { SingleLineWorkflowTrail } from '@/components/SingleLineWorkflowTrail';
+import { MiniWorkflowTrail } from '@/components/MiniWorkflowTrail';
 
 export default function WorkflowDemo() {
   const statuses = ['submitted', 'under_review', 'approved', 'disbursed'];
@@ -41,6 +43,48 @@ export default function WorkflowDemo() {
           </div>
         </section>
 
+        {/* Single Line Trail */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Single Line Trail</h2>
+          <div className="space-y-4">
+            {statuses.map(status => (
+              <div key={status} className="bg-card rounded-lg border border-border p-4">
+                <h3 className="text-sm font-medium mb-3 capitalize">{status.replace('_', ' ')} Status</h3>
+                <SingleLineWorkflowTrail currentStatus={status} showLabels={true} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Mini Trail */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Mini Trail (Perfect for Tables)</h2>
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left p-4 font-medium">Loan ID</th>
+                  <th className="text-left p-4 font-medium">Applicant</th>
+                  <th className="text-left p-4 font-medium">Workflow Progress</th>
+                  <th className="text-left p-4 font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {statuses.map((status, index) => (
+                  <tr key={status} className="border-b border-border/50">
+                    <td className="p-4 font-mono text-sm">CL-2026-{(index + 1).toString().padStart(3, '0')}</td>
+                    <td className="p-4">Sample Applicant {index + 1}</td>
+                    <td className="p-4">
+                      <MiniWorkflowTrail currentStatus={status} />
+                    </td>
+                    <td className="p-4">₹12,50,000</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         {/* Workflow Status Component Variants */}
         <section>
           <h2 className="text-2xl font-semibold mb-6">WorkflowStatus Component Variants</h2>
@@ -51,11 +95,19 @@ export default function WorkflowDemo() {
             <WorkflowStatus currentStatus="under_review" variant="horizontal" />
           </div>
 
-          {/* Compact Variant */}
+          {/* Single Line Variant */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4">Compact Variant</h3>
+            <h3 className="text-lg font-medium mb-4">Single Line Variant</h3>
             <div className="bg-card rounded-lg border border-border p-4">
-              <WorkflowStatus currentStatus="approved" variant="compact" />
+              <WorkflowStatus currentStatus="under_review" variant="single-line" />
+            </div>
+          </div>
+
+          {/* Mini Variant */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium mb-4">Mini Variant (Table-friendly)</h3>
+            <div className="bg-card rounded-lg border border-border p-4">
+              <WorkflowStatus currentStatus="approved" variant="mini" />
             </div>
           </div>
 

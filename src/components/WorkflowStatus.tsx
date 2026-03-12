@@ -1,6 +1,8 @@
 import { CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { WorkflowStatusTrail } from './WorkflowStatusTrail';
 import { CompactWorkflowTrail } from './CompactWorkflowTrail';
+import { SingleLineWorkflowTrail } from './SingleLineWorkflowTrail';
+import { MiniWorkflowTrail } from './MiniWorkflowTrail';
 
 interface WorkflowStatusProps {
   currentStatus: string;
@@ -9,7 +11,7 @@ interface WorkflowStatusProps {
   submittedBy?: number;
   approvedBy?: number;
   className?: string;
-  variant?: 'vertical' | 'horizontal' | 'compact';
+  variant?: 'vertical' | 'horizontal' | 'compact' | 'single-line' | 'mini';
 }
 
 export default function WorkflowStatus({ 
@@ -47,6 +49,26 @@ export default function WorkflowStatus({
       <div className={`flex items-center justify-between ${className}`}>
         <span className="text-sm font-medium text-foreground">Status:</span>
         <CompactWorkflowTrail currentStatus={currentStatus} />
+      </div>
+    );
+  }
+
+  if (variant === 'single-line') {
+    return (
+      <div className={`flex items-center gap-3 ${className}`}>
+        <span className="text-sm font-medium text-foreground">Progress:</span>
+        <SingleLineWorkflowTrail currentStatus={currentStatus} showLabels={true} />
+      </div>
+    );
+  }
+
+  if (variant === 'mini') {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <MiniWorkflowTrail currentStatus={currentStatus} />
+        <span className="text-xs text-muted-foreground capitalize">
+          {currentStatus.replace('_', ' ')}
+        </span>
       </div>
     );
   }
