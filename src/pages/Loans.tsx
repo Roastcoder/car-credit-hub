@@ -30,20 +30,18 @@ export default function Loans() {
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const { data: loans = [], isLoading } = useQuery({
-    queryKey: ['loans', user?.branch_id],
+    queryKey: ['loans', user?.id, user?.role],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        
-        // Backend already handles role-based filtering, so just return the data
-        return data;
-      } catch {
+        // Use the proper API wrapper that handles role-based filtering
+        const response = await loansAPI.getAll();
+        console.log('API Response:', response);
+        // Ensure we always return an array
+        const data = response?.data;
+        console.log('Extracted data:', data, 'Is array:', Array.isArray(data));
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Failed to fetch loans:', error);
         return [];
       }
     },
@@ -122,7 +120,7 @@ export default function Loans() {
     e.target.value = '';
   };
 
-  const filtered = loans.filter((l: any) => {
+  const filtered = (Array.isArray(loans) ? loans : []).filter((l: any) => {
     const matchSearch = !search ||
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.id?.toLowerCase().includes(search.toLowerCase()) ||

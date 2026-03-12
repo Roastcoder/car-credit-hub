@@ -112,7 +112,21 @@ export const api = {
       
       if (method === 'GET') {
         if (endpoint === '/loans') {
-          return { data: MOCK_LOANS, total: MOCK_LOANS.length };
+          // Get current user from token or mock user
+          const currentUser = MOCK_USER;
+          let filteredLoans = MOCK_LOANS;
+          
+          // Filter loans based on user role
+          if (currentUser.role === 'employee') {
+            // Employees can only see their own loans (created by them)
+            filteredLoans = MOCK_LOANS.filter(loan => loan.created_by === currentUser.id);
+          } else if (currentUser.role === 'manager') {
+            // Managers can see all loans from their branch
+            filteredLoans = MOCK_LOANS.filter(loan => loan.branch_id === currentUser.branch_id);
+          }
+          // Admin and super_admin can see all loans (no filtering)
+          
+          return { data: filteredLoans, total: filteredLoans.length };
         }
         
         // Handle specific loan ID

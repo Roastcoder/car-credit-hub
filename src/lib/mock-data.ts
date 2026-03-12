@@ -31,6 +31,8 @@ export interface LoanApplication {
   assignedBroker: string;
   createdAt: string;
   updatedAt: string;
+  created_by?: number;
+  branch_id?: number;
 }
 
 export const MOCK_LOANS: LoanApplication[] = [

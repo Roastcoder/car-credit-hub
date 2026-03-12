@@ -339,13 +339,29 @@ export default function LoanDetail() {
 
         {/* Workflow Status */}
         <div className="mb-5">
-          <WorkflowStatus 
-            currentStatus={loan.status}
-            pddStatus={(loan as any).pdd_status}
-            createdBy={(loan as any).created_by}
-            submittedBy={(loan as any).pdd_submitted_by}
-            approvedBy={(loan as any).pdd_approved_by}
-          />
+          {/* Desktop: Horizontal trail */}
+          <div className="hidden lg:block">
+            <WorkflowStatus 
+              currentStatus={loan.status}
+              pddStatus={(loan as any).pdd_status}
+              createdBy={(loan as any).created_by}
+              submittedBy={(loan as any).pdd_submitted_by}
+              approvedBy={(loan as any).pdd_approved_by}
+              variant="horizontal"
+            />
+          </div>
+          
+          {/* Mobile: Single line */}
+          <div className="lg:hidden">
+            <WorkflowStatus 
+              currentStatus={loan.status}
+              pddStatus={(loan as any).pdd_status}
+              createdBy={(loan as any).created_by}
+              submittedBy={(loan as any).pdd_submitted_by}
+              approvedBy={(loan as any).pdd_approved_by}
+              variant="single-line"
+            />
+          </div>
         </div>
         
         {/* Role Info and Workflow Steps */}
