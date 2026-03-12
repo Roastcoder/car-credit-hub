@@ -1,249 +1,151 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRolePermissions } from '@/lib/permissions';
+import { WorkflowService } from '@/lib/workflow';
+import { LoanStatus } from '@/lib/mock-data';
+import { loansAPI } from '@/lib/api';
 import { toast } from 'sonner';
-import { ArrowRight, ArrowLeft, Users, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowLeft, MessageSquare, Send } from 'lucide-react';
 
 interface WorkflowActionsProps {
   loanId: string;
-  currentStatus: string;
-  onSuccess: () => void;
+  currentStatus: LoanStatus;
+  onSuccess?: () => void;
 }
-
-const WORKFLOW_STEPS = [
-  { status: 'submitted', label: 'Submitted', role: 'employee', nextRole: 'manager' },
-  { status: 'under_review', label: 'Under Review', role: 'manager', nextRole: 'admin' },
-  { status: 'approved', label: 'Approved', role: 'admin', nextRole: 'super_admin' },
-  { status: 'disbursed', label: 'Disbursed', role: 'super_admin', nextRole: null },
-];
 
 export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowActionsProps) {
   const { user } = useAuth();
-  const permissions = getRolePermissions(user?.role || 'employee');
-  const [showForwardModal, setShowForwardModal] = useState(false);
-  const [showSendBackModal, setShowSendBackModal] = useState(false);
+  const [showRemarksModal, setShowRemarksModal] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const currentStep = WORKFLOW_STEPS.find(step => step.status === currentStatus);
-  const currentStepIndex = WORKFLOW_STEPS.findIndex(step => step.status === currentStatus);
+  const workflowMutation = useMutation({
+    mutationFn: async ({ action, remarks }: { action: string; remarks?: string }) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // Use the new workflow API endpoint
+      const response = await loansAPI.performWorkflowAction(loanId, action, remarks);
+      return response;
+    },
+    onSuccess: (result) => {
+      const actionLabels: Record<string, string> = {
+        'send_to_manager': 'sent to manager',
+        'approve': 'approved',
+        'send_back': 'sent back'
+      };
+      
+      toast.success(`Loan ${actionLabels[result.action] || 'updated'} successfully`);
+      onSuccess?.();
+      setShowRemarksModal(null);
+      setRemarks('');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to perform action');
+    }
+  });
+
+  if (!user) return null;
+
+  const availableActions = WorkflowService.getAvailableActions(user.role);
   
-  const canForward = permissions.canChangeStatus && currentStepIndex < WORKFLOW_STEPS.length - 1;
-  const canSendBack = permissions.canChangeStatus && currentStepIndex > 0;
+  if (availableActions.length === 0) return null;
 
-  const handleForward = async () => {
-    if (!currentStep || currentStepIndex >= WORKFLOW_STEPS.length - 1) return;
-    
-    const nextStep = WORKFLOW_STEPS[currentStepIndex + 1];
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/workflow/forward`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({
-          from_status: currentStatus,
-          to_status: nextStep.status,
-          remarks: remarks.trim() || null,
-          forwarded_by: user?.id,
-          forwarded_to_role: nextStep.role,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to forward file');
-
-      toast.success(`File forwarded to ${nextStep.role}`);
-      onSuccess();
-      setShowForwardModal(false);
-      setRemarks('');
-    } catch (error) {
-      toast.error('Failed to forward file');
-    } finally {
-      setLoading(false);
+  const handleAction = (action: string) => {
+    if (action === 'send_back') {
+      setShowRemarksModal(action);
+    } else {
+      workflowMutation.mutate({ action });
     }
   };
 
-  const handleSendBack = async () => {
-    if (currentStepIndex <= 0) return;
-    
-    const previousStep = WORKFLOW_STEPS[currentStepIndex - 1];
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/workflow/sendback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({
-          from_status: currentStatus,
-          to_status: previousStep.status,
-          remarks: remarks.trim() || 'Sent back for review',
-          sent_back_by: user?.id,
-          sent_back_to_role: previousStep.role,
-        }),
+  const handleRemarksSubmit = () => {
+    if (showRemarksModal) {
+      workflowMutation.mutate({ 
+        action: showRemarksModal, 
+        remarks: remarks.trim() || undefined 
       });
-
-      if (!response.ok) throw new Error('Failed to send back file');
-
-      toast.success(`File sent back to ${previousStep.role}`);
-      onSuccess();
-      setShowSendBackModal(false);
-      setRemarks('');
-    } catch (error) {
-      toast.error('Failed to send back file');
-    } finally {
-      setLoading(false);
     }
   };
-
-  if (!permissions.canChangeStatus) return null;
 
   return (
     <>
       <div className="flex items-center gap-2">
-        {canSendBack && (
-          <button
-            onClick={() => setShowSendBackModal(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-orange-500/50 bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors text-sm font-medium"
-          >
-            <ArrowLeft size={16} />
-            Send Back
-          </button>
-        )}
-        
-        {canForward && (
-          <button
-            onClick={() => setShowForwardModal(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
-          >
-            <ArrowRight size={16} />
-            Forward
-          </button>
-        )}
+        {availableActions.map((actionConfig) => {
+          const isApprove = actionConfig.action === 'approve' || actionConfig.action === 'send_to_manager';
+          const isSendBack = actionConfig.action === 'send_back';
+          
+          return (
+            <button
+              key={actionConfig.action}
+              onClick={() => handleAction(actionConfig.action)}
+              disabled={workflowMutation.isPending}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                isApprove
+                  ? 'bg-green-500/10 text-green-500 border border-green-500/50 hover:bg-green-500/20'
+                  : isSendBack
+                  ? 'bg-orange-500/10 text-orange-500 border border-orange-500/50 hover:bg-orange-500/20'
+                  : 'bg-blue-500/10 text-blue-500 border border-blue-500/50 hover:bg-blue-500/20'
+              }`}
+            >
+              {isApprove ? (
+                <CheckCircle size={14} />
+              ) : isSendBack ? (
+                <ArrowLeft size={14} />
+              ) : (
+                <Send size={14} />
+              )}
+              {actionConfig.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Forward Modal */}
-      <Dialog open={showForwardModal} onOpenChange={setShowForwardModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ArrowRight size={20} className="text-green-500" />
-              Forward File
-            </DialogTitle>
-            <DialogDescription>
-              Forward this file to the next stage in the workflow process.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={16} className="text-green-600" />
-                <span className="text-sm font-medium text-green-800">Forwarding To</span>
+      {/* Remarks Modal */}
+      {showRemarksModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <MessageSquare size={24} className="text-orange-500" />
               </div>
-              <p className="text-sm text-green-700">
-                {currentStepIndex < WORKFLOW_STEPS.length - 1 
-                  ? `${WORKFLOW_STEPS[currentStepIndex + 1].role.toUpperCase()} - ${WORKFLOW_STEPS[currentStepIndex + 1].label}`
-                  : 'Final Stage'
-                }
-              </p>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Send Back Application
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Please provide remarks for sending back this application:
+                </p>
+                <textarea
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Enter remarks (optional)..."
+                  className="w-full p-3 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent resize-none"
+                  rows={4}
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Remarks (Optional)</label>
-              <textarea
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Add any comments for the next reviewer..."
-              />
-            </div>
-            
-            <div className="flex gap-3 justify-end">
+            <div className="flex items-center gap-3 mt-6">
               <button
-                type="button"
-                onClick={() => setShowForwardModal(false)}
-                className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+                onClick={() => {
+                  setShowRemarksModal(null);
+                  setRemarks('');
+                }}
+                disabled={workflowMutation.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={handleForward}
-                disabled={loading}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-semibold disabled:opacity-60 hover:bg-green-600 transition-colors"
+                onClick={handleRemarksSubmit}
+                disabled={workflowMutation.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-orange-500 text-sm font-medium text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Forwarding...' : 'Forward File'}
+                {workflowMutation.isPending ? 'Sending...' : 'Send Back'}
               </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Back Modal */}
-      <Dialog open={showSendBackModal} onOpenChange={setShowSendBackModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ArrowLeft size={20} className="text-orange-500" />
-              Send Back File
-            </DialogTitle>
-            <DialogDescription>
-              Send this file back to the previous stage for review or corrections.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={16} className="text-orange-600" />
-                <span className="text-sm font-medium text-orange-800">Sending Back To</span>
-              </div>
-              <p className="text-sm text-orange-700">
-                {currentStepIndex > 0 
-                  ? `${WORKFLOW_STEPS[currentStepIndex - 1].role.toUpperCase()} - ${WORKFLOW_STEPS[currentStepIndex - 1].label}`
-                  : 'Previous Stage'
-                }
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Reason for Sending Back *</label>
-              <textarea
-                required
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Please provide reason for sending back..."
-              />
-            </div>
-            
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => setShowSendBackModal(false)}
-                className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendBack}
-                disabled={loading || !remarks.trim()}
-                className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold disabled:opacity-60 hover:bg-orange-600 transition-colors"
-              >
-                {loading ? 'Sending Back...' : 'Send Back'}
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   );
 }

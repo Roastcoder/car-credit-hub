@@ -109,6 +109,7 @@ export const api = {
     
     if (endpoint.startsWith('/loans')) {
       const { MOCK_LOANS } = await import('./mock-data');
+      const { WorkflowService } = await import('./workflow');
       
       if (method === 'GET') {
         if (endpoint === '/loans') {
@@ -116,27 +117,24 @@ export const api = {
           const currentUser = MOCK_USER;
           let filteredLoans = MOCK_LOANS;
           
-          // Filter loans based on user role
-          if (currentUser.role === 'employee') {
-            // Employees can only see their own loans (created by them)
-            filteredLoans = MOCK_LOANS.filter(loan => loan.created_by === currentUser.id);
-          } else if (currentUser.role === 'manager') {
-            // Managers can see all loans from their branch
-            filteredLoans = MOCK_LOANS.filter(loan => loan.branch_id === currentUser.branch_id);
-          }
-          // Admin and super_admin can see all loans (no filtering)
+          // Filter loans based on ownership (owner_role)
+          filteredLoans = MOCK_LOANS.filter(loan => {
+            // Check if loan should be visible to current user based on owner_role
+            return WorkflowService.shouldShowLoanToUser(loan, currentUser.role);
+          });
           
           return { data: filteredLoans, total: filteredLoans.length };
         }
         
         // Handle specific loan ID
-        const loanIdMatch = endpoint.match(/\/loans\/([^/]+)/);
+        const loanIdMatch = endpoint.match(/\/loans\/([^/]+)$/);
         if (loanIdMatch) {
           const loanId = loanIdMatch[1];
-          const loan = MOCK_LOANS.find(l => l.id === loanId);
-          if (loan) {
+          const loan = MOCK_LOANS.find(l => l.id === loanId || l.loan_number === loanId);
+          if (loan && WorkflowService.shouldShowLoanToUser(loan, MOCK_USER.role)) {
             return { data: loan };
           }
+          throw new Error('Loan not found');
         }
         
         // Handle loan status endpoint
@@ -145,6 +143,26 @@ export const api = {
           const loanId = statusMatch[1];
           const loan = MOCK_LOANS.find(l => l.id === loanId);
           return { status: loan?.status || 'submitted' };
+        }
+        
+        // Handle audit logs
+        const auditMatch = endpoint.match(/\/loans\/([^/]+)\/audit-logs$/);
+        if (auditMatch) {
+          return { data: [] }; // Return empty audit logs for mock
+        }
+      }
+      
+      if (method === 'POST') {
+        // Handle workflow actions
+        const workflowMatch = endpoint.match(/\/loans\/([^/]+)\/workflow$/);
+        if (workflowMatch) {
+          const body = JSON.parse(options.body as string);
+          return { 
+            message: 'Workflow action performed successfully', 
+            action: body.action,
+            newStatus: body.action === 'approve' ? 'manager_approved' : 'sent_back_employee',
+            newOwner: body.action === 'approve' ? 'admin' : 'employee'
+          };
         }
       }
     }
@@ -218,6 +236,9 @@ export const loansAPI = {
   create: (data: any) => api.post('/loans', data),
   update: (id: string | number, data: any) => api.put(`/loans/${id}`, data),
   delete: (id: string | number) => api.delete(`/loans/${id}`),
+  performWorkflowAction: (id: string | number, action: string, remarks?: string) => 
+    api.post(`/loans/${id}/workflow`, { action, remarks }),
+  getAuditLogs: (id: string | number) => api.get(`/loans/${id}/audit-logs`),
 };
 
 // Banks API

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { WorkflowService } from '@/lib/workflow';
 import { exportToCSV, parseCSV } from '@/lib/export-utils';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { getRolePermissions, canAccessLoan } from '@/lib/permissions';
@@ -129,20 +130,10 @@ export default function Loans() {
     const loanPddStatus = l.pdd_status || 'pending';
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
     
-    // Debug logging
-    console.log('Filtering loan:', l.loan_number, {
-      search: search,
-      matchSearch,
-      statusFilter,
-      loanStatus: l.status,
-      matchStatus,
-      pddStatusFilter,
-      loanPddStatus,
-      matchPddStatus,
-      finalResult: matchSearch && matchStatus && matchPddStatus
-    });
+    // Use WorkflowService to check if loan should be visible to user
+    const shouldShow = WorkflowService.shouldShowLoanToUser(l, user?.role || 'employee');
     
-    return matchSearch && matchStatus && matchPddStatus;
+    return matchSearch && matchStatus && matchPddStatus && shouldShow;
   });
 
   return (

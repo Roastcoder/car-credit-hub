@@ -1,16 +1,81 @@
-export type LoanStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled';
+export type LoanStatus = 'submitted' | 'manager_review' | 'manager_approved' | 'admin_approved' | 'disbursed' | 'sent_back_employee' | 'sent_back_manager' | 'sent_back_admin' | 'rejected' | 'cancelled';
 
 export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[] = [
   { value: 'submitted', label: 'Submitted', color: 'status-submitted' },
-  { value: 'under_review', label: 'Under Review', color: 'status-review' },
-  { value: 'approved', label: 'Approved', color: 'status-approved' },
-  { value: 'rejected', label: 'Rejected', color: 'status-rejected' },
+  { value: 'manager_review', label: 'Manager Review', color: 'status-review' },
+  { value: 'manager_approved', label: 'Manager Approved', color: 'status-manager-approved' },
+  { value: 'admin_approved', label: 'Admin Approved', color: 'status-admin-approved' },
   { value: 'disbursed', label: 'Disbursed', color: 'status-disbursed' },
+  { value: 'sent_back_employee', label: 'Sent Back to Employee', color: 'status-sent-back' },
+  { value: 'sent_back_manager', label: 'Sent Back to Manager', color: 'status-sent-back' },
+  { value: 'sent_back_admin', label: 'Sent Back to Admin', color: 'status-sent-back' },
+  { value: 'rejected', label: 'Rejected', color: 'status-rejected' },
   { value: 'cancelled', label: 'Cancelled', color: 'status-cancelled' },
 ];
 
+// Workflow configuration with ownership-based visibility
+export const WORKFLOW_CONFIG = {
+  employee: {
+    initialStatus: 'submitted',
+    initialOwner: 'employee',
+    canCreate: true,
+    actions: [
+      { action: 'send_to_manager', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager' }
+    ]
+  },
+  manager: {
+    canCreate: false,
+    actions: [
+      { action: 'approve', nextStatus: 'manager_approved', nextOwner: 'admin', label: 'Approve' },
+      { action: 'send_back', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee' }
+    ]
+  },
+  admin: {
+    canCreate: false,
+    actions: [
+      { action: 'approve', nextStatus: 'admin_approved', nextOwner: 'super_admin', label: 'Approve' },
+      { action: 'send_back', nextStatus: 'sent_back_manager', nextOwner: 'manager', label: 'Send Back to Manager' }
+    ]
+  },
+  super_admin: {
+    canCreate: false,
+    actions: [
+      { action: 'approve', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Disburse' },
+      { action: 'send_back', nextStatus: 'sent_back_admin', nextOwner: 'admin', label: 'Send Back to Admin' }
+    ]
+  }
+};
+
+// Status to owner role mapping
+export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
+  'submitted': 'employee',
+  'manager_review': 'manager',
+  'manager_approved': 'admin',
+  'admin_approved': 'super_admin',
+  'disbursed': 'super_admin',
+  'sent_back_employee': 'employee',
+  'sent_back_manager': 'manager',
+  'sent_back_admin': 'admin',
+  'rejected': 'employee',
+  'cancelled': 'employee'
+};
+
+// Workflow audit log interface
+export interface WorkflowAuditLog {
+  id: string;
+  loan_id: string;
+  user_id: string;
+  user_role: string;
+  action: string;
+  from_status: string;
+  to_status: string;
+  timestamp: string;
+  remarks?: string;
+}
+
 export interface LoanApplication {
   id: string;
+  loan_number?: string;
   applicantName: string;
   mobile: string;
   pan: string;
@@ -33,11 +98,13 @@ export interface LoanApplication {
   updatedAt: string;
   created_by?: number;
   branch_id?: number;
+  owner_role?: string;
 }
 
 export const MOCK_LOANS: LoanApplication[] = [
   {
     id: 'CL-2025-001',
+    loan_number: 'CL-2025-001',
     applicantName: 'Arjun Mehta',
     mobile: '9876543210',
     pan: 'ABCPM1234K',
@@ -58,9 +125,11 @@ export const MOCK_LOANS: LoanApplication[] = [
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-01-15',
     updatedAt: '2025-02-10',
+    owner_role: 'super_admin'
   },
   {
     id: 'CL-2025-002',
+    loan_number: 'CL-2025-002',
     applicantName: 'Sneha Reddy',
     mobile: '9812345678',
     pan: 'DEFPR5678L',
@@ -76,14 +145,16 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 48,
     interestRate: 9.0,
     emi: 34839,
-    status: 'approved',
+    status: 'manager_approved',
     assignedBank: 'ICICI Bank',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-01-28',
     updatedAt: '2025-02-15',
+    owner_role: 'admin'
   },
   {
     id: 'CL-2025-003',
+    loan_number: 'CL-2025-003',
     applicantName: 'Rahul Joshi',
     mobile: '9988776655',
     pan: 'GHIJK9012M',
@@ -99,14 +170,16 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 60,
     interestRate: 8.75,
     emi: 20625,
-    status: 'under_review',
+    status: 'manager_review',
     assignedBank: 'SBI',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-02-05',
     updatedAt: '2025-02-12',
+    owner_role: 'manager'
   },
   {
     id: 'CL-2025-004',
+    loan_number: 'CL-2025-004',
     applicantName: 'Kavita Nair',
     mobile: '9654321098',
     pan: 'LMNOP3456N',
@@ -127,9 +200,11 @@ export const MOCK_LOANS: LoanApplication[] = [
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-02-10',
     updatedAt: '2025-02-10',
+    owner_role: 'employee'
   },
   {
     id: 'CL-2025-005',
+    loan_number: 'CL-2025-005',
     applicantName: 'Deepak Verma',
     mobile: '9123456789',
     pan: 'QRSTU7890P',
@@ -145,14 +220,16 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 60,
     interestRate: 8.9,
     emi: 33104,
-    status: 'submitted',
+    status: 'sent_back_employee',
     assignedBank: '',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-02-14',
     updatedAt: '2025-02-14',
+    owner_role: 'employee'
   },
   {
     id: 'CL-2025-006',
+    loan_number: 'CL-2025-006',
     applicantName: 'Pooja Desai',
     mobile: '9876512345',
     pan: 'VWXYZ1234Q',
@@ -168,11 +245,12 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 48,
     interestRate: 8.6,
     emi: 37092,
-    status: 'rejected',
+    status: 'admin_approved',
     assignedBank: 'Kotak Mahindra Bank',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-01-20',
     updatedAt: '2025-02-08',
+    owner_role: 'super_admin'
   },
 ];
 
