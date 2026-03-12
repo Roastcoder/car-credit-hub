@@ -37,7 +37,7 @@ export default function LoanDetail() {
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
-      const response = await loansAPI.getById(Number(id));
+      const response = await loansAPI.getById(id as any); // Don't convert to Number, keep as string
       console.log('Loan detail API response:', response);
       const loanData = response.data || response;
       console.log('Processed loan data:', loanData);

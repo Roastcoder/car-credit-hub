@@ -214,10 +214,10 @@ export const authAPI = {
 // Loans API
 export const loansAPI = {
   getAll: (params?: any) => api.get('/loans' + (params ? `?${new URLSearchParams(params)}` : '')),
-  getById: (id: number) => api.get(`/loans/${id}`),
+  getById: (id: string | number) => api.get(`/loans/${id}`),
   create: (data: any) => api.post('/loans', data),
-  update: (id: number, data: any) => api.put(`/loans/${id}`, data),
-  delete: (id: number) => api.delete(`/loans/${id}`),
+  update: (id: string | number, data: any) => api.put(`/loans/${id}`, data),
+  delete: (id: string | number) => api.delete(`/loans/${id}`),
 };
 
 // Banks API
