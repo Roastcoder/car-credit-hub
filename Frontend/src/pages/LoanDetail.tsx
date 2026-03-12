@@ -5,7 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { getRolePermissions } from '@/lib/permissions';
 import { RemarksModal } from '@/components/RemarksModal';
+import { WorkflowActions } from '@/components/WorkflowActions';
 import WorkflowStatus from '@/components/WorkflowStatus';
+import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare } from 'lucide-react';
@@ -287,6 +289,26 @@ export default function LoanDetail() {
               <Mail size={14} className="text-blue-500" />
               Email
             </button>
+            
+            {permissions.canAddRemarks && (
+              <button
+                onClick={() => setRemarksModal({ open: true, currentRemarks: loan.remark || '' })}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-blue-500/10 hover:border-blue-500 transition-colors"
+              >
+                <MessageSquare size={14} className="text-blue-500" />
+                Remarks
+              </button>
+            )}
+            
+            {/* Workflow Actions */}
+            <WorkflowActions 
+              loanId={id!}
+              currentStatus={loan.status}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                queryClient.invalidateQueries({ queryKey: ['loans'] });
+              }}
+            />
             {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
               <>
                 <select
@@ -320,26 +342,21 @@ export default function LoanDetail() {
           </div>
         </div>
 
-        {/* Status Pipeline */}
-        <div className="stat-card mb-5 overflow-x-auto">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Status Pipeline</h3>
-          <div className="flex items-center gap-1 min-w-max">
-            {LOAN_STATUSES.filter(s => s.value !== 'cancelled').map((s, i) => {
-              const isActive = i <= currentIdx && loan.status !== 'rejected' && loan.status !== 'cancelled';
-              const isCurrent = s.value === loan.status;
-              return (
-                <div key={s.value} className="flex items-center gap-1">
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isCurrent ? 'bg-accent text-accent-foreground' : isActive ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                    <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-accent-foreground' : isActive ? 'bg-accent' : 'bg-muted-foreground/40'}`} />
-                    {s.label}
-                  </div>
-                  {i < LOAN_STATUSES.length - 2 && (
-                    <div className={`w-6 h-0.5 ${isActive && i < currentIdx ? 'bg-accent' : 'bg-border'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        {/* Workflow Status */}
+        <div className="mb-5">
+          <WorkflowStatus 
+            currentStatus={loan.status}
+            pddStatus={(loan as any).pdd_status}
+            createdBy={(loan as any).created_by}
+            submittedBy={(loan as any).pdd_submitted_by}
+            approvedBy={(loan as any).pdd_approved_by}
+          />
+        </div>
+        
+        {/* Role Info and Workflow Steps */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+          <RoleInfo />
+          <WorkflowStepsInfo />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
@@ -671,6 +688,18 @@ export default function LoanDetail() {
           </div>
         </div>
       )}
+      
+      {/* Remarks Modal */}
+      <RemarksModal
+        open={remarksModal.open}
+        onClose={() => setRemarksModal({ open: false, currentRemarks: '' })}
+        loanId={id!}
+        currentRemarks={remarksModal.currentRemarks}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['loan', id] });
+          setRemarksModal({ open: false, currentRemarks: '' });
+        }}
+      />
     </>
   );
 }
