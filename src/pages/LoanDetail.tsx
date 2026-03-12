@@ -38,7 +38,10 @@ export default function LoanDetail() {
     queryKey: ['loan', id],
     queryFn: async () => {
       const response = await loansAPI.getById(Number(id));
-      return response.data || response; // Handle both { data: loan } and direct loan formats
+      console.log('Loan detail API response:', response);
+      const loanData = response.data || response;
+      console.log('Processed loan data:', loanData);
+      return loanData;
     },
     enabled: !!id,
   });
