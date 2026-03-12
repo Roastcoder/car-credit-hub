@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
 import { toast } from 'sonner';
@@ -136,6 +136,9 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
               <ArrowRight size={20} className="text-green-500" />
               Forward File
             </DialogTitle>
+            <DialogDescription>
+              Forward this file to the next stage in the workflow process.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
@@ -191,6 +194,9 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
               <ArrowLeft size={20} className="text-orange-500" />
               Send Back File
             </DialogTitle>
+            <DialogDescription>
+              Send this file back to the previous stage for review or corrections.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">

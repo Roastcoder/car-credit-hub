@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ROLE_LABELS } from '@/lib/auth';
@@ -63,6 +63,9 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Assign Role & Branch to {user?.full_name || user?.email}</DialogTitle>
+          <DialogDescription>
+            Select a role and branch for this user. The role determines their permissions in the system.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

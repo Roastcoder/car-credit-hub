@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -54,6 +54,9 @@ export function RemarksModal({ open, onClose, loanId, currentRemarks = '', onSuc
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add Remarks</DialogTitle>
+          <DialogDescription>
+            Add comments or notes about this loan application.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

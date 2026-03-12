@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const initials = user.name
     ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-    : user.email.slice(0, 2).toUpperCase();
+    : user.email ? user.email.slice(0, 2).toUpperCase() : 'U';
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -156,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="hidden lg:flex flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-8">
             <div>
               <p className="text-base font-bold text-blue-950 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
-                Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || 'User'}</span>
+                Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}</span>
               </p>
               <p className="text-xs lg:text-sm text-blue-700 dark:text-blue-400 font-medium truncate tracking-wide">
                 {user.role ? ROLE_LABELS[user.role] : 'User'}

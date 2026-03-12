@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -52,6 +52,9 @@ export function BrokerFormModal({ open, onClose, onSuccess, broker }: BrokerForm
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{broker ? 'Edit Broker' : 'Add Broker'}</DialogTitle>
+          <DialogDescription>
+            {broker ? 'Update the broker information below.' : 'Enter the details for the new broker.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -1,4 +1,6 @@
 import { CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { WorkflowStatusTrail } from './WorkflowStatusTrail';
+import { CompactWorkflowTrail } from './CompactWorkflowTrail';
 
 interface WorkflowStatusProps {
   currentStatus: string;
@@ -7,6 +9,7 @@ interface WorkflowStatusProps {
   submittedBy?: number;
   approvedBy?: number;
   className?: string;
+  variant?: 'vertical' | 'horizontal' | 'compact';
 }
 
 export default function WorkflowStatus({ 
@@ -15,8 +18,40 @@ export default function WorkflowStatus({
   createdBy,
   submittedBy,
   approvedBy,
-  className = '' 
+  className = '',
+  variant = 'vertical'
 }: WorkflowStatusProps) {
+  // Return horizontal trail variants
+  if (variant === 'horizontal') {
+    return (
+      <div className={`bg-card rounded-lg border border-border p-6 ${className}`}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-foreground">Workflow Status</h3>
+          {pddStatus && pddStatus !== 'pending' && (
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+              pddStatus === 'approved' ? 'bg-green-100 text-green-700' :
+              pddStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+              'bg-yellow-100 text-yellow-700'
+            }`}>
+              PDD: {pddStatus.replace('_', ' ')}
+            </span>
+          )}
+        </div>
+        <WorkflowStatusTrail currentStatus={currentStatus} />
+      </div>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <div className={`flex items-center justify-between ${className}`}>
+        <span className="text-sm font-medium text-foreground">Status:</span>
+        <CompactWorkflowTrail currentStatus={currentStatus} />
+      </div>
+    );
+  }
+
+  // Original vertical layout
   const steps = [
     {
       id: 'submitted',

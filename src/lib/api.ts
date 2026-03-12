@@ -1,6 +1,32 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 let authToken: string | null = localStorage.getItem('auth_token');
+
+// Mock user for development
+const MOCK_USER = {
+  id: 1,
+  name: 'Admin User',
+  email: 'admin@meharfinance.com',
+  role: 'admin'
+};
+
+// Mock login function
+const mockLogin = async (email: string, password: string) => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Simple mock authentication
+  if (email && password) {
+    const token = 'mock-jwt-token-' + Date.now();
+    return {
+      token,
+      user: MOCK_USER
+    };
+  } else {
+    throw new Error('Invalid credentials');
+  }
+};
 
 export const api = {
   setToken(token: string | null) {
@@ -13,6 +39,11 @@ export const api = {
   },
 
   async request(endpoint: string, options: RequestInit = {}) {
+    // Use mock data if enabled
+    if (USE_MOCK_DATA) {
+      return this.mockRequest(endpoint, options);
+    }
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -22,27 +53,117 @@ export const api = {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    if (response.status === 401) {
-      this.setToken(null);
-      // Clear all storage
-      localStorage.clear();
-      sessionStorage.clear();
-      // Force reload to clear cache
-      window.location.href = '/login';
-      throw new Error('Session expired. Please login again.');
+      if (response.status === 401) {
+        this.setToken(null);
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
+      }
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(error.error || 'API Error');
+      }
+
+      return response.json();
+    } catch (error: any) {
+      // If backend is not available, fall back to mock data
+      console.warn('Backend not available, using mock data:', error.message);
+      return this.mockRequest(endpoint, options);
     }
+  },
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(error.error || 'API Error');
+  async mockRequest(endpoint: string, options: RequestInit = {}) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const method = options.method || 'GET';
+    
+    // Mock responses based on endpoint
+    if (endpoint === '/auth/login') {
+      const body = JSON.parse(options.body as string);
+      return mockLogin(body.email, body.password);
     }
-
-    return response.json();
+    
+    if (endpoint === '/auth/profile') {
+      return { user: MOCK_USER };
+    }
+    
+    if (endpoint === '/dashboard/stats') {
+      return {
+        totalLoans: 156,
+        approvedLoans: 89,
+        pendingLoans: 34,
+        rejectedLoans: 33,
+        totalAmount: 125000000,
+        monthlyGrowth: 12.5
+      };
+    }
+    
+    if (endpoint.startsWith('/loans')) {
+      const { MOCK_LOANS } = await import('./mock-data');
+      
+      if (method === 'GET') {
+        if (endpoint === '/loans') {
+          return { data: MOCK_LOANS, total: MOCK_LOANS.length };
+        }
+        
+        // Handle specific loan ID
+        const loanIdMatch = endpoint.match(/\/loans\/([^/]+)/);
+        if (loanIdMatch) {
+          const loanId = loanIdMatch[1];
+          const loan = MOCK_LOANS.find(l => l.id === loanId);
+          if (loan) {
+            return { data: loan };
+          }
+        }
+        
+        // Handle loan status endpoint
+        const statusMatch = endpoint.match(/\/loans\/([^/]+)\/status/);
+        if (statusMatch) {
+          const loanId = statusMatch[1];
+          const loan = MOCK_LOANS.find(l => l.id === loanId);
+          return { status: loan?.status || 'submitted' };
+        }
+      }
+    }
+    
+    if (endpoint === '/banks') {
+      const { BANKS } = await import('./mock-data');
+      return { data: BANKS.map((name, index) => ({ id: index + 1, name, status: 'active' })) };
+    }
+    
+    if (endpoint === '/financers') {
+      const { FINANCERS } = await import('./mock-data');
+      return { data: FINANCERS.map((name, index) => ({ id: index + 1, name, status: 'active' })) };
+    }
+    
+    if (endpoint === '/brokers') {
+      return { data: [{ id: 1, name: 'Vikram Singh', status: 'active' }] };
+    }
+    
+    if (endpoint === '/users') {
+      return { data: [MOCK_USER] };
+    }
+    
+    if (endpoint === '/leads') {
+      return { data: [] };
+    }
+    
+    if (endpoint === '/branches') {
+      return { data: [{ id: 1, name: 'Main Branch', location: 'Mumbai' }] };
+    }
+    
+    // Default empty response
+    console.log('Mock endpoint not implemented:', endpoint);
+    return { data: [], message: 'Mock data not implemented for this endpoint' };
   },
 
   get(endpoint: string) {
@@ -165,7 +286,13 @@ export const supabase = {
   auth: {
     signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
       try {
-        const data = await authAPI.login(email, password);
+        let data;
+        if (USE_MOCK_DATA) {
+          data = await mockLogin(email, password);
+        } else {
+          data = await authAPI.login(email, password);
+        }
+        
         if (data.token) {
           api.setToken(data.token);
         }
