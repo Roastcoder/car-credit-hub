@@ -60,7 +60,7 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
         {/* Progress Line */}
         <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700 -z-10">
           <div 
-            className="h-full bg-blue-500 transition-all duration-500 ease-in-out"
+            className="h-full bg-green-300 transition-all duration-500 ease-in-out"
             style={{ 
               width: currentStepIndex >= 0 ? `${(currentStepIndex / (WORKFLOW_STEPS.length - 1)) * 100}%` : '0%' 
             }}
@@ -76,13 +76,13 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                 {
-                  'bg-blue-500 border-blue-500 text-white': state === 'completed',
-                  'bg-blue-100 border-blue-500 text-blue-600 ring-4 ring-blue-100': state === 'current',
+                  'bg-green-50 border-green-200 text-green-600': state === 'completed',
+                  'bg-blue-50 border-blue-200 text-blue-600': state === 'current',
                   'bg-gray-100 border-gray-300 text-gray-400': state === 'pending'
                 }
               )}>
                 {state === 'completed' ? (
-                  <Check size={20} className="text-white" />
+                  <Check size={20} className="text-green-600" />
                 ) : (
                   step.icon
                 )}
@@ -93,7 +93,8 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
                 <div className={cn(
                   "text-sm font-semibold mb-1",
                   {
-                    'text-blue-600': state === 'completed' || state === 'current',
+                    'text-green-600': state === 'completed',
+                    'text-blue-600': state === 'current',
                     'text-gray-500': state === 'pending'
                   }
                 )}>
@@ -102,27 +103,19 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
                 <div className={cn(
                   "text-xs leading-tight",
                   {
-                    'text-blue-500': state === 'completed' || state === 'current',
+                    'text-green-500': state === 'completed',
+                    'text-blue-500': state === 'current',
                     'text-gray-400': state === 'pending'
                   }
                 )}>
                   {step.description}
-                </div>
-                <div className={cn(
-                  "text-xs font-medium mt-1 px-2 py-0.5 rounded-full inline-block",
-                  {
-                    'bg-blue-100 text-blue-700': state === 'completed' || state === 'current',
-                    'bg-gray-100 text-gray-500': state === 'pending'
-                  }
-                )}>
-                  {step.role}
                 </div>
               </div>
 
               {/* Current Step Indicator */}
               {state === 'current' && (
                 <div className="absolute -top-2 -right-2">
-                  <div className="w-4 h-4 bg-orange-500 rounded-full animate-pulse" />
+                  <div className="w-3 h-3 bg-blue-400 rounded-full" />
                 </div>
               )}
             </div>

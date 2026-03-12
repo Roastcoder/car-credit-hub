@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { loansAPI } from '@/lib/api';
-import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { formatCurrency, LOAN_STATUSES, WORKFLOW_STEPS } from '@/lib/mock-data';
+import { WorkflowService } from '@/lib/workflow';
 import { getRolePermissions } from '@/lib/permissions';
 import { RemarksModal } from '@/components/RemarksModal';
 import { WorkflowActions } from '@/components/WorkflowActions';
@@ -11,7 +12,7 @@ import WorkflowStatus from '@/components/WorkflowStatus';
 import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { ArrowLeft, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -237,9 +238,33 @@ export default function LoanDetail() {
   return (
     <>
       <div className="max-w-6xl mx-auto px-4 pb-20 lg:pb-4">
-        <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-          <ArrowLeft size={16} /> Back to Applications
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft size={16} /> Back to Applications
+          </button>
+          
+          {/* Navigation buttons for next/previous loans */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => {
+                // Navigate to previous loan - you can implement this logic
+                toast.info('Previous loan navigation - implement based on your needs');
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              ← Previous
+            </button>
+            <button 
+              onClick={() => {
+                // Navigate to next loan - you can implement this logic
+                toast.info('Next loan navigation - implement based on your needs');
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
@@ -337,7 +362,7 @@ export default function LoanDetail() {
           </div>
         </div>
 
-        {/* Workflow Status - Only section to show */}
+        {/* Workflow Status */}
         <div className="mb-5">
           {/* Desktop: Horizontal trail */}
           <div className="hidden lg:block">
@@ -363,6 +388,107 @@ export default function LoanDetail() {
             />
           </div>
         </div>
+
+        {/* Loan Details Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Applicant Information */}
+          <Section title="Applicant Information" icon={<User size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Name" value={loan.applicant_name || (loan as any).customer_name} />
+              <Field label="Mobile" value={loan.mobile || (loan as any).customer_phone} />
+              <Field label="Email" value={(loan as any).customer_email || '—'} />
+              <Field label="PAN" value={(loan as any).pan || '—'} />
+              <Field label="Aadhaar" value={(loan as any).aadhaar || '—'} />
+              <Field label="Address" value={(loan as any).current_address || loan.address || '—'} />
+            </div>
+          </Section>
+
+          {/* Vehicle Information */}
+          <Section title="Vehicle Information" icon={<Car size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Make" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
+              <Field label="Model" value={(loan as any).model_variant_name || loan.car_model} />
+              <Field label="Variant" value={loan.car_variant || '—'} />
+              <Field label="Year" value={(loan as any).mfg_year || '—'} />
+              <Field label="Vehicle Number" value={(loan as any).vehicle_number || '—'} />
+              <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
+            </div>
+          </Section>
+
+          {/* Loan Information */}
+          <Section title="Loan Information" icon={<IndianRupee size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
+              <Field label="Down Payment" value={formatCurrency(Number((loan as any).down_payment || loan.downPayment || 0))} />
+              <Field label="EMI" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
+              <Field label="Tenure" value={`${(loan as any).tenure_months || loan.tenure || 0} months`} />
+              <Field label="Interest Rate" value={`${(loan as any).interest_rate || loan.interestRate || 0}%`} />
+              <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
+            </div>
+          </Section>
+
+          {/* Bank Information */}
+          <Section title="Bank Information" icon={<Building2 size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
+              <Field label="Broker" value={(loan as any).assigned_broker_name || loan.assignedBroker || '—'} />
+              <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
+              <Field label="Sanction Date" value={(loan as any).sanction_date || '—'} />
+              <Field label="Disbursement Date" value={(loan as any).disbursement_date || '—'} />
+              <Field label="Branch" value={(loan as any).our_branch || '—'} />
+            </div>
+          </Section>
+        </div>
+
+        {/* Documents Section */}
+        <Section title="Documents" icon={<FileText size={16} />}>
+          {documents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {documents.map((doc: any) => (
+                <div key={doc.id} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {doc.document_name || doc.file_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.document_type?.replace(/_/g, ' ').toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      onClick={() => previewDocument(doc)}
+                      disabled={loadingPreview === doc.id}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-accent/10 text-accent rounded hover:bg-accent/20 transition-colors disabled:opacity-50"
+                    >
+                      <Eye size={12} />
+                      {loadingPreview === doc.id ? 'Loading...' : 'View'}
+                    </button>
+                    {permissions.canDelete && (
+                      <button
+                        onClick={() => handleDeleteDoc(doc)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/10 text-red-500 rounded hover:bg-red-500/20 transition-colors"
+                      >
+                        <X size={12} />
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+          )}
+        </Section>
+
+        {/* Remarks Section */}
+        {(loan as any).remark && (
+          <Section title="Remarks" icon={<MessageSquare size={16} />}>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{(loan as any).remark}</p>
+          </Section>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -471,6 +597,59 @@ export default function LoanDetail() {
           setRemarksModal({ open: false, currentRemarks: '' });
         }}
       />
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground truncate">
+                {previewDoc.name}
+              </h3>
+              <button
+                onClick={() => setPreviewDoc(null)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <X size={20} className="text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[calc(90vh-80px)] overflow-auto">
+              {previewDoc.url.toLowerCase().includes('.pdf') ? (
+                <iframe
+                  src={previewDoc.url}
+                  className="w-full h-[600px] border border-border rounded-lg"
+                  title={previewDoc.name}
+                />
+              ) : (
+                <img
+                  src={previewDoc.url}
+                  alt={previewDoc.name}
+                  className="max-w-full h-auto rounded-lg"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-document.png';
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-border">
+              <a
+                href={previewDoc.url}
+                download={previewDoc.name}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <Download size={16} />
+                Download
+              </a>
+              <button
+                onClick={() => setPreviewDoc(null)}
+                className="px-4 py-2 border border-border bg-card text-foreground rounded-lg hover:bg-muted transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

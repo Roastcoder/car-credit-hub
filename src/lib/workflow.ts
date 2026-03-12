@@ -5,6 +5,8 @@ export interface WorkflowAction {
   nextStatus: LoanStatus;
   nextOwner: string;
   label: string;
+  type?: string;
+  requiresRemarks?: boolean;
 }
 
 export class WorkflowService {
@@ -114,16 +116,58 @@ export class WorkflowService {
     // Get the owner role based on current status
     const ownerRole = this.getOwnerRole(loan.status);
     
-    // Only show loan if user role matches owner role
-    return userRole === ownerRole;
+    // Show loan if user role matches owner role OR if it's a sent back status for that role
+    const canSee = userRole === ownerRole;
+    
+    // Additional logic for sent back files
+    if (loan.status?.includes('sent_back')) {
+      const sentBackRole = loan.status.replace('sent_back_', '');
+      return userRole === sentBackRole;
+    }
+    
+    return canSee;
+  }
+
+  static getVisibleLoansForRole(userRole: string): string[] {
+    switch (userRole) {
+      case 'employee':
+        return ['submitted', 'sent_back_employee'];
+      case 'manager':
+        return ['under_review', 'sent_back_manager'];
+      case 'admin':
+        return ['approved', 'sent_back_admin'];
+      case 'super_admin':
+        return ['disbursed'];
+      default:
+        return [];
+    }
+  }
+
+  static getNextLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
+    const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
+    
+    if (currentIndex >= 0 && currentIndex < visibleLoans.length - 1) {
+      return visibleLoans[currentIndex + 1].loan_number || visibleLoans[currentIndex + 1].id;
+    }
+    return null;
+  }
+
+  static getPreviousLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
+    const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
+    
+    if (currentIndex > 0) {
+      return visibleLoans[currentIndex - 1].loan_number || visibleLoans[currentIndex - 1].id;
+    }
+    return null;
   }
 
   static getWorkflowSteps(): Array<{ status: LoanStatus; label: string; role: string }> {
     return [
       { status: 'submitted', label: 'Submitted', role: 'Employee' },
-      { status: 'manager_review', label: 'Manager Review', role: 'Manager' },
-      { status: 'manager_approved', label: 'Manager Approved', role: 'Admin' },
-      { status: 'admin_approved', label: 'Admin Approved', role: 'Super Admin' },
+      { status: 'under_review', label: 'Under Review', role: 'Manager' },
+      { status: 'approved', label: 'Approved', role: 'Admin' },
       { status: 'disbursed', label: 'Disbursed', role: 'Super Admin' }
     ];
   }
@@ -131,9 +175,8 @@ export class WorkflowService {
   static getStatusProgress(currentStatus: LoanStatus): number {
     const progressMap: Record<LoanStatus, number> = {
       'submitted': 20,
-      'manager_review': 40,
-      'manager_approved': 60,
-      'admin_approved': 80,
+      'under_review': 40,
+      'approved': 60,
       'disbursed': 100,
       'sent_back_employee': 10,
       'sent_back_manager': 30,

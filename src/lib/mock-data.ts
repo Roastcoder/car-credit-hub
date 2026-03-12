@@ -1,10 +1,9 @@
-export type LoanStatus = 'submitted' | 'manager_review' | 'manager_approved' | 'admin_approved' | 'disbursed' | 'sent_back_employee' | 'sent_back_manager' | 'sent_back_admin' | 'rejected' | 'cancelled';
+export type LoanStatus = 'submitted' | 'under_review' | 'approved' | 'disbursed' | 'sent_back_employee' | 'sent_back_manager' | 'sent_back_admin' | 'rejected' | 'cancelled';
 
 export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[] = [
   { value: 'submitted', label: 'Submitted', color: 'status-submitted' },
-  { value: 'manager_review', label: 'Manager Review', color: 'status-review' },
-  { value: 'manager_approved', label: 'Manager Approved', color: 'status-manager-approved' },
-  { value: 'admin_approved', label: 'Admin Approved', color: 'status-admin-approved' },
+  { value: 'under_review', label: 'Under Review', color: 'status-review' },
+  { value: 'approved', label: 'Approved', color: 'status-approved' },
   { value: 'disbursed', label: 'Disbursed', color: 'status-disbursed' },
   { value: 'sent_back_employee', label: 'Sent Back to Employee', color: 'status-sent-back' },
   { value: 'sent_back_manager', label: 'Sent Back to Manager', color: 'status-sent-back' },
@@ -13,35 +12,35 @@ export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[
   { value: 'cancelled', label: 'Cancelled', color: 'status-cancelled' },
 ];
 
-// Workflow configuration with ownership-based visibility
+// Workflow configuration with forward and back actions
 export const WORKFLOW_CONFIG = {
   employee: {
     initialStatus: 'submitted',
     initialOwner: 'employee',
     canCreate: true,
     actions: [
-      { action: 'send_to_manager', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager' }
+      { action: 'send_to_manager', nextStatus: 'under_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' }
     ]
   },
   manager: {
     canCreate: false,
     actions: [
-      { action: 'approve', nextStatus: 'manager_approved', nextOwner: 'admin', label: 'Approve' },
-      { action: 'send_back', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee' }
+      { action: 'send_to_admin', nextStatus: 'approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward' },
+      { action: 'send_back_employee', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true }
     ]
   },
   admin: {
     canCreate: false,
     actions: [
-      { action: 'approve', nextStatus: 'admin_approved', nextOwner: 'super_admin', label: 'Approve' },
-      { action: 'send_back', nextStatus: 'sent_back_manager', nextOwner: 'manager', label: 'Send Back to Manager' }
+      { action: 'send_to_super_admin', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Send to Super Admin', type: 'forward' },
+      { action: 'send_back_manager', nextStatus: 'sent_back_manager', nextOwner: 'manager', label: 'Send Back to Manager', type: 'back', requiresRemarks: true }
     ]
   },
   super_admin: {
     canCreate: false,
     actions: [
-      { action: 'approve', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Disburse' },
-      { action: 'send_back', nextStatus: 'sent_back_admin', nextOwner: 'admin', label: 'Send Back to Admin' }
+      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Disburse', type: 'approve' },
+      { action: 'send_back_admin', nextStatus: 'sent_back_admin', nextOwner: 'admin', label: 'Send Back to Admin', type: 'back', requiresRemarks: true }
     ]
   }
 };
@@ -49,9 +48,8 @@ export const WORKFLOW_CONFIG = {
 // Status to owner role mapping
 export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
   'submitted': 'employee',
-  'manager_review': 'manager',
-  'manager_approved': 'admin',
-  'admin_approved': 'super_admin',
+  'under_review': 'manager',
+  'approved': 'admin',
   'disbursed': 'super_admin',
   'sent_back_employee': 'employee',
   'sent_back_manager': 'manager',
@@ -59,6 +57,14 @@ export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
   'rejected': 'employee',
   'cancelled': 'employee'
 };
+
+// Workflow steps for progress tracking
+export const WORKFLOW_STEPS = [
+  { status: 'submitted', label: 'Submitted', description: 'Application created by employee', role: 'Employee' },
+  { status: 'under_review', label: 'Under Review', description: 'Being reviewed by manager', role: 'Manager' },
+  { status: 'approved', label: 'Approved', description: 'Approved by admin', role: 'Admin' },
+  { status: 'disbursed', label: 'Disbursed', description: 'Final disbursement', role: 'Super Admin' }
+];
 
 // Workflow audit log interface
 export interface WorkflowAuditLog {
@@ -145,7 +151,7 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 48,
     interestRate: 9.0,
     emi: 34839,
-    status: 'manager_approved',
+    status: 'approved',
     assignedBank: 'ICICI Bank',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-01-28',
@@ -170,7 +176,7 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 60,
     interestRate: 8.75,
     emi: 20625,
-    status: 'manager_review',
+    status: 'under_review',
     assignedBank: 'SBI',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-02-05',
@@ -245,7 +251,7 @@ export const MOCK_LOANS: LoanApplication[] = [
     tenure: 48,
     interestRate: 8.6,
     emi: 37092,
-    status: 'admin_approved',
+    status: 'approved',
     assignedBank: 'Kotak Mahindra Bank',
     assignedBroker: 'Vikram Singh',
     createdAt: '2025-01-20',
