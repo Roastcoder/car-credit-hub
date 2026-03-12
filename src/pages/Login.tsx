@@ -5,7 +5,6 @@ import { supabase } from '@/lib/api';
 import { ArrowRight, Mail, Lock, Download, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
-import { AuthImageSlider } from '@/components/AuthImageSlider';
 
 export default function Login() {
   const { login } = useAuth();
@@ -44,14 +43,22 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-transparent font-sans">
       {/* ─── LEFT PANEL ─── */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden m-4 lg:mr-2 rounded-[2.5rem] shadow-2xl">
-        <AuthImageSlider />
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center max-w-md">
+          <img src={logo} alt="Mehar Finance" className="h-20 w-auto object-contain mx-auto mb-6 drop-shadow-lg" />
+          <h1 className="text-3xl font-bold text-blue-950 dark:text-white mb-4">Mehar Finance</h1>
+          <p className="text-lg text-blue-700 dark:text-blue-300 mb-6 font-medium">Car Loan Portal</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed">
+            Streamline your car loan process with our comprehensive management system. 
+            Track applications, manage approvals, and handle disbursements all in one place.
+          </p>
+        </div>
       </div>
 
       {/* ─── RIGHT PANEL ─── */}
       <div className="flex-1 flex items-center justify-center p-5 sm:p-8 bg-transparent">
         <div className="w-full max-w-[420px]">
-          {/* Mobile header */}
+          {/* Mobile header - only show on small screens */}
           <div className="lg:hidden flex flex-col items-center mb-8">
             <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain drop-shadow-sm mb-3" />
             <h2 className="text-lg font-bold text-blue-950 dark:text-white">Mehar Finance</h2>
