@@ -59,7 +59,7 @@ export default function LoanDetail() {
 
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
