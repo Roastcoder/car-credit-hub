@@ -59,7 +59,8 @@ export default function LoanDetail() {
 
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+      console.log('Updating status to:', newStatus, 'for loan ID:', id);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -67,8 +68,15 @@ export default function LoanDetail() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error('Failed to update status');
-      return res.json();
+      console.log('Status update response:', res.status, res.statusText);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Status update failed:', errorText);
+        throw new Error(`Failed to update status: ${res.status} ${res.statusText}`);
+      }
+      const result = await res.json();
+      console.log('Status update result:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loan', id] });
