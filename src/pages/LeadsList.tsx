@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { getRolePermissions } from '@/lib/permissions';
 import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,6 +13,7 @@ export default function LeadsList() {
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const permissions = getRolePermissions(user?.role || 'employee');
 
   const queryClient = useQueryClient();
 
@@ -74,9 +76,11 @@ export default function LeadsList() {
           <h1 className="text-2xl font-bold text-foreground">Leads</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} leads found</p>
         </div>
-        <Link to="/add-lead" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
-          <Plus size={16} /> Add Lead
-        </Link>
+        {permissions.canCreate && (
+          <Link to="/add-lead" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
+            <Plus size={16} /> Add Lead
+          </Link>
+        )}
       </div>
 
       <div className="stat-card mb-4">
@@ -150,7 +154,7 @@ export default function LeadsList() {
                 >
                   <ArrowRight size={13} /> Convert
                 </button>
-                {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                {permissions.canDelete && (
                   <button
                     onClick={() => setDeleteConfirm(lead.id)}
                     className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 border border-transparent hover:border-red-200 transition-colors"
@@ -240,7 +244,7 @@ export default function LeadsList() {
                           >
                             <ArrowRight size={16} />
                           </button>
-                          {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                          {permissions.canDelete && (
                             <button
                               onClick={() => setDeleteConfirm(lead.id)}
                               className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors"

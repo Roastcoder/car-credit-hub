@@ -3,10 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Mail, Lock, User, Building2, Shield, BarChart3, Users, Zap, Download, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, Building2, Download, Eye, EyeOff } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { toast } from 'sonner';
 import React from 'react';
+import { AuthImageSlider } from '@/components/AuthImageSlider';
 
 export default function Signup() {
   const { signUp } = useAuth();
@@ -56,72 +57,12 @@ export default function Signup() {
     }
   };
 
-  const features = [
-    { icon: <Shield size={22} />, title: 'Role-Based Access', desc: 'Multi-level permissions for admins, managers, brokers & employees' },
-    { icon: <BarChart3 size={22} />, title: 'Real-Time Analytics', desc: 'Track applications, commissions & performance metrics live' },
-    { icon: <Users size={22} />, title: 'Multi-Party Management', desc: 'Banks, NBFCs, brokers & customers — all in one place' },
-    { icon: <Zap size={22} />, title: 'Streamlined Workflow', desc: 'Application to disbursement with full document tracking' },
-  ];
 
   return (
     <div className="min-h-screen flex bg-transparent font-sans">
       {/* ─── LEFT PANEL ─── */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden glass-panel m-4 lg:mr-2 rounded-[2.5rem]">
-        <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full h-full">
-          <div className="flex items-center gap-3.5">
-            <div className="glass-card rounded-2xl p-2.5 shadow-xl">
-              <img src={logo} alt="Mehar Finance" className="h-12 w-auto object-contain" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-blue-950 dark:text-white tracking-tight">Mehar Finance</h2>
-              <p className="text-blue-600 dark:text-blue-400 text-xs font-semibold tracking-wide uppercase">Car Loan Solutions</p>
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center -mt-8">
-            <div className="mb-2">
-              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
-                Management Portal
-              </span>
-            </div>
-            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-blue-950 dark:text-white leading-[1.15] mb-4 tracking-tight drop-shadow-sm">
-              Car Loan Sales<br />
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                & Management
-              </span>
-            </h1>
-            <p className="text-blue-700 dark:text-slate-300 text-sm leading-relaxed max-w-sm mb-8 font-medium">
-              Complete loan lifecycle management — from lead generation to disbursement, all in one powerful platform.
-            </p>
-
-            <div className="space-y-3.5">
-              {features.map(f => (
-                <div key={f.title} className="flex items-start gap-3 group">
-                  <div className="shrink-0 w-9 h-9 rounded-xl glass-card flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-white/40 dark:group-hover:bg-white/10 transition-all duration-300 shadow-sm border border-white/50 dark:border-white/10">
-                    {f.icon}
-                  </div>
-                  <div className="pt-0.5">
-                    <h3 className="text-blue-950 dark:text-white text-sm font-semibold mb-0.5">{f.title}</h3>
-                    <p className="text-blue-700 dark:text-slate-400 text-xs leading-relaxed font-medium">{f.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 hidden lg:block">
-              <a
-                href="/mehar-finance.apk"
-                download
-                className="inline-flex items-center gap-2.5 glass-card hover:bg-white/60 dark:hover:bg-blue-900/60 text-blue-950 dark:text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-sm"
-              >
-                <Download size={16} className="text-blue-600 dark:text-blue-400" />
-                Download Android App
-              </a>
-            </div>
-          </div>
-
-          <p className="text-blue-500 dark:text-slate-400 text-xs font-medium">© 2025 Mehar Finance. All rights reserved.</p>
-        </div>
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden m-4 lg:mr-2 rounded-[2.5rem] shadow-2xl">
+        <AuthImageSlider />
       </div>
 
       {/* ─── RIGHT PANEL ─── */}

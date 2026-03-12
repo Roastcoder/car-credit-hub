@@ -6,10 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
 import { exportToCSV, parseCSV } from '@/lib/export-utils';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
+import { getRolePermissions, canAccessLoan } from '@/lib/permissions';
+import { RemarksModal } from '@/components/RemarksModal';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare } from 'lucide-react';
 
 type LoanStatusFilter = 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
@@ -22,7 +24,10 @@ export default function Loans() {
   const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
   const [pddStatusFilter, setPddStatusFilter] = useState<PDDStatusFilter>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [remarksModal, setRemarksModal] = useState<{ open: boolean; loanId: string; currentRemarks: string }>({ open: false, loanId: '', currentRemarks: '' });
   const importRef = useRef<HTMLInputElement>(null);
+  
+  const permissions = getRolePermissions(user?.role || 'employee');
 
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.branch_id],
@@ -78,7 +83,9 @@ export default function Loans() {
     onError: () => toast.error('Failed to delete loan'),
   });
 
-  const canEditStatus = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager';
+  const canEditStatus = permissions.canChangeStatus;
+  const canAddRemarks = permissions.canAddRemarks;
+  const canCreateLoan = permissions.canCreate;
 
   const handleExport = () => {
     if (filtered.length === 0) { toast.error('No data to export'); return; }
@@ -147,9 +154,11 @@ export default function Loans() {
             <Upload size={14} className="sm:w-4 sm:h-4" /> Import CSV
           </button>
           <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-          <Link to="/loans/new" className="whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 bg-accent text-accent-foreground font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm">
-            <Plus size={14} className="sm:w-4 sm:h-4" /> New Application
-          </Link>
+          {canCreateLoan && (
+            <Link to="/loans/new" className="whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 bg-accent text-accent-foreground font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl hover:opacity-90 transition-opacity text-xs sm:text-sm">
+              <Plus size={14} className="sm:w-4 sm:h-4" /> New Application
+            </Link>
+          )}
         </div>
       </div>
 
@@ -253,35 +262,45 @@ export default function Loans() {
                 >
                   <MessageCircle size={13} className="text-green-500" /> Share
                 </button>
+                {canAddRemarks && (
+                  <button
+                    onClick={() => setRemarksModal({ open: true, loanId: loan.id, currentRemarks: loan.remark || '' })}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-blue-500/10 transition-colors"
+                  >
+                    <MessageSquare size={13} className="text-blue-500" /> Remarks
+                  </button>
+                )}
+                {permissions.canEdit && (
+                  <button
+                    onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                )}
+                {permissions.canDelete && (
+                  <button
+                    onClick={() => setDeleteConfirm(loan.id)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                )}
                 {canEditStatus && (
-                  <>
-                    <button
-                      onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
-                    >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(loan.id)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
-                    >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Delete
-                    </button>
-                    <select
-                      value={loan.status}
-                      onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
-                      disabled={updateStatus.isPending}
-                      className="flex-1 min-w-[120px] px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                    >
-                      {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                  </>
+                  <select
+                    value={loan.status}
+                    onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                    disabled={updateStatus.isPending}
+                    className="flex-1 min-w-[120px] px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                  >
+                    {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
                 )}
               </div>
             </div>
@@ -307,7 +326,7 @@ export default function Loans() {
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
-                    {canEditStatus && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
+                    {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
                     <th className="py-3 px-3"></th>
                   </tr>
                 </thead>
@@ -328,35 +347,50 @@ export default function Loans() {
                       <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                       <td className="py-3.5 px-3"><PDDStatusBadge status={loan.pdd_status} /></td>
-                      {canEditStatus && (
+                      {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
-                              className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
-                              title="Edit"
-                            >
-                              <svg className="w-3.5 h-3.5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(loan.id)}
-                              className="p-1.5 rounded-md border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                              title="Delete"
-                            >
-                              <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                            <select
-                              value={loan.status}
-                              onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
-                              disabled={updateStatus.isPending}
-                              className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
-                            >
-                              {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                            </select>
+                            {permissions.canEdit && (
+                              <button
+                                onClick={() => navigate(`/loans/${loan.loan_number || loan.id}/edit`)}
+                                className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
+                                title="Edit"
+                              >
+                                <svg className="w-3.5 h-3.5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                            )}
+                            {canAddRemarks && (
+                              <button
+                                onClick={() => setRemarksModal({ open: true, loanId: loan.id, currentRemarks: loan.remark || '' })}
+                                className="p-1.5 rounded-md border border-border bg-card hover:bg-blue-500/10 transition-colors"
+                                title="Add Remarks"
+                              >
+                                <MessageSquare size={14} className="text-blue-500" />
+                              </button>
+                            )}
+                            {permissions.canDelete && (
+                              <button
+                                onClick={() => setDeleteConfirm(loan.id)}
+                                className="p-1.5 rounded-md border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                                title="Delete"
+                              >
+                                <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )}
+                            {canEditStatus && (
+                              <select
+                                value={loan.status}
+                                onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
+                                disabled={updateStatus.isPending}
+                                className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
+                              >
+                                {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                              </select>
+                            )}
                           </div>
                         </td>
                       )}
@@ -414,6 +448,18 @@ export default function Loans() {
           </div>
         </div>
       )}
+      
+      {/* Remarks Modal */}
+      <RemarksModal
+        open={remarksModal.open}
+        onClose={() => setRemarksModal({ open: false, loanId: '', currentRemarks: '' })}
+        loanId={remarksModal.loanId}
+        currentRemarks={remarksModal.currentRemarks}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['loans'] });
+          setRemarksModal({ open: false, loanId: '', currentRemarks: '' });
+        }}
+      />
     </div>
   );
 }

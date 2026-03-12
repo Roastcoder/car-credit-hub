@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, calculateEMI, formatCurrency } from '@/lib/mock-data';
-import { ArrowLeft, Calculator, Search, X } from 'lucide-react';
+import { getRolePermissions } from '@/lib/permissions';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CreateLoan() {
@@ -14,6 +15,36 @@ export default function CreateLoan() {
   const isEditMode = !!id;
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const permissions = getRolePermissions(user?.role || 'employee');
+
+  // Check if user can create loans
+  if (!permissions.canCreate && !isEditMode) {
+    return (
+      <div className="w-full mx-auto px-4 pb-20 lg:pb-4">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
+          <ArrowLeft size={16} /> Back
+        </button>
+        
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} className="text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground mb-4">
+            {user?.role === 'manager' 
+              ? 'Managers can only view and edit existing loan applications, but cannot create new ones.'
+              : 'You do not have permission to create loan applications.'}
+          </p>
+          <button
+            onClick={() => navigate('/loans')}
+            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity"
+          >
+            View Existing Loans
+          </button>
+        </div>
+      </div>
+    );
+  }
 
 
   const { data: banks = [] } = useQuery({

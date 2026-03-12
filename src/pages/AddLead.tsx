@@ -3,13 +3,44 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { getRolePermissions } from '@/lib/permissions';
+import { ArrowLeft, UserPlus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AddLead() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const permissions = getRolePermissions(user?.role || 'employee');
+
+  // Check if user can create leads
+  if (!permissions.canCreate) {
+    return (
+      <div>
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+          <ArrowLeft size={16} /> Back
+        </button>
+        
+        <div className="stat-card max-w-md mx-auto text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} className="text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground mb-4">
+            {user?.role === 'manager' 
+              ? 'Managers can only view and edit existing leads, but cannot create new ones.'
+              : 'You do not have permission to create leads.'}
+          </p>
+          <button
+            onClick={() => navigate('/leads-list')}
+            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity"
+          >
+            View Existing Leads
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const [form, setForm] = useState({
     customer_name: '',
