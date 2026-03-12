@@ -128,6 +128,20 @@ export default function Loans() {
     const matchStatus = statusFilter === 'all' || l.status === statusFilter;
     const loanPddStatus = l.pdd_status || 'pending';
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
+    
+    // Debug logging
+    console.log('Filtering loan:', l.loan_number, {
+      search: search,
+      matchSearch,
+      statusFilter,
+      loanStatus: l.status,
+      matchStatus,
+      pddStatusFilter,
+      loanPddStatus,
+      matchPddStatus,
+      finalResult: matchSearch && matchStatus && matchPddStatus
+    });
+    
     return matchSearch && matchStatus && matchPddStatus;
   });
 

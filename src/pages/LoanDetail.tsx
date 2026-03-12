@@ -37,11 +37,8 @@ export default function LoanDetail() {
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch loan');
-      return res.json();
+      const response = await loansAPI.getById(Number(id));
+      return response.data || response; // Handle both { data: loan } and direct loan formats
     },
     enabled: !!id,
   });
