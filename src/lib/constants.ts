@@ -30,27 +30,27 @@ export const WORKFLOW_CONFIG = {
     initialOwner: 'employee',
     canCreate: true,
     actions: [
-      { action: 'send_forward', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' },
+      { action: 'send_forward', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward', requiresRemarks: true },
     ],
   },
   manager: {
     canCreate: false,
     actions: [
-      { action: 'send_forward', nextStatus: 'manager_approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward' },
+      { action: 'send_forward', nextStatus: 'manager_approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward', requiresRemarks: true },
       { action: 'send_back', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true },
     ],
   },
   admin: {
     canCreate: false,
     actions: [
-      { action: 'send_forward', nextStatus: 'admin_approved', nextOwner: 'super_admin', label: 'Send to Super Admin', type: 'forward' },
+      { action: 'send_forward', nextStatus: 'admin_approved', nextOwner: 'super_admin', label: 'Send to Super Admin', type: 'forward', requiresRemarks: true },
       { action: 'send_back', nextStatus: 'sent_back_manager', nextOwner: 'manager', label: 'Send Back to Manager', type: 'back', requiresRemarks: true },
     ],
   },
   super_admin: {
     canCreate: false,
     actions: [
-      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Disburse', type: 'approve' },
+      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Disburse', type: 'approve', requiresRemarks: true },
       { action: 'send_back', nextStatus: 'sent_back_admin', nextOwner: 'admin', label: 'Send Back to Admin', type: 'back', requiresRemarks: true },
     ],
   },

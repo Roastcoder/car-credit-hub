@@ -13,7 +13,7 @@ import WorkflowStatus from '@/components/WorkflowStatus';
 import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -65,6 +65,14 @@ export default function LoanDetail() {
       });
       if (!res.ok) return [];
       return res.json();
+    },
+    enabled: !!id,
+  });
+  const { data: auditLogs = [] } = useQuery({
+    queryKey: ['loan-audit-logs', id],
+    queryFn: async () => {
+      const response = await loansAPI.getAuditLogs(id!);
+      return response.data || [];
     },
     enabled: !!id,
   });
@@ -343,6 +351,7 @@ export default function LoanDetail() {
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['loan', id] });
                 queryClient.invalidateQueries({ queryKey: ['loans'] });
+                queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
                 // Return to loans list after a successful workflow move
                 setTimeout(() => navigate('/loans'), 500);
               }}
@@ -639,8 +648,63 @@ export default function LoanDetail() {
 
         {/* Remarks Section */}
         {(loan as any).remark && (
-          <Section title="Remarks" icon={<MessageSquare size={16} />}>
+          <Section title="Latest Remarks" icon={<MessageSquare size={16} />}>
             <p className="text-sm text-foreground whitespace-pre-wrap">{(loan as any).remark}</p>
+          </Section>
+        )}
+
+        {/* Workflow History Section */}
+        {auditLogs.length > 0 && (
+          <Section title="Workflow History" icon={<Clock size={16} />}>
+            <div className="space-y-4">
+              {auditLogs.map((log: any, index: number) => (
+                <div key={log.id} className="relative pl-6 pb-4 last:pb-0">
+                  {/* Timeline connector */}
+                  {index < auditLogs.length - 1 && (
+                    <div className="absolute left-[7px] top-[18px] bottom-0 w-[2px] bg-border" />
+                  )}
+                  {/* Timeline dot */}
+                  <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background" />
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">
+                        {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase font-medium">
+                        {log.action_type?.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(log.performed_at).toLocaleString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-muted-foreground">
+                      Performed by <span className="text-foreground font-medium">{log.performed_by_name || 'System'}</span>
+                      {log.forwarded_to_role && (
+                        <span> • Forwarded to <span className="text-accent font-medium capitalize">{log.forwarded_to_role}</span></span>
+                      )}
+                    </p>
+                    {log.remarks && (
+                      <div className="mt-1.5 p-2.5 rounded-lg bg-accent/5 border border-accent/10">
+                        <p className="text-xs text-foreground italic whitespace-pre-wrap">
+                          "{log.remarks}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </Section>
         )}
       </div>
