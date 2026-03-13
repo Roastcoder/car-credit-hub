@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
+import { supabase, externalAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES } from '@/lib/constants';
 import { calculateEMI, formatCurrency } from '@/lib/utils';
@@ -156,24 +156,11 @@ export default function CreateLoan() {
 
     setFetchingVehicleData(true);
     try {
-      console.log('Fetching from API');
-      toast.info('Fetching from API...');
-      const response = await fetch('https://kyc-api.surepass.app/api/v1/rc/rc-v2', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2NjM5ODg5MiwianRpIjoiMjdiNjdiNWEtZjkyZC00YTZmLTk2NmMtMDhhZjc4ZjAwNmI2IiwidHlwZSI6ImFjY2VzcyIsImlkZW50aXR5IjoiZGV2LmZpbm9uZXN0aW5kaWFAc3VyZXBhc3MuaW8iLCJuYmYiOjE3NjYzOTg4OTIsImV4cCI6MjM5NzExODg5MiwiZW1haWwiOiJmaW5vbmVzdGluZGlhQHN1cmVwYXNzLmlvIiwidGVuYW50X2lkIjoibWFpbiIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJ1c2VyIl19fQ.dl1S5S3OxNs3hwxkwtLhcTAN6CmIlYa_hg4yOl5ASlg'
-        },
-        body: JSON.stringify({ id_number: rcNumber, enrich: true }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const rcData = await response.json();
-      console.log('RC API Response:', rcData);
-      console.log('RC Data fields:', Object.keys(rcData.data || {}));
+      console.log('Fetching from backend proxy');
+      toast.info('Fetching vehicle details...');
+      
+      const rcData = await externalAPI.fetchRCData(rcNumber);
+      console.log('RC Proxy Response:', rcData);
 
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
@@ -181,27 +168,19 @@ export default function CreateLoan() {
         setForm(f => ({
           ...f,
           // Vehicle Details
-          makerName: rc.maker_model || rc.vehicle_manufacturer_name || rc.manufacturer || rc.make || '',
-          modelVariantName: rc.model || rc.vehicle_model || rc.variant || rc.model_name || rc.vehicle_class || '',
-          mfgYear: rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || rc.manufacturing_year || rc.model_year || '',
+          makerName: rc.maker_description || rc.maker_model || rc.vehicle_manufacturer_name || rc.manufacturer || rc.make || '',
+          modelVariantName: rc.maker_model || rc.model || rc.vehicle_model || rc.variant || rc.model_name || rc.vehicle_class || '',
+          mfgYear: rc.manufacturing_date_formatted?.split('-')[0] || rc.manufacturing_date?.split('-')[0] || rc.registration_date?.split('-')[0] || rc.mfg_year || rc.year || rc.manufacturing_year || rc.model_year || '',
+          chassisNumber: rc.vehicle_chasi_number || rc.chassis_number || '',
+          engineNumber: rc.vehicle_engine_number || rc.engine_number || '',
 
           // RC/RTO Details  
           rcOwnerName: rc.owner_name || '',
-          rcMfgDate: formatDateToInput(rc.manufacturing_date || rc.registration_date),
-          rcExpiryDate: rc.fitness_upto ? (rc.fitness_upto.includes('/') ?
-            (() => {
-              const [month, year] = rc.fitness_upto.split('/');
-              const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-              return date.toISOString().split('T')[0];
-            })() : formatDateToInput(rc.fitness_upto)) : rc.tax_upto ? (rc.tax_upto.includes('/') ?
-              (() => {
-                const [month, year] = rc.tax_upto.split('/');
-                const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-                return date.toISOString().split('T')[0];
-              })() : formatDateToInput(rc.tax_upto)) : '',
+          rcMfgDate: formatDateToInput(rc.manufacturing_date_formatted || rc.manufacturing_date || rc.registration_date),
+          rcExpiryDate: formatDateToInput(rc.fit_up_to || rc.fitness_upto || rc.tax_upto || rc.tax_paid_upto),
           hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
           isFinanced: rc.financer ? 'Yes' : 'No',
-          fc: rc.fitness_upto ? 'Yes' : 'No',
+          fc: (rc.fit_up_to || rc.fitness_upto) ? 'Yes' : 'No',
 
           // Customer Details (only if empty)
           customerName: f.customerName || rc.owner_name || '',
@@ -223,9 +202,9 @@ export default function CreateLoan() {
       } else {
         toast.error('Could not fetch vehicle details');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching vehicle details:', error);
-      toast.error('Failed to fetch vehicle details');
+      toast.error(error.message || 'Failed to fetch vehicle details');
     } finally {
       setFetchingVehicleData(false);
     }
@@ -240,7 +219,9 @@ export default function CreateLoan() {
     permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
     // Loan & Vehicle Details
     loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
-    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', vertical: '', scheme: '',
+    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', 
+    chassisNumber: '', engineNumber: '',
+    vertical: '', scheme: '',
     // Income Details
     incomeSource: '', monthlyIncome: '',
     // RTO Details
@@ -322,6 +303,8 @@ export default function CreateLoan() {
         makerName: existingLoan.maker_name || '',
         modelVariantName: existingLoan.model_variant_name || '',
         mfgYear: existingLoan.mfg_year || '',
+        chassisNumber: existingLoan.chassis_number || '',
+        engineNumber: existingLoan.engine_number || '',
         vertical: existingLoan.vertical || '',
         scheme: existingLoan.scheme || '',
         incomeSource: existingLoan.income_source || '',
@@ -556,6 +539,8 @@ export default function CreateLoan() {
           maker_name: form.makerName || null,
           model_variant_name: form.modelVariantName || null,
           mfg_year: form.mfgYear || null,
+          chassis_number: form.chassisNumber || null,
+          engine_number: form.engineNumber || null,
           vertical: form.vertical || null,
           scheme: form.scheme || null,
           emi_amount: emi || null,
@@ -762,6 +747,8 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
+                <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} placeholder="Enter chassis number" /></div>
+                <div><label className={labelClass}>Engine Number</label><input className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} placeholder="Enter engine number" /></div>
                 <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV (Car)">PV (Car)</option><option value="CV">CV</option><option value="Tractor">Tractor</option></select></div>
                 <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option></select></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>

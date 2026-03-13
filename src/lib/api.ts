@@ -162,6 +162,11 @@ export const financersAPI = {
   delete: (id: number) => api.delete(`/financers/${id}`),
 };
 
+// External APIs (Proxied via backend)
+export const externalAPI = {
+  fetchRCData: (rcNumber: string) => api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true }),
+};
+
 // Legacy supabase compatibility shim (for components using supabase.auth.*)
 export const supabase = {
   auth: {
