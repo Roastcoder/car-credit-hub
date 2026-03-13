@@ -399,6 +399,8 @@ export default function LoanDetail() {
               <Field label="Email Address" value={(loan as any).customer_email || '—'} />
               <Field label="PAN Number" value={(loan as any).pan || '—'} />
               <Field label="Aadhaar Number" value={(loan as any).aadhaar || '—'} />
+              <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
+              <Field label="Sourcing Person" value={(loan as any).sourcing_person_name || '—'} />
               <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
               <div className="col-span-2">
                 <Field 
@@ -450,7 +452,7 @@ export default function LoanDetail() {
               <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
               <Field label="Vertical" value={(loan as any).vertical || '—'} />
               <Field label="Scheme" value={(loan as any).scheme || '—'} />
-              <Field label="Vehicle Type" value={loan.car_variant || '—'} />
+              <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
               <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
             </div>
           </Section>
@@ -464,6 +466,8 @@ export default function LoanDetail() {
               <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
               <Field label="EMI Start Date" value={(loan as any).emi_start_date || '—'} />
               <Field label="EMI End Date" value={(loan as any).emi_end_date || '—'} />
+              <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
+              <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
               <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
               <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
             </div>
@@ -477,6 +481,8 @@ export default function LoanDetail() {
               <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
               <Field label="Sanction Date" value={(loan as any).sanction_date || '—'} />
               <Field label="Disbursement Date" value={(loan as any).disbursement_date || '—'} />
+              <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
+              <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
             </div>
           </Section>
 
@@ -497,6 +503,7 @@ export default function LoanDetail() {
               <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
               <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
               <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
+              <Field label="Login Date" value={(loan as any).login_date || '—'} />
             </div>
           </Section>
 
@@ -511,6 +518,7 @@ export default function LoanDetail() {
               <Field label="Payment Date" value={(loan as any).payment_received_date || '—'} />
               <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
               <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_pf || 0))} />
+              <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
             </div>
           </Section>
         </div>

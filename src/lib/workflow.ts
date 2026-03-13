@@ -133,9 +133,9 @@ export class WorkflowService {
       case 'employee':
         return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled'];
       case 'manager':
-        return ['manager_review', 'sent_back_manager', 'under_review'];
+        return ['manager_review', 'under_review', 'sent_back_manager'];
       case 'admin':
-        return ['manager_approved', 'sent_back_admin', 'approved'];
+        return ['manager_approved', 'approved', 'sent_back_admin'];
       case 'super_admin':
         return ['admin_approved', 'disbursed'];
       default:
