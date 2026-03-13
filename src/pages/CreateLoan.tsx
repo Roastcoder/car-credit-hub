@@ -323,8 +323,14 @@ export default function CreateLoan() {
         challan: existingLoan.challan || 'No',
         fc: existingLoan.fc || 'No',
         rtoPapers: existingLoan.rto_papers || '',
-        rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
-        rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false,
+        rtoRC: !!existingLoan.rto_rc,
+        rtoNOC: !!existingLoan.rto_noc,
+        rtoPermit: !!existingLoan.rto_permit,
+        rtoPollution: !!existingLoan.rto_pollution,
+        rto2930Form: !!existingLoan.rto_2930_form,
+        rtoSellAgreement: !!existingLoan.rto_sell_agreement,
+        rtoRCOwnerKYC: !!existingLoan.rto_rc_owner_kyc,
+        rtoStampPapers: !!existingLoan.rto_stamp_papers,
         irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
         tenure: String(existingLoan.tenure || '60'),
         emiMode: existingLoan.emi_mode || 'Monthly',
@@ -580,6 +586,28 @@ export default function CreateLoan() {
           remark: form.remark || null,
           status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) || 'submitted',
           created_by: user?.id,
+          // Newly Synced Fields
+          current_state: form.currentState || null,
+          permanent_state: form.permanentState || null,
+          purpose_loan_amount: form.purposeLoanAmount || null,
+          emi_mode: form.emiMode || 'Monthly',
+          financier_executive_name: form.financierExecutiveName || null,
+          financier_team_vertical: form.financierTeamVertical || null,
+          disburse_branch_name: form.disburseBranchName || null,
+          hpn_at_login: form.hpnAtLogin || null,
+          is_financed: form.isFinanced || null,
+          fc: form.fc || null,
+          rc_mfg_date: form.rcMfgDate || null,
+          rc_expiry_date: form.rcExpiryDate || null,
+          // RTO Checkboxes
+          rto_rc: form.rtoRC || false,
+          rto_noc: form.rtoNOC || false,
+          rto_permit: form.rtoPermit || false,
+          rto_pollution: form.rtoPollution || false,
+          rto_2930_form: form.rto2930Form || false,
+          rto_sell_agreement: form.rtoSellAgreement || false,
+          rto_rc_owner_kyc: form.rtoRCOwnerKYC || false,
+          rto_stamp_papers: form.rtoStampPapers || false,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -820,6 +848,33 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
                 <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
                 <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
+                
+                {/* RTO Papers Checklist */}
+                <div className="md:col-span-3 mt-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">RTO Papers Present</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { id: 'rtoRC', label: 'RC' },
+                      { id: 'rtoNOC', label: 'NOC' },
+                      { id: 'rtoPermit', label: 'Permit' },
+                      { id: 'rtoPollution', label: 'Pollution' },
+                      { id: 'rto2930Form', label: '29/30 Form' },
+                      { id: 'rtoSellAgreement', label: 'Sell Agreement' },
+                      { id: 'rtoRCOwnerKYC', label: 'RC Owner KYC' },
+                      { id: 'rtoStampPapers', label: 'Stamp Papers' },
+                    ].map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors">
+                        <input 
+                          type="checkbox" 
+                          checked={(form as any)[item.id]} 
+                          onChange={e => update(item.id, e.target.checked)}
+                          className="w-4 h-4 rounded border-border text-accent focus:ring-accent"
+                        />
+                        <span className="text-xs font-medium">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

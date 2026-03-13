@@ -130,21 +130,20 @@ export class WorkflowService {
   static shouldShowLoanToUser(loan: any, userRole: string): boolean {
     const ownerRole = this.getOwnerRole(loan.status);
     
-    // Show if:
-    // 1. User is the owner.
-    // 2. User is Super Admin (sees everything).
-    // 3. User is Manager and status is 'submitted' (they can pull it).
-    // 4. Status is a 'sent_back_ROLE' where ROLE is userRole.
-    
     if (userRole === 'super_admin') return true;
     if (userRole === ownerRole) return true;
     if (userRole === 'manager' && loan.status === 'submitted') return true;
     
-    if (loan.status?.includes('sent_back')) {
+    // Check for sent back to this role
+    if (loan.status?.startsWith('sent_back_')) {
       const sentBackRole = loan.status.replace('sent_back_', '');
-      return userRole === sentBackRole;
+      if (userRole === sentBackRole) return true;
     }
     
+    // Also allow viewing if they have acted on it previously (audit logs) or if it is in their stage
+    const visibleStatuses = this.getVisibleLoansForRole(userRole);
+    if (visibleStatuses.includes(loan.status)) return true;
+
     return false;
   }
 
@@ -218,6 +217,14 @@ export class WorkflowService {
 
   static canEditLoan(userRole: string, loanStatus: LoanStatus): boolean {
     const ownerRole = this.getOwnerRole(loanStatus);
-    return userRole === ownerRole && userRole === 'employee';
+    
+    // Allow edit if:
+    // 1. User is the current owner
+    // 2. AND (Status is NOT disburse/rejected/cancelled)
+    
+    const terminalStatuses = ['disbursed', 'rejected', 'cancelled'];
+    if (terminalStatuses.includes(loanStatus)) return false;
+    
+    return userRole === ownerRole;
   }
 }

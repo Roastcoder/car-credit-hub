@@ -120,10 +120,10 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Send Back Application
+                  {availableActions.find(a => a.action === showRemarksModal)?.label || 'Workflow Action'}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Please provide remarks for sending back this application:
+                  Please provide remarks for this action:
                 </p>
                 <textarea
                   value={remarks}
@@ -146,13 +146,17 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
               >
                 Cancel
               </button>
-              <button
-                onClick={handleRemarksSubmit}
-                disabled={workflowMutation.isPending}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-orange-500 text-sm font-medium text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {workflowMutation.isPending ? 'Sending...' : 'Send Back'}
-              </button>
+                <button
+                  onClick={handleRemarksSubmit}
+                  disabled={workflowMutation.isPending}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    availableActions.find(a => a.action === showRemarksModal)?.type === 'back' 
+                      ? 'bg-orange-500 hover:bg-orange-600' 
+                      : 'bg-green-500 hover:bg-green-600'
+                  }`}
+                >
+                  {workflowMutation.isPending ? 'Processing...' : (availableActions.find(a => a.action === showRemarksModal)?.label || 'Confirm')}
+                </button>
             </div>
           </div>
         </div>
