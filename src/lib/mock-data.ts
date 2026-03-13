@@ -24,7 +24,7 @@ export const WORKFLOW_CONFIG = {
     initialOwner: 'employee',
     canCreate: true,
     actions: [
-      { action: 'send_to_manager', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' }
+      { action: 'send_forward', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' }
     ]
   },
   manager: {
