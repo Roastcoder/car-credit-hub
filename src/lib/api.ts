@@ -156,12 +156,27 @@ export const api = {
         // Handle workflow actions
         const workflowMatch = endpoint.match(/\/loans\/([^/]+)\/workflow$/);
         if (workflowMatch) {
+          const loanId = workflowMatch[1];
           const body = JSON.parse(options.body as string);
+          
+          const loan = MOCK_LOANS.find(l => l.id === loanId || l.loan_number === loanId);
+          if (!loan) throw new Error('Loan not found');
+          
+          // Use the owner role of the current status to determine next step
+          const currentOwnerRole = WorkflowService.getOwnerRole(loan.status as any);
+          const result = WorkflowService.getNextStatusAndOwner(currentOwnerRole, body.action);
+          
+          if (!result) throw new Error(`Action '${body.action}' not valid for role '${currentOwnerRole}' at status '${loan.status}'`);
+          
+          // Update the mock loan in memory (for this session)
+          loan.status = result.status;
+          loan.owner_role = result.owner;
+          
           return { 
             message: 'Workflow action performed successfully', 
             action: body.action,
-            newStatus: body.action === 'approve' ? 'manager_approved' : 'sent_back_employee',
-            newOwner: body.action === 'approve' ? 'admin' : 'employee'
+            newStatus: result.status,
+            newOwner: result.owner
           };
         }
       }

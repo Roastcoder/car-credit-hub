@@ -1,15 +1,20 @@
-export type LoanStatus = 'submitted' | 'under_review' | 'approved' | 'disbursed' | 'sent_back_employee' | 'sent_back_manager' | 'sent_back_admin' | 'rejected' | 'cancelled';
+export type LoanStatus = 'draft' | 'submitted' | 'manager_review' | 'manager_approved' | 'admin_approved' | 'disbursed' | 'sent_back_employee' | 'sent_back_manager' | 'sent_back_admin' | 'rejected' | 'cancelled' | 'under_review' | 'approved';
 
 export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[] = [
+  { value: 'draft', label: 'Draft', color: 'status-draft' },
   { value: 'submitted', label: 'Submitted', color: 'status-submitted' },
-  { value: 'under_review', label: 'Under Review', color: 'status-review' },
-  { value: 'approved', label: 'Approved', color: 'status-approved' },
+  { value: 'manager_review', label: 'Manager Review', color: 'status-review' },
+  { value: 'manager_approved', label: 'Manager Approved', color: 'status-approved' },
+  { value: 'admin_approved', label: 'Admin Approved', color: 'status-approved' },
   { value: 'disbursed', label: 'Disbursed', color: 'status-disbursed' },
-  { value: 'sent_back_employee', label: 'Sent Back to Employee', color: 'status-sent-back' },
-  { value: 'sent_back_manager', label: 'Sent Back to Manager', color: 'status-sent-back' },
-  { value: 'sent_back_admin', label: 'Sent Back to Admin', color: 'status-sent-back' },
+  { value: 'sent_back_employee', label: 'Sent Back (Emp)', color: 'status-sent-back' },
+  { value: 'sent_back_manager', label: 'Sent Back (Mgr)', color: 'status-sent-back' },
+  { value: 'sent_back_admin', label: 'Sent Back (Adm)', color: 'status-sent-back' },
   { value: 'rejected', label: 'Rejected', color: 'status-rejected' },
   { value: 'cancelled', label: 'Cancelled', color: 'status-cancelled' },
+  // Keep legacy for compatibility during migration
+  { value: 'under_review', label: 'Under Review', color: 'status-review' },
+  { value: 'approved', label: 'Approved', color: 'status-approved' },
 ];
 
 // Workflow configuration with forward and back actions
@@ -19,20 +24,20 @@ export const WORKFLOW_CONFIG = {
     initialOwner: 'employee',
     canCreate: true,
     actions: [
-      { action: 'send_to_manager', nextStatus: 'under_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' }
+      { action: 'send_to_manager', nextStatus: 'manager_review', nextOwner: 'manager', label: 'Send to Manager', type: 'forward' }
     ]
   },
   manager: {
     canCreate: false,
     actions: [
-      { action: 'send_to_admin', nextStatus: 'approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward' },
+      { action: 'send_to_admin', nextStatus: 'manager_approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward' },
       { action: 'send_back_employee', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true }
     ]
   },
   admin: {
     canCreate: false,
     actions: [
-      { action: 'send_to_super_admin', nextStatus: 'disbursed', nextOwner: 'super_admin', label: 'Send to Super Admin', type: 'forward' },
+      { action: 'send_to_super_admin', nextStatus: 'admin_approved', nextOwner: 'super_admin', label: 'Send to Super Admin', type: 'forward' },
       { action: 'send_back_manager', nextStatus: 'sent_back_manager', nextOwner: 'manager', label: 'Send Back to Manager', type: 'back', requiresRemarks: true }
     ]
   },
@@ -47,22 +52,27 @@ export const WORKFLOW_CONFIG = {
 
 // Status to owner role mapping
 export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
+  'draft': 'employee',
   'submitted': 'employee',
-  'under_review': 'manager',
-  'approved': 'admin',
+  'manager_review': 'manager',
+  'manager_approved': 'admin',
+  'admin_approved': 'super_admin',
   'disbursed': 'super_admin',
   'sent_back_employee': 'employee',
   'sent_back_manager': 'manager',
   'sent_back_admin': 'admin',
   'rejected': 'employee',
-  'cancelled': 'employee'
+  'cancelled': 'employee',
+  'under_review': 'manager',
+  'approved': 'admin'
 };
 
 // Workflow steps for progress tracking
 export const WORKFLOW_STEPS = [
   { status: 'submitted', label: 'Submitted', description: 'Application created by employee', role: 'Employee' },
-  { status: 'under_review', label: 'Under Review', description: 'Being reviewed by manager', role: 'Manager' },
-  { status: 'approved', label: 'Approved', description: 'Approved by admin', role: 'Admin' },
+  { status: 'manager_review', label: 'Under Review', description: 'Being reviewed by manager', role: 'Manager' },
+  { status: 'manager_approved', label: 'Manager Approved', description: 'Approved by manager', role: 'Manager' },
+  { status: 'admin_approved', label: 'Admin Approved', description: 'Approved by admin', role: 'Admin' },
   { status: 'disbursed', label: 'Disbursed', description: 'Final disbursement', role: 'Super Admin' }
 ];
 

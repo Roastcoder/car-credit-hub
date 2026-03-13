@@ -16,7 +16,7 @@ export class WorkflowService {
 
   static getAvailableActions(userRole: string): WorkflowAction[] {
     const config = WORKFLOW_CONFIG[userRole as keyof typeof WORKFLOW_CONFIG];
-    return config?.actions || [];
+    return (config?.actions as WorkflowAction[]) || [];
   }
 
   static canCreateLoan(userRole: string): boolean {
@@ -174,15 +174,19 @@ export class WorkflowService {
 
   static getStatusProgress(currentStatus: LoanStatus): number {
     const progressMap: Record<LoanStatus, number> = {
+      'draft': 5,
       'submitted': 20,
-      'under_review': 40,
-      'approved': 60,
+      'manager_review': 40,
+      'manager_approved': 60,
+      'admin_approved': 80,
       'disbursed': 100,
-      'sent_back_employee': 10,
-      'sent_back_manager': 30,
-      'sent_back_admin': 50,
+      'sent_back_employee': 15,
+      'sent_back_manager': 35,
+      'sent_back_admin': 55,
       'rejected': 0,
-      'cancelled': 0
+      'cancelled': 0,
+      'under_review': 40,
+      'approved': 60
     };
     
     return progressMap[currentStatus] || 0;

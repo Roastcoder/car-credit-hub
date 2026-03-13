@@ -394,23 +394,63 @@ export default function LoanDetail() {
           {/* Applicant Information */}
           <Section title="Applicant Information" icon={<User size={16} />}>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Name" value={loan.applicant_name || (loan as any).customer_name} />
-              <Field label="Mobile" value={loan.mobile || (loan as any).customer_phone} />
-              <Field label="Email" value={(loan as any).customer_email || '—'} />
-              <Field label="PAN" value={(loan as any).pan || '—'} />
-              <Field label="Aadhaar" value={(loan as any).aadhaar || '—'} />
-              <Field label="Address" value={(loan as any).current_address || loan.address || '—'} />
+              <Field label="Applicant Name" value={loan.applicant_name || (loan as any).customer_name} />
+              <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
+              <Field label="Email Address" value={(loan as any).customer_email || '—'} />
+              <Field label="PAN Number" value={(loan as any).pan || '—'} />
+              <Field label="Aadhaar Number" value={(loan as any).aadhaar || '—'} />
+              <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
+              <div className="col-span-2">
+                <Field 
+                  label="Current Address" 
+                  value={[
+                    (loan as any).current_address,
+                    (loan as any).current_village,
+                    (loan as any).current_tehsil,
+                    (loan as any).current_district,
+                    (loan as any).current_state,
+                    (loan as any).current_pincode
+                  ].filter(Boolean).join(', ') || '—'} 
+                />
+              </div>
+              <div className="col-span-2">
+                <Field 
+                  label="Permanent Address" 
+                  value={[
+                    (loan as any).permanent_address,
+                    (loan as any).permanent_village,
+                    (loan as any).permanent_tehsil,
+                    (loan as any).permanent_district,
+                    (loan as any).permanent_state,
+                    (loan as any).permanent_pincode
+                  ].filter(Boolean).join(', ') || '—'} 
+                />
+              </div>
             </div>
           </Section>
+
+          {/* Co-Applicant & Guarantor Details */}
+          {( (loan as any).co_applicant_name || (loan as any).guarantor_name ) && (
+            <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
+                <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
+                <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
+                <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
+              </div>
+            </Section>
+          )}
 
           {/* Vehicle Information */}
           <Section title="Vehicle Information" icon={<Car size={16} />}>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Make" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
-              <Field label="Model" value={(loan as any).model_variant_name || loan.car_model} />
-              <Field label="Variant" value={loan.car_variant || '—'} />
-              <Field label="Year" value={(loan as any).mfg_year || '—'} />
-              <Field label="Vehicle Number" value={(loan as any).vehicle_number || '—'} />
+              <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
+              <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
+              <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
+              <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
+              <Field label="Vertical" value={(loan as any).vertical || '—'} />
+              <Field label="Scheme" value={(loan as any).scheme || '—'} />
+              <Field label="Vehicle Type" value={loan.car_variant || '—'} />
               <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
             </div>
           </Section>
@@ -419,11 +459,13 @@ export default function LoanDetail() {
           <Section title="Loan Information" icon={<IndianRupee size={16} />}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
-              <Field label="Down Payment" value={formatCurrency(Number((loan as any).down_payment || loan.downPayment || 0))} />
-              <Field label="EMI" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
-              <Field label="Tenure" value={`${(loan as any).tenure_months || loan.tenure || 0} months`} />
-              <Field label="Interest Rate" value={`${(loan as any).interest_rate || loan.interestRate || 0}%`} />
+              <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
+              <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+              <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
+              <Field label="EMI Start Date" value={(loan as any).emi_start_date || '—'} />
+              <Field label="EMI End Date" value={(loan as any).emi_end_date || '—'} />
               <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
+              <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
             </div>
           </Section>
 
@@ -435,7 +477,40 @@ export default function LoanDetail() {
               <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
               <Field label="Sanction Date" value={(loan as any).sanction_date || '—'} />
               <Field label="Disbursement Date" value={(loan as any).disbursement_date || '—'} />
-              <Field label="Branch" value={(loan as any).our_branch || '—'} />
+            </div>
+          </Section>
+
+          {/* Insurance Information */}
+          <Section title="Insurance Details" icon={<FileText size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
+              <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
+              <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
+              <Field label="Policy Date" value={(loan as any).insurance_date || '—'} />
+              <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
+            </div>
+          </Section>
+
+          {/* RTO details */}
+          <Section title="RTO Details" icon={<MapPin size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
+              <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
+              <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
+            </div>
+          </Section>
+
+          {/* Disbursement details */}
+          <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Total Deduction" value={formatCurrency(Number((loan as any).total_deduction || 0))} />
+              <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
+              <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
+              <Field label="Net Seed Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
+              <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
+              <Field label="Payment Date" value={(loan as any).payment_received_date || '—'} />
+              <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+              <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_pf || 0))} />
             </div>
           </Section>
         </div>

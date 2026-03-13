@@ -29,8 +29,14 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
     onSuccess: (result) => {
       const actionLabels: Record<string, string> = {
         'send_to_manager': 'sent to manager',
+        'send_to_admin': 'sent to admin',
+        'send_to_super_admin': 'sent to super admin',
         'approve': 'approved',
-        'send_back': 'sent back'
+        'disburse': 'disbursed',
+        'send_back_employee': 'sent back to employee',
+        'send_back_manager': 'sent back to manager',
+        'send_back_admin': 'sent back to admin',
+        'reject': 'rejected'
       };
       
       toast.success(`Loan ${actionLabels[result.action] || 'updated'} successfully`);
@@ -45,12 +51,15 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
 
   if (!user) return null;
 
-  const availableActions = WorkflowService.getAvailableActions(user.role);
+  const availableActions = WorkflowService.getAvailableActions(user.role).filter(actionConfig => 
+    WorkflowService.canPerformAction(user.role, currentStatus, actionConfig.action)
+  );
   
   if (availableActions.length === 0) return null;
 
   const handleAction = (action: string) => {
-    if (action === 'send_back') {
+    const actionConfig = availableActions.find(a => a.action === action);
+    if (actionConfig?.requiresRemarks) {
       setShowRemarksModal(action);
     } else {
       workflowMutation.mutate({ action });
@@ -70,8 +79,8 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
     <>
       <div className="flex items-center gap-2">
         {availableActions.map((actionConfig) => {
-          const isApprove = actionConfig.action === 'approve' || actionConfig.action === 'send_to_manager';
-          const isSendBack = actionConfig.action === 'send_back';
+          const isApprove = actionConfig.type === 'forward' || actionConfig.type === 'approve';
+          const isSendBack = actionConfig.type === 'back';
           
           return (
             <button
