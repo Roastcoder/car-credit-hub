@@ -70,7 +70,8 @@ export default function CreateLoan() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loan');
-      return res.json();
+      const data = await res.json();
+      return data.data; // Unwrap the data
     },
     enabled: isEditMode,
   });
