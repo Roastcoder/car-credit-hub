@@ -1,10 +1,11 @@
-import { Check, Clock, User, Shield, CreditCard } from 'lucide-react';
+import { Check, Clock, User, Shield, CreditCard, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const WORKFLOW_STEPS = [
   { status: 'submitted', icon: <User size={10} />, label: 'Sub' },
-  { status: 'under_review', icon: <Clock size={10} />, label: 'Rev' },
-  { status: 'approved', icon: <Shield size={10} />, label: 'App' },
+  { status: 'manager_review', icon: <Clock size={10} />, label: 'Rev' },
+  { status: 'manager_approved', icon: <Users size={10} />, label: 'MAp' },
+  { status: 'admin_approved', icon: <Shield size={10} />, label: 'AAp' },
   { status: 'disbursed', icon: <CreditCard size={10} />, label: 'Dis' }
 ];
 

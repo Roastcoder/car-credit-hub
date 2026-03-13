@@ -18,15 +18,22 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     role: 'Employee'
   },
   {
-    status: 'under_review',
+    status: 'manager_review',
     label: 'Under Review',
     description: 'Being reviewed by manager',
     icon: <Clock size={16} />,
     role: 'Manager'
   },
   {
-    status: 'approved',
-    label: 'Approved',
+    status: 'manager_approved',
+    label: 'Manager Approved',
+    description: 'Approved by manager',
+    icon: <Users size={16} />,
+    role: 'Manager'
+  },
+  {
+    status: 'admin_approved',
+    label: 'Admin Approved',
     description: 'Approved by admin',
     icon: <Shield size={16} />,
     role: 'Admin'

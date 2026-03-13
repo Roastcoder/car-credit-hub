@@ -1,4 +1,4 @@
-import { Check, Clock, User, Shield, CreditCard, ArrowRight } from 'lucide-react';
+import { Check, Clock, User, Shield, CreditCard, ArrowRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkflowStep {
@@ -16,14 +16,20 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     icon: <User size={14} />
   },
   {
-    status: 'under_review',
+    status: 'manager_review',
     label: 'Under Review',
     description: 'Being reviewed by manager',
     icon: <Clock size={14} />
   },
   {
-    status: 'approved',
-    label: 'Approved',
+    status: 'manager_approved',
+    label: 'Manager Approved',
+    description: 'Approved by manager',
+    icon: <Users size={14} />
+  },
+  {
+    status: 'admin_approved',
+    label: 'Admin Approved',
     description: 'Approved by admin',
     icon: <Shield size={14} />
   },

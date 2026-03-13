@@ -131,13 +131,13 @@ export class WorkflowService {
   static getVisibleLoansForRole(userRole: string): string[] {
     switch (userRole) {
       case 'employee':
-        return ['submitted', 'sent_back_employee'];
+        return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled'];
       case 'manager':
-        return ['under_review', 'sent_back_manager'];
+        return ['manager_review', 'sent_back_manager', 'under_review'];
       case 'admin':
-        return ['approved', 'sent_back_admin'];
+        return ['manager_approved', 'sent_back_admin', 'approved'];
       case 'super_admin':
-        return ['disbursed'];
+        return ['admin_approved', 'disbursed'];
       default:
         return [];
     }
@@ -166,9 +166,10 @@ export class WorkflowService {
   static getWorkflowSteps(): Array<{ status: LoanStatus; label: string; role: string }> {
     return [
       { status: 'submitted', label: 'Submitted', role: 'Employee' },
-      { status: 'under_review', label: 'Under Review', role: 'Manager' },
-      { status: 'approved', label: 'Approved', role: 'Admin' },
-      { status: 'disbursed', label: 'Disbursed', role: 'Super Admin' }
+      { status: 'manager_review', label: 'Under Review', role: 'Manager' },
+      { status: 'manager_approved', label: 'Manager Approved', role: 'Admin' },
+      { status: 'admin_approved', label: 'Admin Approved', role: 'Super Admin' },
+      { status: 'disbursed', label: 'Disbursed', role: 'Complete' }
     ];
   }
 
