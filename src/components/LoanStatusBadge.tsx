@@ -1,4 +1,5 @@
-import { LoanStatus, LOAN_STATUSES } from '@/lib/mock-data';
+import { LOAN_STATUSES } from '@/lib/constants';
+import type { LoanStatus } from '@/lib/types';
 
 export default function LoanStatusBadge({ status }: { status: LoanStatus }) {
   const s = LOAN_STATUSES.find(ls => ls.value === status);

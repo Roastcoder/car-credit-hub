@@ -1,4 +1,5 @@
-import { WORKFLOW_CONFIG, LoanStatus, WorkflowAuditLog, STATUS_OWNER_MAP } from './mock-data';
+import { WORKFLOW_CONFIG, STATUS_OWNER_MAP } from './constants';
+import type { LoanStatus, WorkflowAuditLog } from './types';
 
 export interface WorkflowAction {
   action: string;

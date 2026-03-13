@@ -1,4 +1,4 @@
-import { formatCurrency } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
 import logoImg from '@/assets/logo.png';
 

@@ -2,7 +2,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 import LoanStatusBadge from '@/components/LoanStatusBadge';
-import { formatCurrency, LOAN_STATUSES } from '@/lib/mock-data';
+import { LOAN_STATUSES } from '@/lib/constants';
+import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatCurrency } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/utils';
 import { exportToCSV } from '@/lib/export-utils';
 import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatCurrency } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/utils';
 import { exportToCSV } from '@/lib/export-utils';
 import { CreditCard, Download, Filter, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';

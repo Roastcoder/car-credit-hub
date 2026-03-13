@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatCurrency } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/utils';
 import { Building2, Search, Plus, TrendingUp, FileText, Edit } from 'lucide-react';
 import { BankFormModal } from '@/components/BankFormModal';
 

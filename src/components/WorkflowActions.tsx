@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { WorkflowService } from '@/lib/workflow';
-import { LoanStatus } from '@/lib/mock-data';
+import type { LoanStatus } from '@/lib/types';
 import { loansAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, ArrowLeft, MessageSquare, Send } from 'lucide-react';
