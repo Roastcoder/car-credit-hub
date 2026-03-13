@@ -38,9 +38,11 @@ export default function Loans() {
         // Use the proper API wrapper that handles role-based filtering
         const response = await loansAPI.getAll();
         console.log('API Response:', response);
-        // Ensure we always return an array
-        const data = response?.data;
-        console.log('Extracted data:', data, 'Is array:', Array.isArray(data));
+        // Robust data extraction: handle {data: []} or just []
+        let data = response;
+        if (response && typeof response === 'object' && !Array.isArray(response) && response.data) {
+          data = response.data;
+        }
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Failed to fetch loans:', error);
@@ -160,44 +162,47 @@ export default function Loans() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1 max-w-sm relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search by name, ID, or car..."
+            placeholder="Search name, ID, or car..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
           />
         </div>
-        <div className="flex gap-2 flex-wrap items-center mt-1 sm:mt-0">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'all' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-          >All</button>
-          {LOAN_STATUSES.map(s => (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(s.value as LoanStatusFilter)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${statusFilter === s.value ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-            >{s.label}</button>
-          ))}
+        
+        <div className="flex gap-2 min-w-[300px]">
+          <div className="flex-1">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as LoanStatusFilter)}
+              className="w-full px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.67%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10"
+            >
+              <option value="all">All Statuses</option>
+              {LOAN_STATUSES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex-1">
+            <select
+              value={pddStatusFilter}
+              onChange={(e) => setPddStatusFilter(e.target.value as PDDStatusFilter)}
+              className="w-full px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.67%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10"
+            >
+              <option value="all">All PDD Status</option>
+              {(['pending', 'pending_approval', 'approved', 'rejected'] as PDDStatusFilter[]).map((status) => (
+                <option key={status} value={status}>
+                  PDD {status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
-
-      <div className="flex gap-2 flex-wrap items-center mb-4">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">PDD</span>
-        {(['all', 'pending', 'pending_approval', 'approved', 'rejected'] as PDDStatusFilter[]).map((status) => (
-          <button
-            key={status}
-            onClick={() => setPddStatusFilter(status)}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pddStatusFilter === status ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-          >
-            {status === 'all' ? 'All PDD' : status.replace(/_/g, ' ')}
-          </button>
-        ))}
       </div>
 
       {/* Mobile Card View */}

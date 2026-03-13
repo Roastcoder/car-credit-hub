@@ -116,7 +116,14 @@ export class WorkflowService {
   }
 
   static getAuditLogs(loanId?: string): WorkflowAuditLog[] {
-    const logs = JSON.parse(localStorage.getItem('workflow_audit_logs') || '[]');
+    const rawLogs = localStorage.getItem('workflow_audit_logs');
+    let logs: WorkflowAuditLog[] = [];
+    try {
+      logs = JSON.parse(rawLogs || '[]');
+      if (!Array.isArray(logs)) logs = [];
+    } catch (e) {
+      logs = [];
+    }
     return loanId ? logs.filter((log: WorkflowAuditLog) => log.loan_id === loanId) : logs;
   }
 
@@ -158,6 +165,7 @@ export class WorkflowService {
   }
 
   static getNextLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+    if (!Array.isArray(loans)) return null;
     const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
     const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
     
@@ -168,6 +176,7 @@ export class WorkflowService {
   }
 
   static getPreviousLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+    if (!Array.isArray(loans)) return null;
     const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
     const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
     
