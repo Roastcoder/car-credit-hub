@@ -23,7 +23,6 @@ export default function Loans() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<LoanStatusFilter>('all');
   const [pddStatusFilter, setPddStatusFilter] = useState<PDDStatusFilter>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; loanId: string; currentRemarks: string }>({ open: false, loanId: '', currentRemarks: '' });
@@ -131,7 +130,7 @@ export default function Loans() {
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.id?.toLowerCase().includes(search.toLowerCase()) ||
       l.car_model?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || l.status === statusFilter;
+    const matchStatus = true; // Status filter removed from UI
     const loanPddStatus = l.pdd_status || 'pending';
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
     
@@ -176,19 +175,7 @@ export default function Loans() {
           />
         </div>
         
-        <div className="flex gap-2 min-w-[300px]">
-          <div className="flex-1">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as LoanStatusFilter)}
-              className="w-full px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.67%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10"
-            >
-              <option value="all">All Statuses</option>
-              {LOAN_STATUSES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
+        <div className="flex gap-2 min-w-[200px]">
           
           <div className="flex-1">
             <select
