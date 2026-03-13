@@ -42,8 +42,7 @@ export class WorkflowService {
     // 3. Managers can act on 'submitted' files (to pull/forward them).
     const isAuthorized = 
       userRole === ownerRole || 
-      userRole === 'super_admin' || 
-      (userRole === 'manager' && currentStatus === 'submitted');
+      userRole === 'super_admin';
 
     if (!isAuthorized) return false;
 
@@ -132,7 +131,6 @@ export class WorkflowService {
     
     if (userRole === 'super_admin') return true;
     if (userRole === ownerRole) return true;
-    if (userRole === 'manager' && loan.status === 'submitted') return true;
     
     // Check for sent back to this role
     if (loan.status?.startsWith('sent_back_')) {
