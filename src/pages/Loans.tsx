@@ -50,6 +50,8 @@ export default function Loans() {
       }
     },
     enabled: !!user,
+    refetchInterval: 10000, // Auto-refresh every 10 seconds (AJAX behavior)
+    refetchOnWindowFocus: true,
   });
 
   const updateStatus = useMutation({
