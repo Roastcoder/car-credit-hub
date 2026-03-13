@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
 import { exportToCSV } from '@/lib/export-utils';
+import { reportsAPI } from '@/lib/api';
 import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
@@ -16,41 +17,64 @@ const STATUS_LABELS: Record<string, string> = {
 export default function Reports() {
   const [reportType, setReportType] = useState<'overview' | 'bank' | 'status' | 'disbursal'>('overview');
 
-  const { data: loans = [] } = useQuery({
+  const { data: loansData = [] } = useQuery({
     queryKey: ['loans-reports'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch loans');
-      return res.json();
+      try {
+        const data = await reportsAPI.loans();
+        return Array.isArray(data) ? data : (data?.data || []);
+      } catch (error) {
+        console.error('Failed to fetch loans report:', error);
+        return [];
+      }
     },
   });
 
+  const loans = Array.isArray(loansData) ? loansData : [];
+
   const statusData = Object.entries(STATUS_LABELS).map(([key, label]) => ({
     name: label,
-    value: (loans as any[]).filter(l => l.status === key).length,
+    value: loans.filter(l => l.status === key).length,
   })).filter(d => d.value > 0);
 
-  const bankData = [...new Set((loans as any[]).map(l => l.banks?.name).filter(Boolean))].map(bank => ({
-    name: bank.replace(' Bank', ''),
-    cases: (loans as any[]).filter(l => l.banks?.name === bank).length,
-    amount: (loans as any[]).filter(l => l.banks?.name === bank).reduce((s, l) => s + Number(l.loan_amount), 0) / 100000,
+  const bankData = [...new Set(loans.map(l => l.bank_name || l.banks?.name).filter(Boolean))].map(bank => ({
+    name: bank.replace(' Bank', '').replace(' NBFC', ''),
+    cases: loans.filter(l => (l.bank_name || l.banks?.name) === bank).length,
+    amount: loans.filter(l => (l.bank_name || l.banks?.name) === bank).reduce((s, l) => s + Number(l.loan_amount || 0), 0) / 100000,
   }));
 
-  const totalVolume = (loans as any[]).reduce((s, l) => s + Number(l.loan_amount), 0);
+  const totalVolume = loans.reduce((s, l) => s + Number(l.loan_amount || 0), 0);
   const avgLoanSize = loans.length > 0 ? totalVolume / loans.length : 0;
-  const conversionRate = loans.length > 0 ? Math.round(((loans as any[]).filter(l => l.status === 'disbursed').length / loans.length) * 100) : 0;
+  const conversionRate = loans.length > 0 ? Math.round((loans.filter(l => l.status === 'disbursed').length / loans.length) * 100) : 0;
+
+  // Monthly trend data
+  const monthlyData = loans.reduce((acc, loan) => {
+    const date = new Date(loan.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const monthName = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    
+    if (!acc[monthKey]) {
+      acc[monthKey] = { name: monthName, cases: 0, amount: 0, disbursed: 0 };
+    }
+    
+    acc[monthKey].cases += 1;
+    acc[monthKey].amount += Number(loan.loan_amount || 0) / 100000;
+    if (loan.status === 'disbursed') acc[monthKey].disbursed += 1;
+    
+    return acc;
+  }, {} as Record<string, any>);
+  
+  const trendData = Object.values(monthlyData).slice(-6); // Last 6 months
 
   const handleExportCSV = () => {
     if (loans.length === 0) { toast.error('No data to export'); return; }
-    const rows = (loans as any[]).map(l => ({
+    const rows = loans.map(l => ({
       'Loan ID': l.id,
       'Applicant': l.applicant_name,
       'Mobile': l.mobile,
       'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
-      'Bank': l.banks?.name || '',
-      'Broker': l.brokers?.name || '',
+      'Bank': l.bank_name || l.banks?.name || '',
+      'Broker': l.broker_name || l.brokers?.name || '',
       'Loan Amount': l.loan_amount,
       'EMI': l.emi,
       'Tenure': l.tenure,
@@ -141,13 +165,14 @@ export default function Reports() {
             <h3 className="font-semibold text-foreground mb-4">Monthly Trend</h3>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={bankData.length > 0 ? bankData.map(b => ({ name: b.name, cases: b.cases, amount: b.amount })) : []}>
+                <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                  <Line type="monotone" dataKey="cases" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 4 }} name="Cases" />
-                  <Line type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} name="Amount (₹L)" />
+                  <Line type="monotone" dataKey="cases" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ r: 4 }} name="Applications" />
+                  <Line type="monotone" dataKey="disbursed" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} name="Disbursed" />
+                  <Line type="monotone" dataKey="amount" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} name="Amount (₹L)" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
