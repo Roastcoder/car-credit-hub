@@ -74,9 +74,19 @@ export const api = {
 
       return response.json();
     } catch (error: any) {
-      // If backend is not available, fall back to mock data
-      console.warn('Backend not available, using mock data:', error.message);
-      return this.mockRequest(endpoint, options);
+      // Only fall back to mock data for NETWORK errors (backend unreachable)
+      // If it was an HTTP error (4xx/5xx) we already threw above — don't swallow it
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network request failed') ||
+        error.message.includes('ERR_CONNECTION') ||
+        error.message.includes('ECONNREFUSED')
+      )) {
+        console.warn('Backend not available, using mock data:', error.message);
+        return this.mockRequest(endpoint, options);
+      }
+      // Re-throw real API errors so the UI sees them
+      throw error;
     }
   },
 
