@@ -28,6 +28,8 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
     },
     onSuccess: (result) => {
       const actionLabels: Record<string, string> = {
+        'send_forward': 'forwarded',
+        'send_back': 'sent back',
         'send_to_manager': 'sent to manager',
         'send_to_admin': 'sent to admin',
         'send_to_super_admin': 'sent to super admin',

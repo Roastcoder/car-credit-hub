@@ -35,6 +35,15 @@ export default function LoanDetail() {
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; currentRemarks: string }>({ open: false, currentRemarks: '' });
 
 
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans', user?.id, user?.role],
+    queryFn: async () => {
+      const response = await loansAPI.getAll();
+      return Array.isArray(response.data) ? response.data : [];
+    },
+    enabled: !!user,
+  });
+
   const { data: loan, isLoading } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
@@ -247,19 +256,23 @@ export default function LoanDetail() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => {
-                // Navigate to previous loan - you can implement this logic
-                toast.info('Previous loan navigation - implement based on your needs');
+                const prevId = WorkflowService.getPreviousLoanId(id!, loans, user?.role || 'employee');
+                if (prevId) navigate(`/loans/${prevId}`);
+                else toast.info('No previous application found');
               }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              disabled={!WorkflowService.getPreviousLoanId(id!, loans, user?.role || 'employee')}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-30"
             >
               ← Previous
             </button>
             <button 
               onClick={() => {
-                // Navigate to next loan - you can implement this logic
-                toast.info('Next loan navigation - implement based on your needs');
+                const nextId = WorkflowService.getNextLoanId(id!, loans, user?.role || 'employee');
+                if (nextId) navigate(`/loans/${nextId}`);
+                else toast.info('No more applications found');
               }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              disabled={!WorkflowService.getNextLoanId(id!, loans, user?.role || 'employee')}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-30"
             >
               Next →
             </button>
@@ -454,6 +467,10 @@ export default function LoanDetail() {
               <Field label="Scheme" value={(loan as any).scheme || '—'} />
               <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
               <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
+              <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
+              <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
+              <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
+              <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
             </div>
           </Section>
 
@@ -470,6 +487,9 @@ export default function LoanDetail() {
               <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
               <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
               <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
+              <Field label="Commitment Date" value={(loan as any).commitment_date || '—'} />
+              <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
+              <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
             </div>
           </Section>
 
@@ -483,6 +503,7 @@ export default function LoanDetail() {
               <Field label="Disbursement Date" value={(loan as any).disbursement_date || '—'} />
               <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
               <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
+              <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
             </div>
           </Section>
 
@@ -494,6 +515,9 @@ export default function LoanDetail() {
               <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
               <Field label="Policy Date" value={(loan as any).insurance_date || '—'} />
               <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
+              <Field label="Insurance Status" value={(loan as any).insurance_status || '—'} />
+              <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
+              <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
             </div>
           </Section>
 
@@ -504,6 +528,18 @@ export default function LoanDetail() {
               <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
               <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
               <Field label="Login Date" value={(loan as any).login_date || '—'} />
+              <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
+              <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
+              <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
+              <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
+              <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
+              <div className="col-span-2">
+                <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
+              </div>
+              <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
+              <Field label="Challans" value={(loan as any).challan_status || 'No'} />
+              <Field label="Pollution" value={(loan as any).pollution_status || '—'} />
+              <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
             </div>
           </Section>
 
@@ -519,6 +555,36 @@ export default function LoanDetail() {
               <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
               <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_pf || 0))} />
               <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
+            </div>
+          </Section>
+
+          {/* FC & NOC Details */}
+          <Section title="FC & NOC Details" icon={<FileText size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
+              <Field label="FC Date" value={(loan as any).fc_deposit_date || '—'} />
+              <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
+              <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
+              <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
+              <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
+              <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
+              <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
+              <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
+            </div>
+          </Section>
+
+          {/* PDD Tracking Detail */}
+          <Section title="PDD Tracking" icon={<FileText size={16} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="PDD Status" value={(loan as any).pdd_status || 'pending'} />
+              <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
+              <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
+              <Field label="Approved By" value={(loan as any).pdd_approved_by_name || '—'} />
+              <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
+              <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
+              <div className="col-span-2">
+                <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+              </div>
             </div>
           </Section>
         </div>
