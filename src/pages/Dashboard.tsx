@@ -24,16 +24,18 @@ export default function Dashboard() {
         });
         if (!response.ok) return [];
         const data = await response.json();
+        const loansData = data.data || data; // Handle both wrapped and unwrapped data
         
         // Filter based on role
         if (user?.role === 'employee') {
-          return data.filter((l: any) => l.created_by === user.id);
+          return Array.isArray(loansData) ? loansData.filter((l: any) => l.user_id === user.id) : [];
         }
         if (user?.role === 'manager') {
-          return data.filter((l: any) => l.branch_id === user.branch_id);
+          return Array.isArray(loansData) ? loansData.filter((l: any) => l.branch_id === user.branch_id) : [];
         }
-        return data;
-      } catch {
+        return Array.isArray(loansData) ? loansData : [];
+      } catch (error) {
+        console.error('Dashboard fetch error:', error);
         return [];
       }
     },
