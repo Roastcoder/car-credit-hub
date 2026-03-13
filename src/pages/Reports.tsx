@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
 import { exportToCSV } from '@/lib/export-utils';
-import { reportsAPI } from '@/lib/api';
+import { reportsAPI, loansAPI } from '@/lib/api';
 import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
@@ -21,11 +21,19 @@ export default function Reports() {
     queryKey: ['loans-reports'],
     queryFn: async () => {
       try {
+        // Try reports API first, fallback to loans API if forbidden
         const data = await reportsAPI.loans();
         return Array.isArray(data) ? data : (data?.data || []);
-      } catch (error) {
-        console.error('Failed to fetch loans report:', error);
-        return [];
+      } catch (error: any) {
+        console.warn('Reports API failed, falling back to loans API:', error.message);
+        try {
+          // Fallback to regular loans API
+          const data = await loansAPI.getAll();
+          return Array.isArray(data) ? data : (data?.data || []);
+        } catch (fallbackError) {
+          console.error('Both reports and loans API failed:', fallbackError);
+          return [];
+        }
       }
     },
   });
