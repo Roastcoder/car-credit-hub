@@ -80,6 +80,8 @@ export default function LoanDetail() {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['loans-dashboard'] });
       toast.success('Status updated');
+      // Navigate back after a short delay
+      setTimeout(() => navigate('/loans'), 500);
     },
     onError: () => toast.error('Failed to update status'),
   });
@@ -340,6 +342,8 @@ export default function LoanDetail() {
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['loan', id] });
                 queryClient.invalidateQueries({ queryKey: ['loans'] });
+                // Return to loans list after a successful workflow move
+                setTimeout(() => navigate('/loans'), 500);
               }}
             />
             {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
