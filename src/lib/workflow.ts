@@ -33,11 +33,18 @@ export class WorkflowService {
   }
 
   static canPerformAction(userRole: string, currentStatus: LoanStatus, action: string): boolean {
-    // Check if current user is the owner of the loan
     const ownerRole = this.getOwnerRole(currentStatus);
-    if (userRole !== ownerRole) {
-      return false;
-    }
+    
+    // Broaden authorization:
+    // 1. Owners can always act.
+    // 2. Super Admins can act at any stage.
+    // 3. Managers can act on 'submitted' files (to pull/forward them).
+    const isAuthorized = 
+      userRole === ownerRole || 
+      userRole === 'super_admin' || 
+      (userRole === 'manager' && currentStatus === 'submitted');
+
+    if (!isAuthorized) return false;
 
     // Check if action is available for this role
     const availableActions = this.getAvailableActions(userRole);
@@ -113,19 +120,24 @@ export class WorkflowService {
   }
 
   static shouldShowLoanToUser(loan: any, userRole: string): boolean {
-    // Get the owner role based on current status
     const ownerRole = this.getOwnerRole(loan.status);
     
-    // Show loan if user role matches owner role OR if it's a sent back status for that role
-    const canSee = userRole === ownerRole;
+    // Show if:
+    // 1. User is the owner.
+    // 2. User is Super Admin (sees everything).
+    // 3. User is Manager and status is 'submitted' (they can pull it).
+    // 4. Status is a 'sent_back_ROLE' where ROLE is userRole.
     
-    // Additional logic for sent back files
+    if (userRole === 'super_admin') return true;
+    if (userRole === ownerRole) return true;
+    if (userRole === 'manager' && loan.status === 'submitted') return true;
+    
     if (loan.status?.includes('sent_back')) {
       const sentBackRole = loan.status.replace('sent_back_', '');
       return userRole === sentBackRole;
     }
     
-    return canSee;
+    return false;
   }
 
   static getVisibleLoansForRole(userRole: string): string[] {
@@ -133,11 +145,12 @@ export class WorkflowService {
       case 'employee':
         return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled'];
       case 'manager':
-        return ['manager_review', 'under_review', 'sent_back_manager'];
+        return ['submitted', 'manager_review', 'under_review', 'sent_back_manager'];
       case 'admin':
         return ['manager_approved', 'approved', 'sent_back_admin'];
       case 'super_admin':
-        return ['admin_approved', 'disbursed'];
+        // Super admin sees all statuses, but for filtering convenience, we can return empty or all
+        return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
       default:
         return [];
     }
