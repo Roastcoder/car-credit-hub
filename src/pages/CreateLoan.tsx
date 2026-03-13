@@ -52,7 +52,7 @@ export default function CreateLoan() {
     queryKey: ['banks-list'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -66,7 +66,7 @@ export default function CreateLoan() {
   const { data: existingLoan, isLoading: loadingLoan } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loan');
@@ -79,7 +79,7 @@ export default function CreateLoan() {
     queryKey: ['brokers-list'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/brokers`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -94,7 +94,7 @@ export default function CreateLoan() {
     queryKey: ['leads-for-dropdown'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -488,7 +488,7 @@ export default function CreateLoan() {
         formData.append(doc.type, doc.file as File);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents/multiple`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}/documents/multiple`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -518,8 +518,8 @@ export default function CreateLoan() {
     mutationFn: async () => {
       const loanId = form.loanNumber || generateLoanId();
       const url = isEditMode
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`;
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`;
 
       const res = await fetch(url, {
         method: isEditMode ? 'PUT' : 'POST',

@@ -19,7 +19,7 @@ export default function Dashboard() {
     queryKey: ['loans-dashboard', user?.branch_id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -45,7 +45,7 @@ export default function Dashboard() {
     queryFn: async () => {
       if (!user?.branch_id) return null;
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${user.branch_id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/branches/${user.branch_id}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return null;

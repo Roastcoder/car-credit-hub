@@ -31,7 +31,7 @@ export default function FieldPermissions() {
     queryKey: ['field-permissions'],
     queryFn: async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/field-permissions`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
         });
         if (!res.ok) return {};
@@ -48,7 +48,7 @@ export default function FieldPermissions() {
   const savePermissions = useMutation({
     mutationFn: async (perms: any) => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/field-permissions`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/field-permissions`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

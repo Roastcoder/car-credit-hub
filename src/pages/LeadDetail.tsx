@@ -12,7 +12,7 @@ export default function LeadDetail() {
     queryKey: ['lead', id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           }

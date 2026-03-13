@@ -28,7 +28,7 @@ export default function PDDTracking() {
   const { data: loans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans?status=disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
@@ -49,7 +49,7 @@ export default function PDDTracking() {
 
   const approvePdd = useMutation({
     mutationFn: async (loanId: number) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/approve`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}/pdd/approve`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
@@ -68,7 +68,7 @@ export default function PDDTracking() {
 
   const rejectPdd = useMutation({
     mutationFn: async ({ loanId, reason }: { loanId: number; reason: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/reject`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}/pdd/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -26,8 +26,8 @@ export function BankFormModal({ open, onClose, onSuccess, bank }: BankFormModalP
     try {
       const method = bank ? 'PUT' : 'POST';
       const url = bank 
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks/${bank.id}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`;
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks/${bank.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`;
       const res = await fetch(url, {
         method,
         headers: {

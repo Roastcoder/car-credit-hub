@@ -60,7 +60,7 @@ export default function LoanDetail() {
   const { data: documents = [], refetch: refetchDocs } = useQuery({
     queryKey: ['loan-documents', id],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}/documents`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) return [];
@@ -89,7 +89,7 @@ export default function LoanDetail() {
 
   const deleteLoan = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
@@ -107,7 +107,7 @@ export default function LoanDetail() {
 
   const deleteDocument = useMutation({
     mutationFn: async (docId: string) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}/documents/${docId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
@@ -127,7 +127,7 @@ export default function LoanDetail() {
       formData.append('file', file);
       formData.append('document_type', documentType);
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}/documents`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
         body: formData,
@@ -177,7 +177,7 @@ export default function LoanDetail() {
 
     try {
       // 1. First delete the existing document
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}/documents/${docId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
@@ -197,7 +197,7 @@ export default function LoanDetail() {
     setLoadingPreview(doc.id);
     try {
       // Use the file_url directly from the document
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
       // Remove /api from the end to get base URL
       const baseUrl = apiUrl.replace(/\/api$/, '');
 

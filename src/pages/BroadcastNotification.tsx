@@ -23,7 +23,7 @@ export default function BroadcastNotification() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/broadcast`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications/broadcast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
