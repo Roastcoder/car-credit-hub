@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,7 @@ import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
+import { calculateCommission } from '@/lib/schemes';
 
 const DOC_TYPES = [
   { value: 'rc_copy', label: 'RC Copy' },
@@ -43,6 +44,22 @@ export default function LoanDetail() {
       return Array.isArray(response.data) ? response.data : [];
     },
     enabled: !!user,
+  });
+
+  const { data: banks = [] } = useQuery({
+    queryKey: ['banks-list'],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.data || []);
+      } catch {
+        return [];
+      }
+    },
   });
 
   const { data: loan, isLoading } = useQuery({
@@ -91,6 +108,13 @@ export default function LoanDetail() {
     },
     enabled: !!id,
   });
+
+  const computedCommission = useMemo(() => {
+    if (!loan || !banks.length) return { rate: 0, amount: 0 };
+    const financierName = (banks as any[]).find((b: any) => String(b.id) === String(loan.assigned_bank_id))?.name || '';
+    const verticalToUse = loan.financier_team_vertical || loan.vertical;
+    return calculateCommission(financierName, verticalToUse, Number(loan.loan_amount) || 0, Number(loan.tenure) || 0);
+  }, [loan, banks]);
 
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -588,13 +612,28 @@ export default function LoanDetail() {
           </Section>
 
           {/* Broker Commission */}
-          {commissionRecord && (
+          {(commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
             <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Broker Name" value={commissionRecord.broker_name || (loan as any).assigned_broker_name || '—'} />
-                <Field label="Commission Amount" value={formatCurrency(Number(commissionRecord.commission_amount || commissionRecord.amount || 0))} />
-                <Field label="Commission Rate" value={commissionRecord.commission_rate ? `${commissionRecord.commission_rate}%` : '—'} />
-                <Field label="Status" value={commissionRecord.status ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1) : '—'} />
+                <Field 
+                  label="Broker Name" 
+                  value={commissionRecord?.broker_name || (loan as any).assigned_broker_name || '—'} 
+                />
+                <Field 
+                  label="Commission Amount" 
+                  value={formatCurrency(Number(commissionRecord?.commission_amount || commissionRecord?.amount || computedCommission.amount || 0))} 
+                />
+                <Field 
+                  label="Commission Rate" 
+                  value={commissionRecord?.commission_rate ? `${commissionRecord.commission_rate}%` : (computedCommission.rate ? `${computedCommission.rate}%` : '—')} 
+                />
+                <Field 
+                  label="Status" 
+                  value={commissionRecord?.status 
+                    ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1) 
+                    : (computedCommission.amount > 0 ? 'Calculated (Pending)' : '—')
+                  } 
+                />
               </div>
             </Section>
           )}
