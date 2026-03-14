@@ -8,6 +8,7 @@ import { calculateEMI, formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { calculateCommission } from '@/lib/schemes';
 
 export default function CreateLoan() {
   const navigate = useNavigate();
@@ -436,6 +437,11 @@ export default function CreateLoan() {
     return 0;
   }, [form.loanAmount, form.irr, form.tenure]);
 
+  const computedCommission = useMemo(() => {
+    const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
+    return calculateCommission(financierName, form.vertical, Number(form.loanAmount) || 0, Number(form.tenure) || 0);
+  }, [form.assignedBankId, form.vertical, form.loanAmount, form.tenure, banks]);
+
   const totalPayable = emi * Number(form.tenure);
   const totalInterest = totalPayable - Number(form.loanAmount);
 
@@ -619,6 +625,29 @@ export default function CreateLoan() {
 
       // Upload documents after loan is created
       await uploadDocuments(isEditMode ? id! : data.id);
+
+      // Create commission if matched
+      if (computedCommission.amount > 0 && form.assignedBrokerId && !isEditMode) {
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/commissions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            },
+            body: JSON.stringify({
+              loan_id: data.id,
+              broker_id: form.assignedBrokerId,
+              commission_amount: computedCommission.amount,
+              commission_rate: computedCommission.rate,
+              commission_type: 'broker',
+              status: 'pending'
+            })
+          });
+        } catch (e) {
+          console.error('Failed to create commission automatically', e);
+        }
+      }
 
       return data;
     },
@@ -830,6 +859,20 @@ export default function CreateLoan() {
                   </>
                 )}
               </div>
+
+              {/* Auto-Calculated Commission Box */}
+              {computedCommission.amount > 0 && form.assignedBrokerId && (
+                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-green-600 font-semibold text-sm">Broker Payout ({computedCommission.schemeMatched ? computedCommission.schemeMatched.name : 'Matched Scheme'})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Loan Amount</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(Number(form.loanAmount))}</p></div>
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Rate</p><p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p></div>
+                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Payout Amount</p><p className="text-lg font-bold text-green-600 break-all">{formatCurrency(computedCommission.amount)}</p></div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Insurance & RTO */}

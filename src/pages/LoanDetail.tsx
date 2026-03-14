@@ -68,6 +68,21 @@ export default function LoanDetail() {
     },
     enabled: !!id,
   });
+
+  const { data: commissionRecord } = useQuery({
+    queryKey: ['loan-commission', loan?.id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/commissions`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const commissionsObj = Array.isArray(data) ? data : (data.data || []);
+      const match = commissionsObj.find((c: any) => String(c.loan_id) === String(loan.id));
+      return match || null;
+    },
+    enabled: !!loan?.id,
+  });
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['loan-audit-logs', id],
     queryFn: async () => {
@@ -571,6 +586,18 @@ export default function LoanDetail() {
               <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
             </div>
           </Section>
+
+          {/* Broker Commission */}
+          {commissionRecord && (
+            <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Broker Name" value={commissionRecord.broker_name || (loan as any).assigned_broker_name || '—'} />
+                <Field label="Commission Amount" value={formatCurrency(Number(commissionRecord.commission_amount || commissionRecord.amount || 0))} />
+                <Field label="Commission Rate" value={commissionRecord.commission_rate ? `${commissionRecord.commission_rate}%` : '—'} />
+                <Field label="Status" value={commissionRecord.status ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1) : '—'} />
+              </div>
+            </Section>
+          )}
 
           {/* FC & NOC Details */}
           <Section title="FC & NOC Details" icon={<FileText size={16} />}>
