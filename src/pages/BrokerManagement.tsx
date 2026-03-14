@@ -109,8 +109,8 @@ export default function BrokerManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${b.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                      {b.is_active ? 'Active' : 'Inactive'}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                      {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
                     </span>
                     <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
                       <Edit size={14} />
@@ -167,8 +167,8 @@ export default function BrokerManagement() {
                       <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>
                       <td className="py-3 px-3 font-medium text-accent">{b.commission_rate}%</td>
                       <td className="py-3 px-3">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${b.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                          {b.is_active ? 'Active' : 'Inactive'}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                          {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-3 px-3">
