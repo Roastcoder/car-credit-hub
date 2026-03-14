@@ -56,7 +56,8 @@ export default function CreateLoan() {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
-        return await response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.data || []);
       } catch {
         return [];
       }
@@ -84,7 +85,8 @@ export default function CreateLoan() {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
-        return await response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.data || []);
       } catch {
         return [];
       }
@@ -99,7 +101,8 @@ export default function CreateLoan() {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
-        return await response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.data || []);
       } catch {
         return [];
       }

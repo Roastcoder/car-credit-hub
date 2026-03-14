@@ -16,7 +16,8 @@ export default function BrokerManagement() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch brokers');
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
     },
   });
 
@@ -27,7 +28,8 @@ export default function BrokerManagement() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loans');
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
     },
   });
 

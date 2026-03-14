@@ -32,7 +32,8 @@ export default function PDDTracking() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
       if (user?.role === 'employee') {
         return data.filter((loan: any) => loan.created_by === user.id);

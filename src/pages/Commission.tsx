@@ -39,7 +39,8 @@ export default function Commission() {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch commissions');
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
     },
   });
 
