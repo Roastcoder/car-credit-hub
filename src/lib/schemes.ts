@@ -100,10 +100,18 @@ export function calculateCommission(
     // Make matching case-insensitive and partial if needed, but the predefined matrix uses exact names largely
     const isFinancierMatch = s.financier.toLowerCase() === financierName.toLowerCase();
     
-    // For vertical, check if it partially matches e.g. "PV (Car)" -> "CAR"
-    const isVerticalMatch = vertical && s.vertical && vertical.toLowerCase().includes(s.vertical.toLowerCase()) || 
-              (s.vertical.toLowerCase() === 'car' && vertical.toLowerCase().includes('pv'));
-              
+    // For vertical, check if it partially matches e.g. "PV (Car)" -> "CAR" or "Tractor" -> "TR"
+    const v = vertical ? vertical.toLowerCase() : '';
+    const sv = s.vertical ? s.vertical.toLowerCase() : '';
+    
+    const isVerticalMatch = v && sv && (
+      v.includes(sv) || 
+      (sv === 'car' && (v.includes('pv') || v.includes('car'))) ||
+      (sv === 'tr' && v.includes('tractor')) ||
+      (sv === 'cv' && (v === 'lcv' || v === 'hcv' || v === 'cv')) ||
+      (sv === 'hcv' && v === 'hcv')
+    );
+    
     const isVolumeMatch = loanAmount >= s.minVolume && loanAmount <= s.maxVolume;
     
     // Tenure EMI applies mostly if it's strictly requiring > tenureEmi. The matrix has 0, 19, 25.

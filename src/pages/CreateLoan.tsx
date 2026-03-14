@@ -439,8 +439,9 @@ export default function CreateLoan() {
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
-    return calculateCommission(financierName, form.vertical, Number(form.loanAmount) || 0, Number(form.tenure) || 0);
-  }, [form.assignedBankId, form.vertical, form.loanAmount, form.tenure, banks]);
+    const verticalToUse = form.financierTeamVertical || form.vertical;
+    return calculateCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, Number(form.tenure) || 0);
+  }, [form.assignedBankId, form.financierTeamVertical, form.vertical, form.loanAmount, form.tenure, banks]);
 
   const totalPayable = emi * Number(form.tenure);
   const totalInterest = totalPayable - Number(form.loanAmount);
