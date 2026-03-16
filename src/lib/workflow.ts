@@ -131,6 +131,13 @@ export class WorkflowService {
     
     if (userRole === 'super_admin') return true;
     if (userRole === ownerRole) return true;
+
+    // Disbursed files still need to remain visible for creator and branch manager for PDD work.
+    if (loan.status === 'disbursed') {
+      if (userRole === 'employee' && loan.created_by) return true;
+      if (userRole === 'manager') return true;
+      if (userRole === 'admin') return true;
+    }
     
     // Check for sent back to this role
     if (loan.status?.startsWith('sent_back_')) {
@@ -148,11 +155,11 @@ export class WorkflowService {
   static getVisibleLoansForRole(userRole: string): string[] {
     switch (userRole) {
       case 'employee':
-        return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled'];
+        return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled', 'disbursed'];
       case 'manager':
-        return ['manager_review', 'under_review', 'sent_back_manager'];
+        return ['manager_review', 'under_review', 'sent_back_manager', 'disbursed'];
       case 'admin':
-        return ['manager_approved', 'approved', 'sent_back_admin'];
+        return ['manager_approved', 'approved', 'sent_back_admin', 'disbursed'];
       case 'super_admin':
         // Super admin sees all statuses, but for filtering convenience, we can return empty or all
         return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
