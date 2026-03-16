@@ -135,7 +135,12 @@ export default function Loans() {
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
     
     // Use WorkflowService to check if loan should be visible to user
-    const shouldShow = WorkflowService.shouldShowLoanToUser(l, user?.role || 'employee');
+    const shouldShow = WorkflowService.shouldShowLoanToUser(
+      l,
+      user?.role || 'employee',
+      user?.id,
+      user?.branch_id
+    );
     
     return matchSearch && matchStatus && matchPddStatus && shouldShow;
   });

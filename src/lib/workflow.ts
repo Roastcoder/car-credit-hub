@@ -126,7 +126,7 @@ export class WorkflowService {
     return loanId ? logs.filter((log: WorkflowAuditLog) => log.loan_id === loanId) : logs;
   }
 
-  static shouldShowLoanToUser(loan: any, userRole: string): boolean {
+  static shouldShowLoanToUser(loan: any, userRole: string, currentUserId?: number | string, currentBranchId?: number | string): boolean {
     const ownerRole = this.getOwnerRole(loan.status);
     
     if (userRole === 'super_admin') return true;
@@ -134,8 +134,8 @@ export class WorkflowService {
 
     // Disbursed files still need to remain visible for creator and branch manager for PDD work.
     if (loan.status === 'disbursed') {
-      if (userRole === 'employee' && loan.created_by) return true;
-      if (userRole === 'manager') return true;
+      if (userRole === 'employee' && currentUserId !== undefined && Number(loan.created_by) === Number(currentUserId)) return true;
+      if (userRole === 'manager' && currentBranchId !== undefined && Number(loan.branch_id) === Number(currentBranchId)) return true;
       if (userRole === 'admin') return true;
     }
     
@@ -168,9 +168,9 @@ export class WorkflowService {
     }
   }
 
-  static getNextLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+  static getNextLoanId(currentLoanId: string, loans: any[], userRole: string, currentUserId?: number | string, currentBranchId?: number | string): string | null {
     if (!Array.isArray(loans)) return null;
-    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
+    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole, currentUserId, currentBranchId));
     const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
     
     if (currentIndex >= 0 && currentIndex < visibleLoans.length - 1) {
@@ -179,9 +179,9 @@ export class WorkflowService {
     return null;
   }
 
-  static getPreviousLoanId(currentLoanId: string, loans: any[], userRole: string): string | null {
+  static getPreviousLoanId(currentLoanId: string, loans: any[], userRole: string, currentUserId?: number | string, currentBranchId?: number | string): string | null {
     if (!Array.isArray(loans)) return null;
-    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole));
+    const visibleLoans = loans.filter(loan => this.shouldShowLoanToUser(loan, userRole, currentUserId, currentBranchId));
     const currentIndex = visibleLoans.findIndex(loan => loan.id === currentLoanId || loan.loan_number === currentLoanId);
     
     if (currentIndex > 0) {

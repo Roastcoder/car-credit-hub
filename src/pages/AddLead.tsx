@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
@@ -72,6 +72,17 @@ export default function AddLead() {
       }
     },
   });
+
+  const availableBranches = useMemo(() => {
+    if (!user?.branch_id) return branches;
+    return (branches as any[]).filter((branch: any) => Number(branch.id) === Number(user.branch_id));
+  }, [branches, user?.branch_id]);
+
+  useEffect(() => {
+    if (availableBranches.length === 1 && !form.our_branch) {
+      setForm((prev) => ({ ...prev, our_branch: availableBranches[0].name }));
+    }
+  }, [availableBranches, form.our_branch]);
 
   const createLead = useMutation({
     mutationFn: async (data: any) => {
@@ -186,9 +197,14 @@ export default function AddLead() {
 
           <div>
             <label className={labelClass}>Our Branch</label>
-            <select className={inputClass} value={form.our_branch} onChange={e => setForm({...form, our_branch: e.target.value})}>
-              <option value="">Select Our Branch</option>
-              {branches.map((branch: any) => (
+            <select
+              className={inputClass}
+              value={form.our_branch}
+              onChange={e => setForm({...form, our_branch: e.target.value})}
+              disabled={availableBranches.length === 1}
+            >
+              <option value="">{availableBranches.length === 1 ? 'Assigned Branch' : 'Select Our Branch'}</option>
+              {availableBranches.map((branch: any) => (
                 <option key={branch.id} value={branch.name}>{branch.name}</option>
               ))}
             </select>

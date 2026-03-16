@@ -36,10 +36,10 @@ export default function PDDTracking() {
       const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
       if (user?.role === 'employee') {
-        return data.filter((loan: any) => loan.created_by === user.id);
+        return data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
       }
       if (user?.role === 'manager') {
-        return data.filter((loan: any) => loan.branch_id === user.branch_id);
+        return data.filter((loan: any) => Number(loan.branch_id) === Number(user.branch_id));
       }
       return data;
     },
