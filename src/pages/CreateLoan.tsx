@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES } from '@/lib/constants';
 import { calculateEMI, formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
 
@@ -15,6 +15,7 @@ export default function CreateLoan() {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const isEditMode = !!id;
+  const leadId = searchParams.get('leadId');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const permissions = getRolePermissions(user?.role || 'employee');
@@ -110,9 +111,23 @@ export default function CreateLoan() {
     },
   });
 
+  const { data: leadToConvert } = useQuery({
+    queryKey: ['lead-for-loan', leadId],
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${leadId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch lead');
+      const data = await response.json();
+      return data?.data || data;
+    },
+    enabled: !!leadId && !isEditMode,
+  });
+
   const [leadSearch, setLeadSearch] = useState('');
   const [showLeadDropdown, setShowLeadDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prefilledLeadRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -154,6 +169,16 @@ export default function CreateLoan() {
     } catch {
       return '';
     }
+  };
+
+  const getTenureFromDates = (startDate: string, endDate: string) => {
+    if (!startDate || !endDate) return 0;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return 0;
+
+    return ((end.getFullYear() - start.getFullYear()) * 12) + (end.getMonth() - start.getMonth()) + 1;
   };
 
   const fetchVehicleDetails = async (rcNumber: string) => {
@@ -244,7 +269,7 @@ export default function CreateLoan() {
     // Deductions & Disbursement Details
     processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', meharPf: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
     // Others
-    loginDate: '', approvalDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
+    loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
     // Documents
     aadharFront: null, aadharBack: null, panCard: null,
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
@@ -365,6 +390,7 @@ export default function CreateLoan() {
         paymentInFavour: existingLoan.payment_in_favour || '',
         loginDate: formatDate(existingLoan.login_date),
         approvalDate: formatDate(existingLoan.approval_date),
+        disbursementDate: formatDate(existingLoan.disbursement_date),
         sourcingPersonName: existingLoan.sourcing_person_name || '',
         remark: existingLoan.remark || '',
         fileStatus: existingLoan.status || 'submitted',
@@ -402,7 +428,7 @@ export default function CreateLoan() {
       currentDistrict: lead.district || '',
       currentPincode: lead.pin_code || '',
       vehicleNumber: lead.vehicle_no || '',
-      loanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
+      purposeLoanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
       irr: lead.irr_requested ? String(lead.irr_requested) : '',
       sourcingPersonName: lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
@@ -413,6 +439,14 @@ export default function CreateLoan() {
       fetchVehicleDetails(lead.vehicle_no);
     }
   };
+
+  useEffect(() => {
+    if (!leadToConvert || isEditMode || !leadId || prefilledLeadRef.current === leadId) return;
+
+    handleLeadSelect(leadToConvert);
+    setLeadSearch(leadToConvert.customer_id || '');
+    prefilledLeadRef.current = leadId;
+  }, [leadId, leadToConvert, isEditMode]);
 
   const handleSameAddress = (checked: boolean) => {
     setForm(f => ({
@@ -429,21 +463,25 @@ export default function CreateLoan() {
     }));
   };
 
+  const calculatedTenure = useMemo(() => {
+    return getTenureFromDates(form.emiStartDate, form.emiEndDate) || Number(form.tenure) || 0;
+  }, [form.emiEndDate, form.emiStartDate, form.tenure]);
+
   const emi = useMemo(() => {
     const p = Number(form.loanAmount);
     const r = Number(form.irr);
-    const t = Number(form.tenure);
+    const t = calculatedTenure;
     if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t);
     return 0;
-  }, [form.loanAmount, form.irr, form.tenure]);
+  }, [form.loanAmount, form.irr, calculatedTenure]);
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
     const verticalToUse = form.financierTeamVertical || form.vertical;
-    return calculateCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, Number(form.tenure) || 0);
-  }, [form.assignedBankId, form.financierTeamVertical, form.vertical, form.loanAmount, form.tenure, banks]);
+    return calculateCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, calculatedTenure);
+  }, [form.assignedBankId, form.financierTeamVertical, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
-  const totalPayable = emi * Number(form.tenure);
+  const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
 
   const generateLoanId = () => {
@@ -561,10 +599,10 @@ export default function CreateLoan() {
           vertical: form.vertical || null,
           scheme: form.scheme || null,
           emi_amount: emi || null,
-          total_emi: Number(form.tenure) || null,
+          total_emi: calculatedTenure || null,
           total_interest: (totalInterest > 0 ? totalInterest : null),
           irr: Number(form.irr) || null,
-          tenure: Number(form.tenure) || 60,
+          tenure: calculatedTenure || 60,
           emi_start_date: form.emiStartDate || null,
           emi_end_date: form.emiEndDate || null,
           processing_fee: Number(form.processingFee) || null,
@@ -593,6 +631,7 @@ export default function CreateLoan() {
           agent_mobile_no: form.agentMobileNo || null,
           login_date: form.loginDate || null,
           approval_date: form.approvalDate || null,
+          disbursement_date: form.disbursementDate || null,
           sourcing_person_name: form.sourcingPersonName || null,
           remark: form.remark || null,
           status: (form.fileStatus === 'draft' ? 'submitted' : form.fileStatus) || 'submitted',
@@ -811,7 +850,7 @@ export default function CreateLoan() {
                 <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
                 <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} placeholder="Enter chassis number" /></div>
                 <div><label className={labelClass}>Engine Number</label><input className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} placeholder="Enter engine number" /></div>
-                <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV (Car)">PV (Car)</option><option value="CV">CV</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
+                <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
                 <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option></select></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
                 <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} placeholder="Optional" /></div>
@@ -844,15 +883,20 @@ export default function CreateLoan() {
                     <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
                     <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalPayable)}</p></div>
                   </div>
+                  {!!getTenureFromDates(form.emiStartDate, form.emiEndDate) && (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      EMI is currently calculated from the selected start and end dates: {calculatedTenure} month(s).
+                    </p>
+                  )}
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                 <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Financier Details</h3></div>
                 <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier Name</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
                 <div><label className={labelClass}>Financier Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} placeholder="Financier Executive Name" /></div>
-                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Select Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="PV">PV</option><option value="CV">CV</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
+                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Select Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
                 <div><label className={labelClass}>Disburse Branch Name</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} placeholder="Disburse Branch Name" /></div>
-                <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker (Optional)</option>{(brokers as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                 <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker (Optional)</option>{(brokers as any[]).map((b: any) => { const dsaCode = b.dsa_code || b.code || b.broker_code; return <option key={b.id} value={b.id}>{b.name}{dsaCode ? ` (${dsaCode})` : ''}</option>; })}</select></div>
                 {form.assignedBankId && (
                   <>
                     <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} placeholder="Optional" /></div>
@@ -941,9 +985,10 @@ export default function CreateLoan() {
               <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Net (Seed Amount) (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
                 <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
                 <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
                 <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
                 <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
                 <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
@@ -1024,9 +1069,22 @@ export default function CreateLoan() {
                             <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
                             <p className="text-[10px] text-muted-foreground truncate">{(doc.file as File).name}</p>
                           </div>
-                          {uploaded && (
-                            <span className="text-[10px] text-green-600 font-medium">Uploaded</span>
-                          )}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const url = URL.createObjectURL(doc.file as File);
+                                window.open(url, '_blank');
+                              }}
+                              className="p-1 hover:bg-muted rounded text-accent"
+                              title="Preview"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            {uploaded && (
+                              <span className="text-[10px] text-green-600 font-medium whitespace-nowrap">Uploaded</span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}

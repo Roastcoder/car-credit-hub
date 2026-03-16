@@ -602,7 +602,7 @@ export default function LoanDetail() {
               <Field label="Total Deduction" value={formatCurrency(Number((loan as any).total_deduction || 0))} />
               <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
               <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
-              <Field label="Net Seed Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
+              <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
               <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
               <Field label="Payment Date" value={(loan as any).payment_received_date || '—'} />
               <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />

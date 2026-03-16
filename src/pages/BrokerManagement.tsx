@@ -45,7 +45,8 @@ export default function BrokerManagement() {
 
   const filtered = (brokers as any[]).filter(b =>
     b.name.toLowerCase().includes(search.toLowerCase()) ||
-    (b.area || '').toLowerCase().includes(search.toLowerCase())
+    (b.area || '').toLowerCase().includes(search.toLowerCase()) ||
+    (b.dsa_code || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const totalPending = (loans as any[])
@@ -105,7 +106,7 @@ export default function BrokerManagement() {
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">{b.email || b.phone || '—'}</p>
+                      <p className="text-xs text-muted-foreground">{b.dsa_code && <span className="text-accent font-medium">{b.dsa_code} • </span>}{b.email || b.phone || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -138,6 +139,7 @@ export default function BrokerManagement() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
+                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">DSA Code</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Phone</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Cases</th>
@@ -161,7 +163,8 @@ export default function BrokerManagement() {
                             <p className="text-xs text-muted-foreground">{b.email}</p>
                           </div>
                         </div>
-                      </td>
+                       </td>
+                      <td className="py-3 px-3 text-accent font-medium mono text-xs">{b.dsa_code || '—'}</td>
                       <td className="py-3 px-3 text-muted-foreground">{b.area || '—'}</td>
                       <td className="py-3 px-3 text-muted-foreground mono text-xs">{b.phone || '—'}</td>
                       <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>

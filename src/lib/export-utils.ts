@@ -70,7 +70,7 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
     'mehar_pf': 'Mehar PF',
     'total_deduction': 'Total Deduction',
     'hold_amount': 'Hold Amount',
-    'net_seed_amount': 'Net Seed Amount',
+    'net_seed_amount': 'Received Amount',
     'payment_in_favour': 'Payment In Favour',
     'net_disbursement_amount': 'Net Disbursement',
     'payment_received_date': 'Payment Received Date',

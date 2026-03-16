@@ -15,6 +15,7 @@ export function BrokerFormModal({ open, onClose, onSuccess, broker }: BrokerForm
     email: broker?.email || '',
     phone: broker?.phone || '',
     area: broker?.area || '',
+    dsa_code: broker?.dsa_code || '',
     commission_rate: broker?.commission_rate || '1.5',
     is_active: broker?.is_active ?? true,
   });
@@ -72,6 +73,10 @@ export function BrokerFormModal({ open, onClose, onSuccess, broker }: BrokerForm
           <div>
             <label className="block text-sm font-medium mb-1.5">Area</label>
             <input className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={form.area} onChange={e => setForm({...form, area: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">DSA Code</label>
+            <input className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={form.dsa_code} onChange={e => setForm({...form, dsa_code: e.target.value})} placeholder="e.g. DSA001" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Commission Rate (%) *</label>

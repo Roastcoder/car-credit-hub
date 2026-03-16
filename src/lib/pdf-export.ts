@@ -127,7 +127,7 @@ function buildLoanHTML(loan: LoanData): string {
 
   ${sectionTitle('&#128203;', 'Deductions & Disbursement')}
   ${row4('Mehar Deduction', fmtCur(loan.mehar_deduction), 'Mehar PF', fmtCur(loan.mehar_pf), 'Total Deduction', fmtCur(loan.total_deduction), '', '')}
-  ${row4('Hold Amount', fmtCur(loan.hold_amount), 'Net Seed Amount', fmtCur(loan.net_seed_amount), 'Payment In Favour', fmt(loan.payment_in_favour), 'Net Disbursement', fmtCur(loan.net_disbursement_amount))}
+  ${row4('Hold Amount', fmtCur(loan.hold_amount), 'Received Amount', fmtCur(loan.net_seed_amount), 'Payment In Favour', fmt(loan.payment_in_favour), 'Net Disbursement', fmtCur(loan.net_disbursement_amount))}
   ${row4('Payment Received', formatDate(loan.payment_received_date), '', '', '', '', '', '')}
 
   ${sectionTitle('&#128197;', 'Important Dates')}
@@ -275,7 +275,7 @@ function generatePDFBlob(loan: LoanData): Blob {
 
   drawSection('DEDUCTIONS & DISBURSEMENT', [
     ['Mehar Deduction', fmtCur(loan.mehar_deduction)], ['Mehar PF', fmtCur(loan.mehar_pf)], ['Total Deduction', fmtCur(loan.total_deduction)],
-    ['Hold Amount', fmtCur(loan.hold_amount)], ['Net Seed Amount', fmtCur(loan.net_seed_amount)], ['Payment In Favour', fmt(loan.payment_in_favour)],
+    ['Hold Amount', fmtCur(loan.hold_amount)], ['Received Amount', fmtCur(loan.net_seed_amount)], ['Payment In Favour', fmt(loan.payment_in_favour)],
     ['Net Disbursement', fmtCur(loan.net_disbursement_amount)], ['Payment Received', formatDate(loan.payment_received_date)]
   ]);
 
