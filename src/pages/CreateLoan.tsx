@@ -288,6 +288,8 @@ export default function CreateLoan() {
 
   const [customTenure, setCustomTenure] = useState('');
   const [showCustomTenure, setShowCustomTenure] = useState(false);
+  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
 
   const tenureOptions = [12, 18, 24, 36, 48, 60, 72, 84];
 
