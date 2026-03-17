@@ -286,8 +286,28 @@ export default function CreateLoan() {
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
   });
 
-  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
-  const [uploadingDocs, setUploadingDocs] = useState(false);
+  const [customTenure, setCustomTenure] = useState('');
+  const [showCustomTenure, setShowCustomTenure] = useState(false);
+
+  const tenureOptions = [12, 18, 24, 36, 48, 60, 72, 84];
+
+  const handleTenureChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomTenure(true);
+      setCustomTenure('');
+    } else {
+      setShowCustomTenure(false);
+      setCustomTenure('');
+      update('tenure', value);
+    }
+  };
+
+  const handleCustomTenureChange = (value: string) => {
+    setCustomTenure(value);
+    if (value && !isNaN(Number(value)) && Number(value) > 0) {
+      update('tenure', value);
+    }
+  };
 
   useEffect(() => {
     if (isEditMode && existingLoan) {
@@ -407,6 +427,13 @@ export default function CreateLoan() {
         guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
         guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
       });
+      
+      // Handle custom tenure for edit mode
+      const existingTenure = String(existingLoan.tenure || '60');
+      if (!tenureOptions.includes(Number(existingTenure))) {
+        setShowCustomTenure(true);
+        setCustomTenure(existingTenure);
+      }
     }
   }, [isEditMode, existingLoan]);
 
@@ -871,7 +898,50 @@ export default function CreateLoan() {
               <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="e.g., 12.5" /></div>
-                <div><label className={labelClass}>Tenure *</label><select required className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)}>{[12, 18, 24, 36, 48, 60, 72, 84].map(t => <option key={t} value={t}>{t} MONTH</option>)}</select></div>
+                <div>
+                  <label className={labelClass}>Tenure *</label>
+                  {!showCustomTenure ? (
+                    <select 
+                      required 
+                      className={inputClass} 
+                      value={tenureOptions.includes(Number(form.tenure)) ? form.tenure : 'custom'} 
+                      onChange={e => handleTenureChange(e.target.value)}
+                    >
+                      {tenureOptions.map(t => <option key={t} value={t}>{t} MONTH</option>)}
+                      <option value="custom">Other (Manual Input)</option>
+                    </select>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        max="120"
+                        className={inputClass}
+                        value={customTenure}
+                        onChange={e => handleCustomTenureChange(e.target.value)}
+                        placeholder="Enter months"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCustomTenure(false);
+                          setCustomTenure('');
+                          update('tenure', '60');
+                        }}
+                        className="px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
+                        title="Back to dropdown"
+                      >
+                        ↩
+                      </button>
+                    </div>
+                  )}
+                  {showCustomTenure && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Enter tenure in months (1-120)
+                    </p>
+                  )}
+                </div>
                 <div><label className={labelClass}>EMI Mode</label><select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}><option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option><option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option></select></div>
                 <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} placeholder="Optional" /></div>
                 {(form.irr && form.loanAmount) && (
