@@ -259,7 +259,7 @@ export default function CreateLoan() {
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
     // RTO Papers Checkboxes
     rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
-    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false,
+    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false, rtoFitnessDocument: false, rtoTaxReceipt: false,
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
@@ -275,12 +275,12 @@ export default function CreateLoan() {
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
     customerPhoto: null, insurance: null, customerLedger: null,
     // Other KYC Documents
-    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null,
+    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
     // Document checkboxes
     showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
     showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
     // Other KYC checkboxes
-    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false,
+    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
     coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
     guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
     guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
@@ -361,6 +361,8 @@ export default function CreateLoan() {
         rtoSellAgreement: !!existingLoan.rto_sell_agreement,
         rtoRCOwnerKYC: !!existingLoan.rto_rc_owner_kyc,
         rtoStampPapers: !!existingLoan.rto_stamp_papers,
+        rtoFitnessDocument: !!existingLoan.rto_fitness_document,
+        rtoTaxReceipt: !!existingLoan.rto_tax_receipt,
         irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
         tenure: String(existingLoan.tenure || '60'),
         emiMode: existingLoan.emi_mode || 'Monthly',
@@ -397,10 +399,10 @@ export default function CreateLoan() {
         aadharFront: null, aadharBack: null, panCard: null,
         bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
         customerPhoto: null, insurance: null, customerLedger: null,
-        rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null,
+        rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
         showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
         showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
-        showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false,
+        showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
         coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
         guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
         guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
@@ -508,6 +510,8 @@ export default function CreateLoan() {
       { file: form.thirdParty, type: 'third_party', name: 'Third Party' },
       { file: form.stamp, type: 'stamp', name: 'Stamp' },
       { file: form.rcDocument, type: 'rc_document', name: 'RC Document' },
+      { file: form.fitnessDocument, type: 'fitness_document', name: 'FC' },
+      { file: form.taxReceipt, type: 'tax_receipt', name: 'DM' },
     ].filter(doc => doc.file !== null);
 
     if (documents.length === 0) {
@@ -658,6 +662,8 @@ export default function CreateLoan() {
           rto_sell_agreement: form.rtoSellAgreement || false,
           rto_rc_owner_kyc: form.rtoRCOwnerKYC || false,
           rto_stamp_papers: form.rtoStampPapers || false,
+          rto_fitness_document: form.rtoFitnessDocument || false,
+          rto_tax_receipt: form.rtoTaxReceipt || false,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -954,6 +960,8 @@ export default function CreateLoan() {
                       { id: 'rtoSellAgreement', label: 'Sell Agreement' },
                       { id: 'rtoRCOwnerKYC', label: 'RC Owner KYC' },
                       { id: 'rtoStampPapers', label: 'Stamp Papers' },
+                      { id: 'rtoFitnessDocument', label: 'FC' },
+                      { id: 'rtoTaxReceipt', label: 'DM' },
                     ].map((item) => (
                       <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors">
                         <input 
@@ -1050,6 +1058,8 @@ export default function CreateLoan() {
                       { file: form.thirdParty, name: 'Third Party', type: 'third_party' },
                       { file: form.stamp, name: 'Stamp', type: 'stamp' },
                       { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
+                      { file: form.fitnessDocument, name: 'FC', type: 'fitness_document' },
+                      { file: form.taxReceipt, name: 'DM', type: 'tax_receipt' },
                     ].filter(doc => doc.file).map((doc) => {
                       const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
                       return (
@@ -1244,6 +1254,14 @@ export default function CreateLoan() {
                     <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
                     <span className="text-sm font-medium">RC Document</span>
                   </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showFitnessDoc} onChange={e => update('showFitnessDoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">FC</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-sm font-medium">DM</span>
+                  </label>
                 </div>
 
                 {/* Document Upload Fields */}
@@ -1281,6 +1299,20 @@ export default function CreateLoan() {
                       <label className={labelClass}>RC Document</label>
                       <input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.rcDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.rcDocument as File).name}</p>}
+                    </div>
+                  )}
+                  {form.showFitnessDoc && (
+                    <div>
+                      <label className={labelClass}>FC</label>
+                      <input type="file" className={inputClass} onChange={e => update('fitnessDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.fitnessDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.fitnessDocument as File).name}</p>}
+                    </div>
+                  )}
+                  {form.showTaxReceipt && (
+                    <div>
+                      <label className={labelClass}>DM</label>
+                      <input type="file" className={inputClass} onChange={e => update('taxReceipt', e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                      {form.taxReceipt && <p className="text-xs text-green-600 mt-1">✓ {(form.taxReceipt as File).name}</p>}
                     </div>
                   )}
                 </div>
