@@ -1,3 +1,22 @@
+export interface TenureRule {
+  minTenure: number;
+  maxTenure: number;
+  payoutMultiplier: number; // 0 = zero payout, 0.5 = half payout, 1 = full payout
+  description: string;
+}
+
+export interface AdvancedScheme {
+  type: string;
+  name: string;
+  financier: string;
+  vertical: string;
+  minVolume: number;
+  maxVolume: number;
+  baseCommissionRate: number;
+  tenureRules: TenureRule[];
+  status: string;
+}
+
 export interface Scheme {
   type: string;
   name: string;
@@ -9,6 +28,55 @@ export interface Scheme {
   commissionRate: number;
   status: string;
 }
+
+// Advanced schemes with tenure-based payout rules
+export const ADVANCED_SCHEMES: AdvancedScheme[] = [
+  {
+    type: 'Advanced AU Scheme',
+    name: 'AU Small Finance Bank - Used Car',
+    financier: 'AU Small Finance Bank',
+    vertical: 'Car',
+    minVolume: 100000,
+    maxVolume: 500000,
+    baseCommissionRate: 1.50,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 18, payoutMultiplier: 0, description: '18 months or below - Zero payout' },
+      { minTenure: 19, maxTenure: 24, payoutMultiplier: 0.5, description: '19-24 months - Half payout' },
+      { minTenure: 25, maxTenure: 120, payoutMultiplier: 1, description: '25+ months - Full payout' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'Advanced AU Scheme',
+    name: 'AU Small Finance Bank - Used Car Gold',
+    financier: 'AU Small Finance Bank',
+    vertical: 'Car',
+    minVolume: 500001,
+    maxVolume: 1000000,
+    baseCommissionRate: 1.75,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 18, payoutMultiplier: 0, description: '18 months or below - Zero payout' },
+      { minTenure: 19, maxTenure: 24, payoutMultiplier: 0.5, description: '19-24 months - Half payout' },
+      { minTenure: 25, maxTenure: 120, payoutMultiplier: 1, description: '25+ months - Full payout' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'Advanced AU Scheme',
+    name: 'AU Small Finance Bank - Used Car Premium',
+    financier: 'AU Small Finance Bank',
+    vertical: 'Car',
+    minVolume: 1000001,
+    maxVolume: 2500000,
+    baseCommissionRate: 2.00,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 18, payoutMultiplier: 0, description: '18 months or below - Zero payout' },
+      { minTenure: 19, maxTenure: 24, payoutMultiplier: 0.5, description: '19-24 months - Half payout' },
+      { minTenure: 25, maxTenure: 120, payoutMultiplier: 1, description: '25+ months - Full payout' }
+    ],
+    status: 'Active'
+  }
+];
 
 export const SCHEMES: Scheme[] = [
   { type: 'Schemes 1', name: 'SK Car Silver Scheme', financier: 'SK Finance', vertical: 'CAR', minVolume: 100000, maxVolume: 1099999, tenureEmi: 0, commissionRate: 1.75, status: 'Active' },
@@ -87,6 +155,62 @@ export const SCHEMES: Scheme[] = [
   { type: 'Schemes 4', name: 'CHOLA Tractor Platinum Scheme', financier: 'Cholamandalam Investment', vertical: 'TR', minVolume: 10000000, maxVolume: 99999999, tenureEmi: 0, commissionRate: 2.25, status: 'Active' },
   { type: 'Schemes 5', name: 'Kamal Scheme', financier: 'Kamal Finserve', vertical: 'CV', minVolume: 10000000, maxVolume: 99999999, tenureEmi: 0, commissionRate: 1.5, status: 'Active' },
 ];
+
+export function calculateAdvancedCommission(
+  financierName: string,
+  vertical: string,
+  loanAmount: number,
+  tenure: number
+): { rate: number; amount: number; schemeMatched?: AdvancedScheme; tenureRule?: TenureRule; payoutType?: string } {
+  // First try advanced schemes with tenure rules
+  const matchingAdvancedScheme = ADVANCED_SCHEMES.find((s) => {
+    const isFinancierMatch = s.financier.toLowerCase().includes(financierName.toLowerCase()) || 
+                            financierName.toLowerCase().includes(s.financier.toLowerCase());
+    
+    const v = vertical ? vertical.toLowerCase() : '';
+    const sv = s.vertical ? s.vertical.toLowerCase() : '';
+    
+    const isVerticalMatch = v && sv && (
+      v.includes(sv) || 
+      sv.includes(v) ||
+      (sv === 'car' && (v.includes('pv') || v.includes('car') || v.includes('used'))) ||
+      (sv === 'tr' && v.includes('tractor')) ||
+      (sv === 'cv' && (v === 'lcv' || v === 'hcv' || v === 'cv')) ||
+      (sv === 'hcv' && v === 'hcv')
+    );
+    
+    const isVolumeMatch = loanAmount >= s.minVolume && loanAmount <= s.maxVolume;
+    
+    return isFinancierMatch && isVerticalMatch && isVolumeMatch;
+  });
+
+  if (matchingAdvancedScheme) {
+    // Find the applicable tenure rule
+    const applicableTenureRule = matchingAdvancedScheme.tenureRules.find(rule => 
+      tenure >= rule.minTenure && tenure <= rule.maxTenure
+    );
+
+    if (applicableTenureRule) {
+      const effectiveRate = matchingAdvancedScheme.baseCommissionRate * applicableTenureRule.payoutMultiplier;
+      const amount = (loanAmount * effectiveRate) / 100;
+      
+      let payoutType = 'Full Payout';
+      if (applicableTenureRule.payoutMultiplier === 0) payoutType = 'Zero Payout';
+      else if (applicableTenureRule.payoutMultiplier === 0.5) payoutType = 'Half Payout';
+      
+      return {
+        rate: effectiveRate,
+        amount: amount,
+        schemeMatched: matchingAdvancedScheme,
+        tenureRule: applicableTenureRule,
+        payoutType: payoutType
+      };
+    }
+  }
+
+  // Fallback to regular scheme calculation
+  return calculateCommission(financierName, vertical, loanAmount, tenure);
+}
 
 export function calculateCommission(
   financierName: string,

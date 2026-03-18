@@ -8,7 +8,7 @@ import { calculateEMI, formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { calculateCommission } from '@/lib/schemes';
+import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 
 export default function CreateLoan() {
   const navigate = useNavigate();
@@ -509,7 +509,7 @@ export default function CreateLoan() {
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
     const verticalToUse = form.financierTeamVertical || form.vertical;
-    return calculateCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, calculatedTenure);
+    return calculateAdvancedCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, calculatedTenure);
   }, [form.assignedBankId, form.financierTeamVertical, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
   const totalPayable = emi * calculatedTenure;
@@ -987,12 +987,49 @@ export default function CreateLoan() {
               {computedCommission.amount > 0 && form.assignedBrokerId && (
                 <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-green-600 font-semibold text-sm">Broker Payout ({computedCommission.schemeMatched ? computedCommission.schemeMatched.name : 'Matched Scheme'})</span>
+                    <span className="text-green-600 font-semibold text-sm">
+                      Broker Payout ({computedCommission.schemeMatched ? computedCommission.schemeMatched.name : 'Matched Scheme'})
+                      {computedCommission.payoutType && (
+                        <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                          computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' :
+                          computedCommission.payoutType === 'Half Payout' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {computedCommission.payoutType}
+                        </span>
+                      )}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Loan Amount</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(Number(form.loanAmount))}</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Rate</p><p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Payout Amount</p><p className="text-lg font-bold text-green-600 break-all">{formatCurrency(computedCommission.amount)}</p></div>
+                  {computedCommission.tenureRule && (
+                    <div className="mb-3 p-2 rounded-lg bg-background/50">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>Tenure Rule:</strong> {computedCommission.tenureRule.description}
+                      </p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="text-center p-3 rounded-lg bg-background/50">
+                      <p className="text-xs text-muted-foreground mb-1">Loan Amount</p>
+                      <p className="text-lg font-bold text-foreground break-all">{formatCurrency(Number(form.loanAmount))}</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-background/50">
+                      <p className="text-xs text-muted-foreground mb-1">Tenure</p>
+                      <p className="text-lg font-bold text-foreground">{calculatedTenure} months</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-background/50">
+                      <p className="text-xs text-muted-foreground mb-1">Rate</p>
+                      <p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-background/50">
+                      <p className="text-xs text-muted-foreground mb-1">Payout Amount</p>
+                      <p className={`text-lg font-bold break-all ${
+                        computedCommission.payoutType === 'Zero Payout' ? 'text-red-600' :
+                        computedCommission.payoutType === 'Half Payout' ? 'text-yellow-600' :
+                        'text-green-600'
+                      }`}>
+                        {formatCurrency(computedCommission.amount)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
