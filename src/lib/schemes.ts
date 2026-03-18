@@ -31,6 +31,7 @@ export interface Scheme {
 
 // Advanced schemes with tenure-based payout rules
 export const ADVANCED_SCHEMES: AdvancedScheme[] = [
+  // AU Small Finance Bank schemes
   {
     type: 'Advanced AU Scheme',
     name: 'AU Small Finance Bank - Used Car',
@@ -73,6 +74,170 @@ export const ADVANCED_SCHEMES: AdvancedScheme[] = [
       { minTenure: 1, maxTenure: 18, payoutMultiplier: 0, description: '18 months or below - Zero payout' },
       { minTenure: 19, maxTenure: 24, payoutMultiplier: 0.5, description: '19-24 months - Half payout' },
       { minTenure: 25, maxTenure: 120, payoutMultiplier: 1, description: '25+ months - Full payout' }
+    ],
+    status: 'Active'
+  },
+  
+  // SK Finance schemes - No tenure restrictions (NA)
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used Vehicles Tier 1',
+    financier: 'SK Finance',
+    vertical: 'Used Car',
+    minVolume: 0,
+    maxVolume: 500000,
+    baseCommissionRate: 2.00,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CV Tier 1',
+    financier: 'SK Finance',
+    vertical: 'Used CV',
+    minVolume: 0,
+    maxVolume: 500000,
+    baseCommissionRate: 2.00,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CE Tier 1',
+    financier: 'SK Finance',
+    vertical: 'Used CE',
+    minVolume: 0,
+    maxVolume: 500000,
+    baseCommissionRate: 2.00,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  
+  // SK Finance Tier 2: 6-10 Lac
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used Vehicles Tier 2',
+    financier: 'SK Finance',
+    vertical: 'Used Car',
+    minVolume: 600000,
+    maxVolume: 1000000,
+    baseCommissionRate: 2.25,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CV Tier 2',
+    financier: 'SK Finance',
+    vertical: 'Used CV',
+    minVolume: 600000,
+    maxVolume: 1000000,
+    baseCommissionRate: 2.25,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CE Tier 2',
+    financier: 'SK Finance',
+    vertical: 'Used CE',
+    minVolume: 600000,
+    maxVolume: 1000000,
+    baseCommissionRate: 2.25,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  
+  // SK Finance Tier 3: 11-50 Lac
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used Vehicles Tier 3',
+    financier: 'SK Finance',
+    vertical: 'Used Car',
+    minVolume: 1100000,
+    maxVolume: 5000000,
+    baseCommissionRate: 2.50,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CV Tier 3',
+    financier: 'SK Finance',
+    vertical: 'Used CV',
+    minVolume: 1100000,
+    maxVolume: 5000000,
+    baseCommissionRate: 2.50,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CE Tier 3',
+    financier: 'SK Finance',
+    vertical: 'Used CE',
+    minVolume: 1100000,
+    maxVolume: 5000000,
+    baseCommissionRate: 2.50,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  
+  // SK Finance Tier 4: 51 Lac and above
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used Vehicles Tier 4',
+    financier: 'SK Finance',
+    vertical: 'Used Car',
+    minVolume: 5100000,
+    maxVolume: 99999999,
+    baseCommissionRate: 2.75,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CV Tier 4',
+    financier: 'SK Finance',
+    vertical: 'Used CV',
+    minVolume: 5100000,
+    maxVolume: 99999999,
+    baseCommissionRate: 2.75,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
+    ],
+    status: 'Active'
+  },
+  {
+    type: 'SK Finance Scheme',
+    name: 'SK Finance - Used CE Tier 4',
+    financier: 'SK Finance',
+    vertical: 'Used CE',
+    minVolume: 5100000,
+    maxVolume: 99999999,
+    baseCommissionRate: 2.75,
+    tenureRules: [
+      { minTenure: 1, maxTenure: 120, payoutMultiplier: 1, description: 'All tenures - Full payout (No tenure restriction)' }
     ],
     status: 'Active'
   }
@@ -161,7 +326,23 @@ export function calculateAdvancedCommission(
   vertical: string,
   loanAmount: number,
   tenure: number
-): { rate: number; amount: number; schemeMatched?: AdvancedScheme; tenureRule?: TenureRule; payoutType?: string } {
+): { 
+  rate: number; 
+  amount: number; 
+  schemeMatched?: AdvancedScheme; 
+  tenureRule?: TenureRule; 
+  payoutType?: string;
+  calculationBreakdown?: {
+    financier: string;
+    tenure: number;
+    vertical: string;
+    businessVolume: number;
+    volumeTier: string;
+    baseRate: number;
+    tenureMultiplier: number;
+    finalRate: number;
+  }
+} {
   // First try advanced schemes with tenure rules
   const matchingAdvancedScheme = ADVANCED_SCHEMES.find((s) => {
     const isFinancierMatch = s.financier.toLowerCase().includes(financierName.toLowerCase()) || 
@@ -170,12 +351,19 @@ export function calculateAdvancedCommission(
     const v = vertical ? vertical.toLowerCase() : '';
     const sv = s.vertical ? s.vertical.toLowerCase() : '';
     
+    // Enhanced vertical matching for SK Finance and other schemes
     const isVerticalMatch = v && sv && (
       v.includes(sv) || 
       sv.includes(v) ||
-      (sv === 'car' && (v.includes('pv') || v.includes('car') || v.includes('used'))) ||
-      (sv === 'tr' && v.includes('tractor')) ||
-      (sv === 'cv' && (v === 'lcv' || v === 'hcv' || v === 'cv')) ||
+      // Car matching
+      (sv.includes('car') && (v.includes('pv') || v.includes('car') || v.includes('used'))) ||
+      // CV matching (Commercial Vehicle)
+      (sv.includes('cv') && (v === 'lcv' || v === 'hcv' || v === 'cv' || v.includes('commercial'))) ||
+      // CE matching (Construction Equipment)
+      (sv.includes('ce') && (v === 'ce' || v.includes('construction') || v.includes('equipment'))) ||
+      // Tractor matching
+      (sv.includes('tr') && v.includes('tractor')) ||
+      // HCV specific matching
       (sv === 'hcv' && v === 'hcv')
     );
     
@@ -198,18 +386,60 @@ export function calculateAdvancedCommission(
       if (applicableTenureRule.payoutMultiplier === 0) payoutType = 'Zero Payout';
       else if (applicableTenureRule.payoutMultiplier === 0.5) payoutType = 'Half Payout';
       
+      // Determine volume tier description
+      let volumeTier = '';
+      if (loanAmount <= 500000) volumeTier = '0-5 Lac';
+      else if (loanAmount <= 1000000) volumeTier = '6-10 Lac';
+      else if (loanAmount <= 5000000) volumeTier = '11-50 Lac';
+      else volumeTier = '51+ Lac';
+      
       return {
         rate: effectiveRate,
         amount: amount,
         schemeMatched: matchingAdvancedScheme,
         tenureRule: applicableTenureRule,
-        payoutType: payoutType
+        payoutType: payoutType,
+        calculationBreakdown: {
+          financier: financierName,
+          tenure: tenure,
+          vertical: vertical,
+          businessVolume: loanAmount,
+          volumeTier: volumeTier,
+          baseRate: matchingAdvancedScheme.baseCommissionRate,
+          tenureMultiplier: applicableTenureRule.payoutMultiplier,
+          finalRate: effectiveRate
+        }
       };
     }
   }
 
   // Fallback to regular scheme calculation
-  return calculateCommission(financierName, vertical, loanAmount, tenure);
+  const fallbackResult = calculateCommission(financierName, vertical, loanAmount, tenure);
+  
+  // Add breakdown for fallback too
+  if (fallbackResult.amount > 0) {
+    let volumeTier = '';
+    if (loanAmount <= 500000) volumeTier = '0-5 Lac';
+    else if (loanAmount <= 1000000) volumeTier = '6-10 Lac';
+    else if (loanAmount <= 5000000) volumeTier = '11-50 Lac';
+    else volumeTier = '51+ Lac';
+    
+    return {
+      ...fallbackResult,
+      calculationBreakdown: {
+        financier: financierName,
+        tenure: tenure,
+        vertical: vertical,
+        businessVolume: loanAmount,
+        volumeTier: volumeTier,
+        baseRate: fallbackResult.rate,
+        tenureMultiplier: 1,
+        finalRate: fallbackResult.rate
+      }
+    };
+  }
+  
+  return fallbackResult;
 }
 
 export function calculateCommission(

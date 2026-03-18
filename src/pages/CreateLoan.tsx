@@ -988,7 +988,7 @@ export default function CreateLoan() {
                 <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-green-600 font-semibold text-sm">
-                      Broker Payout ({computedCommission.schemeMatched ? computedCommission.schemeMatched.name : 'Matched Scheme'})
+                      Broker Payout Calculation
                       {computedCommission.payoutType && (
                         <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
                           computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' :
@@ -1000,6 +1000,53 @@ export default function CreateLoan() {
                       )}
                     </span>
                   </div>
+                  
+                  {/* 4 Parameter Breakdown */}
+                  {computedCommission.calculationBreakdown && (
+                    <div className="mb-4 p-3 rounded-lg bg-background/50 border border-border/50">
+                      <h4 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">Calculation Parameters</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground mb-1">1. Financier</p>
+                          <p className="text-sm font-bold text-blue-600">{computedCommission.calculationBreakdown.financier}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground mb-1">2. Tenure</p>
+                          <p className="text-sm font-bold text-purple-600">{computedCommission.calculationBreakdown.tenure} months</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground mb-1">3. Vertical</p>
+                          <p className="text-sm font-bold text-orange-600">{computedCommission.calculationBreakdown.vertical}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground mb-1">4. Business Volume</p>
+                          <p className="text-sm font-bold text-green-600">{computedCommission.calculationBreakdown.volumeTier}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Calculation Formula */}
+                  {computedCommission.calculationBreakdown && (
+                    <div className="mb-4 p-3 rounded-lg bg-blue-50/50 border border-blue-200/50">
+                      <h4 className="text-xs font-semibold text-blue-800 mb-2">Calculation Formula</h4>
+                      <div className="text-sm text-blue-700">
+                        <span className="font-mono">
+                          {formatCurrency(computedCommission.calculationBreakdown.businessVolume)} × {computedCommission.calculationBreakdown.baseRate}%
+                          {computedCommission.calculationBreakdown.tenureMultiplier !== 1 && (
+                            <> × {computedCommission.calculationBreakdown.tenureMultiplier}</>  
+                          )}
+                          = <strong className="text-green-600">{formatCurrency(computedCommission.amount)}</strong>
+                        </span>
+                      </div>
+                      {computedCommission.calculationBreakdown.tenureMultiplier !== 1 && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          Base Rate: {computedCommission.calculationBreakdown.baseRate}% × Tenure Multiplier: {computedCommission.calculationBreakdown.tenureMultiplier} = Final Rate: {computedCommission.calculationBreakdown.finalRate}%
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
                   {computedCommission.tenureRule && (
                     <div className="mb-3 p-2 rounded-lg bg-background/50">
                       <p className="text-xs text-muted-foreground">
@@ -1007,17 +1054,15 @@ export default function CreateLoan() {
                       </p>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  
+                  {/* Final Result */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="text-center p-3 rounded-lg bg-background/50">
                       <p className="text-xs text-muted-foreground mb-1">Loan Amount</p>
                       <p className="text-lg font-bold text-foreground break-all">{formatCurrency(Number(form.loanAmount))}</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground mb-1">Tenure</p>
-                      <p className="text-lg font-bold text-foreground">{calculatedTenure} months</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground mb-1">Rate</p>
+                      <p className="text-xs text-muted-foreground mb-1">Final Rate</p>
                       <p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
