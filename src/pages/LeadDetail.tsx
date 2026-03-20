@@ -292,7 +292,12 @@ export default function LeadDetail() {
                       <FileText size={20} className="text-accent" />
                     </div>
                     <div className="overflow-hidden">
-                      <p className="text-xs font-semibold text-foreground truncate uppercase">{doc.document_type.replace(/_/g, ' ')}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-foreground truncate uppercase">{doc.document_type.replace(/_/g, ' ')}</p>
+                        {doc.is_reuploaded && (
+                          <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-accent/20 text-accent font-bold uppercase tracking-wider">New</span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-muted-foreground truncate">{doc.document_name}</p>
                       <p className="text-[9px] text-muted-foreground italic truncate">{new Date(doc.created_at).toLocaleString('en-IN')}</p>
                     </div>
