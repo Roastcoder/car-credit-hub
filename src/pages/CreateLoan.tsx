@@ -19,32 +19,23 @@ export default function CreateLoan() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const permissions = getRolePermissions(user?.role || 'employee');
+  const [activeStep, setActiveStep] = useState(0);
 
-  // Check if user can create loans
-  if (!permissions.canCreate && !isEditMode) {
+  if (!permissions.canCreateLoan && !id) {
     return (
-      <div className="w-full mx-auto px-4 pb-20 lg:pb-4">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-          <ArrowLeft size={16} /> Back
-        </button>
-        
-        <div className="bg-card rounded-lg border border-border p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={32} className="text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
-          <p className="text-muted-foreground mb-4">
-            {user?.role === 'manager' 
-              ? 'Managers can only view and edit existing loan applications, but cannot create new ones.'
-              : 'You do not have permission to create loan applications.'}
-          </p>
-          <button
-            onClick={() => navigate('/loans')}
-            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity"
-          >
-            View Existing Loans
-          </button>
+      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={32} className="text-red-500" />
         </div>
+        <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
+        <p className="text-muted-foreground mb-8">
+          {user?.role === 'broker'
+            ? 'Brokers are not allowed to create loan applications directly. Please create a Lead instead.'
+            : 'You do not have permission to create new loan applications.'}
+        </p>
+        <button onClick={() => navigate('/loans')} className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold">
+          Back to Loans
+        </button>
       </div>
     );
   }

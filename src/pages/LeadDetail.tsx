@@ -1,12 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/api';
 import { ArrowLeft, User, Car, IndianRupee, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { getRolePermissions } from '@/lib/permissions';
 
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const permissions = user?.role ? getRolePermissions(user.role) : null;
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
@@ -62,7 +66,7 @@ export default function LeadDetail() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{lead.customer_name}</p>
         </div>
-        {!lead.converted_to_loan && (
+        {!lead.converted_to_loan && permissions?.canCreateLoan && (
           <button
             onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -84,9 +88,13 @@ export default function LeadDetail() {
             <Field label="Customer Name" value={lead.customer_name} />
             <Field label="Phone Number" value={lead.phone_no} />
             <Field label="District" value={lead.district} />
-            <Field label="Tehsil" value={lead.tehsil} />
-            <Field label="Pin Code" value={lead.pin_code} />
-            <div className="col-span-2"><Field label="Address" value={lead.address} /></div>
+            {user?.role !== 'broker' && (
+              <>
+                <Field label="Tehsil" value={lead.tehsil} />
+                <Field label="Pin Code" value={lead.pin_code} />
+                <div className="col-span-2"><Field label="Address" value={lead.address} /></div>
+              </>
+            )}
           </div>
         </div>
 
@@ -107,7 +115,7 @@ export default function LeadDetail() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Loan Amount Required" value={lead.loan_amount_required ? formatCurrency(Number(lead.loan_amount_required)) : '—'} />
-            <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />
+            {user?.role !== 'broker' && <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />}
           </div>
         </div>
 
@@ -118,7 +126,7 @@ export default function LeadDetail() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Our Branch" value={lead.our_branch} />
-            <Field label="Sourcing Person" value={lead.sourcing_person_name} />
+            {user?.role !== 'broker' && <Field label="Sourcing Person" value={lead.sourcing_person_name} />}
             <Field label="Created" value={new Date(lead.created_at).toLocaleDateString('en-IN')} />
             <Field label="Last Updated" value={new Date(lead.updated_at).toLocaleDateString('en-IN')} />
           </div>

@@ -132,6 +132,12 @@ export class WorkflowService {
     if (userRole === 'super_admin') return true;
     if (userRole === ownerRole) return true;
 
+    // Brokers should see their assigned loans regardless of status
+    if (userRole === 'broker' && currentUserId !== undefined) {
+      const uid = Number(currentUserId);
+      if (Number(loan.broker_id) === uid || Number(loan.assigned_broker_id) === uid) return true;
+    }
+
     // Disbursed files still need to remain visible for creator and branch manager for PDD work.
     if (loan.status === 'disbursed') {
       if (userRole === 'employee' && currentUserId !== undefined && Number(loan.created_by) === Number(currentUserId)) return true;
@@ -157,11 +163,13 @@ export class WorkflowService {
       case 'employee':
         return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled', 'disbursed'];
       case 'manager':
-        return ['manager_review', 'under_review', 'sent_back_manager', 'disbursed'];
+        return ['submitted', 'manager_review', 'under_review', 'sent_back_manager', 'disbursed'];
       case 'admin':
         return ['manager_approved', 'approved', 'sent_back_admin', 'disbursed'];
+      case 'broker':
+        // Broker sees all statuses for their assigned loans (handled in shouldShowLoanToUser)
+        return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
       case 'super_admin':
-        // Super admin sees all statuses, but for filtering convenience, we can return empty or all
         return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
       default:
         return [];

@@ -320,9 +320,10 @@ export default function Loans() {
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
-                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>
+                    {user?.role !== 'broker' && <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>}
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
+                    {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
                     {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
                     <th className="py-3 px-3"></th>
                   </tr>
@@ -341,9 +342,10 @@ export default function Loans() {
                       </td>
                       <td className="py-3.5 px-3 text-muted-foreground">{loan.bank_name || loan.assigned_bank_name || '—'}</td>
                       <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
-                      <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>
+                      {user?.role !== 'broker' && <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>}
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                       <td className="py-3.5 px-3"><PDDStatusBadge status={loan.pdd_status} /></td>
+                      {user?.role === 'broker' && <td className="py-3.5 px-3 text-muted-foreground">{loan.district || '—'}</td>}
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">

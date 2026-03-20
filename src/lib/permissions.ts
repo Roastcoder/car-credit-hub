@@ -1,7 +1,8 @@
 import { UserRole } from '@/contexts/AuthContext';
 
 export interface Permission {
-  canCreate: boolean;
+  canCreateLead: boolean;
+  canCreateLoan: boolean;
   canEdit: boolean;
   canView: boolean;
   canDelete: boolean;
@@ -14,7 +15,8 @@ export const getRolePermissions = (role: UserRole): Permission => {
   switch (role) {
     case 'super_admin':
       return {
-        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
         canEdit: true,
         canView: true,
         canDelete: true,
@@ -25,7 +27,8 @@ export const getRolePermissions = (role: UserRole): Permission => {
     
     case 'admin':
       return {
-        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
         canEdit: true,
         canView: true,
         canDelete: true,
@@ -36,41 +39,56 @@ export const getRolePermissions = (role: UserRole): Permission => {
     
     case 'manager':
       return {
-        canCreate: false, // Manager cannot create loans/leads
-        canEdit: true,    // Can edit existing ones
+        canCreateLead: true,
+        canCreateLoan: true,
+        canEdit: true,
         canView: true,
         canDelete: false,
-        canChangeStatus: false, // Cannot change file status
+        canChangeStatus: true,
         canAddRemarks: true,
-        canViewAll: false, // Only branch-specific
+        canViewAll: true,
       };
     
     case 'employee':
       return {
-        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
         canEdit: true,
         canView: true,
         canDelete: false,
         canChangeStatus: false,
-        canAddRemarks: false,
-        canViewAll: false, // Only own records
+        canAddRemarks: true,
+        canViewAll: false,
       };
     
     case 'bank':
-    case 'broker':
       return {
-        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
         canEdit: false,
         canView: true,
         canDelete: false,
         canChangeStatus: false,
-        canAddRemarks: false,
+        canAddRemarks: true,
+        canViewAll: false,
+      };
+
+    case 'broker':
+      return {
+        canCreateLead: true,
+        canCreateLoan: false,
+        canEdit: false,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
         canViewAll: false,
       };
     
     default:
       return {
-        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
         canEdit: false,
         canView: false,
         canDelete: false,
@@ -79,19 +97,25 @@ export const getRolePermissions = (role: UserRole): Permission => {
         canViewAll: false,
       };
   }
-};
+}
+;
 
-export const canAccessLoan = (userRole: UserRole, userId: number, loan: any): boolean => {
+export const canAccessLoan = (userRole: UserRole, userId: number | string, loan: any): boolean => {
   const permissions = getRolePermissions(userRole);
+  const uid = String(userId);
   
   if (permissions.canViewAll) return true;
   
   if (userRole === 'employee') {
-    return loan.created_by === userId;
+    return String(loan.created_by) === uid;
+  }
+  
+  if (userRole === 'broker') {
+    return String(loan.broker_id) === uid || String(loan.assigned_broker_id) === uid;
   }
   
   if (userRole === 'manager') {
-    return loan.branch_id === userId; // Assuming manager's branch_id matches
+    return String(loan.branch_id) === String((loan as any).user_branch_id); // Fallback if canViewAll is false
   }
   
   return false;

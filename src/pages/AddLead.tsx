@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, UserPlus, AlertTriangle } from 'lucide-react';
@@ -14,7 +13,7 @@ export default function AddLead() {
   const permissions = getRolePermissions(user?.role || 'employee');
 
   // Check if user can create leads
-  if (!permissions.canCreate) {
+  if (!permissions.canCreateLead) {
     return (
       <div>
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -60,6 +59,13 @@ export default function AddLead() {
     financier_name: '',
   });
 
+  const [rcFront, setRcFront] = useState<File | null>(null);
+  const [rcBack, setRcBack] = useState<File | null>(null);
+  const [aadharFront, setAadharFront] = useState<File | null>(null);
+  const [aadharBack, setAadharBack] = useState<File | null>(null);
+  const [panCard, setPanCard] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
@@ -84,7 +90,34 @@ export default function AddLead() {
     }
   }, [availableBranches, form.our_branch]);
 
-  const createLead = useMutation({
+  const uploadDocuments = async (leadId: number) => {
+    const formData = new FormData();
+    if (rcFront) formData.append('rc_front', rcFront);
+    if (rcBack) formData.append('rc_back', rcBack);
+    if (aadharFront) formData.append('aadhar_front', aadharFront);
+    if (aadharBack) formData.append('aadhar_back', aadharBack);
+    if (panCard) formData.append('pan_card', panCard);
+
+    // Simple check if any files are appended
+    let hasFiles = false;
+    for (const _ of formData.entries()) {
+      hasFiles = true;
+      break;
+    }
+    if (!hasFiles) return;
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${leadId}/documents/multiple`, {
+      method: 'POST',
+      headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) throw new Error('Failed to upload documents');
+  };
+
+  const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
         method: 'POST',
@@ -95,11 +128,22 @@ export default function AddLead() {
         body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error('Failed to create lead');
-      return response.json();
+      const result = await response.json();
+      
+      const leadId = result.leadId || result.id;
+      if (leadId) {
+        setIsUploading(true);
+        try {
+          await uploadDocuments(leadId);
+        } finally {
+          setIsUploading(false);
+        }
+      }
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully!');
+      toast.success('Lead created successfully with documents!');
       navigate('/leads-list');
     },
     onError: (err: any) => {
@@ -109,11 +153,12 @@ export default function AddLead() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createLead.mutate(form);
+    createLeadMutation.mutate(form);
   };
 
   const inputClass = "w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors";
   const labelClass = "block text-sm font-medium text-foreground mb-1.5";
+  const fileInputClass = "w-full text-xs text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20 cursor-pointer";
 
   return (
     <div>
@@ -125,7 +170,7 @@ export default function AddLead() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <UserPlus size={24} /> Add Lead
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Capture customer details for quick loan application</p>
+        <p className="text-sm text-muted-foreground mt-1">Capture customer details and upload mandatory documents</p>
       </div>
 
       <form onSubmit={handleSubmit} className="stat-card max-w-4xl">
@@ -214,11 +259,42 @@ export default function AddLead() {
             <label className={labelClass}>Financier Name</label>
             <input className={inputClass} value={form.financier_name} onChange={e => setForm({...form, financier_name: e.target.value})} placeholder="Financier Name" />
           </div>
+          
+          <div className="md:col-span-2 mt-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Documents Upload</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className={labelClass}>RC (Front) *</label>
+                <input type="file" required className={fileInputClass} onChange={e => setRcFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+              </div>
+              <div>
+                <label className={labelClass}>RC (Back) *</label>
+                <input type="file" required className={fileInputClass} onChange={e => setRcBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+              </div>
+              <div>
+                <label className={labelClass}>PAN Card *</label>
+                <input type="file" required className={fileInputClass} onChange={e => setPanCard(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+              </div>
+              <div>
+                <label className={labelClass}>Aadhar (Front) *</label>
+                <input type="file" required className={fileInputClass} onChange={e => setAadharFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+              </div>
+              <div>
+                <label className={labelClass}>Aadhar (Back) *</label>
+                <input type="file" required className={fileInputClass} onChange={e => setAadharBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button type="submit" disabled={createLead.isPending} className="px-6 py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60">
-            {createLead.isPending ? 'Creating...' : 'Create Lead'}
+        <div className="flex gap-3 mt-8 pt-6 border-t border-border">
+          <button type="submit" disabled={createLeadMutation.isPending || isUploading} className="px-6 py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2">
+            {(createLeadMutation.isPending || isUploading) ? (
+                <>
+                    <span className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
+                    {isUploading ? 'Uploading Documents...' : 'Creating...'}
+                </>
+            ) : 'Create Lead'}
           </button>
           <button type="button" onClick={() => navigate(-1)} className="px-6 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors">
             Cancel

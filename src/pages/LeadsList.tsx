@@ -76,7 +76,7 @@ export default function LeadsList() {
           <h1 className="text-2xl font-bold text-foreground">Leads</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} leads found</p>
         </div>
-        {permissions.canCreate && (
+        {permissions.canCreateLead && (
           <Link to="/add-lead" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
             <Plus size={16} /> Add Lead
           </Link>
@@ -148,12 +148,14 @@ export default function LeadsList() {
                 >
                   <Copy size={13} className="text-accent" /> {copiedId === lead.customer_id ? 'Copied' : 'Copy ID'}
                 </button>
-                <button
-                  onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:opacity-90 transition-colors"
-                >
-                  <ArrowRight size={13} /> Convert
-                </button>
+                {permissions.canCreateLoan && (
+                  <button
+                    onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:opacity-90 transition-colors"
+                  >
+                    <ArrowRight size={13} /> Convert
+                  </button>
+                )}
                 {permissions.canDelete && (
                   <button
                     onClick={() => setDeleteConfirm(lead.id)}
@@ -237,13 +239,15 @@ export default function LeadsList() {
                           >
                             <Eye size={16} />
                           </button>
-                          <button
-                            onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
-                            className="p-1.5 rounded-lg hover:bg-accent/10 text-accent transition-colors"
-                            title="Convert to Loan"
-                          >
-                            <ArrowRight size={16} />
-                          </button>
+                          {permissions.canCreateLoan && (
+                            <button
+                              onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
+                              className="p-1.5 rounded-lg hover:bg-accent/10 text-accent transition-colors"
+                              title="Convert to Loan"
+                            >
+                              <ArrowRight size={16} />
+                            </button>
+                          )}
                           {permissions.canDelete && (
                             <button
                               onClick={() => setDeleteConfirm(lead.id)}
