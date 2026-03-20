@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/api';
-import { ArrowLeft, User, Car, IndianRupee, ArrowRight } from 'lucide-react';
+import { ArrowLeft, User, Car, IndianRupee, ArrowRight, FileText, Download, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 
@@ -25,6 +25,24 @@ export default function LeadDetail() {
         return await response.json();
       } catch (error) {
         throw error;
+      }
+    },
+    enabled: !!id,
+  });
+
+  const { data: documents = [] } = useQuery({
+    queryKey: ['lead-documents', id],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}/documents`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
       }
     },
     enabled: !!id,
@@ -130,6 +148,55 @@ export default function LeadDetail() {
             <Field label="Created" value={new Date(lead.created_at).toLocaleDateString('en-IN')} />
             <Field label="Last Updated" value={new Date(lead.updated_at).toLocaleDateString('en-IN')} />
           </div>
+        </div>
+
+        {/* Documents Section */}
+        <div className="stat-card lg:col-span-2 mt-4">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-accent"><FileText size={18} /></span>
+            <h3 className="text-sm font-semibold text-foreground">Uploaded Documents</h3>
+          </div>
+          
+          {documents.length === 0 ? (
+            <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
+              <p className="text-sm text-muted-foreground">No documents uploaded for this lead</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {documents.map((doc: any) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/50 hover:bg-muted/30 transition-colors group">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-10 h-10 rounded bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <FileText size={20} className="text-accent" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-semibold text-foreground truncate uppercase">{doc.document_type.replace(/_/g, ' ')}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{doc.document_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a 
+                      href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.file_url}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded hover:bg-accent/10 text-accent transition-colors"
+                      title="View"
+                    >
+                      <ExternalLink size={14} />
+                    </a>
+                    <a 
+                      href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.file_url}`} 
+                      download 
+                      className="p-1.5 rounded hover:bg-accent/10 text-accent transition-colors"
+                      title="Download"
+                    >
+                      <Download size={14} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
