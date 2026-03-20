@@ -49,7 +49,7 @@ export default function LeadsList() {
         const data = await response.json();
         
         // Filter based on role
-        if (user?.role === 'employee') {
+        if (user?.role === 'employee' || user?.role === 'broker') {
           return data.filter((l: any) => l.created_by === user.id);
         }
         if (user?.role === 'manager') {
