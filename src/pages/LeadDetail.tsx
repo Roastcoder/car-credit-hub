@@ -22,7 +22,9 @@ export default function LeadDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const permissions = user?.role ? getRolePermissions(user.role) : null;
-  const isBroker = user?.role === 'broker';
+  const role = user?.role;
+  const canViewLeadDocuments = role === 'broker' || role === 'manager' || role === 'admin' || role === 'super_admin';
+  const canUploadLeadDocuments = role === 'broker';
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export default function LeadDetail() {
         return [];
       }
     },
-    enabled: !!id && isBroker,
+    enabled: !!id && canViewLeadDocuments,
   });
 
   const uploadMutation = useMutation({
@@ -171,7 +173,7 @@ export default function LeadDetail() {
           <p className="text-sm text-muted-foreground mt-1">{lead.customer_name}</p>
         </div>
         <div className="flex gap-2">
-          {user?.role === 'broker' && lead.reupload_count === 0 && !isReuploading && (
+          {canUploadLeadDocuments && lead.reupload_count === 0 && !isReuploading && (
             <button
               onClick={() => setIsReuploading(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
@@ -194,7 +196,7 @@ export default function LeadDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Re-upload UI */}
-        {isReuploading && (
+        {canUploadLeadDocuments && isReuploading && (
           <div className="stat-card lg:col-span-2 border-accent/50 bg-accent/5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -297,7 +299,7 @@ export default function LeadDetail() {
         </div>
 
         {/* Documents Section */}
-        {isBroker ? (
+        {canViewLeadDocuments ? (
           <div className="stat-card lg:col-span-2 mt-4">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-accent"><FileText size={18} /></span>
@@ -307,6 +309,9 @@ export default function LeadDetail() {
             {documents.length === 0 ? (
               <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
                 <p className="text-sm text-muted-foreground">No documents uploaded for this lead</p>
+                {!canUploadLeadDocuments && (
+                  <p className="text-xs text-muted-foreground mt-1">Uploads are available to broker users only.</p>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -380,7 +385,7 @@ export default function LeadDetail() {
       ) : (
         <div className="stat-card lg:col-span-2 mt-4">
           <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
-            <p className="text-sm text-muted-foreground">Lead documents are visible to broker users only.</p>
+            <p className="text-sm text-muted-foreground">You don’t have permission to view lead documents.</p>
           </div>
         </div>
       )}
