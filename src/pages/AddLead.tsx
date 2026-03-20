@@ -79,6 +79,23 @@ export default function AddLead() {
     },
   });
 
+  const { data: banks = [] } = useQuery({
+    queryKey: ['banks'],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
+    },
+  });
+
   const availableBranches = useMemo(() => {
     if (!user?.branch_id) return branches;
     return (branches as any[]).filter((branch: any) => Number(branch.id) === Number(user.branch_id));
@@ -269,7 +286,18 @@ export default function AddLead() {
 
           <div>
             <label className={labelClass}>Financier Name</label>
-            <input className={inputClass} value={form.financier_name} onChange={e => setForm({...form, financier_name: e.target.value})} placeholder="Financier Name" />
+            <input 
+              list="financiers-list"
+              className={inputClass} 
+              value={form.financier_name} 
+              onChange={e => setForm({...form, financier_name: e.target.value})} 
+              placeholder="Type or Select Financier" 
+            />
+            <datalist id="financiers-list">
+              {(banks as any[]).map((bank: any) => (
+                <option key={bank.id} value={bank.name} />
+              ))}
+            </datalist>
           </div>
           
           <div className="md:col-span-2 mt-4">
