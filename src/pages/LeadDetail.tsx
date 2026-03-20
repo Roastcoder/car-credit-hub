@@ -22,6 +22,7 @@ export default function LeadDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const permissions = user?.role ? getRolePermissions(user.role) : null;
+  const isBroker = user?.role === 'broker';
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export default function LeadDetail() {
         return [];
       }
     },
-    enabled: !!id,
+    enabled: !!id && isBroker,
   });
 
   const uploadMutation = useMutation({
@@ -296,18 +297,19 @@ export default function LeadDetail() {
         </div>
 
         {/* Documents Section */}
-        <div className="stat-card lg:col-span-2 mt-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-accent"><FileText size={18} /></span>
-            <h3 className="text-sm font-semibold text-foreground">Uploaded Documents</h3>
-          </div>
-          
-          {documents.length === 0 ? (
-            <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
-              <p className="text-sm text-muted-foreground">No documents uploaded for this lead</p>
+        {isBroker ? (
+          <div className="stat-card lg:col-span-2 mt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-accent"><FileText size={18} /></span>
+              <h3 className="text-sm font-semibold text-foreground">Uploaded Documents</h3>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            
+            {documents.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
+                <p className="text-sm text-muted-foreground">No documents uploaded for this lead</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {documents.map((doc: any) => {
                 const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.file_url}`;
                 const isImg = isImage(doc.file_url);
@@ -375,6 +377,13 @@ export default function LeadDetail() {
             </div>
           )}
         </div>
+      ) : (
+        <div className="stat-card lg:col-span-2 mt-4">
+          <div className="py-8 text-center border-2 border-dashed border-border rounded-lg">
+            <p className="text-sm text-muted-foreground">Lead documents are visible to broker users only.</p>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

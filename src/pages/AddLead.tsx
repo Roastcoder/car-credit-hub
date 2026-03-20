@@ -279,31 +279,33 @@ export default function AddLead() {
             </datalist>
           </div>
           
-          <div className="md:col-span-2 mt-4">
-            <h3 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Documents Upload</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className={labelClass}>RC (Front) *</label>
-                <input type="file" required className={fileInputClass} onChange={e => setRcFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
-              </div>
-              <div>
-                <label className={labelClass}>RC (Back) *</label>
-                <input type="file" required className={fileInputClass} onChange={e => setRcBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
-              </div>
-              <div>
-                <label className={labelClass}>PAN Card *</label>
-                <input type="file" required className={fileInputClass} onChange={e => setPanCard(e.target.files?.[0] || null)} accept="image/*,.pdf" />
-              </div>
-              <div>
-                <label className={labelClass}>Aadhar (Front) *</label>
-                <input type="file" required className={fileInputClass} onChange={e => setAadharFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
-              </div>
-              <div>
-                <label className={labelClass}>Aadhar (Back) *</label>
-                <input type="file" required className={fileInputClass} onChange={e => setAadharBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+          {user?.role === 'broker' ? (
+            <div className="md:col-span-2 mt-4">
+              <h3 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Documents Upload</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClass}>RC (Front) *</label>
+                  <input type="file" required className={fileInputClass} onChange={e => setRcFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                </div>
+                <div>
+                  <label className={labelClass}>RC (Back) *</label>
+                  <input type="file" required className={fileInputClass} onChange={e => setRcBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                </div>
+                <div>
+                  <label className={labelClass}>PAN Card *</label>
+                  <input type="file" required className={fileInputClass} onChange={e => setPanCard(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                </div>
+                <div>
+                  <label className={labelClass}>Aadhar (Front) *</label>
+                  <input type="file" required className={fileInputClass} onChange={e => setAadharFront(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                </div>
+                <div>
+                  <label className={labelClass}>Aadhar (Back) *</label>
+                  <input type="file" required className={fileInputClass} onChange={e => setAadharBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
+                </div>
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
 
         <div className="flex gap-3 mt-8 pt-6 border-t border-border">
