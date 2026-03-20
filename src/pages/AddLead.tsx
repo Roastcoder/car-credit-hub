@@ -113,56 +113,35 @@ export default function AddLead() {
     }
   }, [user]);
 
-  const uploadDocuments = async (leadId: number) => {
-    const formData = new FormData();
-    if (rcFront) formData.append('rc_front', rcFront);
-    if (rcBack) formData.append('rc_back', rcBack);
-    if (aadharFront) formData.append('aadhar_front', aadharFront);
-    if (aadharBack) formData.append('aadhar_back', aadharBack);
-    if (panCard) formData.append('pan_card', panCard);
-
-    // Simple check if any files are appended
-    let hasFiles = false;
-    for (const _ of formData.entries()) {
-      hasFiles = true;
-      break;
-    }
-    if (!hasFiles) return;
-
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${leadId}/documents/multiple`, {
-      method: 'POST',
-      headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      },
-      body: formData
-    });
-
-    if (!response.ok) throw new Error('Failed to upload documents');
-  };
-
   const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {
+      const formData = new FormData();
+      
+      // Append lead data
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+
+      // Append files
+      if (rcFront) formData.append('rc_front', rcFront);
+      if (rcBack) formData.append('rc_back', rcBack);
+      if (aadharFront) formData.append('aadhar_front', aadharFront);
+      if (aadharBack) formData.append('aadhar_back', aadharBack);
+      if (panCard) formData.append('pan_card', panCard);
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify(data)
+        body: formData
       });
-      if (!response.ok) throw new Error('Failed to create lead');
-      const result = await response.json();
       
-      const leadId = result.leadId || result.id;
-      if (leadId) {
-        setIsUploading(true);
-        try {
-          await uploadDocuments(leadId);
-        } finally {
-          setIsUploading(false);
-        }
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to create lead');
       }
-      return result;
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
