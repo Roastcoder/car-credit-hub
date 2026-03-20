@@ -24,6 +24,11 @@ export default function LeadDetail() {
   const permissions = user?.role ? getRolePermissions(user.role) : null;
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const isImage = (url: string) => {
+    return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
+  };
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
@@ -121,11 +126,6 @@ export default function LeadDetail() {
     uploadMutation.mutate(formData);
   };
 
-  const isImage = (url: string) => {
-    return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
-  };
-
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const Field = ({ label, value }: { label: string; value: string }) => (
     <div>
