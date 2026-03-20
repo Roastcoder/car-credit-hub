@@ -90,6 +90,12 @@ export default function AddLead() {
     }
   }, [availableBranches, form.our_branch]);
 
+  useEffect(() => {
+    if (user?.role === 'broker' && user?.name && !form.sourcing_person_name) {
+      setForm(prev => ({ ...prev, sourcing_person_name: user.name }));
+    }
+  }, [user]);
+
   const uploadDocuments = async (leadId: number) => {
     const formData = new FormData();
     if (rcFront) formData.append('rc_front', rcFront);
@@ -232,7 +238,13 @@ export default function AddLead() {
 
           <div>
             <label className={labelClass}>Sourcing Person Name</label>
-            <input className={inputClass} value={form.sourcing_person_name} onChange={e => setForm({...form, sourcing_person_name: e.target.value})} placeholder="Sourcing Name" />
+            <input 
+              className={inputClass} 
+              value={form.sourcing_person_name} 
+              onChange={e => setForm({...form, sourcing_person_name: e.target.value})} 
+              placeholder="Sourcing Name"
+              readOnly={user?.role === 'broker'}
+            />
           </div>
 
           <div>
