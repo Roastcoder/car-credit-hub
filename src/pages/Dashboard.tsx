@@ -5,7 +5,8 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { LOAN_STATUSES } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
-import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight } from 'lucide-react';
+import { loansAPI, branchesAPI } from '@/lib/api';
+import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -15,25 +16,24 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: loans = [] } = useQuery({
+  const { data: loans = [], isLoading: isLoadingLoans } = useQuery({
     queryKey: ['loans-dashboard', user?.branch_id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        const loansData = data.data || data; // Handle both wrapped and unwrapped data
+        const data = await loansAPI.getAll();
+        const loansData = Array.isArray(data) ? data : (data.data || []);
         
         // Filter based on role
         if (user?.role === 'employee') {
-          return Array.isArray(loansData) ? loansData.filter((l: any) => l.user_id === user.id) : [];
+          return loansData.filter((l: any) => l.user_id === user.id);
         }
         if (user?.role === 'manager') {
-          return Array.isArray(loansData) ? loansData.filter((l: any) => l.branch_id === user.branch_id) : [];
+          return loansData.filter((l: any) => l.branch_id === user.branch_id);
         }
-        return Array.isArray(loansData) ? loansData : [];
+        if (user?.role === 'broker') {
+          return loansData.filter((l: any) => l.broker_id === user.id);
+        }
+        return loansData;
       } catch (error) {
         console.error('Dashboard fetch error:', error);
         return [];
@@ -47,11 +47,7 @@ export default function Dashboard() {
     queryFn: async () => {
       if (!user?.branch_id) return null;
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/branches/${user.branch_id}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-        });
-        if (!response.ok) return null;
-        return await response.json();
+        return await branchesAPI.getById(Number(user.branch_id));
       } catch {
         return null;
       }
@@ -72,12 +68,13 @@ export default function Dashboard() {
     value: loans.filter((l: any) => l.status === s.value).length,
   })).filter(d => d.value > 0);
 
-  const disbursedLoansForChart = loans.filter((l: any) => l.status === 'disbursed');
-  const bankNames = [...new Set(disbursedLoansForChart.map((l: any) => l.bank_name || l.banks?.name).filter(Boolean))];
+  // Consider all loans with a bank assigned for the chart
+  const loansWithBank = loans.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name));
+  const bankNames = [...new Set(loansWithBank.map((l: any) => l.bank_name || l.assigned_bank_name || l.banks?.name).filter(Boolean))];
   const bankData = bankNames.map(bank => ({
-    name: (bank as string).replace(' Bank', ''),
-    loans: disbursedLoansForChart.filter((l: any) => (l.bank_name || l.banks?.name) === bank).length,
-    amount: disbursedLoansForChart.filter((l: any) => (l.bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
+    name: (bank as string).replace(' Bank', '').replace(' NBFC', ''),
+    loans: loansWithBank.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).length,
+    amount: loansWithBank.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
   }));
 
   return (
@@ -94,19 +91,30 @@ export default function Dashboard() {
                 View Loans <ChevronRight size={16} />
               </Link>
             </div>
-            <div className="flex-1 flex min-h-[250px] w-full h-[250px]">
-              {bankData.length > 0 ? (
+            <div className="flex-1 flex min-h-[250px] w-full h-[250px] items-center justify-center">
+              {isLoadingLoans ? (
+                <div className="animate-pulse flex flex-col items-center gap-2">
+                  <Activity className="h-8 w-8 text-blue-400 animate-spin" />
+                  <span className="text-sm text-gray-500">Loading distribution...</span>
+                </div>
+              ) : bankData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={bankData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '13px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Bar dataKey="amount" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="amount" fill="#2563eb" radius={[6, 6, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                    <BarChart3 className="h-6 w-6 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-medium">No distribution data available</p>
+                  <p className="text-xs text-center max-w-[200px]">Once loans are assigned to banks, the distribution will appear here.</p>
+                </div>
               )}
             </div>
           </div>

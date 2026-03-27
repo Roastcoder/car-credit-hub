@@ -12,7 +12,7 @@ export default function BrokerManagement() {
   const { data: brokers = [], isLoading, refetch } = useQuery({
     queryKey: ['brokers'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/brokers`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch brokers');
@@ -24,7 +24,7 @@ export default function BrokerManagement() {
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-for-brokers'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loans');

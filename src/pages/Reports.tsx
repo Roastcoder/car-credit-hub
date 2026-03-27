@@ -45,10 +45,10 @@ export default function Reports() {
     value: loans.filter(l => l.status === key).length,
   })).filter(d => d.value > 0);
 
-  const bankData = [...new Set(loans.map(l => l.bank_name || l.banks?.name).filter(Boolean))].map(bank => ({
+  const bankData = [...new Set(loans.map(l => l.bank_name || l.assigned_bank_name || l.banks?.name).filter(Boolean))].map(bank => ({
     name: bank.replace(' Bank', '').replace(' NBFC', ''),
-    cases: loans.filter(l => (l.bank_name || l.banks?.name) === bank).length,
-    amount: loans.filter(l => (l.bank_name || l.banks?.name) === bank).reduce((s, l) => s + Number(l.loan_amount || 0), 0) / 100000,
+    loans: loans.filter(l => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).length,
+    amount: loans.filter(l => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).reduce((s, l) => s + Number(l.loan_amount || 0), 0) / 100000,
   }));
 
   const totalVolume = loans.reduce((s, l) => s + Number(l.loan_amount || 0), 0);
@@ -145,7 +145,8 @@ export default function Reports() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                  <Bar dataKey="amount" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="amount" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} name="Volume (₹L)" />
+                  <Bar dataKey="loans" fill="hsl(var(--muted))" radius={[6, 6, 0, 0]} name="Loans" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

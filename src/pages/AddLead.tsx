@@ -70,7 +70,7 @@ export default function AddLead() {
     queryKey: ['branches'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/branches`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`);
         if (!response.ok) return [];
         return await response.json();
       } catch {
@@ -83,7 +83,7 @@ export default function AddLead() {
     queryKey: ['banks'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             }
@@ -129,7 +129,7 @@ export default function AddLead() {
       if (aadharBack) formData.append('aadhar_back', aadharBack);
       if (panCard) formData.append('pan_card', panCard);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`

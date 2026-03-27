@@ -1,43 +1,60 @@
 import { useState } from 'react';
-import { Search, Filter, Download, Calendar, FileText } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, Filter, Download, Calendar, FileText, BookOpen, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
+import { accountAPI } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 export default function GeneralLedger() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('this-month');
 
-  const transactions = [
-    { id: 1, date: '2024-01-15', account: 'Cash', description: 'Loan Processing Fee', debit: '25,000', credit: '', balance: '25,000' },
-    { id: 2, date: '2024-01-14', account: 'Rent Expense', description: 'Office Rent Payment', debit: '8,500', credit: '', balance: '8,500' },
-    { id: 3, date: '2024-01-13', account: 'Commission Income', description: 'Broker Commission', debit: '', credit: '15,750', balance: '15,750' },
-    { id: 4, date: '2024-01-12', account: 'Utilities Expense', description: 'Electricity Bill', debit: '3,200', credit: '', balance: '3,200' },
-    { id: 5, date: '2024-01-11', account: 'Bank Account', description: 'Customer Payment', debit: '', credit: '45,000', balance: '45,000' },
-    { id: 6, date: '2024-01-10', account: 'Marketing Expense', description: 'Digital Marketing', debit: '12,000', credit: '', balance: '12,000' }
+  const { data: ledgerData, isLoading } = useQuery({
+    queryKey: ['general-ledger', dateRange],
+    queryFn: () => accountAPI.getLedger({ period: dateRange })
+  });
+
+  const transactions = ledgerData?.transactions || [];
+  const accountSummary = ledgerData?.summary || [
+    { account: 'Assets', balance: '₹0', type: 'debit' },
+    { account: 'Liabilities', balance: '₹0', type: 'credit' },
+    { account: 'Equity', balance: '₹0', type: 'credit' },
+    { account: 'Revenue', balance: '₹0', type: 'credit' },
+    { account: 'Expenses', balance: '₹0', type: 'debit' }
   ];
 
-  const accountSummary = [
-    { account: 'Assets', balance: '₹5,45,000', type: 'debit' },
-    { account: 'Liabilities', balance: '₹1,25,000', type: 'credit' },
-    { account: 'Equity', balance: '₹3,20,000', type: 'credit' },
-    { account: 'Revenue', balance: '₹2,15,000', type: 'credit' },
-    { account: 'Expenses', balance: '₹85,000', type: 'debit' }
-  ];
+  const filteredTransactions = transactions.filter((t: any) => 
+    t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.account_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatCurrency = (amount: number | string) => {
+    const val = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(val || 0);
+  };
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">General Ledger</h1>
-          <p className="text-gray-600 dark:text-gray-400">View all financial transactions and account balances</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">General Ledger</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Complete record of every financial transaction across all accounts</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <Button variant="outline" className="gap-2 border-slate-200 dark:border-slate-800">
             <Download size={16} />
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Export Ledger
+          </Button>
+          <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
             <FileText size={16} />
             Trial Balance
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -58,37 +75,36 @@ export default function GeneralLedger() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-3 mb-6 bg-white/50 dark:bg-black/20 p-2 rounded-2xl border border-white/20 dark:border-white/10 backdrop-blur-sm">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Search transactions..."
+          <Input
+            placeholder="Search by description or account..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="pl-10 border-none shadow-none focus-visible:ring-1 focus-visible:ring-blue-500/20 bg-transparent"
           />
         </div>
-        <select
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-        >
-          <option value="today">Today</option>
-          <option value="this-week">This Week</option>
-          <option value="this-month">This Month</option>
-          <option value="this-quarter">This Quarter</option>
-          <option value="this-year">This Year</option>
-          <option value="custom">Custom Range</option>
-        </select>
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          <Calendar size={16} />
-          Date Range
-        </button>
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        
+        <Select value={dateRange} onValueChange={setDateRange}>
+          <SelectTrigger className="w-[180px] border-none bg-white dark:bg-slate-900/50">
+            <div className="flex items-center gap-2">
+              <Calendar size={14} />
+              <SelectValue placeholder="Period" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="this-week">This Week</SelectItem>
+            <SelectItem value="this-month">This Month</SelectItem>
+            <SelectItem value="this-quarter">This Quarter</SelectItem>
+            <SelectItem value="this-year">This Year</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" size="icon" className="border-none bg-white dark:bg-slate-900/50">
           <Filter size={16} />
-          Filter
-        </button>
+        </Button>
       </div>
 
       {/* Transactions Table */}
@@ -106,49 +122,71 @@ export default function GeneralLedger() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {transactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                    {transaction.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900 dark:text-white">{transaction.account}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-gray-600 dark:text-gray-400">{transaction.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {transaction.debit && (
-                      <span className="font-semibold text-red-600 dark:text-red-400">₹{transaction.debit}</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {transaction.credit && (
-                      <span className="font-semibold text-green-600 dark:text-green-400">₹{transaction.credit}</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <span className="font-semibold text-gray-900 dark:text-white">₹{transaction.balance}</span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500 animate-pulse">Loading ledger transactions...</td>
+                </tr>
+              ) : filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction: any) => (
+                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      {new Date(transaction.transaction_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 dark:text-white">{transaction.account_name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-gray-600 dark:text-gray-400">{transaction.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {parseFloat(transaction.debit) > 0 && (
+                        <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(transaction.debit)}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {parseFloat(transaction.credit) > 0 && (
+                        <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(transaction.credit)}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(transaction.balance)}</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-[300px] mx-auto">
+                      <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
+                        <History className="h-8 w-8 text-blue-500" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Ledger Entries</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                        Transactions are recorded here as they occur in real-time across the platform.
+                      </p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
-            <tfoot className="bg-gray-50 dark:bg-gray-800/50">
-              <tr>
-                <td colSpan={3} className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                  Total:
-                </td>
-                <td className="px-6 py-4 text-right font-semibold text-red-600 dark:text-red-400">
-                  ₹48,700
-                </td>
-                <td className="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
-                  ₹60,750
-                </td>
-                <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                  ₹12,050
-                </td>
-              </tr>
-            </tfoot>
+            {!isLoading && filteredTransactions.length > 0 && (
+              <tfoot className="bg-gray-50 dark:bg-gray-800/50">
+                <tr>
+                  <td colSpan={3} className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
+                    Total:
+                  </td>
+                  <td className="px-6 py-4 text-right font-semibold text-red-600 dark:text-red-400">
+                    {formatCurrency(filteredTransactions.reduce((s: number, t: any) => s + parseFloat(t.debit || 0), 0))}
+                  </td>
+                  <td className="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
+                    {formatCurrency(filteredTransactions.reduce((s: number, t: any) => s + parseFloat(t.credit || 0), 0))}
+                  </td>
+                  <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
+                    -
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>

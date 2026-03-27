@@ -19,7 +19,7 @@ export default function LeadsList() {
 
   const deleteLead = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -40,7 +40,7 @@ export default function LeadsList() {
     queryKey: ['leads'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           }

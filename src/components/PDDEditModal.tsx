@@ -50,7 +50,7 @@ export default function PDDEditModal({ loan, isOpen, onClose, onSuccess }: PDDEd
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loan.id}/pdd`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.id}/pdd`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

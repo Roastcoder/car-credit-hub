@@ -23,7 +23,7 @@ export default function Signup() {
     queryKey: ['branches-signup'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/branches`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`);
         if (!response.ok) return [];
         return await response.json();
       } catch {

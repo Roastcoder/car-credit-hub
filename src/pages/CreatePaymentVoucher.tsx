@@ -51,7 +51,7 @@ export default function CreatePaymentVoucher() {
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', paymentId],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${paymentId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${paymentId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) throw new Error('Failed to fetch payment');
@@ -64,7 +64,7 @@ export default function CreatePaymentVoucher() {
   // Create voucher
   const createVoucher = useMutation({
     mutationFn: async (data: VoucherData) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${paymentId}/voucher`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${paymentId}/voucher`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

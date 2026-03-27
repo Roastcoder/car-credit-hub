@@ -42,7 +42,7 @@ export default function NotificationBell() {
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -63,7 +63,7 @@ export default function NotificationBell() {
 
   const markAsRead = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications/${id}/read`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
@@ -75,7 +75,7 @@ export default function NotificationBell() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications/read-all`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/read-all`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
@@ -85,7 +85,7 @@ export default function NotificationBell() {
 
   const deleteNotification = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });

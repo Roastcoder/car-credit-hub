@@ -31,7 +31,7 @@ export default function PaymentDetail() {
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', id],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) throw new Error('Failed to fetch payment');
@@ -48,7 +48,7 @@ export default function PaymentDetail() {
       if (!payment?.supporting_documents?.length) return [];
       
       const docPromises = payment.supporting_documents.map(async (docId: string) => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documents/${docId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${docId}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (response.ok) {
@@ -66,7 +66,7 @@ export default function PaymentDetail() {
   // Update payment status
   const updateStatus = useMutation({
     mutationFn: async ({ status, remarks }: { status: PaymentStatus; remarks?: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${id}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export default function PaymentDetail() {
   // Add UTR number and mark as paid
   const addUTRNumber = useMutation({
     mutationFn: async ({ utr, date }: { utr: string; date: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${id}/utr`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}/utr`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ export default function PaymentDetail() {
 
   const previewDocument = async (doc: any) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const baseUrl = apiUrl.replace(/\/api$/, '');
       const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
       const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;

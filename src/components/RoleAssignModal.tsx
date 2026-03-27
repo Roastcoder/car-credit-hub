@@ -19,7 +19,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/branches`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch branches');
@@ -38,7 +38,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/users/${user.id}/role`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/${user.id}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

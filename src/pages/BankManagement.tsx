@@ -12,7 +12,7 @@ export default function BankManagement() {
   const { data: banks = [], isLoading, refetch } = useQuery({
     queryKey: ['banks'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch banks');
@@ -24,7 +24,7 @@ export default function BankManagement() {
   const { data: loans = [] } = useQuery({
     queryKey: ['loans-for-banks'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loans');

@@ -37,7 +37,7 @@ export default function LeadDetail() {
     queryKey: ['lead', id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${id}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           }
@@ -55,7 +55,7 @@ export default function LeadDetail() {
     queryKey: ['lead-documents', id],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}/documents`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${id}/documents`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           }
@@ -71,7 +71,7 @@ export default function LeadDetail() {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${id}/documents/multiple`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${id}/documents/multiple`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`

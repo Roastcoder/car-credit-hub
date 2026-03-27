@@ -47,7 +47,7 @@ export default function CreatePaymentApplication() {
   const { data: loan, isLoading: loadingLoan } = useQuery({
     queryKey: ['loan', loanId],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) throw new Error('Failed to fetch loan');
@@ -61,7 +61,7 @@ export default function CreatePaymentApplication() {
   const { data: pddDocuments = [] } = useQuery({
     queryKey: ['pdd-documents', loanId],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}/documents`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
@@ -73,7 +73,7 @@ export default function CreatePaymentApplication() {
   // Create payment application
   const createPayment = useMutation({
     mutationFn: async (data: PaymentFormData) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export default function CreatePaymentApplication() {
 
   const previewDocument = async (doc: any) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const baseUrl = apiUrl.replace(/\/api$/, '');
       const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
       const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;

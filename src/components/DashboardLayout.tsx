@@ -1,43 +1,61 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, ElementType } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ROLE_LABELS } from '@/lib/auth';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet,
-  Activity, TrendingUp, Receipt
+  Activity, TrendingUp, Receipt, Landmark, BookOpen, PieChart
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
 
-
 interface NavItem {
-  label: string;
+  title: string;
   path: string;
-  icon: ReactNode;
+  icon: ElementType;
   roles: UserRole[];
+  children?: {
+    title: string;
+    path: string;
+    icon: ElementType;
+  }[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
-  { label: 'Account Overview', path: '/account', icon: <Activity size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
-  { label: 'Leads', path: '/leads-list', icon: <UserPlus size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'Loan Applications', path: '/loans', icon: <FileText size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
-  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
-  { label: 'Payables', path: '/account/payables', icon: <Receipt size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
-  { label: 'General Ledger', path: '/account/ledger', icon: <FileText size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
-  { label: 'Financial Reports', path: '/account/reports', icon: <BarChart3 size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
-  { label: 'Create Loan', path: '/loans/new', icon: <Car size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { label: 'Payments', path: '/payments', icon: <Wallet size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { label: 'Reports', path: '/reports', icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin', 'manager'] },
-  { label: 'Commission', path: '/commission', icon: <CreditCard size={18} />, roles: ['super_admin', 'admin', 'broker'] },
-  { label: 'Users', path: '/users', icon: <Users size={18} />, roles: ['super_admin', 'admin', 'manager'] },
-  { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
-  { label: 'Brokers', path: '/brokers', icon: <UserCheck size={18} />, roles: ['super_admin', 'admin'] },
-  { label: 'Branches', path: '/branches', icon: <MapPin size={18} />, roles: ['super_admin', 'admin', 'manager'] },
-  { label: 'Send Notification', path: '/broadcast', icon: <Send size={18} />, roles: ['super_admin', 'admin'] },
+  { 
+    title: 'Dashboard', 
+    path: '/dashboard', 
+    icon: LayoutDashboard, 
+    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] 
+  },
+  { 
+    title: 'Account Dept', 
+    path: '/account', 
+    icon: Landmark, 
+    roles: ['super_admin', 'admin', 'accountant'],
+    children: [
+      { title: 'Overview', path: '/account', icon: LayoutDashboard },
+      { title: 'Receivables', path: '/account/receivables', icon: TrendingUp },
+      { title: 'Payables', path: '/account/payables', icon: Receipt },
+      { title: 'General Ledger', path: '/account/ledger', icon: BookOpen },
+      { title: 'Financial Reports', path: '/account/reports', icon: BarChart3 }
+    ]
+  },
+  { title: 'Leads', path: '/leads-list', icon: UserPlus, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
+  { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'Payments', path: '/payments', icon: Wallet, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Commission', path: '/commission', icon: CreditCard, roles: ['super_admin', 'admin', 'broker'] },
+  { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
+  { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
+  { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -89,26 +107,54 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 relative z-10">
           {filteredNav.map(item => {
-            const active = location.pathname === item.path;
+            const isAccountantLink = item.path.startsWith('/account');
+            const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account'));
+            const IconComponent = item.icon;
+
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                title={collapsed ? item.label : undefined}
-                className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${active
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
-                  : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
-                  }`}
-              >
-                <span className={`${active ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
-                  {item.icon}
-                </span>
-                {!collapsed && <span className="truncate tracking-wide">{item.label}</span>}
-                {!collapsed && active && (
-                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm" />
+              <div key={item.path} className="space-y-1">
+                <Link
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  title={collapsed ? item.title : undefined}
+                  className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
+                    : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                    }`}
+                >
+                  <span className={`${isActive ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
+                    <IconComponent size={18} />
+                  </span>
+                  {!collapsed && <span className="truncate tracking-wide">{item.title}</span>}
+                  {!collapsed && isActive && (
+                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm" />
+                  )}
+                </Link>
+
+                {!collapsed && item.children && (isActive || location.pathname.startsWith(item.path)) && (
+                  <div className="ml-6 flex flex-col gap-1 border-l border-white/20 dark:border-white/5 pl-4 mt-1">
+                    {item.children.map((child) => {
+                      const ChildIconComponent = child.icon;
+                      return (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={cn(
+                            "flex items-center gap-2 py-1.5 text-xs font-medium transition-colors rounded-lg px-2",
+                            location.pathname === child.path
+                              ? "text-blue-600 dark:text-blue-400 bg-white/20 dark:bg-white/5"
+                              : "text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white/10 dark:hover:bg-white/5"
+                          )}
+                        >
+                          <ChildIconComponent size={14} />
+                          {child.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </nav>

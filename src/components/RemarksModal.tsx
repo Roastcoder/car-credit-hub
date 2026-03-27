@@ -25,7 +25,7 @@ export function RemarksModal({ open, onClose, loanId, currentRemarks = '', onSuc
 
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

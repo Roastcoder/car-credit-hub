@@ -87,7 +87,7 @@ export default function CreateLoan() {
     queryKey: ['banks-list'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/banks`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/banks`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -102,7 +102,7 @@ export default function CreateLoan() {
   const { data: existingLoan, isLoading: loadingLoan } = useQuery({
     queryKey: ['loan', id],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) throw new Error('Failed to fetch loan');
@@ -116,7 +116,7 @@ export default function CreateLoan() {
     queryKey: ['brokers-list'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/brokers`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -132,7 +132,7 @@ export default function CreateLoan() {
     queryKey: ['leads-for-dropdown'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return [];
@@ -147,7 +147,7 @@ export default function CreateLoan() {
   const { data: leadToConvert } = useQuery({
     queryKey: ['lead-for-loan', leadId],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/leads/${leadId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${leadId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) throw new Error('Failed to fetch lead');
@@ -163,7 +163,7 @@ export default function CreateLoan() {
     queryFn: async () => {
       try {
         const vertical = form.vertical || '';
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/last-number?vertical=${vertical}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/last-number?vertical=${vertical}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         if (!response.ok) return null;
@@ -565,7 +565,7 @@ export default function CreateLoan() {
         formData.append(doc.type, doc.file as File);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${loanId}/documents/multiple`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents/multiple`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -594,8 +594,8 @@ export default function CreateLoan() {
   const createLoan = useMutation({
     mutationFn: async () => {
       const url = isEditMode
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`;
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans`;
 
       const res = await fetch(url, {
         method: isEditMode ? 'PUT' : 'POST',
@@ -705,7 +705,7 @@ export default function CreateLoan() {
       // Create commission if matched
       if (computedCommission.amount > 0 && form.assignedBrokerId && !isEditMode) {
         try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/commissions`, {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/commissions`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

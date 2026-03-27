@@ -66,7 +66,7 @@ export default function Loans() {
 
   const deleteLoan = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });

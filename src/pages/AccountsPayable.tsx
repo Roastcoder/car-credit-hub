@@ -1,16 +1,80 @@
 import { useState } from 'react';
-import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, X, FileText, CheckCircle2, Download } from 'lucide-react';
+import { accountAPI } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 export default function AccountsPayable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isNewBillOpen, setIsNewBillOpen] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<any>(null);
+  const queryClient = useQueryClient();
 
-  const payables = [
-    { id: 1, vendor: 'Office Supplies Ltd', amount: '₹15,000', dueDate: '2024-01-18', status: 'Pending', category: 'Office Expenses' },
-    { id: 2, vendor: 'Tech Solutions Inc', amount: '₹85,000', dueDate: '2024-01-22', status: 'Approved', category: 'IT Services' },
-    { id: 3, vendor: 'Property Management', amount: '₹45,000', dueDate: '2024-01-30', status: 'Pending', category: 'Rent' },
-    { id: 4, vendor: 'Marketing Agency', amount: '₹25,000', dueDate: '2024-02-05', status: 'Draft', category: 'Marketing' }
-  ];
+  const { data: payables = [], isLoading } = useQuery({
+    queryKey: ['accounts-payables'],
+    queryFn: () => accountAPI.getPayables()
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => accountAPI.createPayable(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts-payables'] });
+      setIsNewBillOpen(false);
+      toast.success('Bill recorded successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to record bill');
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    createMutation.mutate({
+      ...data,
+      amount: parseFloat(data.amount as string),
+      outstanding_amount: parseFloat(data.amount as string),
+      status: 'Pending'
+    });
+  };
+
+  const filteredPayables = payables.filter((item: any) => {
+    const matchesSearch = item.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || item.status?.toLowerCase() === filterStatus.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  const stats = {
+    totalPayable: payables.reduce((sum: number, item: any) => sum + parseFloat(item.outstanding_amount || 0), 0),
+    pending: payables.filter((item: any) => item.status === 'Pending').reduce((sum: number, item: any) => sum + parseFloat(item.outstanding_amount || 0), 0),
+    approved: payables.filter((item: any) => item.status === 'Approved').reduce((sum: number, item: any) => sum + parseFloat(item.outstanding_amount || 0), 0),
+    draft: payables.filter((item: any) => item.status === 'Draft').reduce((sum: number, item: any) => sum + parseFloat(item.outstanding_amount || 0), 0)
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -24,15 +88,76 @@ export default function AccountsPayable() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Accounts Payable</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage outgoing payments and vendor bills</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Accounts Payable</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and track your outgoing payments and vendor bills</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus size={16} />
-          New Bill
-        </button>
+        
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2 border-slate-200 dark:border-slate-800">
+            <Download size={16} />
+            Export
+          </Button>
+          
+          <Dialog open={isNewBillOpen} onOpenChange={setIsNewBillOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
+                <Plus size={16} />
+                New Bill
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] glass-panel border-white/20">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-blue-950 dark:text-white">Record New Bill</DialogTitle>
+                <p className="text-sm text-gray-500">Enter bill details to record a new payable liability.</p>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="vendor_name">Vendor Name</Label>
+                    <Input id="vendor_name" name="vendor_name" placeholder="Channel Partner" required className="bg-white/50 dark:bg-black/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="vendor_email">Vendor Email</Label>
+                    <Input id="vendor_email" name="vendor_email" type="email" placeholder="vendor@example.com" className="bg-white/50 dark:bg-black/20" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Bill Amount (₹)</Label>
+                    <Input id="amount" name="amount" type="number" step="0.01" placeholder="0.00" required className="bg-white/50 dark:bg-black/20" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="due_date">Due Date</Label>
+                    <Input id="due_date" name="due_date" type="date" required className="bg-white/50 dark:bg-black/20" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select name="category" defaultValue="Broker Commission">
+                    <SelectTrigger className="bg-white/50 dark:bg-black/20">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Broker Commission">Broker Commission</SelectItem>
+                      <SelectItem value="Salaries">Salaries</SelectItem>
+                      <SelectItem value="Office Rent">Office Rent</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Utilities">Utilities</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="ghost" onClick={() => setIsNewBillOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+                    {createMutation.isPending ? 'Recording...' : 'Record Bill'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -44,7 +169,7 @@ export default function AccountsPayable() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Total Payable</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">₹1,70,000</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.totalPayable)}</p>
             </div>
           </div>
         </div>
@@ -55,7 +180,7 @@ export default function AccountsPayable() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">₹60,000</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.pending)}</p>
             </div>
           </div>
         </div>
@@ -66,7 +191,7 @@ export default function AccountsPayable() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Approved</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">₹85,000</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.approved)}</p>
             </div>
           </div>
         </div>
@@ -77,7 +202,7 @@ export default function AccountsPayable() {
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Draft</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">₹25,000</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.draft)}</p>
             </div>
           </div>
         </div>
@@ -127,42 +252,147 @@ export default function AccountsPayable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {payables.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900 dark:text-white">{item.vendor}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-semibold text-gray-900 dark:text-white">{item.amount}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                    {item.dueDate}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                    {item.category}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <button className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                        <Eye size={16} />
-                      </button>
-                      <button className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300">
-                        <Edit size={16} />
-                      </button>
-                      {item.status === 'Approved' && (
-                        <button className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
-                          <CreditCard size={16} />
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500 animate-pulse">Loading payables...</td>
+                </tr>
+              ) : filteredPayables.length > 0 ? (
+                filteredPayables.map((item: any) => (
+                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 dark:text-white">{item.vendor_name}</div>
+                      <div className="text-xs text-gray-500">{item.bill_number}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(parseFloat(item.amount))}</div>
+                      <div className="text-xs text-gray-500">Bal: {formatCurrency(parseFloat(item.outstanding_amount))}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      {new Date(item.due_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                      {item.category}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button 
+                              className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                              onClick={() => setSelectedBill(item)}
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px] glass-panel border-white/20">
+                            <DialogHeader>
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <DialogTitle className="text-2xl font-bold text-blue-950 dark:text-white">Bill Details</DialogTitle>
+                                  <Badge variant="outline" className={cn("mt-2", getStatusColor(item.status))}>
+                                    {item.status}
+                                  </Badge>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm text-gray-500 uppercase font-semibold">Bill No</div>
+                                  <div className="text-lg font-bold text-red-600">{item.bill_number}</div>
+                                </div>
+                              </div>
+                            </DialogHeader>
+                            
+                            <div className="grid grid-cols-2 gap-8 py-6 border-y border-gray-100 dark:border-gray-800 my-4">
+                              <div className="space-y-4">
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Vendor</div>
+                                  <div className="font-bold text-gray-900 dark:text-white">{item.vendor_name}</div>
+                                  <div className="text-sm text-gray-600">{item.vendor_email || 'No email provided'}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Bill Date</div>
+                                  <div className="text-sm text-gray-900 dark:text-white">{new Date(item.bill_date).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Due Date</div>
+                                  <div className="text-sm font-bold text-blue-600">{new Date(item.due_date).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Category</div>
+                                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800">{item.category}</Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-4 text-right">
+                                <div className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl">
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Total Amount</div>
+                                  <div className="text-2xl font-black text-gray-900 dark:text-white">{formatCurrency(parseFloat(item.amount))}</div>
+                                </div>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Outstanding Balance</div>
+                                  <div className="text-xl font-bold text-red-600">{formatCurrency(parseFloat(item.outstanding_amount))}</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="text-xs text-gray-500 uppercase font-semibold">Description / Notes</div>
+                              <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-700 dark:text-gray-300 min-h-[80px]">
+                                {item.description || 'No additional notes provided.'}
+                              </div>
+                            </div>
+
+                            <DialogFooter className="flex justify-between items-center mt-6">
+                              <Button variant="outline" className="gap-2">
+                                <CreditCard size={16} />
+                                Record Payment
+                              </Button>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" onClick={() => setSelectedBill(null)}>Close</Button>
+                                <Button className="bg-blue-600">Approve Bill</Button>
+                              </div>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                        <button className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300">
+                          <Edit size={16} />
                         </button>
-                      )}
+                        {item.status === 'Approved' && (
+                          <button className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+                            <CreditCard size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-[300px] mx-auto">
+                      <div className="w-16 h-16 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
+                        <Receipt className="h-8 w-8 text-red-500" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Payables Yet</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+                        Bills and commissions will appear here once they are approved or manually recorded.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-2 border-dashed border-red-200 hover:border-red-500 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                        onClick={() => setIsNewBillOpen(true)}
+                      >
+                        <Plus size={14} />
+                        Record Manual Bill
+                      </Button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

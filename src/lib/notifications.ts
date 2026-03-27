@@ -23,7 +23,7 @@ export const subscribeUserToPush = async (): Promise<PushSubscription | null> =>
     if (!token) return subscription;
 
     // Send subscription to backend
-    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/notifications/subscribe`, {
+    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

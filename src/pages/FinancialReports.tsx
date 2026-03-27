@@ -1,9 +1,19 @@
 import { useState } from 'react';
-import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, PieChart } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { accountAPI } from '@/lib/api';
+import { Download, Calendar, TrendingUp, TrendingDown, BarChart3, PieChart, FilePieChart, Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function FinancialReports() {
   const [reportType, setReportType] = useState('profit-loss');
   const [period, setPeriod] = useState('this-month');
+
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ['financial-report', reportType, period],
+    queryFn: () => accountAPI.generateReport({ type: reportType, period })
+  });
 
   const reports = [
     { name: 'Profit & Loss', key: 'profit-loss', icon: <TrendingUp size={20} />, description: 'Income statement' },
@@ -12,26 +22,26 @@ export default function FinancialReports() {
     { name: 'Trial Balance', key: 'trial-balance', icon: <PieChart size={20} />, description: 'Account balances' }
   ];
 
-  const profitLossData = [
-    { category: 'Revenue', items: [
-      { name: 'Loan Processing Fees', amount: 125000 },
-      { name: 'Commission Income', amount: 85000 },
-      { name: 'Interest Income', amount: 45000 }
-    ]},
-    { category: 'Expenses', items: [
-      { name: 'Salaries & Benefits', amount: 95000 },
-      { name: 'Office Rent', amount: 25000 },
-      { name: 'Marketing Expenses', amount: 18000 },
-      { name: 'Utilities', amount: 8500 },
-      { name: 'Other Expenses', amount: 12000 }
-    ]}
+  const profitLossData = reportData || [
+    { category: 'Revenue', items: [] },
+    { category: 'Expenses', items: [] }
   ];
 
-  const totalRevenue = profitLossData[0].items.reduce((sum, item) => sum + item.amount, 0);
-  const totalExpenses = profitLossData[1].items.reduce((sum, item) => sum + item.amount, 0);
+  const revenueItems = profitLossData.find((d: any) => d.category === 'Revenue')?.items || [];
+  const expenseItems = profitLossData.find((d: any) => d.category === 'Expenses')?.items || [];
+
+  const totalRevenue = revenueItems.reduce((sum: number, item: any) => sum + parseFloat(item.amount || 0), 0);
+  const totalExpenses = expenseItems.reduce((sum: number, item: any) => sum + parseFloat(item.amount || 0), 0);
   const netProfit = totalRevenue - totalExpenses;
 
-  return (
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -99,65 +109,90 @@ export default function FinancialReports() {
           </div>
           
           <div className="p-6">
-            {/* Revenue Section */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                Revenue
-              </h3>
-              <div className="space-y-3">
-                {profitLossData[0].items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                    <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">₹{item.amount.toLocaleString()}</span>
+            {isLoading ? (
+              <div className="py-20 text-center text-gray-500 animate-pulse">
+                <Activity className="h-10 w-10 text-blue-500 mx-auto mb-4 animate-spin" />
+                Generating real-time financial report...
+              </div>
+            ) : revenueItems.length > 0 || expenseItems.length > 0 ? (
+              <>
+                {/* Revenue Section */}
+                <div className="mb-8 p-4 rounded-2xl bg-white/40 dark:bg-black/20 border border-white/20">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    Revenue Streams
+                  </h3>
+                  <div className="space-y-3">
+                    {revenueItems.length > 0 ? (
+                      revenueItems.map((item: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                          <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(parseFloat(item.amount))}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 italic py-2">No revenue records found</p>
+                    )}
+                    <div className="flex justify-between items-center py-3 border-t-2 border-gray-200 dark:border-gray-700 font-bold mt-2">
+                      <span className="text-gray-900 dark:text-white">Total Operating Revenue</span>
+                      <span className="text-green-600 dark:text-green-400 text-xl">{formatCurrency(totalRevenue)}</span>
+                    </div>
                   </div>
-                ))}
-                <div className="flex justify-between items-center py-3 border-t-2 border-gray-200 dark:border-gray-700 font-semibold">
-                  <span className="text-gray-900 dark:text-white">Total Revenue</span>
-                  <span className="text-green-600 dark:text-green-400 text-lg">₹{totalRevenue.toLocaleString()}</span>
                 </div>
-              </div>
-            </div>
 
-            {/* Expenses Section */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <TrendingDown className="h-5 w-5 text-red-600" />
-                Expenses
-              </h3>
-              <div className="space-y-3">
-                {profitLossData[1].items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                    <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
-                    <span className="font-semibold text-red-600 dark:text-red-400">₹{item.amount.toLocaleString()}</span>
+                {/* Expenses Section */}
+                <div className="mb-8 p-4 rounded-2xl bg-white/40 dark:bg-black/20 border border-white/20">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <TrendingDown className="h-5 w-5 text-red-600" />
+                    Operating Expenses
+                  </h3>
+                  <div className="space-y-3">
+                    {expenseItems.length > 0 ? (
+                      expenseItems.map((item: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">{formatCurrency(parseFloat(item.amount))}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 italic py-2">No expense records found</p>
+                    )}
+                    <div className="flex justify-between items-center py-3 border-t-2 border-gray-200 dark:border-gray-700 font-bold mt-2">
+                      <span className="text-gray-900 dark:text-white">Total Operating Expenses</span>
+                      <span className="text-red-600 dark:text-red-400 text-xl">{formatCurrency(totalExpenses)}</span>
+                    </div>
                   </div>
-                ))}
-                <div className="flex justify-between items-center py-3 border-t-2 border-gray-200 dark:border-gray-700 font-semibold">
-                  <span className="text-gray-900 dark:text-white">Total Expenses</span>
-                  <span className="text-red-600 dark:text-red-400 text-lg">₹{totalExpenses.toLocaleString()}</span>
                 </div>
-              </div>
-            </div>
 
-            {/* Net Profit */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Net Profit</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Total Revenue - Total Expenses</p>
+                {/* Net Profit */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-600/20">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-2xl font-black">{netProfit >= 0 ? 'Net Profit' : 'Net Loss'}</h3>
+                      <p className="text-blue-100 mt-1 opacity-80">Final bottom-line performance for the selected period</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-4xl font-black drop-shadow-md">
+                        {formatCurrency(Math.abs(netProfit))}
+                      </span>
+                      <div className="mt-2 text-sm font-bold bg-white/20 backdrop-blur-md rounded-full px-4 py-1 inline-block">
+                        {totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}% Margin
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className={`text-3xl font-bold ${
-                    netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    ₹{Math.abs(netProfit).toLocaleString()}
-                  </span>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {((netProfit / totalRevenue) * 100).toFixed(1)}% margin
-                  </p>
+              </>
+            ) : (
+              <div className="py-20 text-center">
+                <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                  <FilePieChart className="h-10 w-10 text-blue-500" />
                 </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Reports are empty</h3>
+                <p className="max-w-xs mx-auto text-gray-500 dark:text-gray-400">
+                  Once transactions are recorded in the ledger, your financial reports will be generated automatically.
+                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}

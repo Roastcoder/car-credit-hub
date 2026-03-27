@@ -41,7 +41,7 @@ export default function Payments() {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments?${params}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) throw new Error('Failed to fetch payments');
@@ -54,7 +54,7 @@ export default function Payments() {
   // Update payment status (for managers and accounts)
   const updateStatus = useMutation({
     mutationFn: async ({ id, status, remarks }: { id: string; status: PaymentStatus; remarks?: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payments/${id}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
