@@ -21,6 +21,48 @@ export default function CreateLoan() {
   const permissions = getRolePermissions(user?.role || 'employee');
   const [activeStep, setActiveStep] = useState(0);
 
+  const [form, setForm] = useState({
+    // Customer Details
+    customerId: '', customerName: '', mobile: '', ourBranch: '',
+    currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
+    sameAsCurrentAddress: false,
+    permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
+    // Loan & Vehicle Details
+    loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
+    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', 
+    chassisNumber: '', engineNumber: '',
+    vertical: '', scheme: '',
+    // Income Details
+    incomeSource: '', monthlyIncome: '',
+    // RTO Details
+    rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
+    rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
+    // RTO Papers Checkboxes
+    rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
+    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false, rtoFitnessDocument: false, rtoTaxReceipt: false,
+    // EMI Details
+    irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
+    // Financier Details
+    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: 'MEH', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
+    // Insurance Details
+    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
+    // Deductions & Disbursement Details
+    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', meharPf: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
+    // Others
+    loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
+    // Documents
+    aadharFront: null, aadharBack: null, panCard: null,
+    bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
+    customerPhoto: null, insurance: null, customerLedger: null,
+    // Other KYC Documents
+    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
+    // Document checkboxes
+    showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
+    showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
+    // Other KYC checkboxes
+    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
+  });
+
   if (!permissions.canCreateLoan && !id) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -160,8 +202,6 @@ export default function CreateLoan() {
   }, [leads, leadSearch]);
 
   const [showOptionalFields, setShowOptionalFields] = useState({
-    coApplicant: false,
-    guarantor: false,
     permanentAddress: false,
   });
 
@@ -250,52 +290,6 @@ export default function CreateLoan() {
     }
   };
 
-  const [form, setForm] = useState({
-    // Customer Details
-    customerId: '', customerName: '', mobile: '', coApplicantName: '', coApplicantMobile: '',
-    guarantorName: '', guarantorMobile: '', ourBranch: '',
-    currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
-    sameAsCurrentAddress: false,
-    permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
-    // Loan & Vehicle Details
-    loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
-    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', 
-    chassisNumber: '', engineNumber: '',
-    vertical: '', scheme: '',
-    // Income Details
-    incomeSource: '', monthlyIncome: '',
-    // RTO Details
-    rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
-    rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
-    // RTO Papers Checkboxes
-    rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
-    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false, rtoFitnessDocument: false, rtoTaxReceipt: false,
-    // EMI Details
-    irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
-    // Financier Details
-    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: 'MEH', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
-    // Insurance Details
-    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
-    // Deductions & Disbursement Details
-    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', meharPf: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
-    // Others
-    loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
-    // Documents
-    aadharFront: null, aadharBack: null, panCard: null,
-    bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
-    customerPhoto: null, insurance: null, customerLedger: null,
-    // Other KYC Documents
-    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
-    // Document checkboxes
-    showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
-    showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
-    // Other KYC checkboxes
-    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
-    coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
-    guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
-    guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
-  });
-
   const [customTenure, setCustomTenure] = useState('');
   const [showCustomTenure, setShowCustomTenure] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
@@ -338,10 +332,6 @@ export default function CreateLoan() {
         customerId: existingLoan.customer_id || '',
         customerName: existingLoan.applicant_name || '',
         mobile: existingLoan.mobile || '',
-        coApplicantName: existingLoan.co_applicant_name || '',
-        coApplicantMobile: existingLoan.co_applicant_mobile || '',
-        guarantorName: existingLoan.guarantor_name || '',
-        guarantorMobile: existingLoan.guarantor_mobile || '',
         ourBranch: existingLoan.our_branch || '',
         currentAddress: existingLoan.current_address || '',
         currentVillage: existingLoan.current_village || '',
@@ -435,9 +425,6 @@ export default function CreateLoan() {
         showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
         showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
         showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
-        coAadharFront: null, coAadharBack: null, coPanCard: null, coPhoto: null,
-        guarantorAadharFront: null, guarantorAadharBack: null, guarantorPanCard: null,
-        guarantorRcFront: null, guarantorRcBack: null, guarantorPhoto: null,
       });
       
       // Handle custom tenure for edit mode
@@ -621,10 +608,6 @@ export default function CreateLoan() {
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
           mobile: form.mobile,
-          co_applicant_name: form.coApplicantName || null,
-          co_applicant_mobile: form.coApplicantMobile || null,
-          guarantor_name: form.guarantorName || null,
-          guarantor_mobile: form.guarantorMobile || null,
           current_address: form.currentAddress || null,
           current_village: form.currentVillage || null,
           current_tehsil: form.currentTehsil || null,

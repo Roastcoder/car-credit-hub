@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { accountAPI } from '@/lib/api';
 import { 
   Users, CreditCard, BarChart3, Settings, FileText, Calculator, 
@@ -125,59 +125,9 @@ export default function AccountDashboard() {
   };
 
   return (
-    <div className="flex h-full">
-      {/* Side Navigation */}
-      <div className={`${sideNavOpen ? 'w-80' : 'w-16'} transition-all duration-300 glass-panel border-r border-white/20 dark:border-white/10 flex flex-col`}>
-        <div className="p-4 border-b border-white/20 dark:border-white/10">
-          <div className="flex items-center justify-between">
-            {sideNavOpen && (
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Account Department</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Financial Management</p>
-              </div>
-            )}
-            <button
-              onClick={() => setSideNavOpen(!sideNavOpen)}
-              className="p-2 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
-            >
-              <ChevronRight className={`h-4 w-4 transition-transform ${sideNavOpen ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          {ACCOUNT_NAV_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                title={!sideNavOpen ? item.label : undefined}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10'
-                } ${!sideNavOpen ? 'justify-center' : ''}`}
-              >
-                <span className={isActive ? 'text-white' : 'text-blue-500'}>
-                  {item.icon}
-                </span>
-                {sideNavOpen && (
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.label}</p>
-                    <p className="text-xs opacity-75 truncate">{item.description}</p>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {isOverviewPage ? (
-          <div className="p-6">
+    <div className="h-full">
+      {isOverviewPage ? (
+        <div className="p-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Account Dashboard</h1>
               <p className="text-gray-600 dark:text-gray-400">
@@ -200,36 +150,24 @@ export default function AccountDashboard() {
                 <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
-                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                      +12.5%
-                    </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Outstanding Receivables</p>
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                      -8.2%
-                    </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.outstandingReceivables)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Payables</p>
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                      +5.1%
-                    </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.pendingPayables)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Net Profit Margin</p>
-                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                      +2.3%
-                    </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.netProfitMargin}%</p>
                 </div>
@@ -393,15 +331,8 @@ export default function AccountDashboard() {
             </div>
           </div>
         ) : (
-          <div className="p-6">
-            <div className="text-center py-12">
-              <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Page Under Development</h3>
-              <p className="text-gray-600 dark:text-gray-400">This section is currently being built.</p>
-            </div>
-          </div>
+          <Outlet />
         )}
-      </div>
     </div>
   );
 }

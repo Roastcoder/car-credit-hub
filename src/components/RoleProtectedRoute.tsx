@@ -31,6 +31,10 @@ export default function RoleProtectedRoute({
   }
 
   if (!user.role || !allowedRoles.includes(user.role)) {
+    // If user is accountant and doesn't have access, redirect to /account
+    if (user.role === 'accountant') {
+      return <Navigate to="/account" replace />;
+    }
     return <Navigate to={redirectTo} replace />;
   }
 

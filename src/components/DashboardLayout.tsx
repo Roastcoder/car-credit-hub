@@ -4,7 +4,8 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ROLE_LABELS } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet
+  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet,
+  Activity, TrendingUp, Receipt
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -20,9 +21,13 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
-  { label: 'Account', path: '/account', icon: <User size={18} />, roles: ['super_admin', 'admin', 'accountant'] },
+  { label: 'Account Overview', path: '/account', icon: <Activity size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loan Applications', path: '/loans', icon: <FileText size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
+  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
+  { label: 'Payables', path: '/account/payables', icon: <Receipt size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
+  { label: 'General Ledger', path: '/account/ledger', icon: <FileText size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
+  { label: 'Financial Reports', path: '/account/reports', icon: <BarChart3 size={18} />, roles: ['accountant', 'super_admin', 'admin'] },
   { label: 'Create Loan', path: '/loans/new', icon: <Car size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'Payments', path: '/payments', icon: <Wallet size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
@@ -64,7 +69,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-72'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-4 lg:mr-2 rounded-[2.5rem] lg:h-[calc(100vh-2rem)]`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-72'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-4 lg:mr-2 rounded-[2.5rem] lg:h-[calc(100vh-2rem)] will-change-transform`}>
         {/* Logo */}
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
           <div className="glass-card rounded-2xl p-2 shadow-sm">
@@ -148,9 +153,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 lg:h-16 lg:mt-4 lg:mx-4 glass-panel border-b border-white/20 dark:border-white/5 lg:border lg:rounded-[2rem] flex items-center px-4 lg:px-6 gap-3 lg:gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/5 dark:bg-black/10 backdrop-blur-xl">
-          {/* Mobile: Logo */}
-          <div className="lg:hidden flex items-center gap-2">
+        <header className="h-16 lg:h-16 lg:mt-4 lg:mx-4 glass-panel border-b border-white/20 dark:border-white/5 lg:border lg:rounded-[2rem] flex items-center px-4 lg:px-6 gap-3 lg:gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/10 dark:bg-black/20 backdrop-blur-md will-change-transform">
+          {/* Logo - Mobile always, Desktop only for accountants */}
+          <div className={`${user.role === 'accountant' ? 'flex' : 'lg:hidden'} items-center gap-2`}>
             <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
           </div>
 
@@ -173,8 +178,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
 
-          {/* Mobile: Profile Dropdown */}
-          <div className="lg:hidden relative">
+          {/* Profile Dropdown - Mobile always, Desktop only for accountants */}
+          <div className={`${user.role === 'accountant' ? 'block' : 'lg:hidden'} relative`}>
             <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all"

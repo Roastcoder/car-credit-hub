@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,36 +8,38 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import RoleProtectedRoute from "@/components/RoleProtectedRoute";
 import DashboardRedirect from "@/components/DashboardRedirect";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
-import Dashboard from "@/pages/Dashboard";
-import AccountDashboard from "@/pages/AccountDashboard";
-import AccountsReceivable from "@/pages/AccountsReceivable";
-import AccountsPayable from "@/pages/AccountsPayable";
-import GeneralLedger from "@/pages/GeneralLedger";
-import FinancialReports from "@/pages/FinancialReports";
-import PaymentApplicationForm from "@/pages/PaymentApplicationForm";
-import PaymentApplicationsList from "@/pages/PaymentApplicationsList";
-import PaymentVoucherForm from "@/pages/PaymentVoucherForm";
-import Loans from "@/pages/Loans";
-import CreateLoan from "@/pages/CreateLoan";
-import LoanDetail from "@/pages/LoanDetail";
-import UserManagement from "@/pages/UserManagement";
-import BankManagement from "@/pages/BankManagement";
-import BrokerManagement from "@/pages/BrokerManagement";
-import BranchManagement from "@/pages/BranchManagement";
-import Commission from "@/pages/Commission";
-import Reports from "@/pages/Reports";
-import AddLead from "@/pages/AddLead";
-import LeadsList from "@/pages/LeadsList";
-import LeadDetail from "@/pages/LeadDetail";
-import BroadcastNotification from "@/pages/BroadcastNotification";
-import PDDTracking from "@/pages/PDDTracking";
-import Payments from "@/pages/Payments";
-import CreatePaymentApplication from "@/pages/CreatePaymentApplication";
-import CreatePaymentVoucher from "@/pages/CreatePaymentVoucher";
-import PaymentDetail from "@/pages/PaymentDetail";
-import NotFound from "./pages/NotFound";
+
+// Lazy load pages to break circular dependencies and improve performance
+const Login = lazy(() => import("@/pages/Login"));
+const Signup = lazy(() => import("@/pages/Signup"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const AccountDashboard = lazy(() => import("@/pages/AccountDashboard"));
+const AccountsReceivable = lazy(() => import("@/pages/AccountsReceivable"));
+const AccountsPayable = lazy(() => import("@/pages/AccountsPayable"));
+const GeneralLedger = lazy(() => import("@/pages/GeneralLedger"));
+const FinancialReports = lazy(() => import("@/pages/FinancialReports"));
+const PaymentApplicationForm = lazy(() => import("@/pages/PaymentApplicationForm"));
+const PaymentApplicationsList = lazy(() => import("@/pages/PaymentApplicationsList"));
+const PaymentVoucherForm = lazy(() => import("@/pages/PaymentVoucherForm"));
+const Loans = lazy(() => import("@/pages/Loans"));
+const CreateLoan = lazy(() => import("@/pages/CreateLoan"));
+const LoanDetail = lazy(() => import("@/pages/LoanDetail"));
+const UserManagement = lazy(() => import("@/pages/UserManagement"));
+const BankManagement = lazy(() => import("@/pages/BankManagement"));
+const BrokerManagement = lazy(() => import("@/pages/BrokerManagement"));
+const BranchManagement = lazy(() => import("@/pages/BranchManagement"));
+const Commission = lazy(() => import("@/pages/Commission"));
+const Reports = lazy(() => import("@/pages/Reports"));
+const AddLead = lazy(() => import("@/pages/AddLead"));
+const LeadsList = lazy(() => import("@/pages/LeadsList"));
+const LeadDetail = lazy(() => import("@/pages/LeadDetail"));
+const BroadcastNotification = lazy(() => import("@/pages/BroadcastNotification"));
+const PDDTracking = lazy(() => import("@/pages/PDDTracking"));
+const Payments = lazy(() => import("@/pages/Payments"));
+const CreatePaymentApplication = lazy(() => import("@/pages/CreatePaymentApplication"));
+const CreatePaymentVoucher = lazy(() => import("@/pages/CreatePaymentVoucher"));
+const PaymentDetail = lazy(() => import("@/pages/PaymentDetail"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -77,35 +80,13 @@ function AppRoutes() {
             <AccountDashboard />
           </RoleProtectedRoute>
         </ProtectedRoute>
-      } />
-      <Route path="/account/receivables" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
-            <AccountsReceivable />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
-      <Route path="/account/payables" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
-            <AccountsPayable />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
-      <Route path="/account/ledger" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
-            <GeneralLedger />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
-      <Route path="/account/reports" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
-            <FinancialReports />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
+      }>
+        <Route path="receivables" element={<AccountsReceivable />} />
+        <Route path="payables" element={<AccountsPayable />} />
+        <Route path="ledger" element={<GeneralLedger />} />
+        <Route path="reports" element={<FinancialReports />} />
+        <Route path="vouchers/create/:applicationId" element={<PaymentVoucherForm />} />
+      </Route>
       
       {/* Regular Routes */}
       <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
@@ -135,15 +116,6 @@ function AppRoutes() {
       <Route path="/payments/applications/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       <Route path="/payments/applications/loan/:loanId" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       
-      {/* Account Department Voucher Routes */}
-      <Route path="/account/vouchers/create/:applicationId" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
-            <PaymentVoucherForm />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
-      
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
       <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
@@ -154,13 +126,19 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <Suspense fallback={
+            <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          }>
+            <AppRoutes />
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
+      <Toaster />
+      <Sonner />
     </TooltipProvider>
   </QueryClientProvider>
 );

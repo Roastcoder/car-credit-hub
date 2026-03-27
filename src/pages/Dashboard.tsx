@@ -72,11 +72,12 @@ export default function Dashboard() {
     value: loans.filter((l: any) => l.status === s.value).length,
   })).filter(d => d.value > 0);
 
-  const bankNames = [...new Set(loans.map((l: any) => l.bank_name || l.banks?.name).filter(Boolean))];
+  const disbursedLoansForChart = loans.filter((l: any) => l.status === 'disbursed');
+  const bankNames = [...new Set(disbursedLoansForChart.map((l: any) => l.bank_name || l.banks?.name).filter(Boolean))];
   const bankData = bankNames.map(bank => ({
     name: (bank as string).replace(' Bank', ''),
-    loans: loans.filter((l: any) => (l.bank_name || l.banks?.name) === bank).length,
-    amount: loans.filter((l: any) => (l.bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
+    loans: disbursedLoansForChart.filter((l: any) => (l.bank_name || l.banks?.name) === bank).length,
+    amount: disbursedLoansForChart.filter((l: any) => (l.bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
   }));
 
   return (

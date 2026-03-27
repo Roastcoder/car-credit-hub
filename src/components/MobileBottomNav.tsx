@@ -92,9 +92,9 @@ export default function MobileBottomNav() {
       {/* More Menu Popup */}
       {showMore && (
         <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden" onClick={() => setShowMore(false)} />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden" onClick={() => setShowMore(false)} />
           <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
-            <div className="glass-panel rounded-t-3xl border-t border-border shadow-2xl max-h-[70vh] overflow-y-auto">
+            <div className="glass-panel rounded-t-[2.5rem] border-t border-white/20 dark:border-white/10 shadow-2xl max-h-[70vh] overflow-y-auto backdrop-blur-lg">
               <div className="sticky top-0 glass-panel border-b border-border px-6 py-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-foreground">More Options</h3>
                 <button
