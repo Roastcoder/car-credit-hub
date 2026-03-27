@@ -129,6 +129,7 @@ export default function Loans() {
     const matchSearch = !search ||
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.id?.toLowerCase().includes(search.toLowerCase()) ||
+      l.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
       l.car_model?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = true; // Status filter removed from UI
     const loanPddStatus = l.pdd_status || 'pending';
@@ -173,7 +174,7 @@ export default function Loans() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search name, ID, or car..."
+            placeholder="Search name, loan number, ID, or car..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
@@ -215,7 +216,16 @@ export default function Loans() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
-                  <p className="text-xs text-muted-foreground mono">{loan.loan_number || loan.id}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs mono font-bold text-accent">
+                      {loan.loan_number || `ID: ${loan.id}`}
+                    </p>
+                    {loan.loan_number && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                        DISBURSED
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <LoanStatusBadge status={loan.status} />
@@ -315,7 +325,7 @@ export default function Loans() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan ID</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan Number</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
@@ -331,7 +341,14 @@ export default function Loans() {
                 <tbody>
                   {filtered.map((loan: any) => (
                     <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}>
-                      <td className="py-3.5 px-3 mono text-xs text-accent font-medium">{loan.loan_number || loan.id}</td>
+                      <td className="py-3.5 px-3">
+                        <div className="flex flex-col">
+                          <p className="mono text-sm text-accent font-bold">{loan.loan_number || `ID: ${loan.id}`}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {loan.loan_number ? 'Loan Number' : 'Application ID'}
+                          </p>
+                        </div>
+                      </td>
                       <td className="py-3.5 px-3">
                         <p className="font-medium text-foreground">{loan.applicant_name}</p>
                         <p className="text-xs text-muted-foreground">{loan.mobile}</p>

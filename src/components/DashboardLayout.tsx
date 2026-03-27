@@ -4,7 +4,7 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ROLE_LABELS } from '@/lib/auth';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck
+  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -20,10 +20,12 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
+  { label: 'Account', path: '/account', icon: <User size={18} />, roles: ['super_admin', 'admin', 'accountant'] },
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={18} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loan Applications', path: '/loans', icon: <FileText size={18} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Create Loan', path: '/loans/new', icon: <Car size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { label: 'Payments', path: '/payments', icon: <Wallet size={18} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={18} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={18} />, roles: ['super_admin', 'admin', 'manager'] },

@@ -21,3 +21,23 @@ export function calculateEMI(principal: number, rate: number, tenure: number): n
       (Math.pow(1 + monthlyRate, tenure) - 1),
   );
 }
+
+export function generateLoanNumber(vertical: string, lastLoanNumber?: string): string {
+  const prefix = vertical ? `MEH${vertical.toUpperCase()}` : 'MEH';
+  
+  if (!lastLoanNumber) {
+    return `${prefix}0001`;
+  }
+  
+  // Extract number from last loan number (e.g., MEHCAR0123 -> 123)
+  const match = lastLoanNumber.match(new RegExp(`${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)$`));
+  if (!match) {
+    return `${prefix}0001`;
+  }
+  
+  const lastNumber = parseInt(match[1], 10);
+  const nextNumber = lastNumber + 1;
+  
+  // Pad with zeros to maintain 4-digit format
+  return `${prefix}${nextNumber.toString().padStart(4, '0')}`;
+}

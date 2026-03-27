@@ -85,6 +85,7 @@ export const loansAPI = {
   performWorkflowAction: (id: string | number, action: string, remarks?: string) =>
     api.post(`/loans/${id}/workflow`, { action, remarks }),
   getAuditLogs: (id: string | number) => api.get(`/loans/${id}/audit-logs`),
+  getLastLoanNumber: () => api.get('/loans/last-number'),
 };
 
 // Banks API
@@ -165,6 +166,41 @@ export const financersAPI = {
 // External APIs (Proxied via backend)
 export const externalAPI = {
   fetchRCData: (rcNumber: string) => api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true }),
+};
+
+// Account Department API
+export const accountAPI = {
+  getOverview: () => api.get('/account/overview'),
+  getReceivables: () => api.get('/account/receivables'),
+  getPayables: () => api.get('/account/payables'),
+  getLedger: (params?: any) => api.get('/account/ledger' + (params ? `?${new URLSearchParams(params)}` : '')),
+  getChartOfAccounts: () => api.get('/account/chart-of-accounts'),
+  createReceivable: (data: any) => api.post('/account/receivables', data),
+  createPayable: (data: any) => api.post('/account/payables', data),
+  generateReport: (params: any) => api.get('/account/reports' + `?${new URLSearchParams(params)}`),
+};
+
+// Payment Applications API
+export const paymentApplicationAPI = {
+  getAll: () => api.get('/payments/applications'),
+  getById: (id: number) => api.get(`/payments/applications/${id}`),
+  create: (data: any) => api.post('/payments/applications', data),
+  managerAction: (id: number, action: string, remarks?: string) => 
+    api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
+  addUTR: (id: number, utr_number: string) => 
+    api.post(`/payments/applications/${id}/utr`, { utr_number }),
+  getPddDocuments: (loanId: string) => api.get(`/payments/loans/${loanId}/pdd-documents`),
+  uploadDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+    return api.request('/payments/upload-document', {
+      method: 'POST',
+      body: formData,
+      headers: {} // Remove Content-Type to let browser set it with boundary
+    });
+  },
+  createVoucher: (data: any) => api.post('/payments/vouchers', data),
+  getNextVoucherNumber: () => api.get('/payments/vouchers/next-number')
 };
 
 // Legacy supabase compatibility shim (for components using supabase.auth.*)

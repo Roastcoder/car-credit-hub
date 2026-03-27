@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, externalAPI } from '@/lib/api';
+import { supabase, externalAPI, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES } from '@/lib/constants';
-import { calculateEMI, formatCurrency } from '@/lib/utils';
+import { calculateEMI, formatCurrency, generateLoanNumber } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -113,6 +113,25 @@ export default function CreateLoan() {
       return data?.data || data;
     },
     enabled: !!leadId && !isEditMode,
+  });
+
+  // Fetch last loan number for auto-generation based on vertical
+  const { data: lastLoanNumber, refetch: refetchLastLoanNumber } = useQuery({
+    queryKey: ['last-loan-number', form.vertical],
+    queryFn: async () => {
+      try {
+        const vertical = form.vertical || '';
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/last-number?vertical=${vertical}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data?.loan_number || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !isEditMode, // Only fetch for new loans
   });
 
   const [leadSearch, setLeadSearch] = useState('');
@@ -254,7 +273,7 @@ export default function CreateLoan() {
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
-    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
+    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: 'MEH', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
     insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
     // Deductions & Disbursement Details
@@ -506,11 +525,20 @@ export default function CreateLoan() {
   const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
 
-  const generateLoanId = () => {
-    const year = new Date().getFullYear();
-    const num = Math.floor(Math.random() * 9000) + 1000;
-    return `CL-${year}-${num}`;
-  };
+  // Auto-generate loan number when vertical changes or component loads
+  useEffect(() => {
+    if (!isEditMode && form.vertical && lastLoanNumber !== undefined) {
+      const newLoanNumber = generateLoanNumber(form.vertical, lastLoanNumber);
+      update('loanNumber', newLoanNumber);
+    }
+  }, [form.vertical, lastLoanNumber, isEditMode]);
+
+  // Refetch last loan number when vertical changes
+  useEffect(() => {
+    if (!isEditMode && form.vertical) {
+      refetchLastLoanNumber();
+    }
+  }, [form.vertical, isEditMode, refetchLastLoanNumber]);
 
   const uploadDocuments = async (loanId: string) => {
     const documents = [
@@ -578,7 +606,6 @@ export default function CreateLoan() {
 
   const createLoan = useMutation({
     mutationFn: async () => {
-      const loanId = form.loanNumber || generateLoanId();
       const url = isEditMode
         ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans/${id}`
         : `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/loans`;
@@ -590,7 +617,7 @@ export default function CreateLoan() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          loan_number: loanId,
+          loan_number: form.loanNumber || null,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
           mobile: form.mobile,
@@ -666,7 +693,7 @@ export default function CreateLoan() {
           purpose_loan_amount: form.purposeLoanAmount || null,
           emi_mode: form.emiMode || 'Monthly',
           financier_executive_name: form.financierExecutiveName || null,
-          financier_team_vertical: form.financierTeamVertical || null,
+          financier_team_vertical: 'MEH',
           disburse_branch_name: form.disburseBranchName || null,
           hpn_at_login: form.hpnAtLogin || null,
           is_financed: form.isFinanced || null,
@@ -851,6 +878,19 @@ export default function CreateLoan() {
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className={labelClass}>Loan Number</label>
+                  <input 
+                    className={`${inputClass} bg-muted/50`} 
+                    value={form.loanNumber} 
+                    onChange={e => update('loanNumber', e.target.value)}
+                    placeholder="Generated on disburse"
+                    readOnly={!isEditMode}
+                  />
+                  {!isEditMode && !form.loanNumber && (
+                    <p className="text-xs text-muted-foreground mt-1">Will be generated when loan is disbursed</p>
+                  )}
+                </div>
                 <div className="relative">
                   <label className={labelClass}>Vehicle Reg. No</label>
                   <input
@@ -963,7 +1003,7 @@ export default function CreateLoan() {
                 <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Financier Details</h3></div>
                 <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier Name</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
                 <div><label className={labelClass}>Financier Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} placeholder="Financier Executive Name" /></div>
-                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Select Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
+                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Financer Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
                 <div><label className={labelClass}>Disburse Branch Name</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} placeholder="Disburse Branch Name" /></div>
                  <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker (Optional)</option>{(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => parseInt(a.dsa_code) - parseInt(b.dsa_code)).map((b: any) => <option key={b.id} value={b.id}>DSA-{String(b.dsa_code).padStart(3, '0')} | {b.name}</option>)}{(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
                 {form.assignedBankId && (

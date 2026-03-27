@@ -5,9 +5,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
+import RoleProtectedRoute from "@/components/RoleProtectedRoute";
+import DashboardRedirect from "@/components/DashboardRedirect";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import Dashboard from "@/pages/Dashboard";
+import AccountDashboard from "@/pages/AccountDashboard";
+import AccountsReceivable from "@/pages/AccountsReceivable";
+import AccountsPayable from "@/pages/AccountsPayable";
+import GeneralLedger from "@/pages/GeneralLedger";
+import FinancialReports from "@/pages/FinancialReports";
+import PaymentApplicationForm from "@/pages/PaymentApplicationForm";
+import PaymentApplicationsList from "@/pages/PaymentApplicationsList";
+import PaymentVoucherForm from "@/pages/PaymentVoucherForm";
 import Loans from "@/pages/Loans";
 import CreateLoan from "@/pages/CreateLoan";
 import LoanDetail from "@/pages/LoanDetail";
@@ -22,6 +32,10 @@ import LeadsList from "@/pages/LeadsList";
 import LeadDetail from "@/pages/LeadDetail";
 import BroadcastNotification from "@/pages/BroadcastNotification";
 import PDDTracking from "@/pages/PDDTracking";
+import Payments from "@/pages/Payments";
+import CreatePaymentApplication from "@/pages/CreatePaymentApplication";
+import CreatePaymentVoucher from "@/pages/CreatePaymentVoucher";
+import PaymentDetail from "@/pages/PaymentDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,9 +60,54 @@ function AppRoutes() {
   const { user } = auth;
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/login" element={user ? <DashboardRedirect /> : <Login />} />
+      <Route path="/signup" element={user ? <DashboardRedirect /> : <Signup />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee']}>
+            <Dashboard />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      
+      {/* Account Department Routes - Only for super_admin, admin, and accountant */}
+      <Route path="/account" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <AccountDashboard />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/account/receivables" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <AccountsReceivable />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/account/payables" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <AccountsPayable />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/account/ledger" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <GeneralLedger />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/account/reports" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <FinancialReports />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      
+      {/* Regular Routes */}
       <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
       <Route path="/loans/new" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
@@ -63,8 +122,30 @@ function AppRoutes() {
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
+      
+      {/* Payment Routes - Available to all authenticated users */}
+      <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+      <Route path="/payments/new" element={<ProtectedRoute><CreatePaymentApplication /></ProtectedRoute>} />
+      <Route path="/payments/loan/:loanId" element={<ProtectedRoute><CreatePaymentApplication /></ProtectedRoute>} />
+      <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetail /></ProtectedRoute>} />
+      <Route path="/payments/:paymentId/voucher" element={<ProtectedRoute><CreatePaymentVoucher /></ProtectedRoute>} />
+      
+      {/* Payment Application Routes */}
+      <Route path="/payments/applications" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
+      <Route path="/payments/applications/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
+      <Route path="/payments/applications/loan/:loanId" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
+      
+      {/* Account Department Voucher Routes */}
+      <Route path="/account/vouchers/create/:applicationId" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
+            <PaymentVoucherForm />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
