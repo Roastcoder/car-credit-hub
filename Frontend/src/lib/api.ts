@@ -170,20 +170,28 @@ export const externalAPI = {
 
 // Account Department API
 export const accountAPI = {
-  getOverview: () => api.get('/account/overview'),
-  getReceivables: () => api.get('/account/receivables'),
-  getPayables: () => api.get('/account/payables'),
-  getLedger: (params?: any) => api.get('/account/ledger' + (params ? `?${new URLSearchParams(params)}` : '')),
-  getChartOfAccounts: () => api.get('/account/chart-of-accounts'),
+  getOverview: (v = Date.now()) => api.get(`/account/overview?v=${v}`),
+  getReceivables: (v = Date.now()) => api.get(`/account/receivables?v=${v}`),
+  getPayables: (v = Date.now()) => api.get(`/account/payables?v=${v}`),
+  getLedger: (params?: any) => {
+    const queryParams = new URLSearchParams(params);
+    queryParams.append('v', Date.now().toString());
+    return api.get('/account/ledger' + `?${queryParams}`);
+  },
+  getChartOfAccounts: (v = Date.now()) => api.get(`/account/chart-of-accounts?v=${v}`),
   createReceivable: (data: any) => api.post('/account/receivables', data),
   createPayable: (data: any) => api.post('/account/payables', data),
-  generateReport: (params: any) => api.get('/account/reports' + `?${new URLSearchParams(params)}`),
+  generateReport: (params: any) => {
+    const queryParams = new URLSearchParams(params);
+    queryParams.append('v', Date.now().toString());
+    return api.get('/account/reports' + `?${queryParams}`);
+  },
 };
 
 // Payment Applications API
 export const paymentApplicationAPI = {
-  getAll: () => api.get('/payments/applications'),
-  getById: (id: number) => api.get(`/payments/applications/${id}`),
+  getAll: (v = Date.now()) => api.get(`/payments/applications?v=${v}`),
+  getById: (id: number, v = Date.now()) => api.get(`/payments/applications/${id}?v=${v}`),
   create: (data: any) => api.post('/payments/applications', data),
   managerAction: (id: number, action: string, remarks?: string) => 
     api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
