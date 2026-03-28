@@ -608,15 +608,28 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 9. Payment Details (PDD & Banking Docs) */}
+        {/* 9. Beneficiary Banking Details */}
+        <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
+          <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
+            <Building2 className="h-5 w-5 text-blue-600" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">9. Beneficiary Banking Details</h2>
+            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FormField label="Payment In Favour (Beneficiary Name) *" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} required placeholder="Enter beneficiary name" />
+            <FormField label="Bank Name *" name="bank_name" value={formData.bank_name} onChange={handleInputChange} required placeholder="Enter bank name" />
+            <FormField label="Account Number *" name="account_number" value={formData.account_number} onChange={handleInputChange} required placeholder="Enter account number" />
+            <FormField label="IFSC Code *" name="ifsc_code" value={formData.ifsc_code} onChange={handleInputChange} required placeholder="e.g. SBIN0001234" />
+            <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" />
+            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 10. Payment Details (Docs & Remarks) */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <Clock className="h-5 w-5 text-red-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">9. Payment Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <FormField label="Payment In Favour (Name)" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} />
-            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} />
+            <FileText className="h-5 w-5 text-red-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">10. Supporting Documents</h2>
           </div>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
