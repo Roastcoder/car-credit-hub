@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { 
   Upload, FileText, Plus, X, Save, Send, 
   User, Building2, CreditCard, Calendar,
@@ -153,11 +154,7 @@ export default function PaymentApplicationForm() {
 
   const fetchApplicationData = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const data = await paymentApplicationAPI.getById(parseInt(id || '0'));
       setFormData(data);
       if (data.pdd_documents) {
         setSelectedPddDocs(data.pdd_documents);
@@ -176,10 +173,7 @@ export default function PaymentApplicationForm() {
 
   const fetchPddDocumentsById = async (lId: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/loans/${lId}/pdd-documents`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const data = await paymentApplicationAPI.getPddDocuments(lId);
       setPddDocuments(data);
     } catch (error) {
       console.error('Error fetching PDD documents:', error);
@@ -207,11 +201,9 @@ export default function PaymentApplicationForm() {
 
   const fetchLoanData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/loans/${loanId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
-      setLoanData(data);
+      const data = await loansAPI.getById(loanId!);
+      setLoanData(data.data || data);
+      const lData = data.data || data;
       
       // Pre-fill applicant and loan data
       setFormData(prev => ({
@@ -260,10 +252,7 @@ export default function PaymentApplicationForm() {
 
   const fetchPddDocuments = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/loans/${loanId}/pdd-documents`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const data = await paymentApplicationAPI.getPddDocuments(loanId!);
       setPddDocuments(data);
     } catch (error) {
       console.error('Error fetching PDD documents:', error);
@@ -344,22 +333,11 @@ export default function PaymentApplicationForm() {
         status
       };
       
-      const url = id 
-        ? `${import.meta.env.VITE_API_URL}/api/payments/applications/${id}`
-        : `${import.meta.env.VITE_API_URL}/api/payments/applications`;
-        
-      const response = await fetch(url, {
-        method: id ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(applicationData)
-      });
-      
-      if (!response.ok) throw new Error('Failed to submit application');
-      
-      const result = await response.json();
+      if (id) {
+        await paymentApplicationAPI.update(parseInt(id), applicationData);
+      } else {
+        await paymentApplicationAPI.create(applicationData);
+      }
       
       toast.success(id ? 'Application updated successfully' : (status === 'draft' ? 'Application saved as draft' : 'Application submitted successfully'));
       navigate('/payments');

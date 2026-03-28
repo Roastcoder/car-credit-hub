@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download } from 'lucide-react';
+import { paymentApplicationAPI } from '@/lib/api';
+import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info } from 'lucide-react';
 
 type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
 
@@ -34,14 +35,7 @@ export default function PaymentDetail() {
   // Fetch payment details
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', id],
-    queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (!response.ok) throw new Error('Failed to fetch payment');
-      const data = await response.json();
-      return data.data || data;
-    },
+    queryFn: async () => paymentApplicationAPI.getById(parseInt(id!)),
     enabled: !!id,
   });
 
@@ -88,16 +82,8 @@ export default function PaymentDetail() {
   // Update payment status (manager action)
   const managerAction = useMutation({
     mutationFn: async ({ action, remarks }: { action: 'approve' | 'reject'; remarks?: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/manager-action`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ action, remarks })
-      });
-      if (!response.ok) throw new Error('Failed to process application');
-      return response.json();
+      const result = await paymentApplicationAPI.managerAction(parseInt(id!), action, remarks);
+      return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
@@ -111,16 +97,8 @@ export default function PaymentDetail() {
   // Add UTR number
   const addUTRNumber = useMutation({
     mutationFn: async (utr: string) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/utr`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ utr_number: utr })
-      });
-      if (!response.ok) throw new Error('Failed to add UTR number');
-      return response.json();
+      const result = await paymentApplicationAPI.addUTR(parseInt(id!), utr);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
@@ -136,17 +114,8 @@ export default function PaymentDetail() {
   // Upload Proof
   const uploadProof = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('document', file);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/payment-proof`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: formData
-      });
-      if (!response.ok) throw new Error('Failed to upload proof');
-      return response.json();
+      const result = await paymentApplicationAPI.uploadProof(parseInt(id!), file);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });

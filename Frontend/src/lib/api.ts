@@ -193,10 +193,20 @@ export const paymentApplicationAPI = {
   getAll: (v = Date.now()) => api.get(`/payments/applications?v=${v}`),
   getById: (id: number, v = Date.now()) => api.get(`/payments/applications/${id}?v=${v}`),
   create: (data: any) => api.post('/payments/applications', data),
+  update: (id: number, data: any) => api.put(`/payments/applications/${id}`, data),
   managerAction: (id: number, action: string, remarks?: string) => 
     api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
   addUTR: (id: number, utr_number: string) => 
     api.post(`/payments/applications/${id}/utr`, { utr_number }),
+  uploadProof: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+    return api.request(`/payments/applications/${id}/payment-proof`, {
+      method: 'POST',
+      headers: {}, // fetch will set boundary for FormData
+      body: formData
+    });
+  },
   getPddDocuments: (loanId: string) => api.get(`/payments/loans/${loanId}/pdd-documents`),
   uploadDocument: (file: File) => {
     const formData = new FormData();

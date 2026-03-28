@@ -6,6 +6,7 @@ import {
   Plus, Search, Filter, Eye, Edit, CheckCircle, X,
   Clock, FileText, CreditCard, AlertCircle, Download
 } from 'lucide-react';
+import { paymentApplicationAPI } from '@/lib/api';
 
 interface PaymentApplication {
   id: number;
@@ -42,10 +43,7 @@ export default function PaymentApplicationsList() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const data = await paymentApplicationAPI.getAll();
       setApplications(data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -58,16 +56,7 @@ export default function PaymentApplicationsList() {
   const handleManagerAction = async (applicationId: number, action: 'approve' | 'reject', remarks?: string) => {
     try {
       setActionLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${applicationId}/manager-action`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ action, remarks })
-      });
-      
-      if (!response.ok) throw new Error('Failed to process application');
+      await paymentApplicationAPI.managerAction(applicationId, action, remarks);
       
       toast.success(`Application ${action}d successfully`);
       fetchApplications();
@@ -86,17 +75,7 @@ export default function PaymentApplicationsList() {
 
   const handleAddUTR = async (applicationId: number, utrNumber: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${applicationId}/utr`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ utr_number: utrNumber })
-      });
-      
-      if (!response.ok) throw new Error('Failed to add UTR number');
-      
+      await paymentApplicationAPI.addUTR(applicationId, utrNumber);
       toast.success('UTR number added successfully. Now please upload the payment proof.');
       fetchApplications();
     } catch (error) {
@@ -108,18 +87,7 @@ export default function PaymentApplicationsList() {
   const handleUploadProof = async (applicationId: number, file: File) => {
     try {
       setActionLoading(true);
-      const formData = new FormData();
-      formData.append('document', file);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${applicationId}/payment-proof`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: formData
-      });
-      
-      if (!response.ok) throw new Error('Failed to upload payment proof');
+      await paymentApplicationAPI.uploadProof(applicationId, file);
       
       toast.success('Payment proof uploaded successfully and status updated to COMPLETED');
       fetchApplications();

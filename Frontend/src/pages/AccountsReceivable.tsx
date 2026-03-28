@@ -195,10 +195,12 @@ export default function AccountsReceivable() {
                         <button 
                           className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           onClick={() => {
-                            if (item.loan_id) {
+                            if (item.application_id) {
+                              navigate(`/payments/${item.application_id}`);
+                            } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}`);
                             } else {
-                              toast.info('No associated loan found for this record');
+                              toast.info('No associated record found');
                             }
                           }}
                           title="View Details"
@@ -209,13 +211,15 @@ export default function AccountsReceivable() {
                         <button 
                           className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                           onClick={() => {
-                            if (item.loan_id) {
+                            if (item.application_id) {
+                              navigate(`/payments/edit/${item.application_id}`);
+                            } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}/edit`);
                             } else {
                               toast.info('Direct edit not available for this record');
                             }
                           }}
-                          title="Edit Loan"
+                          title="Edit Record"
                         >
                           <Edit size={16} />
                         </button>

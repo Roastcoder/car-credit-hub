@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, Download } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, Download, Info } from 'lucide-react';
 import { accountAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -212,7 +212,7 @@ export default function AccountsPayable() {
                           className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                           onClick={() => {
                             if (item.application_id) {
-                              navigate(`/payments/applications/edit/${item.application_id}`);
+                              navigate(`/payments/edit/${item.application_id}`);
                             } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}/edit`);
                             } else {
@@ -224,19 +224,23 @@ export default function AccountsPayable() {
                           <Edit size={16} />
                         </button>
                         {item.status === 'Approved' && (
-                          <button 
-                            className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                            onClick={() => {
-                              if (item.application_id) {
-                                navigate(`/payments/applications`); // Navigate to process list
-                              } else {
-                                toast.info('Please process this via the Payments module');
-                              }
-                            }}
-                            title="Process Payment"
-                          >
-                            <CreditCard size={16} />
-                          </button>
+                          <div className="flex flex-col gap-1">
+                            <button 
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold transition-colors border border-indigo-100 dark:border-indigo-800/50"
+                              onClick={() => {
+                                if (item.application_id) {
+                                  navigate(`/payments/applications/${item.application_id}`);
+                                } else {
+                                  toast.info('Please process this via the Payments module', {
+                                    icon: <Info size={16} className="text-indigo-500" />
+                                  });
+                                }
+                              }}
+                            >
+                              <CreditCard size={14} />
+                              Process
+                            </button>
+                          </div>
                         )}
                       </div>
                     </td>

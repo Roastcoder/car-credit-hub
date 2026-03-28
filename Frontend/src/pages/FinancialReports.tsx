@@ -27,12 +27,12 @@ export default function FinancialReports() {
     { category: 'Expenses', items: [] }
   ];
 
-  const revenueItems = profitLossData.find((d: any) => d.category === 'Revenue')?.items || [];
-  const expenseItems = profitLossData.find((d: any) => d.category === 'Expenses')?.items || [];
+  const revenueItems = reportData?.revenue?.items || [];
+  const expenseItems = reportData?.expenses?.items || [];
 
-  const totalRevenue = revenueItems.reduce((sum: number, item: any) => sum + parseFloat(item.amount || 0), 0);
-  const totalExpenses = expenseItems.reduce((sum: number, item: any) => sum + parseFloat(item.amount || 0), 0);
-  const netProfit = totalRevenue - totalExpenses;
+  const totalRevenue = reportData?.revenue?.total || 0;
+  const totalExpenses = reportData?.expenses?.total || 0;
+  const netProfit = reportData?.netProfit || 0;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -126,7 +126,7 @@ return (
                     {revenueItems.length > 0 ? (
                       revenueItems.map((item: any, index: number) => (
                         <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.account_name}</span>
                           <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(parseFloat(item.amount))}</span>
                         </div>
                       ))
@@ -150,7 +150,7 @@ return (
                     {expenseItems.length > 0 ? (
                       expenseItems.map((item: any, index: number) => (
                         <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                          <span className="text-gray-700 dark:text-gray-300 font-medium">{item.account_name}</span>
                           <span className="font-bold text-red-600 dark:text-red-400">{formatCurrency(parseFloat(item.amount))}</span>
                         </div>
                       ))
