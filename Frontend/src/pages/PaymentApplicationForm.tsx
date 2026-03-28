@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { 
   Upload, FileText, Plus, X, Save, Send, 
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight
 } from 'lucide-react';
 
 interface PaymentApplication {
@@ -281,9 +281,8 @@ export default function PaymentApplicationForm() {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    setFormData(prev => ({ ...prev, applicant_name: query }));
     
-    if (query.length < 2) {
+    if (query.trim().length < 1) {
       setSearchResults([]);
       setShowSearchResults(false);
       return;
@@ -291,9 +290,13 @@ export default function PaymentApplicationForm() {
 
     try {
       setSearching(true);
-      const response = await loansAPI.getAll({ search: query });
-      setSearchResults(response.data || []);
       setShowSearchResults(true);
+      const response = await loansAPI.getAll({ search: query, forPayment: 'true' });
+      const results = (response.data || []).map((loan: any) => ({
+        ...loan,
+        _displayName: loan.customer_name || loan.applicant_name || 'Unknown'
+      }));
+      setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -303,8 +306,7 @@ export default function PaymentApplicationForm() {
 
   const selectLoan = (loan: any) => {
     setShowSearchResults(false);
-    setSearchQuery(loan.customer_name);
-    // Use the existing auto-fill logic
+    setSearchQuery(loan._displayName || loan.customer_name || loan.applicant_name || '');
     fetchLoanDataById(loan.id.toString());
     fetchPddDocumentsById(loan.id.toString());
   };
@@ -405,14 +407,61 @@ export default function PaymentApplicationForm() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto pb-20">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          <CreditCard className="h-8 w-8 text-blue-600" />
-          {id ? 'Edit Payment Application' : 'New Payment Application'}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          {id ? `Application ID: #${id}` : 'Complete payment requisition workflow with automated loan data integration'}
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <CreditCard className="h-8 w-8 text-blue-600" />
+            {id ? 'Edit Payment Application' : 'New Payment Application'}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            {id ? `Application ID: #${id}` : 'Search for a customer to auto-fill loan details'}
+          </p>
+        </div>
+        
+        {/* Global Search Tool */}
+        {!id && (
+          <div className="w-full md:w-96 relative search-container">
+            <FormField 
+              label="Customer ID / Name / Mobile" 
+              name="lookup" 
+              placeholder="Search by ID, name or phone..."
+              icon={<Search className="h-5 w-5 !text-blue-500" />} 
+              value={searchQuery} 
+              onChange={(e: any) => handleSearch(e.target.value)} 
+              onFocus={() => searchQuery.length > 0 && setShowSearchResults(true)}
+            />
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute z-[100] mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto ring-1 ring-black/5">
+                {searchResults.map((loan) => (
+                  <button
+                    key={loan.id}
+                    type="button"
+                    className="w-full px-5 py-4 text-left hover:bg-blue-50/50 dark:hover:bg-blue-900/10 border-b border-gray-100 dark:border-gray-800 last:border-0 group transition-colors"
+                    onClick={() => selectLoan(loan)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-base text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">{loan._displayName}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded uppercase tracking-wider">{loan.loan_number}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1">
+                            <User size={12} /> {loan.mobile}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {searching && (
+              <div className="absolute right-4 top-10">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <form className="space-y-8">
@@ -423,42 +472,7 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Customer Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="relative search-container lg:col-span-2">
-              <FormField 
-                label="Customer ID" 
-                name="applicant_name" 
-                placeholder="Search by ID, name or phone..."
-                icon={<Search className="h-5 w-5" />} 
-                value={formData.applicant_name} 
-                onChange={(e: any) => handleSearch(e.target.value)} 
-                onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
-                required 
-              />
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                  {searchResults.map((loan) => (
-                    <button
-                      key={loan.id}
-                      type="button"
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-800 last:border-0"
-                      onClick={() => selectLoan(loan)}
-                    >
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">{loan.customer_name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{loan.loan_number}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{loan.mobile}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {searching && (
-                <div className="absolute right-3 top-9">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                </div>
-              )}
-            </div>
+            <FormField label="Customer Name" name="applicant_name" value={formData.applicant_name} onChange={handleInputChange} required />
             <FormField label="Loan Number" name="loan_number" value={formData.loan_number} onChange={handleInputChange} disabled />
             <FormField label="Mobile Number" name="applicant_phone" value={formData.applicant_phone} onChange={handleInputChange} required />
             <FormSelect label="KYC Documents" name="kyc_documents" value={formData.kyc_documents} onChange={handleInputChange} options={['Yes', 'No']} />
