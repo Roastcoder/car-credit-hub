@@ -317,6 +317,8 @@ export default function PaymentApplicationForm() {
   const selectLoan = (loan: any) => {
     setShowSearchResults(false);
     setSearchQuery(loan._displayName || loan.customer_name || loan.applicant_name || '');
+    // IMPORTANT: set loan_id so the payment is saved with the correct loan reference
+    setFormData(prev => ({ ...prev, loan_id: String(loan.id) }));
     fetchLoanDataById(loan.id.toString());
     fetchPddDocumentsById(loan.id.toString());
   };

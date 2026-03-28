@@ -59,16 +59,20 @@ export default function PaymentDetail() {
     enabled: !!payment,
   });
 
-  // Fetch all loan documents linked to the loan
+  // Fetch all loan documents - use loan_id or fall back to loan_number
+  const loanIdentifier = payment?.loan_id || payment?.loan_number;
   const { data: loanDocuments = [] } = useQuery({
-    queryKey: ['payment-loan-docs', payment?.loan_id],
+    queryKey: ['payment-loan-docs', loanIdentifier],
     queryFn: async () => {
-      if (!payment?.loan_id) return [];
+      if (!loanIdentifier) return [];
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${apiUrl}/loans/${payment.loan_id}/documents`, {
+      const response = await fetch(`${apiUrl}/loans/${loanIdentifier}/documents`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
-      if (!response.ok) return [];
+      if (!response.ok) {
+        console.warn('Failed to fetch loan documents:', response.status);
+        return [];
+      }
       const data = await response.json();
       const baseUrl = apiUrl.replace(/\/api$/, '');
       return (Array.isArray(data) ? data : []).map((doc: any) => ({
@@ -78,7 +82,7 @@ export default function PaymentDetail() {
         type: doc.document_type || 'Loan Document'
       }));
     },
-    enabled: !!payment?.loan_id,
+    enabled: !!loanIdentifier,
   });
 
   // Update payment status (manager action)
