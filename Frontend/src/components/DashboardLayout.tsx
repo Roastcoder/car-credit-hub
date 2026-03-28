@@ -1,0 +1,270 @@
+import { ReactNode, useState, ElementType } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { ROLE_LABELS } from '@/lib/auth';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
+  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet,
+  Activity, TrendingUp, Receipt, Landmark, BookOpen, PieChart
+} from 'lucide-react';
+import logo from '@/assets/logo.png';
+import MobileBottomNav from './MobileBottomNav';
+import NotificationBell from './NotificationBell';
+
+interface NavItem {
+  title: string;
+  path: string;
+  icon: ElementType;
+  roles: UserRole[];
+  children?: {
+    title: string;
+    path: string;
+    icon: ElementType;
+  }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { 
+    title: 'Dashboard', 
+    path: '/dashboard', 
+    icon: LayoutDashboard, 
+    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] 
+  },
+  { 
+    title: 'Account Dept', 
+    path: '/account', 
+    icon: Landmark, 
+    roles: ['super_admin', 'admin', 'accountant'],
+    children: [
+      { title: 'Overview', path: '/account', icon: LayoutDashboard },
+      { title: 'Receivables', path: '/account/receivables', icon: TrendingUp },
+      { title: 'Payables', path: '/account/payables', icon: Receipt },
+      { title: 'General Ledger', path: '/account/ledger', icon: BookOpen },
+      { title: 'Financial Reports', path: '/account/reports', icon: BarChart3 }
+    ]
+  },
+  { title: 'Leads', path: '/leads-list', icon: UserPlus, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
+  { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'Payments', path: '/payments', icon: Wallet, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Commission', path: '/commission', icon: CreditCard, roles: ['super_admin', 'admin', 'broker'] },
+  { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
+  { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
+  { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
+];
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  if (!user) return null;
+
+  const filteredNav = NAV_ITEMS.filter(item => !user.role || item.roles.includes(user.role));
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const initials = user.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : user.email ? user.email.slice(0, 2).toUpperCase() : 'U';
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-foreground/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-72'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-4 lg:mr-2 rounded-[2.5rem] lg:h-[calc(100vh-2rem)] will-change-transform`}>
+        {/* Logo */}
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
+          <div className="glass-card rounded-2xl p-2 shadow-sm">
+            <img src={logo} alt="Mehar Finance" className={`${collapsed ? 'h-8 w-8' : 'h-10 w-10'} object-contain`} />
+          </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-blue-950 dark:text-white truncate tracking-tight">Mehar Finance</p>
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Portal</p>
+            </div>
+          )}
+          <button className="lg:hidden ml-auto text-blue-500 hover:text-blue-950 dark:text-blue-400 dark:hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 relative z-10">
+          {filteredNav.map(item => {
+            const isAccountantLink = item.path.startsWith('/account');
+            const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account'));
+            const IconComponent = item.icon;
+
+            return (
+              <div key={item.path} className="space-y-1">
+                <Link
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  title={collapsed ? item.title : undefined}
+                  className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
+                    : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                    }`}
+                >
+                  <span className={`${isActive ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
+                    <IconComponent size={18} />
+                  </span>
+                  {!collapsed && <span className="truncate tracking-wide">{item.title}</span>}
+                  {!collapsed && isActive && (
+                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm" />
+                  )}
+                </Link>
+
+                {!collapsed && item.children && (isActive || location.pathname.startsWith(item.path)) && (
+                  <div className="ml-6 flex flex-col gap-1 border-l border-white/20 dark:border-white/5 pl-4 mt-1">
+                    {item.children.map((child) => {
+                      const ChildIconComponent = child.icon;
+                      return (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setSidebarOpen(false)}
+                          className={cn(
+                            "flex items-center gap-2 py-1.5 text-xs font-medium transition-colors rounded-lg px-2",
+                            location.pathname === child.path
+                              ? "text-blue-600 dark:text-blue-400 bg-white/20 dark:bg-white/5"
+                              : "text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white/10 dark:hover:bg-white/5"
+                          )}
+                        >
+                          <ChildIconComponent size={14} />
+                          {child.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Collapse toggle (desktop only) */}
+        <div className="hidden lg:flex justify-center py-4 border-t border-white/20 dark:border-white/5">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2.5 rounded-xl text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/20 dark:hover:border-white/10"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
+
+        {/* User */}
+        <div className={`px-4 pb-6 pt-6 border-t border-white/20 dark:border-white/5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+          {!collapsed && (
+            <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
+                <p className="text-xs font-medium text-blue-500 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+              </div>
+            </div>
+          )}
+          {collapsed ? (
+            <button onClick={handleLogout} title="Logout" className="p-3 rounded-2xl text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 border border-transparent hover:border-red-200 dark:hover:border-red-800/30">
+              <LogOut size={20} />
+            </button>
+          ) : (
+            <button onClick={handleLogout} className="flex items-center justify-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-red-600 dark:text-red-400 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 transition-all duration-300 w-full border border-red-200 dark:border-red-900/50 hover:border-transparent hover:shadow-lg hover:shadow-red-500/20">
+              <LogOut size={18} />
+              Logout
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="h-16 lg:h-16 lg:mt-4 lg:mx-4 glass-panel border-b border-white/20 dark:border-white/5 lg:border lg:rounded-[2rem] flex items-center px-4 lg:px-6 gap-3 lg:gap-6 shrink-0 shadow-sm z-40 lg:mb-2 bg-white/10 dark:bg-black/20 backdrop-blur-md will-change-transform">
+          {/* Logo - Mobile always, Desktop only for accountants */}
+          <div className={`${user.role === 'accountant' ? 'flex' : 'lg:hidden'} items-center gap-2`}>
+            <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
+          </div>
+
+          {/* Page title / User greeting */}
+          <div className="hidden lg:flex flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-8">
+            <div>
+              <p className="text-base font-bold text-blue-950 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
+                Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}</span>
+              </p>
+              <p className="text-xs lg:text-sm text-blue-700 dark:text-blue-400 font-medium truncate tracking-wide">
+                {user.role ? ROLE_LABELS[user.role] : 'User'}
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 lg:hidden"></div>
+
+
+          {/* Notification Bell */}
+          <div className="relative z-50">
+            <NotificationBell />
+          </div>
+
+          {/* Profile Dropdown - Mobile always, Desktop only for accountants */}
+          <div className={`${user.role === 'accountant' ? 'block' : 'lg:hidden'} relative`}>
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all"
+            >
+              {initials}
+            </button>
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
+                <div className="absolute right-0 top-14 w-60 glass-panel border border-white/20 dark:border-white/5 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all backdrop-blur-2xl bg-white/10 dark:bg-black/20">
+                  <div className="p-4 border-b border-white/10">
+                    <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
+                  </div>
+                  <div className="p-2">
+                    <button
+                      onClick={() => { handleLogout(); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 rounded-xl transition-all"
+                    >
+                      <LogOut size={18} />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Page */}
+        <main className="flex-1 overflow-y-auto px-0 py-4 pb-36 lg:p-6">
+          <div className="animate-fade-in h-full">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+    </div>
+  );
+}

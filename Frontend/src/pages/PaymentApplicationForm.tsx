@@ -1,0 +1,682 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { 
+  Upload, FileText, Plus, X, Save, Send, 
+  User, Building2, CreditCard, Calendar,
+  AlertCircle, CheckCircle, Clock
+} from 'lucide-react';
+
+interface PaymentApplication {
+  id?: number;
+  loan_id: string;
+  applicant_name: string;
+  applicant_phone: string;
+  applicant_email: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  branch_name: string;
+  payment_amount: number;
+  payment_purpose: string;
+  pdd_documents: string[];
+  banking_documents: string[];
+  remarks: string;
+  status: 'draft' | 'submitted' | 'manager_approved' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
+  created_by: number;
+  approved_by?: number;
+  processed_by?: number;
+  
+  // New fields
+  kyc_documents?: string;
+  financier_name?: string;
+  disbursement_amount?: number;
+  tenure_months?: number;
+  emi_amount?: number;
+  emi_mode?: string;
+  irr_percentage?: number;
+  loan_type?: string;
+  file_booked_code?: string;
+  vehicle_name?: string;
+  vehicle_model?: string;
+  vehicle_number?: string;
+  vehicle_type?: string;
+  disbursement_branch?: string;
+  branch_manager_name?: string;
+  rto_agent_name?: string;
+  rto_mobile?: string;
+  dto_location?: string;
+  rto_work_type?: string;
+  rto_doc_location?: string;
+  rc_status?: string;
+  noc_status?: string;
+  noc_checked_by?: string;
+  insurance_available?: boolean;
+  third_party_stamp?: boolean;
+  noc_stamp?: boolean;
+  is_third_party?: boolean;
+  foreclosure_amount?: number;
+  foreclosure_name?: string;
+  old_release_amount?: number;
+  today_release_amount?: number;
+  total_release_amount?: number;
+  total_release_percentage?: number;
+  hold_amount?: number;
+  hold_percentage?: number;
+  challan_amount?: number;
+  payment_in_favour_name?: string;
+  dm_approval?: boolean;
+  loan_number?: string;
+  disbursement_date?: string;
+  loan_amount?: number;
+}
+
+export default function PaymentApplicationForm() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { loanId, id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [loanData, setLoanData] = useState<any>(null);
+  const [pddDocuments, setPddDocuments] = useState<any[]>([]);
+  const [selectedPddDocs, setSelectedPddDocs] = useState<string[]>([]);
+  const [bankingDocs, setBankingDocs] = useState<File[]>([]);
+  
+  const [formData, setFormData] = useState<PaymentApplication>({
+    loan_id: loanId || '',
+    applicant_name: '',
+    applicant_phone: '',
+    applicant_email: '',
+    bank_name: '',
+    account_number: '',
+    ifsc_code: '',
+    branch_name: '',
+    payment_amount: 0,
+    payment_purpose: '',
+    pdd_documents: [],
+    banking_documents: [],
+    remarks: '',
+    status: 'draft',
+    created_by: user?.id || 0,
+    
+    // Initializing new fields
+    kyc_documents: 'No',
+    financier_name: '',
+    disbursement_amount: 0,
+    tenure_months: 0,
+    emi_amount: 0,
+    emi_mode: '',
+    irr_percentage: 0,
+    loan_type: 'New',
+    file_booked_code: '',
+    vehicle_name: '',
+    vehicle_model: '',
+    vehicle_number: '',
+    vehicle_type: '',
+    disbursement_branch: '',
+    branch_manager_name: '',
+    rto_agent_name: '',
+    rto_mobile: '',
+    dto_location: '',
+    rto_work_type: '',
+    rto_doc_location: '',
+    rc_status: 'Pending',
+    noc_status: 'Pending',
+    noc_checked_by: '',
+    insurance_available: false,
+    third_party_stamp: false,
+    noc_stamp: false,
+    is_third_party: false,
+    foreclosure_amount: 0,
+    foreclosure_name: '',
+    old_release_amount: 0,
+    today_release_amount: 0,
+    total_release_amount: 0,
+    total_release_percentage: 0,
+    hold_amount: 0,
+    hold_percentage: 0,
+    challan_amount: 0,
+    payment_in_favour_name: '',
+    dm_approval: false,
+    disbursement_date: '',
+    loan_amount: 0
+  });
+
+  useEffect(() => {
+    if (id) {
+      fetchApplicationData();
+    } else if (loanId) {
+      fetchLoanData();
+      fetchPddDocuments();
+    }
+  }, [loanId, id]);
+
+  const fetchApplicationData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      const data = await response.json();
+      setFormData(data);
+      if (data.pdd_documents) {
+        setSelectedPddDocs(data.pdd_documents);
+      }
+      // Also fetch PDD documents for the loan associated with this application
+      if (data.loan_id) {
+        fetchPddDocumentsById(data.loan_id);
+      }
+    } catch (error) {
+      console.error('Error fetching application data:', error);
+      toast.error('Failed to fetch application details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPddDocumentsById = async (lId: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/loans/${lId}/pdd-documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      const data = await response.json();
+      setPddDocuments(data);
+    } catch (error) {
+      console.error('Error fetching PDD documents:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Calculate Total Release and Percentages
+    const oldAmt = Number(formData.old_release_amount) || 0;
+    const todayAmt = Number(formData.today_release_amount) || 0;
+    const totalAmt = oldAmt + todayAmt;
+    const loanAmt = Number(formData.loan_amount) || 0;
+    const holdAmt = Number(formData.hold_amount) || 0;
+
+    const totalPerc = loanAmt > 0 ? (totalAmt / loanAmt) * 100 : 0;
+    const holdPerc = loanAmt > 0 ? (holdAmt / loanAmt) * 100 : 0;
+
+    setFormData(prev => ({
+      ...prev,
+      total_release_amount: totalAmt,
+      total_release_percentage: parseFloat(totalPerc.toFixed(2)),
+      hold_percentage: parseFloat(holdPerc.toFixed(2))
+    }));
+  }, [formData.old_release_amount, formData.today_release_amount, formData.loan_amount, formData.hold_amount]);
+
+  const fetchLoanData = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/loans/${loanId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      const data = await response.json();
+      setLoanData(data);
+      
+      // Pre-fill applicant and loan data
+      setFormData(prev => ({
+        ...prev,
+        applicant_name: data.customer_name || data.applicantName || '',
+        applicant_phone: data.mobile || data.customer_phone || '',
+        applicant_email: data.customer_email || '',
+        loan_number: data.loan_number || '',
+        financier_name: data.bank_name || data.financier_executive_name || '',
+        loan_amount: Number(data.loan_amount) || 0,
+        disbursement_amount: Number(data.net_disbursement_amount || data.disbursement_amount) || 0,
+        disbursement_date: data.disbursement_date ? new Date(data.disbursement_date).toISOString().split('T')[0] : '',
+        tenure_months: data.tenure_months || data.tenure || 0,
+        emi_amount: Number(data.emi_amount || data.emi) || 0,
+        emi_mode: data.emi_mode || '',
+        irr_percentage: Number(data.irr || data.interestRate) || 0,
+        loan_type: data.refinance ? 'Refinance' : 'New',
+        vehicle_name: data.maker_name || data.carMake || '',
+        vehicle_model: data.model_variant_name || data.carModel || data.carVariant || '',
+        vehicle_number: data.vehicle_number || '',
+        vehicle_type: data.vehicle_type || data.category || '',
+        branch_name: data.our_branch || '',
+        disbursement_branch: data.disburse_branch_name || '',
+        branch_manager_name: data.branch_manager || '',
+        rto_agent_name: data.rto_agent_name || '',
+        rto_mobile: data.rto_agent_mobile || data.agent_mobile_no || '',
+        dto_location: data.dto_location || '',
+        rto_work_type: data.rto_work_description || data.rto_work || '',
+        rto_doc_location: data.rto_docs_location || '',
+        rc_status: data.rto_work_status || 'Pending',
+        noc_status: data.noc_status || 'Pending',
+        noc_checked_by: data.noc_checked_by || '',
+        kyc_documents: data.rto_rc_owner_kyc ? 'Yes' : 'No',
+        insurance_available: data.insurance_status === 'Approved' || !!data.insurance_copy,
+        foreclosure_amount: Number(data.foreclosure_amount) || 0,
+        foreclosure_name: data.foreclosure_bank_name || '',
+        hold_amount: Number(data.hold_amount) || 0,
+        challan_amount: Number(data.rto_challan_amount) || 0,
+        payment_in_favour_name: data.payment_in_favour || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching loan data:', error);
+      toast.error('Failed to fetch loan data');
+    }
+  };
+
+  const fetchPddDocuments = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/loans/${loanId}/pdd-documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      const data = await response.json();
+      setPddDocuments(data);
+    } catch (error) {
+      console.error('Error fetching PDD documents:', error);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePddDocumentToggle = (docPath: string) => {
+    setSelectedPddDocs(prev => {
+      const updated = prev.includes(docPath) 
+        ? prev.filter(doc => doc !== docPath)
+        : [...prev, docPath];
+      
+      setFormData(prevForm => ({
+        ...prevForm,
+        pdd_documents: updated
+      }));
+      
+      return updated;
+    });
+  };
+
+  const handleBankingDocUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setBankingDocs(prev => [...prev, ...files]);
+  };
+
+  const removeBankingDoc = (index: number) => {
+    setBankingDocs(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadBankingDocuments = async () => {
+    const uploadedPaths: string[] = [];
+    
+    for (const file of bankingDocs) {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('type', 'banking');
+      
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/upload-document`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+          body: formData
+        });
+        
+        const result = await response.json();
+        if (result.path) {
+          uploadedPaths.push(result.path);
+        }
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        toast.error(`Failed to upload ${file.name}`);
+      }
+    }
+    
+    return uploadedPaths;
+  };
+
+  const handleSubmit = async (status: 'draft' | 'submitted') => {
+    try {
+      setLoading(true);
+      
+      // Upload banking documents first
+      const bankingDocPaths = await uploadBankingDocuments();
+      
+      const applicationData = {
+        ...formData,
+        banking_documents: [...(formData.banking_documents || []), ...bankingDocPaths],
+        status
+      };
+      
+      const url = id 
+        ? `${import.meta.env.VITE_API_URL}/api/payments/applications/${id}`
+        : `${import.meta.env.VITE_API_URL}/api/payments/applications`;
+        
+      const response = await fetch(url, {
+        method: id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(applicationData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to submit application');
+      
+      const result = await response.json();
+      
+      toast.success(id ? 'Application updated successfully' : (status === 'draft' ? 'Application saved as draft' : 'Application submitted successfully'));
+      navigate('/payments');
+      
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast.error('Failed to submit application');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+      case 'submitted': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case 'manager_approved': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      case 'account_processing': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      case 'voucher_created': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
+      case 'payment_released': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400';
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto pb-20">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <CreditCard className="h-8 w-8 text-blue-600" />
+          {id ? 'Edit Payment Application' : 'New Payment Application'}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          {id ? `Application ID: #${id}` : 'Complete payment requisition workflow with automated loan data integration'}
+        </p>
+      </div>
+
+      <form className="space-y-8">
+        {/* 1. Customer Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <User className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Customer Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FormField label="Customer Name" name="applicant_name" value={formData.applicant_name} onChange={handleInputChange} required />
+            <FormField label="Loan Number" name="loan_number" value={formData.loan_number} onChange={handleInputChange} disabled />
+            <FormField label="Mobile Number" name="applicant_phone" value={formData.applicant_phone} onChange={handleInputChange} required />
+            <FormSelect label="KYC Documents" name="kyc_documents" value={formData.kyc_documents} onChange={handleInputChange} options={['Yes', 'No']} />
+          </div>
+        </section>
+
+        {/* 2. Loan Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <Building2 className="h-5 w-5 text-green-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Loan Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} />
+            <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} />
+            <FormField label="Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} />
+            <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} />
+            <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} />
+            <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} />
+            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} />
+            <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} />
+            <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} />
+            <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 3. Vehicle Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <Upload className="h-5 w-5 text-purple-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Vehicle Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} />
+            <FormField label="Vehicle Model" name="vehicle_model" value={formData.vehicle_model} onChange={handleInputChange} />
+            <FormField label="Vehicle Number" name="vehicle_number" value={formData.vehicle_number} onChange={handleInputChange} />
+            <FormField label="Vehicle Type" name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 4. Branch & Manager Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <Building2 className="h-5 w-5 text-orange-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Branch & Manager Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} />
+            <FormField label="Disbursement Branch" name="disbursement_branch" value={formData.disbursement_branch} onChange={handleInputChange} />
+            <FormField label="Branch Manager Name" name="branch_manager_name" value={formData.branch_manager_name} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 5. RTO Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <FileText className="h-5 w-5 text-teal-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">5. RTO Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} />
+            <FormField label="RTO Mobile Number" name="rto_mobile" value={formData.rto_mobile} onChange={handleInputChange} />
+            <FormField label="DTO Location" name="dto_location" value={formData.dto_location} onChange={handleInputChange} />
+            <FormField label="RTO Work" name="rto_work_type" value={formData.rto_work_type} onChange={handleInputChange} />
+            <FormField label="RTO Document Location" name="rto_doc_location" value={formData.rto_doc_location} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 6. Document & Status Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">6. Document & Status Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} />
+            <FormSelect label="NOC Status" name="noc_status" value={formData.noc_status} onChange={handleInputChange} options={['Pending', 'OK']} />
+            <FormField label="Checked By (NOC Status)" name="noc_checked_by" value={formData.noc_checked_by} onChange={handleInputChange} />
+            <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} />
+            <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} />
+            <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} />
+            <FormCheckbox label="Third Party" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 7. Payment & Foreclosure Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <Plus className="h-5 w-5 text-indigo-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">7. Payment & Foreclosure Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} />
+            <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} />
+            <FormField label="Old Payment Release Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} />
+            <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} />
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+              <label className="text-xs font-semibold text-blue-600 uppercase mb-1 block text-left">Total Payment Release Amount</label>
+              <p className="text-xl font-bold text-blue-900 dark:text-blue-100 text-left">₹{formData.total_release_amount?.toLocaleString()}</p>
+            </div>
+            <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
+              <label className="text-xs font-semibold text-green-600 uppercase mb-1 block text-left">Total Payment Release (%)</label>
+              <p className="text-xl font-bold text-green-900 dark:text-green-100 text-left">{formData.total_release_percentage}%</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 8. Hold & Balance Details */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField label="Hold Amount" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} />
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+              <label className="text-xs font-semibold text-yellow-600 uppercase mb-1 block text-left">Hold Amount (%)</label>
+              <p className="text-xl font-bold text-yellow-900 dark:text-yellow-100 text-left">{formData.hold_percentage}%</p>
+            </div>
+            <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} />
+          </div>
+        </section>
+
+        {/* 9. Payment Details (PDD & Banking Docs) */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <Clock className="h-5 w-5 text-red-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">9. Payment Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField label="Payment In Favour (Name)" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} />
+            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} />
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* PDD Docs */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">PDD Documents</label>
+              {pddDocuments.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {pddDocuments.map((doc, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                        formData.pdd_documents.includes(doc.file_path)
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                      }`}
+                      onClick={() => handlePddDocumentToggle(doc.file_path)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {formData.pdd_documents.includes(doc.file_path) ? <CheckCircle size={16} className="text-blue-500" /> : <FileText size={16} className="text-gray-400" />}
+                        <span className="text-sm">{doc.document_type}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-sm text-gray-500 italic text-left">No PDD docs found</p>}
+            </div>
+
+            {/* Banking Docs */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Banking Documents</label>
+              <input type="file" id="banking-docs" multiple onChange={handleBankingDocUpload} className="hidden" />
+              <label htmlFor="banking-docs" className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                <Upload size={20} className="mr-2 text-gray-400" />
+                <span className="text-sm text-gray-500">Upload bank docs</span>
+              </label>
+              <div className="mt-2 space-y-1">
+                {bankingDocs.map((file, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    <span className="truncate">{file.name}</span>
+                    <X size={14} className="text-red-500 cursor-pointer" onClick={() => removeBankingDoc(i)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 text-left">Remarks</label>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleInputChange}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              placeholder="Additional information..."
+            />
+          </div>
+        </section>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={() => navigate('/payments')}
+            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit('draft')}
+            disabled={loading}
+            className="px-8 py-3 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-semibold disabled:opacity-50"
+          >
+            Save Draft
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit('submitted')}
+            disabled={loading}
+            className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
+          >
+            {loading ? 'Submitting...' : 'Submit Now'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// Helper Components for the Form
+function FormField({ label, name, type = 'text', value, onChange, disabled, required }: any) {
+  return (
+    <div className="space-y-1.5 text-left">
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label} {required && '*'}</label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
+      />
+    </div>
+  );
+}
+
+function FormSelect({ label, name, value, onChange, options }: any) {
+  return (
+    <div className="space-y-1.5 text-left">
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+      >
+        {options.map((opt: string) => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function FormCheckbox({ label, name, checked, onChange }: any) {
+  return (
+    <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all cursor-pointer">
+      <input
+        type="checkbox"
+        id={name}
+        name={name}
+        checked={checked}
+        onChange={(e) => onChange({ target: { name, value: e.target.checked, type: 'checkbox' } })}
+        className="h-5 w-5 rounded text-blue-600 border-gray-300"
+      />
+      <label htmlFor={name} className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+        {label}
+      </label>
+    </div>
+  );
+}
