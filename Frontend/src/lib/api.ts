@@ -14,10 +14,16 @@ export const api = {
   },
 
   async request(endpoint: string, options: RequestInit = {}) {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    const headers: any = { ...options.headers };
+    
+    // Only set Content-Type to application/json if body is NOT FormData
+    // When body is FormData, browser needs to set its own Content-Type with boundary
+    if (options.body && !(options.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    } else if (!options.body) {
+      // Default for GET/DELETE without body
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
 
     if (authToken) {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${authToken}`;

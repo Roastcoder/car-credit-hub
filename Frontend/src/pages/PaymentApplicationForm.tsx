@@ -82,6 +82,10 @@ export default function PaymentApplicationForm() {
   const [pddDocuments, setPddDocuments] = useState<any[]>([]);
   const [selectedPddDocs, setSelectedPddDocs] = useState<string[]>([]);
   const [bankingDocs, setBankingDocs] = useState<File[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
@@ -150,6 +154,16 @@ export default function PaymentApplicationForm() {
       fetchLoanData();
       fetchPddDocuments();
     }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.search-container')) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [loanId, id]);
 
   const fetchApplicationData = async () => {
@@ -263,6 +277,36 @@ export default function PaymentApplicationForm() {
     } catch (error) {
       console.error('Error fetching PDD documents:', error);
     }
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    setFormData(prev => ({ ...prev, applicant_name: query }));
+    
+    if (query.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      setSearching(true);
+      const response = await loansAPI.getAll({ search: query });
+      setSearchResults(response.data || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const selectLoan = (loan: any) => {
+    setShowSearchResults(false);
+    setSearchQuery(loan.customer_name);
+    // Use the existing auto-fill logic
+    fetchLoanDataById(loan.id.toString());
+    fetchPddDocumentsById(loan.id.toString());
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -379,7 +423,40 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Customer Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Customer Name" name="applicant_name" value={formData.applicant_name} onChange={handleInputChange} required />
+            <div className="relative search-container">
+              <FormField 
+                label="Customer Name" 
+                name="applicant_name" 
+                value={formData.applicant_name} 
+                onChange={(e: any) => handleSearch(e.target.value)} 
+                onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
+                required 
+              />
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                  {searchResults.map((loan) => (
+                    <button
+                      key={loan.id}
+                      type="button"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      onClick={() => selectLoan(loan)}
+                    >
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white">{loan.customer_name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{loan.loan_number}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{loan.mobile}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searching && (
+                <div className="absolute right-3 top-9">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
             <FormField label="Loan Number" name="loan_number" value={formData.loan_number} onChange={handleInputChange} disabled />
             <FormField label="Mobile Number" name="applicant_phone" value={formData.applicant_phone} onChange={handleInputChange} required />
             <FormSelect label="KYC Documents" name="kyc_documents" value={formData.kyc_documents} onChange={handleInputChange} options={['Yes', 'No']} />
@@ -515,9 +592,10 @@ export default function PaymentApplicationForm() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* PDD Docs */}
+            {/* Loan & PDD Docs */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">PDD Documents</label>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Loan & PDD Documents</label>
+              <p className="text-xs text-gray-500 mb-4 text-left">Select all documents to include in this application</p>
               {pddDocuments.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {pddDocuments.map((doc, index) => (
@@ -604,7 +682,7 @@ export default function PaymentApplicationForm() {
 }
 
 // Helper Components for the Form
-function FormField({ label, name, type = 'text', value, onChange, disabled, required }: any) {
+function FormField({ label, name, type = 'text', value, onChange, disabled, required, onFocus }: any) {
   return (
     <div className="space-y-1.5 text-left">
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label} {required && '*'}</label>
@@ -613,6 +691,7 @@ function FormField({ label, name, type = 'text', value, onChange, disabled, requ
         name={name}
         value={value || ''}
         onChange={onChange}
+        onFocus={onFocus}
         disabled={disabled}
         className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
       />
