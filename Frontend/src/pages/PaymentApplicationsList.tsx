@@ -177,8 +177,18 @@ export default function PaymentApplicationsList() {
   };
 
   const canEdit = (app: PaymentApplication) => {
+    // Super admins and Administrators can edit anything
+    if (user?.role === 'super_admin' || user?.role === 'admin') return true;
+    
+    // Accountants can edit applications that are approved or in processing to fix details
+    if (user?.role === 'accountant') {
+      const accountantEditable = ['submitted', 'manager_approved', 'account_processing'];
+      return accountantEditable.includes(app.status);
+    }
+
+    // Original creator can only edit drafts or rejected apps
     const editableStatuses = ['draft', 'manager_rejected'];
-    return editableStatuses.includes(app.status) && (user?.id === app.created_by || user?.role === 'super_admin' || user?.role === 'admin');
+    return editableStatuses.includes(app.status) && user?.id === app.created_by;
   };
 
   const filteredApplications = applications.filter(app => {

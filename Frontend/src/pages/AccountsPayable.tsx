@@ -1,60 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, X, FileText, CheckCircle2, Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, Download } from 'lucide-react';
 import { accountAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 export default function AccountsPayable() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [isNewBillOpen, setIsNewBillOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data: payables = [], isLoading } = useQuery({
-    queryKey: ['accounts-payables'],
-    queryFn: () => accountAPI.getPayables()
+    queryKey: ['payables'],
+    queryFn: () => accountAPI.getPayables(),
   });
-
-  const createMutation = useMutation({
-    mutationFn: (data: any) => accountAPI.createPayable(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts-payables'] });
-      setIsNewBillOpen(false);
-      toast.success('Bill recorded successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to record bill');
-    }
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    createMutation.mutate({
-      ...data,
-      amount: parseFloat(data.amount as string),
-      outstanding_amount: parseFloat(data.amount as string),
-      status: 'Pending'
-    });
-  };
 
   const filteredPayables = payables.filter((item: any) => {
     const matchesSearch = item.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -101,63 +63,13 @@ export default function AccountsPayable() {
             Export
           </Button>
           
-          <Dialog open={isNewBillOpen} onOpenChange={setIsNewBillOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
-                <Plus size={16} />
-                New Bill
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] glass-panel border-white/20">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-blue-950 dark:text-white">Record New Bill</DialogTitle>
-                <p className="text-sm text-gray-500">Enter bill details to record a new payable liability.</p>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="vendor_name">Vendor Name</Label>
-                    <Input id="vendor_name" name="vendor_name" placeholder="Channel Partner" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="vendor_email">Vendor Email</Label>
-                    <Input id="vendor_email" name="vendor_email" type="email" placeholder="vendor@example.com" className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Bill Amount (₹)</Label>
-                    <Input id="amount" name="amount" type="number" step="0.01" placeholder="0.00" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="due_date">Due Date</Label>
-                    <Input id="due_date" name="due_date" type="date" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue="Broker Commission">
-                    <SelectTrigger className="bg-white/50 dark:bg-black/20">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Broker Commission">Broker Commission</SelectItem>
-                      <SelectItem value="Salaries">Salaries</SelectItem>
-                      <SelectItem value="Office Rent">Office Rent</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Utilities">Utilities</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button type="button" variant="ghost" onClick={() => setIsNewBillOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
-                    {createMutation.isPending ? 'Recording...' : 'Record Bill'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+            onClick={() => navigate('/payments/applications/new')}
+          >
+            <Plus size={16} />
+            Record New Bill
+          </Button>
         </div>
       </div>
 
@@ -345,7 +257,7 @@ export default function AccountsPayable() {
                         variant="outline" 
                         size="sm" 
                         className="gap-2 border-dashed border-red-200 hover:border-red-500 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                        onClick={() => setIsNewBillOpen(true)}
+                        onClick={() => navigate('/payments/applications/new')}
                       >
                         <Plus size={14} />
                         Record Manual Bill

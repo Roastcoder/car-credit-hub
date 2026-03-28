@@ -1,60 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, Plus, Eye, Edit, Download, TrendingUp, X, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { accountAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 export default function AccountsReceivable() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [isNewInvoiceOpen, setIsNewInvoiceOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data: receivables = [], isLoading } = useQuery({
     queryKey: ['accounts-receivables'],
     queryFn: () => accountAPI.getReceivables()
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data: any) => accountAPI.createReceivable(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts-receivables'] });
-      setIsNewInvoiceOpen(false);
-      toast.success('Invoice created successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to create invoice');
-    }
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    createMutation.mutate({
-      ...data,
-      amount: parseFloat(data.amount as string),
-      outstanding_amount: parseFloat(data.amount as string),
-      status: 'Sent'
-    });
-  };
 
   const filteredReceivables = receivables.filter((item: any) => {
     const matchesSearch = item.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -100,52 +63,13 @@ export default function AccountsReceivable() {
             Export
           </Button>
           
-          <Dialog open={isNewInvoiceOpen} onOpenChange={setIsNewInvoiceOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20">
-                <Plus size={16} />
-                New Invoice
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] glass-panel border-white/20">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-blue-950 dark:text-white">Create New Invoice</DialogTitle>
-                <p className="text-sm text-gray-500">Enter invoice details to generate a new receivable record.</p>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="customer_name">Customer Name</Label>
-                    <Input id="customer_name" name="customer_name" placeholder="John Doe" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customer_email">Customer Email</Label>
-                    <Input id="customer_email" name="customer_email" type="email" placeholder="john@example.com" className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Invoice Amount (₹)</Label>
-                    <Input id="amount" name="amount" type="number" step="0.01" placeholder="0.00" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="due_date">Due Date</Label>
-                    <Input id="due_date" name="due_date" type="date" required className="bg-white/50 dark:bg-black/20" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description / Notes</Label>
-                  <Textarea id="description" name="description" placeholder="Loan processing fees for..." className="bg-white/50 dark:bg-black/20" />
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button type="button" variant="ghost" onClick={() => setIsNewInvoiceOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
-                    {createMutation.isPending ? 'Creating...' : 'Create Invoice'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+            onClick={() => navigate('/loans/new')}
+          >
+            <Plus size={16} />
+            New Invoice
+          </Button>
         </div>
       </div>
 
@@ -314,7 +238,7 @@ export default function AccountsReceivable() {
                         variant="outline" 
                         size="sm" 
                         className="gap-2 border-dashed border-blue-200 hover:border-blue-500 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/20"
-                        onClick={() => setIsNewInvoiceOpen(true)}
+                        onClick={() => navigate('/loans/new')}
                       >
                         <Plus size={14} />
                         Create Manual Invoice
