@@ -189,10 +189,15 @@ export default function PaymentApplicationForm() {
 
   const fetchPddDocumentsById = async (lId: string) => {
     try {
-      const data = await paymentApplicationAPI.getPddDocuments(lId);
-      setPddDocuments(data);
+      // Fetch ALL loan documents (not just PDD)
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${lId}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setPddDocuments(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching PDD documents:', error);
+      console.error('Error fetching loan documents:', error);
     }
   };
 
@@ -228,8 +233,8 @@ export default function PaymentApplicationForm() {
       // Pre-fill applicant and loan data
       setFormData(prev => ({
         ...prev,
-        applicant_name: prev.applicant_name || d.customer_name || d.applicantName || '',
-        applicant_phone: prev.applicant_phone || d.mobile || d.customer_phone || '',
+        applicant_name: prev.applicant_name || d.customer_name || d.applicant_name || d.applicantName || '',
+        applicant_phone: prev.applicant_phone || d.mobile || d.customer_phone || d.customerPhone || '',
         applicant_email: prev.applicant_email || d.customer_email || '',
         loan_number: d.loan_number || '',
         financier_name: prev.financier_name || d.bank_name || d.financier_executive_name || '',
@@ -272,10 +277,15 @@ export default function PaymentApplicationForm() {
 
   const fetchPddDocuments = async () => {
     try {
-      const data = await paymentApplicationAPI.getPddDocuments(loanId!);
-      setPddDocuments(data);
+      // Fetch ALL loan documents for the loan
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setPddDocuments(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching PDD documents:', error);
+      console.error('Error fetching loan documents:', error);
     }
   };
 
@@ -320,11 +330,11 @@ export default function PaymentApplicationForm() {
     }));
   };
 
-  const handlePddDocumentToggle = (docPath: string) => {
+  const handlePddDocumentToggle = (docIdentifier: string) => {
     setSelectedPddDocs(prev => {
-      const updated = prev.includes(docPath) 
-        ? prev.filter(doc => doc !== docPath)
-        : [...prev, docPath];
+      const updated = prev.includes(docIdentifier)
+        ? prev.filter(doc => doc !== docIdentifier)
+        : [...prev, docIdentifier];
       
       setFormData(prevForm => ({
         ...prevForm,
@@ -610,28 +620,38 @@ export default function PaymentApplicationForm() {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Loan & PDD Docs */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Loan & PDD Documents</label>
-              <p className="text-xs text-gray-500 mb-4 text-left">Select all documents to include in this application</p>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Loan Documents</label>
+              <p className="text-xs text-gray-500 mb-4 text-left">Select documents attached to this loan</p>
               {pddDocuments.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
-                  {pddDocuments.map((doc, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${
-                        formData.pdd_documents.includes(doc.file_path)
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
-                      }`}
-                      onClick={() => handlePddDocumentToggle(doc.file_path)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {formData.pdd_documents.includes(doc.file_path) ? <CheckCircle size={16} className="text-blue-500" /> : <FileText size={16} className="text-gray-400" />}
-                        <span className="text-sm">{doc.document_type}</span>
+                  {pddDocuments.map((doc, index) => {
+                    const docKey = doc.file_url || doc.file_path || String(doc.id || index);
+                    const docLabel = doc.document_name || doc.document_type || doc.file_name || `Document ${index + 1}`;
+                    const isSelected = formData.pdd_documents.includes(docKey);
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => handlePddDocumentToggle(docKey)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isSelected ? <CheckCircle size={16} className="text-blue-500" /> : <FileText size={16} className="text-gray-400" />}
+                          <div>
+                            <span className="text-sm font-medium">{docLabel}</span>
+                            {doc.document_type && doc.document_name && (
+                              <p className="text-xs text-gray-400">{doc.document_type}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              ) : <p className="text-sm text-gray-500 italic text-left">No PDD docs found</p>}
+              ) : <p className="text-sm text-gray-500 italic text-left">No documents found for this loan</p>}
             </div>
 
             {/* Banking Docs */}
