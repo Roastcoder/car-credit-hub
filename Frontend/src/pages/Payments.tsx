@@ -84,7 +84,7 @@ export default function Payments() {
     const matchStatus = statusFilter === 'all' || payment.status === statusFilter;
     
     // Role-based filtering
-    if (user?.role === 'accounts') {
+    if (user?.role === 'accountant') {
       return matchSearch && matchStatus && ['manager_approved', 'accounts_processing', 'paid'].includes(payment.status);
     }
     
@@ -93,7 +93,7 @@ export default function Payments() {
 
   const canCreatePayment = ['employee', 'manager', 'admin', 'super_admin'].includes(user?.role || '');
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '');
-  const canProcess = user?.role === 'accounts';
+  const canProcess = user?.role === 'accountant';
 
   return (
     <div className="pb-20 lg:pb-0">
