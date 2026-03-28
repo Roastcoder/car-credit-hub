@@ -196,7 +196,7 @@ export default function AccountsReceivable() {
                           className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           onClick={() => {
                             if (item.application_id) {
-                              navigate(`/payments/${item.application_id}`);
+                              navigate(`/account/payments/${item.application_id}`);
                             } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}`);
                             } else {
@@ -212,7 +212,7 @@ export default function AccountsReceivable() {
                           className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                           onClick={() => {
                             if (item.application_id) {
-                              navigate(`/payments/applications/edit/${item.application_id}`);
+                              navigate(`/account/payments/edit/${item.application_id}`);
                             } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}/edit`);
                             } else {

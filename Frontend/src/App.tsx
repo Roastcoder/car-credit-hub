@@ -86,6 +86,9 @@ function AppRoutes() {
         <Route path="ledger" element={<GeneralLedger />} />
         <Route path="reports" element={<FinancialReports />} />
         <Route path="vouchers/create/:applicationId" element={<PaymentVoucherForm />} />
+        {/* Mirror payment application routes so accountant stays in context */}
+        <Route path="payments/:id" element={<PaymentDetail />} />
+        <Route path="payments/edit/:id" element={<PaymentApplicationForm />} />
       </Route>
       
       {/* Regular Routes */}
