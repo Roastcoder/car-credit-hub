@@ -5,7 +5,7 @@ import { accountAPI, paymentApplicationAPI } from '@/lib/api';
 import { 
   Users, CreditCard, BarChart3, Settings, FileText, Calculator, 
   TrendingUp, DollarSign, Receipt, Wallet, PieChart, Target,
-  ChevronRight, Activity, Clock, AlertCircle
+  ChevronRight, Activity, Clock, AlertCircle, Eye
 } from 'lucide-react';
 
 interface SideNavItem {
@@ -312,7 +312,7 @@ export default function AccountDashboard() {
                 ) : recentTransactions.length > 0 ? (
                   <div className="space-y-4">
                     {recentTransactions.map((transaction: any) => (
-                      <div key={transaction.id} className="flex items-center justify-between p-4 rounded-xl bg-white/20 dark:bg-white/5">
+                      <div key={transaction.id} className="flex items-center justify-between p-4 rounded-xl bg-white/20 dark:bg-white/5 group">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                             transaction.type === 'Credit' || transaction.credit_amount > 0 
@@ -325,24 +325,48 @@ export default function AccountDashboard() {
                           </div>
                           <div>
                             <p className="font-medium text-gray-900 dark:text-white">{transaction.description}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {new Date(transaction.transaction_date).toLocaleDateString()}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {new Date(transaction.transaction_date).toLocaleDateString()}
+                              </p>
+                              {transaction.reference_number && (
+                                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-gray-500 font-mono">
+                                  #{transaction.reference_number}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${
-                            transaction.credit_amount > 0 
-                              ? 'text-green-600 dark:text-green-400' 
-                              : 'text-red-600 dark:text-red-400'
-                          }`}>
-                            {transaction.credit_amount > 0 
-                              ? `+${formatCurrency(transaction.credit_amount)}` 
-                              : `-${formatCurrency(transaction.debit_amount)}`}
-                          </p>
-                          <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                            Completed
-                          </span>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className={`font-semibold ${
+                              transaction.credit_amount > 0 
+                                ? 'text-green-600 dark:text-green-400' 
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {transaction.credit_amount > 0 
+                                ? `+${formatCurrency(transaction.credit_amount)}` 
+                                : `-${formatCurrency(transaction.debit_amount)}`}
+                            </p>
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                              Completed
+                            </span>
+                          </div>
+                          <button 
+                            className="p-2 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              // If it contains a loan ID format (e.g. LON- or CL-)
+                              if (transaction.description.includes('CL-') || transaction.description.includes('LON-')) {
+                                // Extract code or just navigate to loans list
+                                navigate('/loans');
+                              } else {
+                                navigate('/payments/applications');
+                              }
+                            }}
+                            title="View Context"
+                          >
+                            <Eye size={16} />
+                          </button>
                         </div>
                       </div>
                     ))}

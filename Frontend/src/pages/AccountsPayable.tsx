@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Filter, Plus, Eye, Edit, CreditCard, Receipt, X, FileText, CheckCircle2, Download } from 'lucide-react';
 import { accountAPI } from '@/lib/api';
@@ -20,10 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 export default function AccountsPayable() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isNewBillOpen, setIsNewBillOpen] = useState(false);
-  const [selectedBill, setSelectedBill] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: payables = [], isLoading } = useQuery({
@@ -280,88 +281,48 @@ export default function AccountsPayable() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button 
-                              className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                              onClick={() => setSelectedBill(item)}
-                            >
-                              <Eye size={16} />
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px] glass-panel border-white/20">
-                            <DialogHeader>
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <DialogTitle className="text-2xl font-bold text-blue-950 dark:text-white">Bill Details</DialogTitle>
-                                  <Badge variant="outline" className={cn("mt-2", getStatusColor(item.status))}>
-                                    {item.status}
-                                  </Badge>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm text-gray-500 uppercase font-semibold">Bill No</div>
-                                  <div className="text-lg font-bold text-red-600">{item.bill_number}</div>
-                                </div>
-                              </div>
-                            </DialogHeader>
-                            
-                            <div className="grid grid-cols-2 gap-8 py-6 border-y border-gray-100 dark:border-gray-800 my-4">
-                              <div className="space-y-4">
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Vendor</div>
-                                  <div className="font-bold text-gray-900 dark:text-white">{item.vendor_name}</div>
-                                  <div className="text-sm text-gray-600">{item.vendor_email || 'No email provided'}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Bill Date</div>
-                                  <div className="text-sm text-gray-900 dark:text-white">{new Date(item.bill_date).toLocaleDateString()}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Due Date</div>
-                                  <div className="text-sm font-bold text-blue-600">{new Date(item.due_date).toLocaleDateString()}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Category</div>
-                                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800">{item.category}</Badge>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-4 text-right">
-                                <div className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl">
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Total Amount</div>
-                                  <div className="text-2xl font-black text-gray-900 dark:text-white">{formatCurrency(parseFloat(item.amount))}</div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Outstanding Balance</div>
-                                  <div className="text-xl font-bold text-red-600">{formatCurrency(parseFloat(item.outstanding_amount))}</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="text-xs text-gray-500 uppercase font-semibold">Description / Notes</div>
-                              <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-700 dark:text-gray-300 min-h-[80px]">
-                                {item.description || 'No additional notes provided.'}
-                              </div>
-                            </div>
-
-                            <DialogFooter className="flex justify-between items-center mt-6">
-                              <Button variant="outline" className="gap-2">
-                                <CreditCard size={16} />
-                                Record Payment
-                              </Button>
-                              <div className="flex gap-2">
-                                <Button variant="ghost" onClick={() => setSelectedBill(null)}>Close</Button>
-                                <Button className="bg-blue-600">Approve Bill</Button>
-                              </div>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                        <button className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300">
+                        <button 
+                          className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          onClick={() => {
+                            if (item.application_id) {
+                              navigate(`/payments/applications/${item.application_id}`);
+                            } else if (item.loan_id) {
+                              navigate(`/loans/${item.loan_id}`);
+                            } else {
+                              toast.info('No associated payment or loan found for this record');
+                            }
+                          }}
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button 
+                          className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                          onClick={() => {
+                            if (item.application_id) {
+                              navigate(`/payments/applications/edit/${item.application_id}`);
+                            } else if (item.loan_id) {
+                              navigate(`/loans/${item.loan_id}/edit`);
+                            } else {
+                              toast.info('Direct edit not available for this record');
+                            }
+                          }}
+                          title="Edit Record"
+                        >
                           <Edit size={16} />
                         </button>
                         {item.status === 'Approved' && (
-                          <button className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+                          <button 
+                            className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                            onClick={() => {
+                              if (item.application_id) {
+                                navigate(`/payments/applications`); // Navigate to process list
+                              } else {
+                                toast.info('Please process this via the Payments module');
+                              }
+                            }}
+                            title="Process Payment"
+                          >
                             <CreditCard size={16} />
                           </button>
                         )}
