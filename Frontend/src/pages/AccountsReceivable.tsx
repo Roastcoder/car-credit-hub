@@ -286,8 +286,16 @@ export default function AccountsReceivable() {
                                   </Badge>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm text-gray-500 uppercase font-semibold">Invoice No</div>
-                                  <div className="text-lg font-bold text-blue-600">{item.invoice_number}</div>
+                                  <div className="mb-2">
+                                    <div className="text-xs text-gray-500 uppercase font-semibold">Invoice No</div>
+                                    <div className="text-lg font-bold text-blue-600">{item.invoice_number}</div>
+                                  </div>
+                                  {item.loan_number && (
+                                    <div>
+                                      <div className="text-xs text-gray-500 uppercase font-semibold">Loan No</div>
+                                      <div className="text-md font-bold text-slate-800 dark:text-slate-200">{item.loan_number}</div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </DialogHeader>
