@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
   Plus, Search, Filter, Eye, Edit, CheckCircle, X,
-  Clock, FileText, CreditCard, AlertCircle, Download
+  Clock, FileText, CreditCard, AlertCircle, Download, FileCheck, Receipt
 } from 'lucide-react';
 import { paymentApplicationAPI } from '@/lib/api';
+import { Button } from "@/components/ui/button";
 
 interface PaymentApplication {
   id: number;
@@ -31,9 +32,7 @@ export default function PaymentApplicationsList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedApp, setSelectedApp] = useState<PaymentApplication | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const fileInputRef = useState<HTMLInputElement | null>(null);
   const [uploadingForId, setUploadingForId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -57,10 +56,8 @@ export default function PaymentApplicationsList() {
     try {
       setActionLoading(true);
       await paymentApplicationAPI.managerAction(applicationId, action, remarks);
-      
       toast.success(`Application ${action}d successfully`);
       fetchApplications();
-      setSelectedApp(null);
     } catch (error) {
       console.error('Error processing application:', error);
       toast.error(`Failed to ${action} application`);
@@ -69,27 +66,11 @@ export default function PaymentApplicationsList() {
     }
   };
 
-  const handleCreateVoucher = (applicationId: number) => {
-    navigate(`/account/vouchers/create/${applicationId}`);
-  };
-
-  const handleAddUTR = async (applicationId: number, utrNumber: string) => {
-    try {
-      await paymentApplicationAPI.addUTR(applicationId, utrNumber);
-      toast.success('UTR number added successfully. Now please upload the payment proof.');
-      fetchApplications();
-    } catch (error) {
-      console.error('Error adding UTR:', error);
-      toast.error('Failed to add UTR number');
-    }
-  };
-
   const handleUploadProof = async (applicationId: number, file: File) => {
     try {
       setActionLoading(true);
       await paymentApplicationAPI.uploadProof(applicationId, file);
-      
-      toast.success('Payment proof uploaded successfully and status updated to COMPLETED');
+      toast.success('Payment proof uploaded successfully');
       fetchApplications();
       setUploadingForId(null);
     } catch (error) {
@@ -114,92 +95,57 @@ export default function PaymentApplicationsList() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'draft': return <FileText size={16} />;
-      case 'submitted': return <Clock size={16} />;
-      case 'manager_approved': return <CheckCircle size={16} />;
-      case 'manager_rejected': return <X size={16} />;
-      case 'account_processing': return <CreditCard size={16} />;
-      case 'voucher_created': return <FileText size={16} />;
-      case 'payment_released': return <Download size={16} />;
-      case 'completed': return <CheckCircle size={16} />;
-      default: return <AlertCircle size={16} />;
-    }
-  };
-
-  const canManagerApprove = (app: PaymentApplication) => {
-    return user?.role === 'manager' && app.status === 'submitted';
-  };
-
-  const canAccountProcess = (app: PaymentApplication) => {
-    return (user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'manager_approved';
-  };
-
-  const canAddUTR = (app: PaymentApplication) => {
-    return (user?.role === 'accountant' || user?.role === 'super_admin' || user?.role === 'admin') && app.status === 'voucher_created';
-  };
-
-  const canUploadProof = (app: PaymentApplication) => {
-    return (user?.role === 'accountant' || user?.role === 'super_admin' || user?.role === 'admin') && app.status === 'payment_released';
-  };
-
-  const canEdit = (app: PaymentApplication) => {
-    // Super admins and Administrators can edit anything
-    if (user?.role === 'super_admin' || user?.role === 'admin') return true;
-    
-    // Accountants can edit applications that are approved or in processing to fix details
-    if (user?.role === 'accountant') {
-      const accountantEditable = ['submitted', 'manager_approved', 'account_processing'];
-      return accountantEditable.includes(app.status);
-    }
-
-    // Original creator can only edit drafts or rejected apps
-    const editableStatuses = ['draft', 'manager_rejected'];
-    return editableStatuses.includes(app.status) && user?.id === app.created_by;
-  };
-
   const filteredApplications = applications.filter(app => {
     const matchesSearch = app.applicant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.loan_number.toLowerCase().includes(searchTerm.toLowerCase());
+                         app.loan_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         app.id.toString().includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6 pb-24 md:pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Applications</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage payment applications and workflow</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight text-shadow-sm">Payment Applications</h1>
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">Manage and track your funding requests</p>
         </div>
+        
         {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (
-          <button
-            onClick={() => navigate('/payments/applications/new')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <Button 
+            onClick={() => navigate('/payments/new')}
+            className="w-full md:w-auto gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 rounded-xl"
           >
             <Plus size={16} />
             New Application
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <input
             type="text"
             placeholder="Search applications..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all shadow-sm min-w-[150px]"
         >
           <option value="all">All Status</option>
           <option value="draft">Draft</option>
@@ -211,6 +157,9 @@ export default function PaymentApplicationsList() {
           <option value="payment_released">Payment Released</option>
           <option value="completed">Completed</option>
         </select>
+        <Button variant="outline" size="icon" className="rounded-xl border-gray-300 dark:border-gray-600 hidden sm:inline-flex">
+          <Filter size={16} />
+        </Button>
       </div>
 
       <input
@@ -226,165 +175,174 @@ export default function PaymentApplicationsList() {
         accept="image/*,.pdf"
       />
 
-      {/* Applications List */}
-      <div className="glass-card rounded-xl border border-white/20 dark:border-white/10 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading applications...</p>
+      {loading ? (
+        <div className="flex items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : filteredApplications.length === 0 ? (
+        <div className="glass-card p-12 text-center rounded-2xl border border-white/20 dark:border-white/10 shadow-sm">
+          <div className="flex flex-col items-center justify-center max-w-[300px] mx-auto">
+            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
+              <FileCheck className="h-8 w-8 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No Applications</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+              When you create payment requests, they will appear here.
+            </p>
           </div>
-        ) : filteredApplications.length === 0 ? (
-          <div className="p-8 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">No payment applications found</p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4 mb-8">
+            {filteredApplications.map((app) => (
+              <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(app.status)}`}>
+                    {app.status.replace('_', ' ')}
+                  </div>
+                  <div className="text-[10px] text-gray-500 font-mono">#{app.id}</div>
+                </div>
+                
+                <div className="flex items-start justify-between mb-4 relative z-10">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-1">{app.applicant_name}</h3>
+                    <p className="text-xs text-gray-500 mb-2">{app.loan_number}</p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
+                      <Receipt size={10} className="text-blue-500" />
+                      {app.payment_purpose}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount)}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-tighter">{new Date(app.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/10 relative z-10">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 min-w-[80px]"
+                    onClick={() => navigate(`/payments/${app.id}`)}
+                  >
+                    <Eye size={14} />
+                    View
+                  </Button>
+                  
+                  {user?.role === 'manager' && app.status === 'submitted' && (
+                    <>
+                      <Button 
+                        size="sm" 
+                        className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-green-600 hover:bg-green-700 min-w-[80px]"
+                        onClick={() => handleManagerAction(app.id, 'approve')}
+                        disabled={actionLoading}
+                      >
+                        <CheckCircle size={14} />
+                        Approve
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 min-w-[80px]"
+                        onClick={() => handleManagerAction(app.id, 'reject')}
+                        disabled={actionLoading}
+                      >
+                        <X size={14} />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+
+                  {(user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'manager_approved' && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-purple-600 hover:bg-purple-700 min-w-[80px]"
+                      onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
+                    >
+                      <FileText size={14} />
+                      Voucher
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-800/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Applicant</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Purpose</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredApplications.map((app) => (
-                  <tr key={app.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">#{app.id}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{app.loan_number}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900 dark:text-white">{app.applicant_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-semibold text-gray-900 dark:text-white">₹{app.payment_amount?.toLocaleString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-600 dark:text-gray-400">{app.payment_purpose}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(app.status)}`}>
-                        {getStatusIcon(app.status)}
-                        {app.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(app.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => navigate(`/payments/${app.id}`)}
-                          className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="View Details"
-                        >
-                          <Eye size={16} />
-                        </button>
 
-                        {canEdit(app) && (
-                          <button
-                            onClick={() => navigate(`/payments/applications/edit/${app.id}`)}
-                            className="p-1 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
-                            title="Edit Application"
-                          >
-                            <Edit size={16} />
-                          </button>
-                        )}
-                        
-                        {canManagerApprove(app) && (
-                          <>
-                            <button
-                              onClick={() => handleManagerAction(app.id, 'approve')}
-                              disabled={actionLoading}
-                              className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50"
-                              title="Approve"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleManagerAction(app.id, 'reject')}
-                              disabled={actionLoading}
-                              className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                              title="Reject"
-                            >
-                              <X size={16} />
-                            </button>
-                          </>
-                        )}
-                        
-                        {canAccountProcess(app) && (
-                          <button
-                            onClick={() => handleCreateVoucher(app.id)}
-                            className="p-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                            title="Create Voucher"
-                          >
-                            <FileText size={16} />
-                          </button>
-                        )}
-                        
-                        {canAddUTR(app) && !app.utr_number && (
-                          <button
-                            onClick={() => {
-                              const utr = prompt('Enter UTR Number:');
-                              if (utr) handleAddUTR(app.id, utr);
-                            }}
-                            className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                            title="Add UTR Number"
-                          >
-                            <CreditCard size={16} />
-                          </button>
-                        )}
-
-                        {canUploadProof(app) && (
-                          <button
-                            onClick={() => {
-                              setUploadingForId(app.id);
-                              document.getElementById('proof-upload')?.click();
-                            }}
-                            className="p-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                            title="Upload Payment Proof"
-                          >
-                            <Download size={16} />
-                          </button>
-                        )}
-                        
-                        {app.utr_number && (
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-gray-400 uppercase font-bold">UTR Number</span>
-                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                              {app.utr_number}
-                            </span>
-                          </div>
-                        )}
-
-                        {app.payment_proof_path && (
-                          <a
-                            href={`${import.meta.env.VITE_API_URL}${app.payment_proof_path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                            title="View Payment Proof"
-                          >
-                            <FileText size={16} />
-                          </a>
-                        )}
-                      </div>
-                    </td>
+          {/* Desktop Table View */}
+          <div className="hidden md:block glass-card rounded-2xl border border-white/20 dark:border-white/10 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50/50 dark:bg-slate-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID / Loan</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Purpose</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                  {filteredApplications.map((app) => (
+                    <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-semibold text-gray-900 dark:text-white">#{app.id}</div>
+                        <div className="text-[10px] text-gray-500 font-mono italic">{app.loan_number}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 dark:text-white">{app.applicant_name}</div>
+                        <div className="text-[10px] text-gray-500 uppercase tracking-tighter">{new Date(app.created_at).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
+                        {formatCurrency(app.payment_amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        {app.payment_purpose}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
+                          {app.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
+                            <Eye size={16} />
+                          </Button>
+                          
+                          {user?.role === 'manager' && app.status === 'submitted' && (
+                            <div className="flex items-center gap-1 ml-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handleManagerAction(app.id, 'approve')}>
+                                <CheckCircle size={16} />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => handleManagerAction(app.id, 'reject')}>
+                                <X size={16} />
+                              </Button>
+                            </div>
+                          )}
+
+                          {(user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'manager_approved' && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 gap-1.5 text-purple-600 font-bold text-[10px] uppercase tracking-wider"
+                              onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
+                            >
+                              <FileText size={14} />
+                              Voucher
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

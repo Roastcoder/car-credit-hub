@@ -107,18 +107,19 @@ function AppRoutes() {
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       
-      {/* Payment Routes - Available to all authenticated users */}
-      <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-      <Route path="/payments/new" element={<ProtectedRoute><CreatePaymentApplication /></ProtectedRoute>} />
-      <Route path="/payments/loan/:loanId" element={<ProtectedRoute><CreatePaymentApplication /></ProtectedRoute>} />
+      {/* Consolidated Payment Routes */}
+      <Route path="/payments" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
+      <Route path="/payments/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
+      <Route path="/payments/loan/:loanId" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetail /></ProtectedRoute>} />
-      <Route path="/payments/:paymentId/voucher" element={<ProtectedRoute><CreatePaymentVoucher /></ProtectedRoute>} />
+      <Route path="/payments/edit/:id" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       
-      {/* Payment Application Routes */}
-      <Route path="/payments/applications" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
-      <Route path="/payments/applications/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
-      <Route path="/payments/applications/edit/:id" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
-      <Route path="/payments/applications/loan/:loanId" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
+      {/* Legacy Redirects for old paths */}
+      <Route path="/payments/applications" element={<Navigate to="/payments" replace />} />
+      <Route path="/payments/applications/new" element={<Navigate to="/payments/new" replace />} />
+      <Route path="/payments/applications/edit/:id" element={<Navigate to="/payments/edit/:id" replace />} />
+      <Route path="/payments/applications/loan/:loanId" element={<Navigate to="/payments/loan/:loanId" replace />} />
+      <Route path="/payments/applications/:id" element={<Navigate to="/payments/:id" replace />} />
       
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
       <Route path="/" element={<DashboardRedirect />} />

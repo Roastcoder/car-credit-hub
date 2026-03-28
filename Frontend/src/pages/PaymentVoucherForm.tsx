@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { paymentApplicationAPI } from '@/lib/api';
 import { 
   FileText, Calendar, CreditCard, Building2, User,
   Save, Send, Download, Eye, CheckCircle
@@ -51,10 +52,7 @@ export default function PaymentVoucherForm() {
 
   const fetchApplicationData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${applicationId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const data = await paymentApplicationAPI.getById(parseInt(applicationId || '0'));
       setApplicationData(data);
       
       // Pre-fill voucher data
@@ -72,13 +70,10 @@ export default function PaymentVoucherForm() {
 
   const generateVoucherNumber = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/vouchers/next-number`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      const data = await response.json();
+      const { nextVoucherNumber } = await paymentApplicationAPI.getNextVoucherNumber();
       setVoucherData(prev => ({
         ...prev,
-        voucher_number: data.voucher_number
+        voucher_number: nextVoucherNumber
       }));
     } catch (error) {
       console.error('Error generating voucher number:', error);
@@ -97,24 +92,13 @@ export default function PaymentVoucherForm() {
     try {
       setLoading(true);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/vouchers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({
-          ...voucherData,
-          status
-        })
+      await paymentApplicationAPI.createVoucher({
+        ...voucherData,
+        status
       });
       
-      if (!response.ok) throw new Error('Failed to create voucher');
-      
-      const result = await response.json();
-      
       toast.success(status === 'draft' ? 'Voucher saved as draft' : 'Payment voucher created successfully');
-      navigate('/account/vouchers');
+      navigate('/account/payables'); // Redirect back to payables
       
     } catch (error) {
       console.error('Error creating voucher:', error);
@@ -161,8 +145,8 @@ export default function PaymentVoucherForm() {
       <div className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Payment Application Details</h2>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(applicationData.status)}`}>
-            {applicationData.status.replace('_', ' ').toUpperCase()}
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(applicationData?.status)}`}>
+            {(applicationData?.status || '').replace('_', ' ').toUpperCase()}
           </span>
         </div>
         

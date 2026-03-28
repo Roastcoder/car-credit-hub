@@ -207,7 +207,7 @@ export const paymentApplicationAPI = {
       body: formData
     });
   },
-  getPddDocuments: (loanId: string) => api.get(`/payments/loans/${loanId}/pdd-documents`),
+  getPddDocuments: (loanId: string) => api.get(`/loans/${loanId}/pdd-documents`),
   uploadDocument: (file: File) => {
     const formData = new FormData();
     formData.append('document', file);

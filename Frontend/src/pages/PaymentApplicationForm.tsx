@@ -162,6 +162,8 @@ export default function PaymentApplicationForm() {
       // Also fetch PDD documents for the loan associated with this application
       if (data.loan_id) {
         fetchPddDocumentsById(data.loan_id);
+        // Also fetch the full loan details to fill the read-only or supplemental fields
+        fetchLoanDataById(data.loan_id);
       }
     } catch (error) {
       console.error('Error fetching application data:', error);
@@ -200,49 +202,53 @@ export default function PaymentApplicationForm() {
   }, [formData.old_release_amount, formData.today_release_amount, formData.loan_amount, formData.hold_amount]);
 
   const fetchLoanData = async () => {
+    if (loanId) await fetchLoanDataById(loanId);
+  };
+
+  const fetchLoanDataById = async (lId: string) => {
     try {
-      const data = await loansAPI.getById(loanId!);
+      const data = await loansAPI.getById(lId);
       setLoanData(data.data || data);
-      const lData = data.data || data;
+      const d = data.data || data;
       
       // Pre-fill applicant and loan data
       setFormData(prev => ({
         ...prev,
-        applicant_name: data.customer_name || data.applicantName || '',
-        applicant_phone: data.mobile || data.customer_phone || '',
-        applicant_email: data.customer_email || '',
-        loan_number: data.loan_number || '',
-        financier_name: data.bank_name || data.financier_executive_name || '',
-        loan_amount: Number(data.loan_amount) || 0,
-        disbursement_amount: Number(data.net_disbursement_amount || data.disbursement_amount) || 0,
-        disbursement_date: data.disbursement_date ? new Date(data.disbursement_date).toISOString().split('T')[0] : '',
-        tenure_months: data.tenure_months || data.tenure || 0,
-        emi_amount: Number(data.emi_amount || data.emi) || 0,
-        emi_mode: data.emi_mode || '',
-        irr_percentage: Number(data.irr || data.interestRate) || 0,
-        loan_type: data.refinance ? 'Refinance' : 'New',
-        vehicle_name: data.maker_name || data.carMake || '',
-        vehicle_model: data.model_variant_name || data.carModel || data.carVariant || '',
-        vehicle_number: data.vehicle_number || '',
-        vehicle_type: data.vehicle_type || data.category || '',
-        branch_name: data.our_branch || '',
-        disbursement_branch: data.disburse_branch_name || '',
-        branch_manager_name: data.branch_manager || '',
-        rto_agent_name: data.rto_agent_name || '',
-        rto_mobile: data.rto_agent_mobile || data.agent_mobile_no || '',
-        dto_location: data.dto_location || '',
-        rto_work_type: data.rto_work_description || data.rto_work || '',
-        rto_doc_location: data.rto_docs_location || '',
-        rc_status: data.rto_work_status || 'Pending',
-        noc_status: data.noc_status || 'Pending',
-        noc_checked_by: data.noc_checked_by || '',
-        kyc_documents: data.rto_rc_owner_kyc ? 'Yes' : 'No',
-        insurance_available: data.insurance_status === 'Approved' || !!data.insurance_copy,
-        foreclosure_amount: Number(data.foreclosure_amount) || 0,
-        foreclosure_name: data.foreclosure_bank_name || '',
-        hold_amount: Number(data.hold_amount) || 0,
-        challan_amount: Number(data.rto_challan_amount) || 0,
-        payment_in_favour_name: data.payment_in_favour || ''
+        applicant_name: prev.applicant_name || d.customer_name || d.applicantName || '',
+        applicant_phone: prev.applicant_phone || d.mobile || d.customer_phone || '',
+        applicant_email: prev.applicant_email || d.customer_email || '',
+        loan_number: d.loan_number || '',
+        financier_name: prev.financier_name || d.bank_name || d.financier_executive_name || '',
+        loan_amount: prev.loan_amount || Number(d.loan_amount) || 0,
+        disbursement_amount: prev.disbursement_amount || Number(d.net_disbursement_amount || d.disbursement_amount) || 0,
+        disbursement_date: prev.disbursement_date || (d.disbursement_date ? new Date(d.disbursement_date).toISOString().split('T')[0] : ''),
+        tenure_months: prev.tenure_months || d.tenure_months || d.tenure || 0,
+        emi_amount: prev.emi_amount || Number(d.emi_amount || d.emi) || 0,
+        emi_mode: prev.emi_mode || d.emi_mode || '',
+        irr_percentage: prev.irr_percentage || Number(d.irr || d.interestRate) || 0,
+        loan_type: prev.loan_type || (d.refinance ? 'Refinance' : 'New'),
+        vehicle_name: prev.vehicle_name || d.maker_name || d.carMake || '',
+        vehicle_model: prev.vehicle_model || d.model_variant_name || d.carModel || d.carVariant || '',
+        vehicle_number: prev.vehicle_number || d.vehicle_number || '',
+        vehicle_type: prev.vehicle_type || d.vehicle_type || d.category || '',
+        branch_name: prev.branch_name || d.our_branch || '',
+        disbursement_branch: prev.disbursement_branch || d.disburse_branch_name || '',
+        branch_manager_name: prev.branch_manager_name || d.branch_manager || '',
+        rto_agent_name: prev.rto_agent_name || d.rto_agent_name || '',
+        rto_mobile: prev.rto_mobile || d.rto_agent_mobile || d.agent_mobile_no || '',
+        dto_location: prev.dto_location || d.dto_location || '',
+        rto_work_type: prev.rto_work_type || d.rto_work_description || d.rto_work || '',
+        rto_doc_location: prev.rto_doc_location || d.rto_docs_location || '',
+        rc_status: prev.rc_status || d.rto_work_status || 'Pending',
+        noc_status: prev.noc_status || d.noc_status || 'Pending',
+        noc_checked_by: prev.noc_checked_by || d.noc_checked_by || '',
+        kyc_documents: prev.kyc_documents || (d.rto_rc_owner_kyc ? 'Yes' : 'No'),
+        insurance_available: prev.insurance_available || d.insurance_status === 'Approved' || !!d.insurance_copy,
+        foreclosure_amount: prev.foreclosure_amount || Number(d.foreclosure_amount) || 0,
+        foreclosure_name: prev.foreclosure_name || d.foreclosure_bank_name || '',
+        hold_amount: prev.hold_amount || Number(d.hold_amount) || 0,
+        challan_amount: prev.challan_amount || Number(d.rto_challan_amount) || 0,
+        payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || ''
       }));
     } catch (error) {
       console.error('Error fetching loan data:', error);
@@ -296,18 +302,8 @@ export default function PaymentApplicationForm() {
     const uploadedPaths: string[] = [];
     
     for (const file of bankingDocs) {
-      const formData = new FormData();
-      formData.append('document', file);
-      formData.append('type', 'banking');
-      
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/upload-document`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-          body: formData
-        });
-        
-        const result = await response.json();
+        const result = await paymentApplicationAPI.uploadDocument(file);
         if (result.path) {
           uploadedPaths.push(result.path);
         }
@@ -615,7 +611,7 @@ function FormField({ label, name, type = 'text', value, onChange, disabled, requ
       <input
         type={type}
         name={name}
-        value={value}
+        value={value || ''}
         onChange={onChange}
         disabled={disabled}
         className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
@@ -630,7 +626,7 @@ function FormSelect({ label, name, value, onChange, options }: any) {
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>
       <select
         name={name}
-        value={value}
+        value={value || ''}
         onChange={onChange}
         className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
       >

@@ -133,10 +133,10 @@ export default function AccountDashboard() {
   return (
     <div className="h-full">
       {isOverviewPage ? (
-        <div className="p-6">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Account Dashboard</h1>
-              <p className="text-gray-600 dark:text-gray-400">
+        <div className="p-4 md:p-6 pb-24 md:pb-6">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Account Dashboard</h1>
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                 Welcome back, {user?.name || 'User'}. Monitor your financial operations and key metrics.
               </p>
             </div>
@@ -153,39 +153,39 @@ export default function AccountDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-yellow-500">
+                <div className="glass-card p-5 md:p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-yellow-500">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Waiting for Voucher</p>
                     <Clock className="h-4 w-4 text-yellow-500" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_voucher}</p>
-                  <p className="text-xs text-gray-500 mt-1">Manager approved applications</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-1">Manager approved applications</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-blue-500">
+                <div className="glass-card p-5 md:p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-blue-500">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Waiting for UTR</p>
                     <CreditCard className="h-4 w-4 text-blue-500" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_utr}</p>
-                  <p className="text-xs text-gray-500 mt-1">Vouchers generated, payment pending</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-1">Vouchers generated, payment pending</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-purple-500">
+                <div className="glass-card p-5 md:p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-purple-500">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Proof</p>
                     <FileText className="h-4 w-4 text-purple-500" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_proof}</p>
-                  <p className="text-xs text-gray-500 mt-1">UTR added, proof needs upload</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-1">UTR added, proof needs upload</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-green-500">
+                <div className="glass-card p-5 md:p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-green-500">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Disbursed</p>
                     <TrendingUp className="h-4 w-4 text-green-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(Number(stats.total_disbursed || 0))}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">From {stats.total_completed} applications</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-1">From {stats.total_completed} applications</p>
                 </div>
               </div>
             )}
@@ -312,9 +312,9 @@ export default function AccountDashboard() {
                 ) : recentTransactions.length > 0 ? (
                   <div className="space-y-4">
                     {recentTransactions.map((transaction: any) => (
-                      <div key={transaction.id} className="flex items-center justify-between p-4 rounded-xl bg-white/20 dark:bg-white/5 group">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                     <div key={transaction.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl bg-white/20 dark:bg-white/5 group gap-4 sm:gap-0">
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                          <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${
                             transaction.type === 'Credit' || transaction.credit_amount > 0 
                               ? 'bg-green-100 text-green-600 dark:bg-green-900/20' 
                               : 'bg-red-100 text-red-600 dark:bg-red-900/20'
@@ -324,9 +324,9 @@ export default function AccountDashboard() {
                               : <Receipt size={16} />}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{transaction.description}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="font-medium text-gray-900 dark:text-white leading-tight">{transaction.description}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(transaction.transaction_date).toLocaleDateString()}
                               </p>
                               {transaction.reference_number && (
@@ -337,8 +337,8 @@ export default function AccountDashboard() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
+                        <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                          <div className="text-left sm:text-right">
                             <p className={`font-semibold ${
                               transaction.credit_amount > 0 
                                 ? 'text-green-600 dark:text-green-400' 
@@ -348,25 +348,27 @@ export default function AccountDashboard() {
                                 ? `+${formatCurrency(transaction.credit_amount)}` 
                                 : `-${formatCurrency(transaction.debit_amount)}`}
                             </p>
-                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                               Completed
                             </span>
+                            <button 
+                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all"
+                              onClick={() => {
+                                // If it contains a loan ID format (e.g. LON- or CL-)
+                                if (transaction.description.includes('CL-') || transaction.description.includes('LON-')) {
+                                  // Extract code or just navigate to loans list
+                                  navigate('/loans');
+                                } else {
+                                  navigate('/payments');
+                                }
+                              }}
+                              title="View Context"
+                            >
+                              <Eye size={16} />
+                            </button>
                           </div>
-                          <button 
-                            className="p-2 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => {
-                              // If it contains a loan ID format (e.g. LON- or CL-)
-                              if (transaction.description.includes('CL-') || transaction.description.includes('LON-')) {
-                                // Extract code or just navigate to loans list
-                                navigate('/loans');
-                              } else {
-                                navigate('/payments/applications');
-                              }
-                            }}
-                            title="View Context"
-                          >
-                            <Eye size={16} />
-                          </button>
                         </div>
                       </div>
                     ))}
