@@ -20,6 +20,7 @@ interface PaymentApplication {
   approved_by?: number;
   processed_by?: number;
   utr_number?: string;
+  payment_proof_path?: string;
 }
 
 export default function PaymentApplicationsList() {
@@ -31,6 +32,8 @@ export default function PaymentApplicationsList() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedApp, setSelectedApp] = useState<PaymentApplication | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
+  const [uploadingForId, setUploadingForId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -94,11 +97,38 @@ export default function PaymentApplicationsList() {
       
       if (!response.ok) throw new Error('Failed to add UTR number');
       
-      toast.success('UTR number added successfully');
+      toast.success('UTR number added successfully. Now please upload the payment proof.');
       fetchApplications();
     } catch (error) {
       console.error('Error adding UTR:', error);
       toast.error('Failed to add UTR number');
+    }
+  };
+
+  const handleUploadProof = async (applicationId: number, file: File) => {
+    try {
+      setActionLoading(true);
+      const formData = new FormData();
+      formData.append('document', file);
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${applicationId}/payment-proof`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) throw new Error('Failed to upload payment proof');
+      
+      toast.success('Payment proof uploaded successfully and status updated to COMPLETED');
+      fetchApplications();
+      setUploadingForId(null);
+    } catch (error) {
+      console.error('Error uploading proof:', error);
+      toast.error('Failed to upload payment proof');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -139,7 +169,11 @@ export default function PaymentApplicationsList() {
   };
 
   const canAddUTR = (app: PaymentApplication) => {
-    return (user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'voucher_created';
+    return (user?.role === 'accountant' || user?.role === 'super_admin' || user?.role === 'admin') && app.status === 'voucher_created';
+  };
+
+  const canUploadProof = (app: PaymentApplication) => {
+    return (user?.role === 'accountant' || user?.role === 'super_admin' || user?.role === 'admin') && app.status === 'payment_released';
   };
 
   const canEdit = (app: PaymentApplication) => {
@@ -200,6 +234,19 @@ export default function PaymentApplicationsList() {
           <option value="completed">Completed</option>
         </select>
       </div>
+
+      <input
+        type="file"
+        id="proof-upload"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadingForId) {
+            handleUploadProof(uploadingForId, file);
+          }
+        }}
+        accept="image/*,.pdf"
+      />
 
       {/* Applications List */}
       <div className="glass-card rounded-xl border border-white/20 dark:border-white/10 overflow-hidden">
@@ -314,14 +361,42 @@ export default function PaymentApplicationsList() {
                             className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                             title="Add UTR Number"
                           >
+                            <CreditCard size={16} />
+                          </button>
+                        )}
+
+                        {canUploadProof(app) && (
+                          <button
+                            onClick={() => {
+                              setUploadingForId(app.id);
+                              document.getElementById('proof-upload')?.click();
+                            }}
+                            className="p-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
+                            title="Upload Payment Proof"
+                          >
                             <Download size={16} />
                           </button>
                         )}
                         
                         {app.utr_number && (
-                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                            UTR: {app.utr_number}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold">UTR Number</span>
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              {app.utr_number}
+                            </span>
+                          </div>
+                        )}
+
+                        {app.payment_proof_path && (
+                          <a
+                            href={`${import.meta.env.VITE_API_URL}${app.payment_proof_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="View Payment Proof"
+                          >
+                            <FileText size={16} />
+                          </a>
                         )}
                       </div>
                     </td>

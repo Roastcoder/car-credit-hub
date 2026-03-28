@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { accountAPI } from '@/lib/api';
+import { accountAPI, paymentApplicationAPI } from '@/lib/api';
 import { 
   Users, CreditCard, BarChart3, Settings, FileText, Calculator, 
   TrendingUp, DollarSign, Receipt, Wallet, PieChart, Target,
@@ -20,19 +20,19 @@ const ACCOUNT_NAV_ITEMS: SideNavItem[] = [
     label: 'Overview', 
     path: '/account', 
     icon: <Activity size={18} />, 
-    description: 'Account dashboard overview' 
+    description: 'Dashboard overview' 
   },
   { 
-    label: 'Accounts Receivable', 
-    path: '/account/receivables', 
-    icon: <TrendingUp size={18} />, 
-    description: 'Manage incoming payments' 
+    label: 'Process Payments', 
+    path: '/payments/applications', 
+    icon: <CreditCard size={18} />, 
+    description: 'Review and release payments' 
   },
   { 
-    label: 'Accounts Payable', 
+    label: 'Payment Vouchers', 
     path: '/account/payables', 
     icon: <Receipt size={18} />, 
-    description: 'Manage outgoing payments' 
+    description: 'Manage generated vouchers' 
   },
   { 
     label: 'General Ledger', 
@@ -44,7 +44,7 @@ const ACCOUNT_NAV_ITEMS: SideNavItem[] = [
     label: 'Financial Reports', 
     path: '/account/reports', 
     icon: <BarChart3 size={18} />, 
-    description: 'Financial statements & reports' 
+    description: 'Financial statements' 
   },
   { 
     label: 'Budget Management', 
@@ -85,10 +85,11 @@ export default function AccountDashboard() {
   const [sideNavOpen, setSideNavOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalRevenue: 0,
-    outstandingReceivables: 0,
-    pendingPayables: 0,
-    netProfitMargin: 0
+    waiting_for_voucher: 0,
+    waiting_for_utr: 0,
+    waiting_for_proof: 0,
+    total_completed: 0,
+    total_disbursed: 0
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [branchSummary, setBranchSummary] = useState([]);
@@ -104,10 +105,15 @@ export default function AccountDashboard() {
   const fetchAccountOverview = async () => {
     try {
       setLoading(true);
-      const data = await accountAPI.getOverview();
-      setStats(data.stats);
-      setRecentTransactions(data.recentTransactions);
-      setBranchSummary(data.branchSummary || []);
+      // Fetch both general overview and accountant-specific payment stats
+      const [overviewData, paymentStats] = await Promise.all([
+        accountAPI.getOverview(),
+        paymentApplicationAPI.getAccountantStats()
+      ]);
+      
+      setStats(paymentStats);
+      setRecentTransactions(overviewData.recentTransactions);
+      setBranchSummary(overviewData.branchSummary || []);
     } catch (error) {
       console.error('Error fetching account overview:', error);
     } finally {
@@ -147,29 +153,39 @@ export default function AccountDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
+                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-yellow-500">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Waiting for Voucher</p>
+                    <Clock className="h-4 w-4 text-yellow-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_voucher}</p>
+                  <p className="text-xs text-gray-500 mt-1">Manager approved applications</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
+                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-blue-500">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Outstanding Receivables</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Waiting for UTR</p>
+                    <CreditCard className="h-4 w-4 text-blue-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.outstandingReceivables)}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_utr}</p>
+                  <p className="text-xs text-gray-500 mt-1">Vouchers generated, payment pending</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
+                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-purple-500">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Payables</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Proof</p>
+                    <FileText className="h-4 w-4 text-purple-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.pendingPayables)}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.waiting_for_proof}</p>
+                  <p className="text-xs text-gray-500 mt-1">UTR added, proof needs upload</p>
                 </div>
-                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10">
+                <div className="glass-card p-6 rounded-2xl border border-white/20 dark:border-white/10 border-l-4 border-l-green-500">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Net Profit Margin</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Disbursed</p>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.netProfitMargin}%</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(Number(stats.total_disbursed || 0))}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">From {stats.total_completed} applications</p>
                 </div>
               </div>
             )}
@@ -227,36 +243,45 @@ export default function AccountDashboard() {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <div 
-                onClick={() => navigate('/account/receivables')}
-                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl"
+                onClick={() => navigate('/payments/applications')}
+                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl group"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white mb-4">
-                  <TrendingUp className="h-6 w-6" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-blue-500/50 transition-all">
+                  <CreditCard className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Receivables</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage incoming payments</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Process Payments</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Applications waiting for action</p>
+                <div className="mt-4 flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
+                  Open Workflow <ChevronRight size={14} className="ml-1" />
+                </div>
               </div>
 
               <div 
                 onClick={() => navigate('/account/payables')}
-                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl"
+                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl group"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-purple-500/50 transition-all">
                   <Receipt className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Payables</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage outgoing payments</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Expense Vouchers</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage vendor and branch bills</p>
+                <div className="mt-4 flex items-center text-xs font-medium text-purple-600 dark:text-purple-400">
+                  View List <ChevronRight size={14} className="ml-1" />
+                </div>
               </div>
 
               <div 
                 onClick={() => navigate('/account/reports')}
-                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl"
+                className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl group"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-indigo-500/50 transition-all">
                   <BarChart3 className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Reports</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Financial statements</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Financial Reports</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Analyze performance and cash flow</p>
+                <div className="mt-4 flex items-center text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                  View Reports <ChevronRight size={14} className="ml-1" />
+                </div>
               </div>
             </div>
 

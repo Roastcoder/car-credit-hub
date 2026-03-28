@@ -200,7 +200,17 @@ export const paymentApplicationAPI = {
     });
   },
   createVoucher: (data: any) => api.post('/payments/vouchers', data),
-  getNextVoucherNumber: () => api.get('/payments/vouchers/next-number')
+  getNextVoucherNumber: () => api.get('/payments/vouchers/next-number'),
+  uploadPaymentProof: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+    return api.request(`/payments/applications/${id}/payment-proof`, {
+      method: 'POST',
+      body: formData,
+      headers: {} // Remove Content-Type to let browser set it with boundary
+    });
+  },
+  getAccountantStats: () => api.get('/payments/stats/accountant'),
 };
 
 // Legacy supabase compatibility shim (for components using supabase.auth.*)

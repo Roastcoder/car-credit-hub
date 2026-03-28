@@ -4,16 +4,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign } from 'lucide-react';
+import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download } from 'lucide-react';
 
-type PaymentStatus = 'pending' | 'manager_approved' | 'accounts_processing' | 'paid' | 'rejected';
+type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
 
 const PAYMENT_STATUSES = [
-  { value: 'pending', label: 'Pending Review', color: 'bg-yellow-100 text-yellow-800', icon: Calendar },
-  { value: 'manager_approved', label: 'Manager Approved', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-  { value: 'accounts_processing', label: 'Accounts Processing', color: 'bg-purple-100 text-purple-800', icon: CreditCard },
-  { value: 'paid', label: 'Paid', color: 'bg-green-100 text-green-800', icon: DollarSign },
-  { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800', icon: XCircle }
+  { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: FileText },
+  { value: 'submitted', label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: Calendar },
+  { value: 'manager_approved', label: 'Manager Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
+  { value: 'manager_rejected', label: 'Manager Rejected', color: 'bg-red-100 text-red-800', icon: XCircle },
+  { value: 'voucher_created', label: 'Voucher Created', color: 'bg-purple-100 text-purple-800', icon: FileText },
+  { value: 'payment_released', label: 'Payment Released', color: 'bg-blue-100 text-blue-800', icon: DollarSign },
+  { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle }
 ];
 
 export default function PaymentDetail() {
@@ -23,9 +25,11 @@ export default function PaymentDetail() {
   const queryClient = useQueryClient();
   
   const [showUTRModal, setShowUTRModal] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
 
   // Fetch payment details
   const { data: payment, isLoading } = useQuery({
@@ -41,91 +45,124 @@ export default function PaymentDetail() {
     enabled: !!id,
   });
 
-  // Fetch supporting documents
-  const { data: documents = [] } = useQuery({
-    queryKey: ['payment-documents', id],
+  // Fetch banking documents attached to the application
+  const { data: bankingDocuments = [] } = useQuery({
+    queryKey: ['payment-banking-docs', id],
     queryFn: async () => {
-      if (!payment?.supporting_documents?.length) return [];
+      if (!payment?.banking_documents) return [];
+      const docPaths = typeof payment.banking_documents === 'string' 
+        ? JSON.parse(payment.banking_documents) 
+        : payment.banking_documents;
+        
+      if (!Array.isArray(docPaths) || docPaths.length === 0) return [];
       
-      const docPromises = payment.supporting_documents.map(async (docId: string) => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${docId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-        });
-        if (response.ok) {
-          return response.json();
-        }
-        return null;
-      });
-      
-      const results = await Promise.all(docPromises);
-      return results.filter(doc => doc !== null);
+      return docPaths.map(path => ({
+        url: `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${path}`,
+        name: path.split('/').pop() || 'Document',
+        type: 'Banking Proof'
+      }));
     },
-    enabled: !!payment?.supporting_documents?.length,
+    enabled: !!payment,
   });
 
-  // Update payment status
-  const updateStatus = useMutation({
-    mutationFn: async ({ status, remarks }: { status: PaymentStatus; remarks?: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}/status`, {
-        method: 'PUT',
+  // Fetch PDD documents linked to the loan
+  const { data: pddDocumentsSlice = [] } = useQuery({
+    queryKey: ['payment-pdd-docs', id],
+    queryFn: async () => {
+      if (!payment?.pdd_documents) return [];
+      const docPaths = typeof payment.pdd_documents === 'string' 
+        ? JSON.parse(payment.pdd_documents) 
+        : payment.pdd_documents;
+
+      if (!Array.isArray(docPaths) || docPaths.length === 0) return [];
+      
+      return docPaths.map(path => ({
+        url: `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${path}`,
+        name: path.split('/').pop() || 'Document',
+        type: 'PDD Document'
+      }));
+    },
+    enabled: !!payment,
+  });
+
+  // Update payment status (manager action)
+  const managerAction = useMutation({
+    mutationFn: async ({ action, remarks }: { action: 'approve' | 'reject'; remarks?: string }) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/manager-action`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ status, remarks, updated_by: user?.id })
+        body: JSON.stringify({ action, remarks })
       });
-      if (!response.ok) throw new Error('Failed to update status');
+      if (!response.ok) throw new Error('Failed to process application');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      toast.success('Payment status updated successfully');
+      toast.success(data.message);
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update status');
+      toast.error(error.message || 'Failed to process application');
     }
   });
 
-  // Add UTR number and mark as paid
+  // Add UTR number
   const addUTRNumber = useMutation({
-    mutationFn: async ({ utr, date }: { utr: string; date: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/${id}/utr`, {
-        method: 'PUT',
+    mutationFn: async (utr: string) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/utr`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ 
-          utr_number: utr, 
-          payment_date: date,
-          status: 'paid',
-          updated_by: user?.id 
-        })
+        body: JSON.stringify({ utr_number: utr })
       });
       if (!response.ok) throw new Error('Failed to add UTR number');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
       setShowUTRModal(false);
       setUtrNumber('');
-      toast.success('UTR number added and payment marked as paid');
+      toast.success('UTR number added and payment released. Please upload proof next.');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to add UTR number');
     }
   });
 
+  // Upload Proof
+  const uploadProof = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('document', file);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/applications/${id}/payment-proof`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: formData
+      });
+      if (!response.ok) throw new Error('Failed to upload proof');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment', id] });
+      toast.success('Payment proof uploaded and application completed!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to upload proof');
+    }
+  });
+
   const previewDocument = async (doc: any) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const baseUrl = apiUrl.replace(/\/api$/, '');
-      const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
-      const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;
+      const url = doc.url || doc.file_url;
+      const name = doc.name || doc.document_name || doc.file_name;
       
-      setPreviewDoc({ url: fileUrl, name: doc.document_name || doc.file_name });
+      setPreviewDoc({ url, name });
     } catch (error) {
       toast.error('Failed to load document');
     }
@@ -137,7 +174,7 @@ export default function PaymentDetail() {
       toast.error('Please enter UTR number');
       return;
     }
-    addUTRNumber.mutate({ utr: utrNumber.trim(), date: paymentDate });
+    addUTRNumber.mutate(utrNumber.trim());
   };
 
   if (isLoading) {
@@ -161,9 +198,10 @@ export default function PaymentDetail() {
   }
 
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
-  const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'pending';
-  const canProcess = user?.role === 'accountant' && payment.status === 'manager_approved';
-  const canAddUTR = user?.role === 'accountant' && payment.status === 'accounts_processing';
+  const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
+  const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
+  const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'voucher_created';
+  const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'payment_released';
 
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="bg-card rounded-lg border border-border p-6">
@@ -175,10 +213,10 @@ export default function PaymentDetail() {
     </div>
   );
 
-  const Field = ({ label, value }: { label: string; value: string }) => (
-    <div>
+  const Field = ({ label, value, className = "" }: { label: string; value: string | React.ReactNode; className?: string }) => (
+    <div className={className}>
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-medium text-foreground">{value || '—'}</p>
+      <div className="text-sm font-medium text-foreground">{value || '—'}</div>
     </div>
   );
 
@@ -220,15 +258,20 @@ export default function PaymentDetail() {
             {canApprove && (
               <>
                 <button
-                  onClick={() => updateStatus.mutate({ status: 'manager_approved' })}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                  onClick={() => managerAction.mutate({ action: 'approve' })}
+                  disabled={managerAction.isPending}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <CheckCircle size={16} />
-                  Approve
+                  {managerAction.isPending ? 'Processing...' : 'Approve'}
                 </button>
                 <button
-                  onClick={() => updateStatus.mutate({ status: 'rejected' })}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                  onClick={() => {
+                    const remarks = prompt('Enter rejection remarks:');
+                    if (remarks) managerAction.mutate({ action: 'reject', remarks });
+                  }}
+                  disabled={managerAction.isPending}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <XCircle size={16} />
                   Reject
@@ -238,44 +281,99 @@ export default function PaymentDetail() {
             
             {canProcess && (
               <button
-                onClick={() => navigate(`/payments/${id}/voucher`)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                onClick={() => navigate(`/account/vouchers/create/${id}`)}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
               >
                 <FileText size={16} />
-                Create Voucher
+                Generate Voucher
               </button>
             )}
             
             {canAddUTR && (
               <button
                 onClick={() => setShowUTRModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 <DollarSign size={16} />
-                Add UTR & Mark Paid
+                Enter UTR Number
               </button>
             )}
+
+            {canUploadProof && (
+              <button
+                onClick={() => document.getElementById('final-proof-upload')?.click()}
+                disabled={uploadProof.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                <Download size={16} />
+                {uploadProof.isPending ? 'Uploading...' : 'Upload Payment Proof'}
+              </button>
+            )}
+
+            <input 
+              type="file" 
+              id="final-proof-upload" 
+              className="hidden" 
+              accept="image/*,.pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadProof.mutate(file);
+              }}
+            />
           </div>
         </div>
 
-        {/* Payment Details Grid */}
+        {/* Main Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Payment Information */}
-          <Section title="Payment Information" icon={<CreditCard size={20} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Payment Type" value={payment.payment_type?.replace(/_/g, ' ').toUpperCase()} />
-              <Field label="Amount" value={formatCurrency(Number(payment.amount))} />
-              <div className="col-span-2">
-                <Field label="Purpose/Description" value={payment.description} />
+          {/* Beneficiary & Bank Information - HIGHLIGHTED */}
+          <div className="lg:col-span-2">
+            <Section title="Beneficiary & Bank Details" icon={<Building2 size={20} />}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/20">
+                <div className="col-span-1 md:col-span-2">
+                  <Field label="Payment In Favour (Beneficiary)" value={payment.payment_in_favour_name} className="text-lg font-bold text-blue-700 dark:text-blue-400" />
+                </div>
+                <Field label="Bank Name" value={payment.bank_name} />
+                <Field label="Account Number" value={payment.account_number} className="font-mono tracking-wider text-green-600 dark:text-green-400" />
+                <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
+                <Field label="Branch Name" value={payment.branch_name} />
+                <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
+                <Field label="DM Approval Status" value={payment.dm_approval ? 'APPROVED' : 'PENDING'} />
               </div>
-              <Field label="Created Date" value={new Date(payment.created_at).toLocaleDateString()} />
+            </Section>
+          </div>
+
+          {/* Customer & Info */}
+          <Section title="Contact & KYC Information" icon={<User size={20} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Applicant Name" value={payment.applicant_name} />
+              <Field label="Phone Number" value={payment.applicant_phone} />
+              <div className="col-span-2">
+                <Field label="Email Address" value={payment.applicant_email} />
+              </div>
+              <Field label="KYC Documents Verified" value={payment.kyc_documents === 'Yes' ? 'YES' : 'NO'} />
+              <Field label="Status" value={payment.status?.toUpperCase()} />
               <Field label="Created By" value={payment.created_by_name || 'System'} />
+              <Field label="Application Date" value={new Date(payment.created_at).toLocaleDateString()} />
+              
               {payment.utr_number && (
-                <>
+                <div className="col-span-1 bg-green-50 dark:bg-green-900/10 p-3 rounded-lg border border-green-100 dark:border-green-900/20">
                   <Field label="UTR Number" value={payment.utr_number} />
-                  <Field label="Payment Date" value={payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : '—'} />
-                </>
+                </div>
               )}
+              {payment.payment_proof_path && (
+                <div className="col-span-1 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/20">
+                  <p className="text-xs text-muted-foreground mb-1">Payment Proof</p>
+                  <a 
+                    href={`${import.meta.env.VITE_API_URL}${payment.payment_proof_path}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    <Eye size={14} /> View Attachment
+                  </a>
+                </div>
+              )}
+              <Field label="Payment Date" value={payment.released_at ? new Date(payment.released_at).toLocaleDateString() : '—'} />
             </div>
           </Section>
 
@@ -301,10 +399,15 @@ export default function PaymentDetail() {
               <Field label="Financier Name" value={payment.financier_name} />
               <Field label="Loan Amount" value={formatCurrency(Number(payment.loan_amount || 0))} />
               <Field label="Disbursement Amount" value={formatCurrency(Number(payment.disbursement_amount || 0))} />
+              <Field label="Disbursement Date" value={payment.disbursement_date ? new Date(payment.disbursement_date).toLocaleDateString() : '—'} />
               <Field label="Tenure (Months)" value={String(payment.tenure_months || 0)} />
               <Field label="EMI Amount" value={formatCurrency(Number(payment.emi_amount || 0))} />
+              <Field label="EMI Mode" value={payment.emi_mode || '—'} />
               <Field label="IRR (%)" value={`${payment.irr_percentage || 0}%`} />
               <Field label="Loan Type" value={payment.loan_type} />
+              <div className="col-span-2">
+                <Field label="Purpose/Description" value={payment.payment_purpose || payment.description} />
+              </div>
               <Field label="File Booked Code" value={payment.file_booked_code} />
             </div>
           </Section>
@@ -332,11 +435,12 @@ export default function PaymentDetail() {
               <Field label="Disbursement Branch" value={payment.disbursement_branch} />
               <Field label="Branch Manager" value={payment.branch_manager_name} />
               <Field label="NOC Checked By" value={payment.noc_checked_by} />
+              <Field label="RC Status" value={payment.rc_status} />
+              <Field label="NOC Status" value={payment.noc_status} />
               <Field label="Insurance Available" value={payment.insurance_available ? 'YES' : 'NO'} />
               <Field label="3rd Party Stamp" value={payment.third_party_stamp ? 'YES' : 'NO'} />
               <Field label="NOC Stamp" value={payment.noc_stamp ? 'YES' : 'NO'} />
               <Field label="Is Third Party" value={payment.is_third_party ? 'YES' : 'NO'} />
-              <Field label="DM Approval" value={payment.dm_approval ? 'APPROVED' : 'PENDING'} />
             </div>
           </Section>
 
@@ -360,34 +464,40 @@ export default function PaymentDetail() {
           )}
         </div>
 
-        {/* Supporting Documents */}
-        {documents.length > 0 && (
-          <Section title="Supporting Documents" icon={<FileText size={20} />}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc: any) => (
-                <div key={doc.id} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {doc.document_name || doc.file_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.document_type?.replace(/_/g, ' ').toUpperCase()}
-                      </p>
-                    </div>
+        {/* Supporting Documents (Banking & PDD) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Section title="Banking Proofs" icon={<FileText size={20} />}>
+            <div className="grid grid-cols-1 gap-4">
+              {bankingDocuments.length > 0 ? bankingDocuments.map((doc, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <FileText size={16} className="text-blue-500 flex-shrink-0" />
+                    <span className="text-sm truncate">{doc.name}</span>
                   </div>
-                  <button
-                    onClick={() => previewDocument(doc)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-accent/10 text-accent rounded hover:bg-accent/20 transition-colors"
-                  >
-                    <Eye size={12} />
-                    Preview
+                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                    View
                   </button>
                 </div>
-              ))}
+              )) : <p className="text-sm text-muted-foreground italic">No banking documents attached</p>}
             </div>
           </Section>
-        )}
+
+          <Section title="PDD Documents" icon={<FileText size={20} />}>
+            <div className="grid grid-cols-1 gap-4">
+              {pddDocumentsSlice.length > 0 ? pddDocumentsSlice.map((doc, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <FileText size={16} className="text-purple-500 flex-shrink-0" />
+                    <span className="text-sm truncate">{doc.name}</span>
+                  </div>
+                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline">
+                    View
+                  </button>
+                </div>
+              )) : <p className="text-sm text-muted-foreground italic">No PDD documents selected</p>}
+            </div>
+          </Section>
+        </div>
 
         {/* Remarks */}
         {payment.remarks && (
@@ -401,7 +511,10 @@ export default function PaymentDetail() {
       {showUTRModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Add UTR Number</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Add UTR / Transaction ID</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter the bank transaction reference number. This will release the payment to the user.
+            </p>
             <form onSubmit={handleUTRSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">UTR Number *</label>
@@ -409,18 +522,8 @@ export default function PaymentDetail() {
                   type="text"
                   value={utrNumber}
                   onChange={(e) => setUtrNumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Enter UTR number"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Payment Date *</label>
-                <input
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                   required
                 />
               </div>
@@ -435,9 +538,9 @@ export default function PaymentDetail() {
                 <button
                   type="submit"
                   disabled={addUTRNumber.isPending}
-                  className="flex-1 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
                 >
-                  {addUTRNumber.isPending ? 'Adding...' : 'Add UTR & Mark Paid'}
+                  {addUTRNumber.isPending ? 'Adding...' : 'Release Payment'}
                 </button>
               </div>
             </form>
