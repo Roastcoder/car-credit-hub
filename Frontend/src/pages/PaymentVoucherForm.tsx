@@ -98,7 +98,7 @@ export default function PaymentVoucherForm() {
       });
       
       toast.success(status === 'draft' ? 'Voucher saved as draft' : 'Payment voucher created successfully');
-      navigate('/account/payables'); // Redirect back to payables
+      navigate('/account/vouchers'); // Redirect to the new vouchers list
       
     } catch (error) {
       console.error('Error creating voucher:', error);

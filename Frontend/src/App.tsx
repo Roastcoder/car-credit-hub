@@ -38,7 +38,8 @@ const PDDTracking = lazy(() => import("@/pages/PDDTracking"));
 const Payments = lazy(() => import("@/pages/Payments"));
 const CreatePaymentApplication = lazy(() => import("@/pages/CreatePaymentApplication"));
 const CreatePaymentVoucher = lazy(() => import("@/pages/CreatePaymentVoucher"));
-const PaymentDetail = lazy(() => import("@/pages/PaymentDetail"));
+const PaymentDetail = lazy(() => import("./pages/PaymentDetail"));
+const VouchersList = lazy(() => import("@/pages/VouchersList"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -83,6 +84,7 @@ function AppRoutes() {
       }>
         <Route path="receivables" element={<AccountsReceivable />} />
         <Route path="payables" element={<AccountsPayable />} />
+        <Route path="vouchers" element={<VouchersList />} />
         <Route path="ledger" element={<GeneralLedger />} />
         <Route path="reports" element={<FinancialReports />} />
         <Route path="vouchers/create/:applicationId" element={<PaymentVoucherForm />} />

@@ -40,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: 'Overview', path: '/account', icon: LayoutDashboard },
       { title: 'Receivables', path: '/account/receivables', icon: TrendingUp },
       { title: 'Payables', path: '/account/payables', icon: Receipt },
+      { title: 'Vouchers', path: '/account/vouchers', icon: FileText },
       { title: 'General Ledger', path: '/account/ledger', icon: BookOpen },
       { title: 'Financial Reports', path: '/account/reports', icon: BarChart3 }
     ]

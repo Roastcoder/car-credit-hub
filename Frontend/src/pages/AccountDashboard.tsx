@@ -30,7 +30,7 @@ const ACCOUNT_NAV_ITEMS: SideNavItem[] = [
   },
   { 
     label: 'Payment Vouchers', 
-    path: '/account/payables', 
+    path: '/account/vouchers', 
     icon: <Receipt size={18} />, 
     description: 'Manage generated vouchers' 
   },
@@ -257,14 +257,14 @@ export default function AccountDashboard() {
               </div>
 
               <div 
-                onClick={() => navigate('/account/payables')}
+                onClick={() => navigate('/account/vouchers')}
                 className="glass-card p-6 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl group"
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-purple-500/50 transition-all">
                   <Receipt className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Expense Vouchers</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage vendor and branch bills</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Payment Vouchers</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">View all generated vouchers</p>
                 <div className="mt-4 flex items-center text-xs font-medium text-purple-600 dark:text-purple-400">
                   View List <ChevronRight size={14} className="ml-1" />
                 </div>

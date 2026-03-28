@@ -224,7 +224,7 @@ export default function Payments() {
                 )}
                 {canProcess && payment.status === 'manager_approved' && (
                   <button
-                    onClick={() => navigate(`/payments/${payment.id}/voucher`)}
+                    onClick={() => navigate(`/account/vouchers/create/${payment.id}`)}
                     className="flex-1 px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-colors"
                   >
                     Create Voucher
@@ -325,7 +325,7 @@ export default function Payments() {
                           
                           {canProcess && payment.status === 'manager_approved' && (
                             <button
-                              onClick={() => navigate(`/payments/${payment.id}/voucher`)}
+                              onClick={() => navigate(`/account/vouchers/create/${payment.id}`)}
                               className="p-1.5 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
                               title="Create Voucher"
                             >
