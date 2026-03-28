@@ -197,7 +197,7 @@ export default function AccountsPayable() {
                           className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           onClick={() => {
                             if (item.application_id) {
-                              navigate(`/payments/applications/${item.application_id}`);
+                              navigate(`/payments/${item.application_id}`);
                             } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}`);
                             } else {
