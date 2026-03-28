@@ -59,24 +59,26 @@ export default function PaymentDetail() {
     enabled: !!payment,
   });
 
-  // Fetch PDD documents linked to the loan
-  const { data: pddDocumentsSlice = [] } = useQuery({
-    queryKey: ['payment-pdd-docs', id],
+  // Fetch all loan documents linked to the loan
+  const { data: loanDocuments = [] } = useQuery({
+    queryKey: ['payment-loan-docs', payment?.loan_id],
     queryFn: async () => {
-      if (!payment?.pdd_documents) return [];
-      const docPaths = typeof payment.pdd_documents === 'string' 
-        ? JSON.parse(payment.pdd_documents) 
-        : payment.pdd_documents;
-
-      if (!Array.isArray(docPaths) || docPaths.length === 0) return [];
-      
-      return docPaths.map(path => ({
-        url: `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${path}`,
-        name: path.split('/').pop() || 'Document',
-        type: 'PDD Document'
+      if (!payment?.loan_id) return [];
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${apiUrl}/loans/${payment.loan_id}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      const baseUrl = apiUrl.replace(/\/api$/, '');
+      return (Array.isArray(data) ? data : []).map((doc: any) => ({
+        ...doc,
+        url: doc.file_url?.startsWith('http') ? doc.file_url : `${baseUrl}${doc.file_url}`,
+        name: doc.document_name || doc.document_type || doc.file_name || 'Document',
+        type: doc.document_type || 'Loan Document'
       }));
     },
-    enabled: !!payment,
+    enabled: !!payment?.loan_id,
   });
 
   // Update payment status (manager action)
@@ -451,19 +453,24 @@ export default function PaymentDetail() {
             </div>
           </Section>
 
-          <Section title="PDD Documents" icon={<FileText size={20} />}>
-            <div className="grid grid-cols-1 gap-4">
-              {pddDocumentsSlice.length > 0 ? pddDocumentsSlice.map((doc, idx) => (
+          <Section title="Loan Documents" icon={<FileText size={20} />}>
+            <div className="grid grid-cols-1 gap-3">
+              {loanDocuments.length > 0 ? loanDocuments.map((doc: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="flex items-center gap-3 overflow-hidden">
                     <FileText size={16} className="text-purple-500 flex-shrink-0" />
-                    <span className="text-sm truncate">{doc.name}</span>
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-medium truncate">{doc.name}</p>
+                      {doc.type && doc.type !== doc.name && (
+                        <p className="text-xs text-muted-foreground">{doc.type}</p>
+                      )}
+                    </div>
                   </div>
-                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline">
+                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex-shrink-0 ml-2">
                     View
                   </button>
                 </div>
-              )) : <p className="text-sm text-muted-foreground italic">No PDD documents selected</p>}
+              )) : <p className="text-sm text-muted-foreground italic">No documents found for this loan</p>}
             </div>
           </Section>
         </div>
