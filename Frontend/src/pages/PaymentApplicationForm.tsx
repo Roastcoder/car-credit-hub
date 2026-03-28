@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { 
   Upload, FileText, Plus, X, Save, Send, 
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock
+  AlertCircle, CheckCircle, Clock, Search
 } from 'lucide-react';
 
 interface PaymentApplication {
@@ -423,10 +423,12 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Customer Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="relative search-container">
+            <div className="relative search-container lg:col-span-2">
               <FormField 
-                label="Customer Name" 
+                label="Customer ID" 
                 name="applicant_name" 
+                placeholder="Search by ID, name or phone..."
+                icon={<Search className="h-5 w-5" />} 
                 value={formData.applicant_name} 
                 onChange={(e: any) => handleSearch(e.target.value)} 
                 onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
@@ -682,19 +684,27 @@ export default function PaymentApplicationForm() {
 }
 
 // Helper Components for the Form
-function FormField({ label, name, type = 'text', value, onChange, disabled, required, onFocus }: any) {
+function FormField({ label, name, type = 'text', value, onChange, disabled, required, onFocus, placeholder, icon }: any) {
   return (
     <div className="space-y-1.5 text-left">
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label} {required && '*'}</label>
-      <input
-        type={type}
-        name={name}
-        value={value || ''}
-        onChange={onChange}
-        onFocus={onFocus}
-        disabled={disabled}
-        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          name={name}
+          value={value || ''}
+          onChange={onChange}
+          onFocus={onFocus}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={`w-full ${icon ? 'pl-11' : 'px-4'} py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50 transition-all`}
+        />
+        {icon && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            {icon}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
