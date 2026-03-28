@@ -1,0 +1,8 @@
+# Root .dockerignore to keep the frontend build light
+backend/
+Frontend/node_modules/
+.git/
+.DS_Store
+*.md
+loans_schema.txt
+payment_apps_schema.txt
