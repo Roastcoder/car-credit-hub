@@ -212,7 +212,7 @@ export default function AccountsReceivable() {
                           className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                           onClick={() => {
                             if (item.application_id) {
-                              navigate(`/payments/edit/${item.application_id}`);
+                              navigate(`/payments/applications/edit/${item.application_id}`);
                             } else if (item.loan_id) {
                               navigate(`/loans/${item.loan_id}/edit`);
                             } else {
