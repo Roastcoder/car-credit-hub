@@ -193,8 +193,12 @@ export default function LeadsList() {
                 </thead>
                 <tbody>
                   {filtered.map((lead: any) => (
-                    <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-3">
+                    <tr 
+                      key={lead.id} 
+                      className="border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer group/row"
+                      onClick={() => navigate(`/leads/${lead.id}`)}
+                    >
+                      <td className="py-3 px-3" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => {
                             if (lead.customer_id) {
@@ -230,7 +234,7 @@ export default function LeadsList() {
                           <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">Active</span>
                         )}
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => navigate(`/leads/${lead.id}`)}

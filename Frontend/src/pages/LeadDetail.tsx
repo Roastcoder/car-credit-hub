@@ -272,7 +272,12 @@ export default function LeadDetail() {
             <h3 className="text-sm font-semibold text-foreground">Vehicle Details</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Vehicle Number" value={lead.vehicle_no} />
+            <Field label="Vehicle Number" value={lead.loan_vehicle_number || lead.vehicle_no} />
+            {lead.maker_name && <Field label="Maker Name" value={lead.maker_name} />}
+            {lead.model_variant_name && <Field label="Model Variant" value={lead.model_variant_name} />}
+            {lead.mfg_year && <Field label="Mfg Year" value={lead.mfg_year} />}
+            {lead.chassis_number && <Field label="Chassis Number" value={lead.chassis_number} />}
+            {lead.engine_number && <Field label="Engine Number" value={lead.engine_number} />}
           </div>
         </div>
 
@@ -282,7 +287,24 @@ export default function LeadDetail() {
             <h3 className="text-sm font-semibold text-foreground">Loan Details</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
+            {lead.converted_loan_number && (
+              <div className="col-span-2 mb-1 p-2 rounded bg-accent/10 border border-accent/20">
+                <p className="text-[10px] text-accent font-bold uppercase">Linked Loan Application</p>
+                <div className="flex items-center justify-between mt-1">
+                  <button 
+                    onClick={() => navigate(`/loans/${lead.loan_id}`)}
+                    className="text-sm font-bold text-foreground hover:text-accent transition-colors flex items-center gap-1"
+                  >
+                    {lead.converted_loan_number} <ExternalLink size={12} />
+                  </button>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/10 text-foreground uppercase font-bold">
+                    {lead.loan_status?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              </div>
+            )}
             <Field label="Loan Amount Required" value={lead.loan_amount_required ? formatCurrency(Number(lead.loan_amount_required)) : '—'} />
+            {lead.approved_loan_amount && <Field label="Approved Loan Amount" value={formatCurrency(Number(lead.approved_loan_amount))} />}
             <Field label="Financier Name" value={lead.financier_name} />
             {user?.role !== 'broker' && (
               <>

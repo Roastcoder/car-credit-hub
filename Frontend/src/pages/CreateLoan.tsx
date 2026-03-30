@@ -593,6 +593,7 @@ export default function CreateLoan() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
+          lead_id: leadId ? Number(leadId) : null,
           loan_number: form.loanNumber || null,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
