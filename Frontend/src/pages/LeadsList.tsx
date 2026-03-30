@@ -48,13 +48,6 @@ export default function LeadsList() {
         if (!response.ok) return [];
         const data = await response.json();
         
-        // Filter based on role
-        if (user?.role === 'employee' || user?.role === 'broker') {
-          return data.filter((l: any) => l.created_by === user.id);
-        }
-        if (user?.role === 'manager') {
-          return data.filter((l: any) => l.branch_id === user.branch_id);
-        }
         return data;
       } catch {
         return [];
