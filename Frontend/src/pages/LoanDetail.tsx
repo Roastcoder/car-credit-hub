@@ -298,6 +298,7 @@ export default function LoanDetail() {
     !(loan as any).loan_number.startsWith('APP-') &&
     !(loan as any).loan_number.startsWith('TEMP-')
   );
+  const applicationIdentifier = (loan as any).loan_number || String(loan.id);
 
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="stat-card">
@@ -358,7 +359,7 @@ export default function LoanDetail() {
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {hasFinalLoanNumber ? (loan as any).loan_number : `Application ID: ${loan.id}`}
+                  {hasFinalLoanNumber ? (loan as any).loan_number : `Application ID: ${applicationIdentifier}`}
                 </h1>
                 {hasFinalLoanNumber && (
                   <p className="text-xs text-green-600 font-medium mt-1">✓ Loan Number Assigned</p>
@@ -571,7 +572,7 @@ export default function LoanDetail() {
           <Section title="Loan Information" icon={<IndianRupee size={16} />}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
-              <Field label="Application ID" value={loan.id} />
+              <Field label="Application ID" value={applicationIdentifier} />
               <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
               {user?.role !== 'broker' ? (
                 <>
@@ -872,7 +873,7 @@ export default function LoanDetail() {
                 </p>
                 <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
                   <p className="text-xs text-muted-foreground mb-1">Application Details:</p>
-                  <p className="text-sm font-medium text-foreground">{hasFinalLoanNumber ? (loan as any).loan_number : loan.id}</p>
+                  <p className="text-sm font-medium text-foreground">{hasFinalLoanNumber ? (loan as any).loan_number : applicationIdentifier}</p>
                   <p className="text-xs text-muted-foreground mt-1">{loan.applicant_name} • {formatCurrency(Number(loan.loan_amount))}</p>
                 </div>
               </div>

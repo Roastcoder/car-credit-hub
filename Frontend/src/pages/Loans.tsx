@@ -89,6 +89,7 @@ export default function Loans() {
     !loan.loan_number.startsWith('APP-') &&
     !loan.loan_number.startsWith('TEMP-')
   );
+  const getApplicationIdentifier = (loan: any) => loan.loan_number || String(loan.id);
 
   const handleExport = () => {
     if (filtered.length === 0) { toast.error('No data to export'); return; }
@@ -216,7 +217,7 @@ export default function Loans() {
           filtered.map((loan: any) => (
             <div
               key={loan.id}
-              onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : loan.id}`)}
+              onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}`)}
               className="stat-card active:scale-[0.98] transition-transform cursor-pointer"
             >
               <div className="flex items-start justify-between mb-3">
@@ -224,7 +225,7 @@ export default function Loans() {
                   <p className="font-semibold text-foreground truncate">{loan.applicant_name}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-xs mono font-bold text-accent">
-                      {hasFinalLoanNumber(loan) ? loan.loan_number : `ID: ${loan.id}`}
+                      {hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}
                     </p>
                     {hasFinalLoanNumber(loan) && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
@@ -285,7 +286,7 @@ export default function Loans() {
                 )}
                 {permissions.canEdit && (
                   <button
-                    onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : loan.id}/edit`)}
+                    onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,10 +347,10 @@ export default function Loans() {
                 </thead>
                 <tbody>
                   {filtered.map((loan: any) => (
-                    <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : loan.id}`)}>
+                    <tr key={loan.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}`)}>
                       <td className="py-3.5 px-3">
                         <div className="flex flex-col">
-                          <p className="mono text-sm text-accent font-bold">{hasFinalLoanNumber(loan) ? loan.loan_number : `ID: ${loan.id}`}</p>
+                          <p className="mono text-sm text-accent font-bold">{hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}</p>
                           <p className="text-xs text-muted-foreground">
                             {hasFinalLoanNumber(loan) ? 'Loan Number' : 'Application ID'}
                           </p>
@@ -374,7 +375,7 @@ export default function Loans() {
                           <div className="flex items-center gap-2">
                             {permissions.canEdit && (
                               <button
-                                onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : loan.id}/edit`)}
+                                onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                                 className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
                                 title="Edit"
                               >
