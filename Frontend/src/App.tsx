@@ -27,6 +27,7 @@ const LoanDetail = lazy(() => import("@/pages/LoanDetail"));
 const UserManagement = lazy(() => import("@/pages/UserManagement"));
 const BankManagement = lazy(() => import("@/pages/BankManagement"));
 const BrokerManagement = lazy(() => import("@/pages/BrokerManagement"));
+const MyBrokers = lazy(() => import("@/pages/MyBrokers"));
 const BranchManagement = lazy(() => import("@/pages/BranchManagement"));
 const Commission = lazy(() => import("@/pages/Commission"));
 const Reports = lazy(() => import("@/pages/Reports"));
@@ -104,6 +105,13 @@ function AppRoutes() {
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
       <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
+      <Route path="/my-brokers" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['employee']}>
+            <MyBrokers />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />

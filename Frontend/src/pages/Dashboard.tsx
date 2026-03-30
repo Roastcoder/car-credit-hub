@@ -9,6 +9,7 @@ import { loansAPI, branchesAPI } from '@/lib/api';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
@@ -80,6 +81,31 @@ export default function Dashboard() {
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-4 pb-20 lg:p-8">
+        {user?.role === 'employee' && (
+          <div className="stat-card mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
+            <div>
+              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">Refer a Broker</h2>
+              <p className="text-sm text-blue-700 dark:text-blue-300">Share this link to invite brokers. They will automatically report to you.</p>
+            </div>
+            <div className="flex bg-white/50 dark:bg-black/20 rounded-lg p-1 border border-blue-200 dark:border-blue-800 w-full sm:w-auto">
+              <input 
+                type="text" 
+                readOnly 
+                value={`${window.location.origin}/signup?ref=${user.id}`} 
+                className="bg-transparent text-sm w-full sm:w-64 px-3 outline-none text-blue-900 dark:text-blue-100"
+              />
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${user.id}`);
+                  toast.success('Referral link copied to clipboard!');
+                }}
+                className="bg-primary hover:bg-primary/90 transition-colors text-white font-medium text-sm px-4 py-2 rounded-md whitespace-nowrap"
+              >
+                Copy Link
+              </button>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 flex-col-reverse lg:grid-cols-3 gap-6">
           {/* Main Chart Section */}
           <div className="stat-card lg:col-span-2 order-2 lg:order-1">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
@@ -18,6 +18,8 @@ export default function Signup() {
   const [branchId, setBranchId] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref') || undefined;
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-signup'],
@@ -41,7 +43,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const result = await signUp(email, password, fullName, branchId);
+      const result = await signUp(email, password, fullName, branchId, refCode);
       if (result.error) {
         toast.error(result.error);
         setLoading(false);
