@@ -15,12 +15,14 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [branchId, setBranchId] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || undefined;
   const refName = searchParams.get('name') || undefined;
+  const refBranch = searchParams.get('branch') || undefined;
+
+  const [branchId, setBranchId] = useState(refBranch || '');
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-signup'],
@@ -150,16 +152,18 @@ export default function Signup() {
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none shadow-sm backdrop-blur-md font-medium"
+                    disabled={!!refBranch}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none shadow-sm backdrop-blur-md font-medium disabled:opacity-75 disabled:cursor-not-allowed"
                   >
                     <option value="">Select your branch</option>
                     {branches.map((branch: any) => (
-                      <option key={branch.id} value={branch.id} className="text-blue-950 bg-white dark:bg-slate-800 dark:text-white">
+                      <option key={branch.id} value={branch.id} className="text-blue-950 bg-white dark:bg-slate-800 dark:text-white disabled:opacity-75 disabled:bg-slate-100">
                         {branch.name} ({branch.code})
                       </option>
                     ))}
                   </select>
                 </div>
+                {refBranch && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1.5 font-medium ml-1">Branch auto-assigned by referral.</p>}
               </div>
 
               <button
