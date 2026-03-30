@@ -24,6 +24,22 @@ export default function PDDTracking() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
+
+  const formatDisplayDate = (value: unknown) => {
+    if (!value) return '—';
+    if (typeof value !== 'string') {
+      const date = new Date(value as string | number | Date);
+      return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
+  };
   const [editingLoan, setEditingLoan] = useState<any>(null);
   const { data: loans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id],
@@ -215,7 +231,7 @@ export default function PDDTracking() {
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
                         <p className="text-muted-foreground mb-1">Payment Received</p>
-                        <p className="font-semibold text-foreground">{loan.payment_received_date ? new Date(loan.payment_received_date).toLocaleDateString('en-IN') : '—'}</p>
+                        <p className="font-semibold text-foreground">{formatDisplayDate(loan.payment_received_date)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">M-Parivahan Financier</p>
@@ -245,7 +261,7 @@ export default function PDDTracking() {
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">Deposit Date</p>
-                        <p className="font-semibold text-foreground">{loan.fc_deposit_date ? new Date(loan.fc_deposit_date).toLocaleDateString('en-IN') : '—'}</p>
+                        <p className="font-semibold text-foreground">{formatDisplayDate(loan.fc_deposit_date)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">FC Receipt</p>
@@ -337,7 +353,7 @@ export default function PDDTracking() {
                       <div className="border-t border-border/50 pt-3 col-span-2 mt-1">
                         <div>
                           <p className="text-muted-foreground mb-1">Commitment Date</p>
-                          <p className="font-semibold text-foreground">{loan.commitment_date ? new Date(loan.commitment_date).toLocaleDateString('en-IN') : '—'}</p>
+                          <p className="font-semibold text-foreground">{formatDisplayDate(loan.commitment_date)}</p>
                         </div>
                       </div>
                     </div>

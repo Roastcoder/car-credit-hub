@@ -172,6 +172,22 @@ export default function PaymentDetail() {
     );
   }
 
+  const formatDisplayDate = (value: unknown) => {
+    if (!value) return '—';
+    if (typeof value !== 'string') {
+      const date = new Date(value as string | number | Date);
+      return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
+  };
+
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
@@ -328,7 +344,7 @@ export default function PaymentDetail() {
               <Field label="KYC Documents Verified" value={payment.kyc_documents === 'Yes' ? 'YES' : 'NO'} />
               <Field label="Status" value={payment.status?.toUpperCase()} />
               <Field label="Created By" value={payment.created_by_name || 'System'} />
-              <Field label="Application Date" value={new Date(payment.created_at).toLocaleDateString()} />
+              <Field label="Application Date" value={formatDisplayDate(payment.created_at)} />
               
               {payment.utr_number && (
                 <div className="col-span-1 bg-green-50 dark:bg-green-900/10 p-3 rounded-lg border border-green-100 dark:border-green-900/20">
@@ -348,7 +364,7 @@ export default function PaymentDetail() {
                   </a>
                 </div>
               )}
-              <Field label="Payment Date" value={payment.released_at ? new Date(payment.released_at).toLocaleDateString() : '—'} />
+              <Field label="Payment Date" value={formatDisplayDate(payment.released_at)} />
             </div>
           </Section>
 
@@ -374,7 +390,7 @@ export default function PaymentDetail() {
               <Field label="Financier Name" value={payment.financier_name} />
               <Field label="Loan Amount" value={formatCurrency(Number(payment.loan_amount || 0))} />
               <Field label="Disbursement Amount" value={formatCurrency(Number(payment.disbursement_amount || 0))} />
-              <Field label="Disbursement Date" value={payment.disbursement_date ? new Date(payment.disbursement_date).toLocaleDateString() : '—'} />
+              <Field label="Disbursement Date" value={formatDisplayDate(payment.disbursement_date)} />
               <Field label="Tenure (Months)" value={String(payment.tenure_months || 0)} />
               <Field label="EMI Amount" value={formatCurrency(Number(payment.emi_amount || 0))} />
               <Field label="EMI Mode" value={payment.emi_mode || '—'} />
@@ -424,7 +440,7 @@ export default function PaymentDetail() {
             <Section title="Voucher Information" icon={<FileText size={20} />}>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Voucher Number" value={payment.voucher_number} />
-                <Field label="Voucher Date" value={payment.voucher_date ? new Date(payment.voucher_date).toLocaleDateString() : '—'} />
+                <Field label="Voucher Date" value={formatDisplayDate(payment.voucher_date)} />
                 <Field label="Payment Method" value={payment.payment_method?.toUpperCase()} />
                 <Field label="Reference Number" value={payment.reference_number} />
                 <Field label="Prepared By" value={payment.prepared_by} />

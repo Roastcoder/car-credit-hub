@@ -276,6 +276,22 @@ export default function LoanDetail() {
     );
   }
 
+  const formatDisplayDate = (value: unknown) => {
+    if (!value) return '—';
+    if (typeof value !== 'string') {
+      const date = new Date(value as string | number | Date);
+      return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
+  };
+
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="stat-card">
       <div className="flex items-center gap-2 mb-3">
@@ -555,13 +571,13 @@ export default function LoanDetail() {
                   <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
                   <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
                   <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
-                  <Field label="EMI Start Date" value={(loan as any).emi_start_date || '—'} />
-                  <Field label="EMI End Date" value={(loan as any).emi_end_date || '—'} />
+                  <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
+                  <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
                   <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
                   <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
                   <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
                   <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
-                  <Field label="Commitment Date" value={(loan as any).commitment_date || '—'} />
+                  <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
                   <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
                   <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
                 </>
@@ -582,10 +598,10 @@ export default function LoanDetail() {
               {user?.role !== 'broker' && (
                 <>
                   <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
-                  <Field label="Sanction Date" value={(loan as any).sanction_date || '—'} />
+                  <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
                 </>
               )}
-              <Field label="Disbursement Date" value={(loan as any).disbursement_date || '—'} />
+              <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
               {user?.role !== 'broker' && (
                 <>
                   <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
@@ -604,7 +620,7 @@ export default function LoanDetail() {
                   <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
                   <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
                   <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
-                  <Field label="Policy Date" value={(loan as any).insurance_date || '—'} />
+                  <Field label="Policy Date" value={formatDisplayDate((loan as any).insurance_date)} />
                   <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
                 </>
               )}
@@ -625,7 +641,7 @@ export default function LoanDetail() {
                 <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
                 <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
                 <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
-                <Field label="Login Date" value={(loan as any).login_date || '—'} />
+                <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
                 <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
                 <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
                 <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
@@ -651,7 +667,7 @@ export default function LoanDetail() {
                 <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
                 <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
                 <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
-                <Field label="Payment Date" value={(loan as any).payment_received_date || '—'} />
+                <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
                 <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
                 <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_pf || 0))} />
                 <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
@@ -691,7 +707,7 @@ export default function LoanDetail() {
             <Section title="FC & NOC Details" icon={<FileText size={16} />}>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
-                <Field label="FC Date" value={(loan as any).fc_deposit_date || '—'} />
+                <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
                 <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
                 <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
                 <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
