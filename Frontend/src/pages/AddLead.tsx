@@ -101,26 +101,6 @@ export default function AddLead() {
     return (branches as any[]).filter((branch: any) => Number(branch.id) === Number(user.branch_id));
   }, [branches, user?.branch_id]);
 
-  const { data: managers = [] } = useQuery({
-    queryKey: ['users', 'managers'],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        });
-        if (!response.ok) return [];
-        const users = await response.json();
-        // Filter for managers and admins
-        return (users as any[]).filter(u => u.role === 'manager' || u.role === 'admin' || u.role === 'super_admin');
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!user && !(user as any)?.referred_by_name,
-  });
-
   useEffect(() => {
     if (availableBranches.length === 1 && !form.our_branch) {
       setForm((prev) => ({ ...prev, our_branch: availableBranches[0].name }));
@@ -272,25 +252,12 @@ export default function AddLead() {
 
           <div>
             <label className={labelClass}>Manager Name</label>
-            {(user as any)?.referred_by_name ? (
-              <input 
-                className={inputClass} 
-                value={form.manager_name} 
-                readOnly 
-                placeholder="Manager Name" 
-              />
-            ) : (
-              <select
-                className={inputClass}
-                value={form.manager_name}
-                onChange={e => setForm({...form, manager_name: e.target.value})}
-              >
-                <option value="">Select Manager Name</option>
-                {managers.map((m: any) => (
-                  <option key={m.id} value={m.full_name}>{m.full_name}</option>
-                ))}
-              </select>
-            )}
+            <input 
+              className={inputClass} 
+              value={form.manager_name} 
+              readOnly 
+              placeholder="Manager Name" 
+            />
           </div>
 
           <div>
