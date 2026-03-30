@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS } from '@/lib/constants';
-import { calculateEMI, formatCurrency, generateLoanNumber } from '@/lib/utils';
+import { calculateEMI, formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -152,25 +152,6 @@ export default function CreateLoan() {
       return data?.data || data;
     },
     enabled: !!leadId && !isEditMode,
-  });
-
-  // Fetch last loan number for auto-generation based on vertical
-  const { data: lastLoanNumber, refetch: refetchLastLoanNumber } = useQuery({
-    queryKey: ['last-loan-number', form.vertical],
-    queryFn: async () => {
-      try {
-        const vertical = form.vertical || '';
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/last-number?vertical=${vertical}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-        });
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data?.loan_number || null;
-      } catch {
-        return null;
-      }
-    },
-    enabled: !isEditMode, // Only fetch for new loans
   });
 
   const [leadSearch, setLeadSearch] = useState('');
@@ -501,21 +482,6 @@ export default function CreateLoan() {
   const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
 
-  // Auto-generate loan number when vertical changes or component loads
-  useEffect(() => {
-    if (!isEditMode && form.vertical && lastLoanNumber !== undefined) {
-      const newLoanNumber = generateLoanNumber(form.vertical, lastLoanNumber);
-      update('loanNumber', newLoanNumber);
-    }
-  }, [form.vertical, lastLoanNumber, isEditMode]);
-
-  // Refetch last loan number when vertical changes
-  useEffect(() => {
-    if (!isEditMode && form.vertical) {
-      refetchLastLoanNumber();
-    }
-  }, [form.vertical, isEditMode, refetchLastLoanNumber]);
-
   const uploadDocuments = async (loanId: string) => {
     const documents = [
       { file: form.aadharFront, type: 'aadhar_front', name: 'Aadhar Front' },
@@ -594,7 +560,6 @@ export default function CreateLoan() {
         },
         body: JSON.stringify({
           lead_id: leadId ? Number(leadId) : null,
-          loan_number: form.loanNumber || null,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
           mobile: form.mobile,

@@ -292,6 +292,13 @@ export default function LoanDetail() {
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
   };
 
+  const hasFinalLoanNumber = Boolean(
+    (loan as any).loan_number &&
+    loan.status === 'disbursed' &&
+    !(loan as any).loan_number.startsWith('APP-') &&
+    !(loan as any).loan_number.startsWith('TEMP-')
+  );
+
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="stat-card">
       <div className="flex items-center gap-2 mb-3">
@@ -351,9 +358,9 @@ export default function LoanDetail() {
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex flex-col">
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {(loan as any).loan_number ? (loan as any).loan_number : `Application ID: ${loan.id}`}
+                  {hasFinalLoanNumber ? (loan as any).loan_number : `Application ID: ${loan.id}`}
                 </h1>
-                {(loan as any).loan_number && (
+                {hasFinalLoanNumber && (
                   <p className="text-xs text-green-600 font-medium mt-1">✓ Loan Number Assigned</p>
                 )}
               </div>
@@ -563,7 +570,7 @@ export default function LoanDetail() {
           {/* Loan Information */}
           <Section title="Loan Information" icon={<IndianRupee size={16} />}>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Loan Number" value={(loan as any).loan_number || 'Not assigned yet'} />
+              <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
               <Field label="Application ID" value={loan.id} />
               <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
               {user?.role !== 'broker' ? (
@@ -865,7 +872,7 @@ export default function LoanDetail() {
                 </p>
                 <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
                   <p className="text-xs text-muted-foreground mb-1">Application Details:</p>
-                  <p className="text-sm font-medium text-foreground">{(loan as any).loan_number || loan.id}</p>
+                  <p className="text-sm font-medium text-foreground">{hasFinalLoanNumber ? (loan as any).loan_number : loan.id}</p>
                   <p className="text-xs text-muted-foreground mt-1">{loan.applicant_name} • {formatCurrency(Number(loan.loan_amount))}</p>
                 </div>
               </div>
