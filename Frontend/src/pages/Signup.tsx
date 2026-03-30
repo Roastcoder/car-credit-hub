@@ -7,7 +7,6 @@ import { ArrowRight, Mail, Lock, User, Building2, Download, Eye, EyeOff } from '
 import logo from '@/assets/logo.png';
 import { toast } from 'sonner';
 import React from 'react';
-import { AuthImageSlider } from '@/components/AuthImageSlider';
 
 export default function Signup() {
   const { signUp } = useAuth();
@@ -66,8 +65,16 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex bg-transparent font-sans">
       {/* ─── LEFT PANEL ─── */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden m-4 lg:mr-2 rounded-[2.5rem] shadow-2xl">
-        <AuthImageSlider />
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center max-w-md">
+          <img src={logo} alt="Mehar Finance" className="h-20 w-auto object-contain mx-auto mb-6 drop-shadow-lg" />
+          <h1 className="text-3xl font-bold text-blue-950 dark:text-white mb-4">Mehar Finance</h1>
+          <p className="text-lg text-blue-700 dark:text-blue-300 mb-6 font-medium">Car Loan Portal</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed">
+            Streamline your car loan process with our comprehensive management system. 
+            Track applications, manage approvals, and handle disbursements all in one place.
+          </p>
+        </div>
       </div>
 
       {/* ─── RIGHT PANEL ─── */}
