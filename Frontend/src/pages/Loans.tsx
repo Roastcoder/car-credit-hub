@@ -15,7 +15,7 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard } from 'lucide-react';
 
-type LoanStatusFilter = 'draft' | 'submitted' | 'manager_review' | 'manager_approved' | 'admin_approved' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'all';
+type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admin_approved' | 'disbursed' | 'rejected' | 'cancelled';
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
 
 export default function Loans() {

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { CAR_MAKES } from '@/lib/constants';
+import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, generateLoanNumber } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function CreateLoan() {
 
   const [form, setForm] = useState({
     // Customer Details
-    customerId: '', customerName: '', mobile: '', ourBranch: '',
+    customerId: '', customerName: '', mobile: '', panNumber: '', aadharNumber: '', ourBranch: '',
     currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
     sameAsCurrentAddress: false,
     permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
@@ -37,9 +37,6 @@ export default function CreateLoan() {
     // RTO Details
     rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
-    // RTO Papers Checkboxes
-    rtoRC: false, rtoNOC: false, rtoPermit: false, rtoPollution: false, rto2930Form: false,
-    rtoSellAgreement: false, rtoRCOwnerKYC: false, rtoStampPapers: false, rtoFitnessDocument: false, rtoTaxReceipt: false,
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
@@ -261,8 +258,6 @@ export default function CreateLoan() {
           hpnAtLogin: rc.financer ? (rc.financer || 'Financed') : 'Not Financed',
           isFinanced: rc.financer ? 'Yes' : 'No',
           fc: (rc.fit_up_to || rc.fitness_upto) ? 'Yes' : 'No',
-
-          // Customer Details (only if empty)
           customerName: f.customerName || rc.owner_name || '',
           mobile: f.mobile || rc.mobile_number || '',
 
@@ -332,6 +327,8 @@ export default function CreateLoan() {
         customerId: existingLoan.customer_id || '',
         customerName: existingLoan.applicant_name || '',
         mobile: existingLoan.mobile || '',
+        panNumber: existingLoan.pan_number || '',
+        aadharNumber: existingLoan.aadhar_number || '',
         ourBranch: existingLoan.our_branch || '',
         currentAddress: existingLoan.current_address || '',
         currentVillage: existingLoan.current_village || '',
@@ -375,16 +372,6 @@ export default function CreateLoan() {
         challan: existingLoan.challan || 'No',
         fc: existingLoan.fc || 'No',
         rtoPapers: existingLoan.rto_papers || '',
-        rtoRC: !!existingLoan.rto_rc,
-        rtoNOC: !!existingLoan.rto_noc,
-        rtoPermit: !!existingLoan.rto_permit,
-        rtoPollution: !!existingLoan.rto_pollution,
-        rto2930Form: !!existingLoan.rto_2930_form,
-        rtoSellAgreement: !!existingLoan.rto_sell_agreement,
-        rtoRCOwnerKYC: !!existingLoan.rto_rc_owner_kyc,
-        rtoStampPapers: !!existingLoan.rto_stamp_papers,
-        rtoFitnessDocument: !!existingLoan.rto_fitness_document,
-        rtoTaxReceipt: !!existingLoan.rto_tax_receipt,
         irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
         tenure: String(existingLoan.tenure || '60'),
         emiMode: existingLoan.emi_mode || 'Monthly',
@@ -450,7 +437,9 @@ export default function CreateLoan() {
       ...f,
       customerId: lead.customer_id || '',
       customerName: lead.customer_name || '',
-      mobile: lead.phone_no || '',
+      mobile: lead.phone_no || lead.mobile || '',
+      panNumber: lead.pan_number || lead.pan_no || lead.pan_card || '',
+      aadharNumber: lead.aadhar_number || lead.aadhar_no || lead.aadhar_card || '',
       currentAddress: lead.address || '',
       currentTehsil: lead.tehsil || '',
       currentDistrict: lead.district || '',
@@ -608,6 +597,9 @@ export default function CreateLoan() {
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
           mobile: form.mobile,
+          pan_number: form.panNumber || null,
+          aadhar_number: form.aadharNumber || null,
+          our_branch: form.ourBranch || null,
           current_address: form.currentAddress || null,
           current_village: form.currentVillage || null,
           current_tehsil: form.currentTehsil || null,
@@ -618,7 +610,6 @@ export default function CreateLoan() {
           permanent_tehsil: form.permanentTehsil || null,
           permanent_district: form.permanentDistrict || null,
           permanent_pincode: form.permanentPincode || null,
-          our_branch: form.ourBranch || null,
           income_source: form.incomeSource || null,
           monthly_income: Number(form.monthlyIncome) || null,
           loan_amount: Number(form.loanAmount) || 0,
@@ -683,17 +674,8 @@ export default function CreateLoan() {
           fc: form.fc || null,
           rc_mfg_date: form.rcMfgDate || null,
           rc_expiry_date: form.rcExpiryDate || null,
-          // RTO Checkboxes
-          rto_rc: form.rtoRC || false,
-          rto_noc: form.rtoNOC || false,
-          rto_permit: form.rtoPermit || false,
-          rto_pollution: form.rtoPollution || false,
-          rto_2930_form: form.rto2930Form || false,
-          rto_sell_agreement: form.rtoSellAgreement || false,
-          rto_rc_owner_kyc: form.rtoRCOwnerKYC || false,
-          rto_stamp_papers: form.rtoStampPapers || false,
-          rto_fitness_document: form.rtoFitnessDocument || false,
-          rto_tax_receipt: form.rtoTaxReceipt || false,
+          challan_status: form.challan,
+          rto_papers: form.rtoPapers,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -817,9 +799,17 @@ export default function CreateLoan() {
                           }}
                           className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-0"
                         >
-                          <div className="font-medium text-foreground text-sm">{l.customer_name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            <span className="font-mono text-accent">{l.customer_id}</span> • {l.phone_no}
+                          <div className="font-medium text-foreground text-sm flex items-center justify-between">
+                            <span>{l.customer_name}</span>
+                            {(l.pan_number || l.aadhar_number) && (
+                              <div className="flex gap-1.5">
+                                {l.pan_number && <span className="bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded text-[10px] border border-blue-500/20">PAN: {l.pan_number}</span>}
+                                {l.aadhar_number && <span className="bg-purple-500/10 text-purple-600 px-1.5 py-0.5 rounded text-[10px] border border-purple-500/20">AADHAAR: {l.aadhar_number}</span>}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 flex items-center justify-between">
+                            <div><span className="font-mono text-accent">{l.customer_id}</span> • {l.phone_no}</div>
                           </div>
                         </button>
                       ))}
@@ -828,6 +818,8 @@ export default function CreateLoan() {
                 </div>
                 <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
                 <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
+                <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
+                <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                 <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
 
                 <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
@@ -890,30 +882,30 @@ export default function CreateLoan() {
               <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
               <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
               <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
-              <div><label className={labelClass}>Engine Number</label><input className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
+              <div><label className={labelClass}>Engine Number</label><input type="text" autoComplete="off" className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
+            </div>
+
+            {/* Categorization Dropdowns (Moved after RC fields) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
               <div>
                 <label className={labelClass}>Vertical</label>
                 <select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}>
                   <option value="">Select Vertical</option>
-                  <option value="LCV">LCV</option><option value="HCV">HCV</option>
-                  <option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option>
+                  {VERTICALS.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Scheme</label>
                 <select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}>
                   <option value="">Select Scheme</option>
-                  <option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option>
-                  <option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option>
-                  <option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option>
+                  {SCHEMES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Loan Type</label>
                 <select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}>
                   <option value="">Select Type</option>
-                  <option value="New Vehicle Loan">New Vehicle Loan</option>
-                  <option value="Used Vehicle Loan">Used Vehicle Loan</option>
+                  {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
@@ -929,10 +921,7 @@ export default function CreateLoan() {
                   <label className={labelClass}>Insurance Made By</label>
                   <select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}>
                     <option value="">Select</option>
-                    <option value="In House">In House</option><option value="Financier">Financier</option>
-                    <option value="Customer">Customer</option><option value="Seller">Seller</option>
-                    <option value="By Me">By Me</option><option value="Bank Recommended">Bank Recommended</option>
-                    <option value="Broker Recommended">Broker Recommended</option><option value="Customer Choice">Customer Choice</option>
+                    {INSURANCE_MADE_BY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
                 <div className="md:col-span-1 pt-6">
@@ -944,34 +933,19 @@ export default function CreateLoan() {
               </div>
             </div>
 
-            {/* RTO Details Checklist */}
+            {/* RTO Details */}
             <div className="pt-4 border-t border-border/50">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
                 <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
-                <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
                 <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
-                <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
                 <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
                 <div className="md:col-span-2"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
                 
-                <div className="md:col-span-3 mt-2">
-                  <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">RTO Papers Checklist</p>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    {[
-                      { id: 'rtoRC', label: 'RC' }, { id: 'rtoNOC', label: 'NOC' }, { id: 'rtoPermit', label: 'Permit' },
-                      { id: 'rtoPollution', label: 'Pollution' }, { id: 'rto2930Form', label: '29/30 Form' },
-                      { id: 'rtoSellAgreement', label: 'Sell Agreement' }, { id: 'rtoRCOwnerKYC', label: 'RC Owner KYC' },
-                      { id: 'rtoStampPapers', label: 'Stamp Papers' }, { id: 'rtoFitnessDocument', label: 'FC' },
-                      { id: 'rtoTaxReceipt', label: 'DM' },
-                    ].map((item) => (
-                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
-                        <input type="checkbox" checked={(form as any)[item.id]} onChange={e => update(item.id, e.target.checked)} className="w-3.5 h-3.5 rounded border-border text-accent" />
-                        <span className="text-[11px] font-medium group-hover:text-accent transition-colors">{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {/* Dropdowns/Special fields moved here */}
+                <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
+
               </div>
             </div>
           </div>
@@ -1042,12 +1016,8 @@ export default function CreateLoan() {
               <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
               <div><label className={labelClass}>Disbursement Branch</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} /></div>
               <div>
-                <label className={labelClass}>Vertical</label>
-                <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
-                  <option value="">Select Vertical</option>
-                  <option value="LCV">LCV</option><option value="HCV">HCV</option>
-                  <option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option>
-                </select>
+                <label className={labelClass}>Vertical (Read only)</label>
+                <input disabled className={`${inputClass} bg-muted/30 cursor-not-allowed`} value={form.vertical} />
               </div>
               <div>
                 <label className={labelClass}>Broker</label>

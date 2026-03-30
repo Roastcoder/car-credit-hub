@@ -124,8 +124,7 @@ export const canAccessLoan = (userRole: UserRole, userId: number | string, loan:
 export const getWorkflowSteps = (userRole: UserRole) => {
   const steps = [
     { id: 'employee', label: 'Employee', description: 'Create and submit application' },
-    { id: 'manager', label: 'Manager', description: 'Review and approve' },
-    { id: 'admin', label: 'Admin', description: 'Final processing' },
+    { id: 'admin', label: 'Admin', description: 'Review and approve' },
     { id: 'super_admin', label: 'Super Admin', description: 'System oversight' },
   ];
   

@@ -253,6 +253,8 @@ export default function LeadDetail() {
             <Field label="Customer ID" value={lead.customer_id} />
             <Field label="Customer Name" value={lead.customer_name} />
             <Field label="Phone Number" value={lead.phone_no} />
+            <Field label="PAN Number" value={lead.pan_number} />
+            <Field label="Aadhaar Number" value={lead.aadhar_number} />
             <Field label="District" value={lead.district} />
             {user?.role !== 'broker' && (
               <>
@@ -281,7 +283,13 @@ export default function LeadDetail() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Loan Amount Required" value={lead.loan_amount_required ? formatCurrency(Number(lead.loan_amount_required)) : '—'} />
-            {user?.role !== 'broker' && <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />}
+            <Field label="Financier Name" value={lead.financier_name} />
+            {user?.role !== 'broker' && (
+              <>
+                <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />
+                <Field label="Manager Name" value={lead.manager_name} />
+              </>
+            )}
           </div>
         </div>
 
