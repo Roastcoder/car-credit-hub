@@ -89,7 +89,10 @@ export default function Loans() {
     !loan.loan_number.startsWith('APP-') &&
     !loan.loan_number.startsWith('TEMP-')
   );
-  const getApplicationIdentifier = (loan: any) => loan.loan_number || String(loan.id);
+  const getApplicationIdentifier = (loan: any) => (
+    typeof loan.loan_number === 'string' &&
+    (loan.loan_number.startsWith('APP-') || loan.loan_number.startsWith('TEMP-'))
+  ) ? loan.loan_number : String(loan.id);
 
   const handleExport = () => {
     if (filtered.length === 0) { toast.error('No data to export'); return; }

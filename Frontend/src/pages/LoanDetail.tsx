@@ -298,7 +298,13 @@ export default function LoanDetail() {
     !(loan as any).loan_number.startsWith('APP-') &&
     !(loan as any).loan_number.startsWith('TEMP-')
   );
-  const applicationIdentifier = (loan as any).loan_number || String(loan.id);
+  const applicationIdentifier = (
+    typeof (loan as any).loan_number === 'string' &&
+    (
+      (loan as any).loan_number.startsWith('APP-') ||
+      (loan as any).loan_number.startsWith('TEMP-')
+    )
+  ) ? (loan as any).loan_number : String(loan.id);
 
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="stat-card">
