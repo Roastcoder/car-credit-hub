@@ -20,6 +20,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || undefined;
+  const refName = searchParams.get('name') || undefined;
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches-signup'],
@@ -84,6 +85,12 @@ export default function Signup() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight drop-shadow-sm">Create Account</h2>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">Join Mehar Finance team</p>
+              {refName && (
+                <div className="mt-3 inline-flex items-center gap-2 bg-blue-100/80 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-blue-200/50 dark:border-blue-800/50">
+                  <User size={14} className="text-blue-600 dark:text-blue-400" />
+                  Invited by {decodeURIComponent(refName)}
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSignup} className="space-y-4">

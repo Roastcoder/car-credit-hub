@@ -91,12 +91,12 @@ export default function Dashboard() {
               <input 
                 type="text" 
                 readOnly 
-                value={`${window.location.origin}/signup?ref=${user.id}`} 
+                value={`${window.location.origin}/signup?ref=${user.id}&name=${encodeURIComponent(user.name || '')}`} 
                 className="bg-transparent text-sm w-full sm:w-64 px-3 outline-none text-blue-900 dark:text-blue-100"
               />
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${user.id}`);
+                  navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${user.id}&name=${encodeURIComponent(user.name || '')}`);
                   toast.success('Referral link copied to clipboard!');
                 }}
                 className="bg-primary hover:bg-primary/90 transition-colors text-white font-medium text-sm px-4 py-2 rounded-md whitespace-nowrap"
