@@ -857,294 +857,224 @@ export default function CreateLoan() {
               </div>
             </div>
 
-            {/* Vehicle & Loan */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Vehicle & Loan Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className={labelClass}>Loan Number</label>
-                  <input 
-                    className={`${inputClass} bg-muted/50`} 
-                    value={form.loanNumber} 
-                    onChange={e => update('loanNumber', e.target.value)}
-                    placeholder="Generated on disburse"
-                    readOnly={!isEditMode}
-                  />
-                  {!isEditMode && !form.loanNumber && (
-                    <p className="text-xs text-muted-foreground mt-1">Will be generated when loan is disbursed</p>
-                  )}
-                </div>
-                <div className="relative">
-                  <label className={labelClass}>Vehicle Reg. No</label>
-                  <input
-                    className={inputClass}
-                    value={form.vehicleNumber}
-                    onChange={e => {
-                      const value = e.target.value.toUpperCase();
-                      update('vehicleNumber', value);
-                      if (value.length >= 8) {
-                        fetchVehicleDetails(value);
-                      }
-                    }}
-                    placeholder="e.g., RJ60SW9525"
-                  />
-                  {fetchingVehicleData && (
-                    <div className="absolute right-3 top-8">
-                      <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-                <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
-                <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
-                <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
-                <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} placeholder="Enter chassis number" /></div>
-                <div><label className={labelClass}>Engine Number</label><input className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} placeholder="Enter engine number" /></div>
-                <div><label className={labelClass}>Vertical</label><select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}><option value="">Select</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
-                <div><label className={labelClass}>Scheme</label><select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}><option value="">Select</option><option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option><option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option><option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option></select></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Loan Details</h3></div>
-                <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} placeholder="Optional" /></div>
-                <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} placeholder="Enter loan amount" /></div>
-                <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} placeholder="Optional" /></div>
-                <div><label className={labelClass}>Loan Type</label><select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}><option value="">Select</option><option value="New Vehicle Loan">New Vehicle Loan</option><option value="Used Vehicle Loan">Used Vehicle Loan</option></select></div>
+          {/* ─── SECTION 2: Vehicle, Insurance & RTO Details ─── */}
+          <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
+              <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">2</span>
+              Vehicle, Insurance & RTO Details
+            </h2>
+
+            {/* Vehicle Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <label className={labelClass}>Vehicle Reg. No</label>
+                <input
+                  className={inputClass}
+                  value={form.vehicleNumber}
+                  onChange={e => {
+                    const value = e.target.value.toUpperCase();
+                    update('vehicleNumber', value);
+                    if (value.length >= 8) fetchVehicleDetails(value);
+                  }}
+                  placeholder="e.g., RJ60SW9525"
+                />
+                {fetchingVehicleData && (
+                  <div className="absolute right-3 top-8">
+                    <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
+              <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
+              <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
+              <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
+              <div><label className={labelClass}>Engine Number</label><input className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
+              <div>
+                <label className={labelClass}>Vertical</label>
+                <select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}>
+                  <option value="">Select Vertical</option>
+                  <option value="LCV">LCV</option><option value="HCV">HCV</option>
+                  <option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Scheme</label>
+                <select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}>
+                  <option value="">Select Scheme</option>
+                  <option value="Re-finance">Re-finance</option><option value="New Finance">New Finance</option>
+                  <option value="Balance Transfer">Balance Transfer</option><option value="Purchase">Purchase</option>
+                  <option value="Purchase+BT">Purchase+BT</option><option value="SVSH">SVSH</option><option value="SVOH">SVOH</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Loan Type</label>
+                <select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}>
+                  <option value="">Select Type</option>
+                  <option value="New Vehicle Loan">New Vehicle Loan</option>
+                  <option value="Used Vehicle Loan">Used Vehicle Loan</option>
+                </select>
               </div>
             </div>
 
-            {/* EMI & Financier */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">EMI & Financier Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} placeholder="e.g., 12.5" /></div>
-                <div>
-                  <label className={labelClass}>Tenure *</label>
-                  {!showCustomTenure ? (
-                    <select 
-                      required 
-                      className={inputClass} 
-                      value={tenureOptions.includes(Number(form.tenure)) ? form.tenure : 'custom'} 
-                      onChange={e => handleTenureChange(e.target.value)}
-                    >
-                      {tenureOptions.map(t => <option key={t} value={t}>{t} MONTH</option>)}
-                      <option value="custom">Other (Manual Input)</option>
-                    </select>
-                  ) : (
-                    <div className="flex gap-2">
-                      <input
-                        required
-                        type="number"
-                        min="1"
-                        max="120"
-                        className={inputClass}
-                        value={customTenure}
-                        onChange={e => handleCustomTenureChange(e.target.value)}
-                        placeholder="Enter months"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCustomTenure(false);
-                          setCustomTenure('');
-                          update('tenure', '60');
-                        }}
-                        className="px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
-                        title="Back to dropdown"
-                      >
-                        ↩
-                      </button>
-                    </div>
-                  )}
-                  {showCustomTenure && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Enter tenure in months (1-120)
-                    </p>
-                  )}
-                </div>
-                <div><label className={labelClass}>EMI Mode</label><select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}><option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option><option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option></select></div>
-                <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} placeholder="Optional" /></div>
-                {(form.irr && form.loanAmount) && (
-                  <>
-                    <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
-                    <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
-                  </>
-                )}
-              </div>
-              {emi > 0 && (
-                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20">
-                  <div className="flex items-center gap-2 mb-3"><Calculator size={16} className="text-accent" /><span className="text-accent font-semibold text-sm">EMI Calculator</span></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Monthly EMI</p><p className="text-lg font-bold text-accent break-all">{formatCurrency(emi)}</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
-                    <div className="text-center p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground break-all">{formatCurrency(totalPayable)}</p></div>
-                  </div>
-                  {!!getTenureFromDates(form.emiStartDate, form.emiEndDate) && (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      EMI is currently calculated from the selected start and end dates: {calculatedTenure} month(s).
-                    </p>
-                  )}
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Financier Details</h3></div>
-                <div><label className={labelClass}>Financier Name</label><select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}><option value="">Select Financier Name</option>{(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
-                <div><label className={labelClass}>Financier Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} placeholder="Financier Executive Name" /></div>
-                <div><label className={labelClass}>Financier Team Vertical</label><select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}><option value="">Financer Team Vertical</option><option value="LCV">LCV</option><option value="HCV">HCV</option><option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option></select></div>
-                <div><label className={labelClass}>Disburse Branch Name</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} placeholder="Disburse Branch Name" /></div>
-                 <div><label className={labelClass}>Broker</label><select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}><option value="">Select Broker (Optional)</option>{(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => parseInt(a.dsa_code) - parseInt(b.dsa_code)).map((b: any) => <option key={b.id} value={b.id}>DSA-{String(b.dsa_code).padStart(3, '0')} | {b.name}</option>)}{(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
-                {form.assignedBankId && (
-                  <>
-                    <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} placeholder="Optional" /></div>
-                    <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
-                  </>
-                )}
-              </div>
-
-              {/* Auto-Calculated Commission Box */}
-              {computedCommission.amount > 0 && form.assignedBrokerId && (
-                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-green-600 font-semibold text-sm">
-                      Broker Payout Calculation
-                      {computedCommission.payoutType && (
-                        <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                          computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' :
-                          computedCommission.payoutType === 'Half Payout' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {computedCommission.payoutType}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  
-                  {/* 4 Parameter Breakdown */}
-                  {computedCommission.calculationBreakdown && (
-                    <div className="mb-4 p-3 rounded-lg bg-background/50 border border-border/50">
-                      <h4 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">Calculation Parameters</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">1. Financier</p>
-                          <p className="text-sm font-bold text-blue-600">{computedCommission.calculationBreakdown.financier}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">2. Tenure</p>
-                          <p className="text-sm font-bold text-purple-600">{computedCommission.calculationBreakdown.tenure} months</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">3. Vertical</p>
-                          <p className="text-sm font-bold text-orange-600">{computedCommission.calculationBreakdown.vertical}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">4. Business Volume</p>
-                          <p className="text-sm font-bold text-green-600">{computedCommission.calculationBreakdown.volumeTier}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Calculation Formula */}
-                  {computedCommission.calculationBreakdown && (
-                    <div className="mb-4 p-3 rounded-lg bg-blue-50/50 border border-blue-200/50">
-                      <h4 className="text-xs font-semibold text-blue-800 mb-2">Calculation Formula</h4>
-                      <div className="text-sm text-blue-700">
-                        <span className="font-mono">
-                          {formatCurrency(computedCommission.calculationBreakdown.businessVolume)} × {computedCommission.calculationBreakdown.baseRate}%
-                          {computedCommission.calculationBreakdown.tenureMultiplier !== 1 && (
-                            <> × {computedCommission.calculationBreakdown.tenureMultiplier}</>  
-                          )}
-                          = <strong className="text-green-600">{formatCurrency(computedCommission.amount)}</strong>
-                        </span>
-                      </div>
-                      {computedCommission.calculationBreakdown.tenureMultiplier !== 1 && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          Base Rate: {computedCommission.calculationBreakdown.baseRate}% × Tenure Multiplier: {computedCommission.calculationBreakdown.tenureMultiplier} = Final Rate: {computedCommission.calculationBreakdown.finalRate}%
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {computedCommission.tenureRule && (
-                    <div className="mb-3 p-2 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground">
-                        <strong>Tenure Rule:</strong> {computedCommission.tenureRule.description}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Final Result */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground mb-1">Loan Amount</p>
-                      <p className="text-lg font-bold text-foreground break-all">{formatCurrency(Number(form.loanAmount))}</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground mb-1">Final Rate</p>
-                      <p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-background/50">
-                      <p className="text-xs text-muted-foreground mb-1">Payout Amount</p>
-                      <p className={`text-lg font-bold break-all ${
-                        computedCommission.payoutType === 'Zero Payout' ? 'text-red-600' :
-                        computedCommission.payoutType === 'Half Payout' ? 'text-yellow-600' :
-                        'text-green-600'
-                      }`}>
-                        {formatCurrency(computedCommission.amount)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Insurance & RTO */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Insurance & RTO Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
-                <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
-                <div><label className={labelClass}>Insurance Made By</label><select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}><option value="">Select</option><option value="In House">In House</option><option value="Financier">Financier</option><option value="Customer">Customer</option><option value="Seller">Seller</option><option value="By Me">By Me</option><option value="Bank Recommended">Bank Recommended</option><option value="Broker Recommended">Broker Recommended</option><option value="Customer Choice">Customer Choice</option></select></div>
-                <div className="md:col-span-3 mt-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.insuranceReminderEnabled} onChange={e => update('insuranceReminderEnabled', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium text-foreground">Send Insurance Expiry Reminder to Admin/Manager</span>
-                  </label>
-                </div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">RTO Details</h3></div>
+            {/* Insurance & RC Details */}
+            <div className="pt-4 border-t border-border/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
                 <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
+                <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
+                <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
+                <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
+                <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                <div>
+                  <label className={labelClass}>Insurance Made By</label>
+                  <select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}>
+                    <option value="">Select</option>
+                    <option value="In House">In House</option><option value="Financier">Financier</option>
+                    <option value="Customer">Customer</option><option value="Seller">Seller</option>
+                    <option value="By Me">By Me</option><option value="Bank Recommended">Bank Recommended</option>
+                    <option value="Broker Recommended">Broker Recommended</option><option value="Customer Choice">Customer Choice</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1 pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.insuranceReminderEnabled} onChange={e => update('insuranceReminderEnabled', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                    <span className="text-xs font-medium text-foreground">Send Expiry Reminder</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* RTO Details Checklist */}
+            <div className="pt-4 border-t border-border/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
                 <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
-                
-                {/* RTO Papers Checklist */}
-                <div className="md:col-span-3 mt-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">RTO Papers Present</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="md:col-span-3 mt-2">
+                  <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">RTO Papers Checklist</p>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                     {[
-                      { id: 'rtoRC', label: 'RC' },
-                      { id: 'rtoNOC', label: 'NOC' },
-                      { id: 'rtoPermit', label: 'Permit' },
-                      { id: 'rtoPollution', label: 'Pollution' },
-                      { id: 'rto2930Form', label: '29/30 Form' },
-                      { id: 'rtoSellAgreement', label: 'Sell Agreement' },
-                      { id: 'rtoRCOwnerKYC', label: 'RC Owner KYC' },
-                      { id: 'rtoStampPapers', label: 'Stamp Papers' },
-                      { id: 'rtoFitnessDocument', label: 'FC' },
+                      { id: 'rtoRC', label: 'RC' }, { id: 'rtoNOC', label: 'NOC' }, { id: 'rtoPermit', label: 'Permit' },
+                      { id: 'rtoPollution', label: 'Pollution' }, { id: 'rto2930Form', label: '29/30 Form' },
+                      { id: 'rtoSellAgreement', label: 'Sell Agreement' }, { id: 'rtoRCOwnerKYC', label: 'RC Owner KYC' },
+                      { id: 'rtoStampPapers', label: 'Stamp Papers' }, { id: 'rtoFitnessDocument', label: 'FC' },
                       { id: 'rtoTaxReceipt', label: 'DM' },
                     ].map((item) => (
-                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors">
-                        <input 
-                          type="checkbox" 
-                          checked={(form as any)[item.id]} 
-                          onChange={e => update(item.id, e.target.checked)}
-                          className="w-4 h-4 rounded border-border text-accent focus:ring-accent"
-                        />
-                        <span className="text-xs font-medium">{item.label}</span>
+                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <input type="checkbox" checked={(form as any)[item.id]} onChange={e => update(item.id, e.target.checked)} className="w-3.5 h-3.5 rounded border-border text-accent" />
+                        <span className="text-[11px] font-medium group-hover:text-accent transition-colors">{item.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ─── SECTION 3: Loan, EMI & Financier Details ─── */}
+          <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
+              <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">3</span>
+              Loan, EMI & Finance Details
+            </h2>
+
+            {/* Loan Amounts */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
+              <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
+              <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+            </div>
+
+            {/* EMI Details */}
+            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} /></div>
+              <div>
+                <label className={labelClass}>Tenure (Months) *</label>
+                {!showCustomTenure ? (
+                  <select required className={inputClass} value={tenureOptions.includes(Number(form.tenure)) ? form.tenure : 'custom'} onChange={e => handleTenureChange(e.target.value)}>
+                    {tenureOptions.map(t => <option key={t} value={t}>{t} MONTHS</option>)}
+                    <option value="custom">Other (Manual)</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input required type="number" min="1" max="120" className={inputClass} value={customTenure} onChange={e => handleCustomTenureChange(e.target.value)} />
+                    <button type="button" onClick={() => { setShowCustomTenure(false); setCustomTenure(''); update('tenure', '60'); }} className="px-2 py-2 rounded-lg border border-border hover:bg-muted">↩</button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className={labelClass}>EMI Mode</label>
+                <select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}>
+                  <option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option>
+                  <option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option>
+                </select>
+              </div>
+              <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
+               <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
+              <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
+            </div>
+
+            {emi > 0 && (
+              <div className="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
+                <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider text-xs">EMI Calculator</span></div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Monthly EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
+                </div>
+              </div>
+            )}
+
+            {/* Financier Details */}
+            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>Financier</label>
+                <select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}>
+                  <option value="">Select Financier</option>
+                  {(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+              <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
+              <div>
+                <label className={labelClass}>Vertical</label>
+                <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
+                  <option value="">Select Vertical</option>
+                  <option value="LCV">LCV</option><option value="HCV">HCV</option>
+                  <option value="Car">Car</option><option value="Tractor">Tractor</option><option value="CE">CE</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Broker</label>
+                <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
+                  <option value="">Select Broker (Optional)</option>
+                  {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => parseInt(a.dsa_code) - parseInt(b.dsa_code)).map((b: any) => <option key={b.id} value={b.id}>DSA-{String(b.dsa_code).padStart(3, '0')} | {b.name}</option>)}
+                  {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+              {form.assignedBankId && (
+                <>
+                  <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
+                </>
+              )}
+            </div>
+
+            {/* Broker Payout Summary (Inline) */}
+            {computedCommission.amount > 0 && form.assignedBrokerId && (
+              <div className="mt-4 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Broker Payout Summary</span>
+                  {computedCommission.payoutType && (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' : computedCommission.payoutType === 'Half Payout' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{computedCommission.payoutType}</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Calculation Rate</p><p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p></div>
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Payout Amount</p><p className="text-lg font-bold text-green-600">{formatCurrency(computedCommission.amount)}</p></div>
+                  <div className="text-center p-2 rounded-lg bg-background/50 flex flex-col justify-center"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Vertical</p><p className="text-xs font-bold text-foreground">{computedCommission.calculationBreakdown?.vertical}</p></div>
+                </div>
+              </div>
+            )}
+          </div>
 
             {/* Deduction */}
             <div>
