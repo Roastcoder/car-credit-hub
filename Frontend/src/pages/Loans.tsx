@@ -90,6 +90,8 @@ export default function Loans() {
     !loan.loan_number.startsWith('TEMP-')
   );
   const getApplicationIdentifier = (loan: any) => (
+    typeof loan.application_id === 'string' && loan.application_id
+  ) ? loan.application_id : (
     typeof loan.loan_number === 'string' &&
     (loan.loan_number.startsWith('APP-') || loan.loan_number.startsWith('TEMP-'))
   ) ? loan.loan_number : String(loan.id);

@@ -26,6 +26,7 @@ export interface WorkflowAuditLog {
 export interface LoanApplication {
   id: string;
   loan_number?: string;
+  application_id?: string;
   applicantName: string;
   mobile: string;
   pan: string;

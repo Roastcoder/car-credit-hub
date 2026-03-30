@@ -299,6 +299,8 @@ export default function LoanDetail() {
     !(loan as any).loan_number.startsWith('TEMP-')
   );
   const applicationIdentifier = (
+    typeof (loan as any).application_id === 'string' && (loan as any).application_id
+  ) ? (loan as any).application_id : (
     typeof (loan as any).loan_number === 'string' &&
     (
       (loan as any).loan_number.startsWith('APP-') ||
