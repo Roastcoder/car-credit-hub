@@ -81,6 +81,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const isPathActive = (itemPath: string) => {
     if (location.pathname === itemPath) return true;
     if (itemPath === '/account') return location.pathname === '/account';
+    if (itemPath === '/loans' && location.pathname === '/loans/new') return false;
     return location.pathname.startsWith(`${itemPath}/`);
   };
 
