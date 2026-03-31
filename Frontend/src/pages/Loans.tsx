@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,7 @@ type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 're
 
 export default function Loans() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -29,6 +30,9 @@ export default function Loans() {
   const importRef = useRef<HTMLInputElement>(null);
   
   const permissions = getRolePermissions(user?.role || 'employee');
+  const statusFilter = searchParams.get('status');
+  const monthFilter = searchParams.get('month');
+  const dayFilter = searchParams.get('day');
 
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.id, user?.role],
@@ -137,15 +141,18 @@ export default function Loans() {
     e.target.value = '';
   };
 
-  const filtered = (Array.isArray(loans) ? loans : []).filter((l: any) => {
+  const filtered = useMemo(() => (Array.isArray(loans) ? loans : []).filter((l: any) => {
     const matchSearch = !search ||
       l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.id?.toLowerCase().includes(search.toLowerCase()) ||
       l.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
       l.car_model?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = true; // Status filter removed from UI
+    const matchStatus = !statusFilter || l.status === statusFilter;
     const loanPddStatus = l.pdd_status || 'pending';
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
+    const createdAt = l.created_at ? new Date(l.created_at) : null;
+    const matchMonth = !monthFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().slice(0, 7) === monthFilter);
+    const matchDay = !dayFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().split('T')[0] === dayFilter);
     
     // Use WorkflowService to check if loan should be visible to user
     const shouldShow = WorkflowService.shouldShowLoanToUser(
@@ -155,8 +162,8 @@ export default function Loans() {
       user?.branch_id
     );
     
-    return matchSearch && matchStatus && matchPddStatus && shouldShow;
-  });
+    return matchSearch && matchStatus && matchPddStatus && matchMonth && matchDay && shouldShow;
+  }), [loans, search, statusFilter, pddStatusFilter, monthFilter, dayFilter, user?.role, user?.id, user?.branch_id]);
 
   return (
     <div className="pb-20 lg:pb-0">

@@ -113,6 +113,17 @@ export default function Dashboard() {
     amount: loansWithBank.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
   }));
 
+  const buildLoansFilterUrl = (status?: string) => {
+    const params = new URLSearchParams();
+
+    if (status) params.set('status', status);
+    if (isAdminDashboard && adminFilterMode === 'month') params.set('month', selectedMonth);
+    if (isAdminDashboard && adminFilterMode === 'day') params.set('day', selectedDay);
+
+    const queryString = params.toString();
+    return queryString ? `/loans?${queryString}` : '/loans';
+  };
+
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-3 pb-20 lg:p-4 sm:lg:p-6">
@@ -192,7 +203,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-4 mb-6">
               <div
-                onClick={() => navigate('/loans')}
+                onClick={() => navigate(buildLoansFilterUrl())}
                 className="stat-card cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Total Files</p>
@@ -202,7 +213,7 @@ export default function Dashboard() {
               {statusKpis.map((item) => (
                 <div
                   key={item.value}
-                  onClick={() => navigate(`/loans?status=${item.value}`)}
+                  onClick={() => navigate(buildLoansFilterUrl(item.value))}
                   className="stat-card cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">{item.label}</p>

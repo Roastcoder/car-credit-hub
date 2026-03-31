@@ -41,7 +41,7 @@ export default function CreateLoan() {
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
-    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
+    assignedBankId: '', assignedBrokerId: '', bookingMode: 'self', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
     insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
     // Deductions & Disbursement Details
@@ -361,6 +361,7 @@ export default function CreateLoan() {
         emiEndDate: formatDate(existingLoan.emi_end_date),
         assignedBankId: existingLoan.assigned_bank_id || '',
         assignedBrokerId: existingLoan.assigned_broker_id || '',
+        bookingMode: existingLoan.booking_mode || (existingLoan.assigned_broker_id ? 'broker' : 'self'),
         financierExecutiveName: existingLoan.financier_executive_name || '',
         financierTeamVertical: existingLoan.financier_team_vertical || '',
         disburseBranchName: existingLoan.disburse_branch_name || '',
@@ -408,6 +409,9 @@ export default function CreateLoan() {
   const update = (key: string, val: string | File | null | boolean) => {
     setForm(f => {
       const newForm = { ...f, [key]: val };
+      if (key === 'bookingMode' && val === 'self') {
+        newForm.assignedBrokerId = '';
+      }
       // Save to localStorage
       localStorage.setItem('loan_form_draft', JSON.stringify(newForm));
       return newForm;
@@ -603,7 +607,8 @@ export default function CreateLoan() {
           emi: emi || null,
           interest_rate: Number(form.irr) || null,
           assigned_bank_id: form.assignedBankId || null,
-          assigned_broker_id: form.assignedBrokerId || null,
+          assigned_broker_id: form.bookingMode === 'broker' ? (form.assignedBrokerId || null) : null,
+          booking_mode: form.bookingMode,
           sanction_amount: Number(form.sanctionAmount) || null,
           sanction_date: form.sanctionDate || null,
           insurance_company_name: form.insuranceCompanyName || null,
@@ -987,6 +992,13 @@ export default function CreateLoan() {
               <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
               <div><label className={labelClass}>Disbursement Branch</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} /></div>
               <div>
+                <label className={labelClass}>Booking Mode</label>
+                <select className={inputClass} value={form.bookingMode} onChange={e => update('bookingMode', e.target.value)}>
+                  <option value="self">Self</option>
+                  <option value="broker">Broker</option>
+                </select>
+              </div>
+              <div>
                 <label className={labelClass}>Financier Team Vertical</label>
                 <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
                   <option value="">Select Financier Team Vertical</option>
@@ -999,27 +1011,29 @@ export default function CreateLoan() {
                 <label className={labelClass}>Vertical (Read only)</label>
                 <input disabled className={`${inputClass} bg-muted/30 cursor-not-allowed`} value={form.vertical} />
               </div>
-              <div>
-                <label className={labelClass}>Broker</label>
-                <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
-                  <option value="">Select Broker (Optional)</option>
-                  {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => {
-                    const numA = parseInt(a.dsa_code.replace(/^\D+/g, '')) || 0;
-                    const numB = parseInt(b.dsa_code.replace(/^\D+/g, '')) || 0;
-                    return numA - numB;
-                  }).map((b: any) => {
-                    const number = b.dsa_code.replace(/^\D+/g, '');
-                    const prefixMatch = b.dsa_code.match(/^MEH([A-Z]+)/);
-                    const initials = prefixMatch ? prefixMatch[1] : '';
-                    return (
-                      <option key={b.id} value={b.id}>
-                        {`MEH${initials}${number}`} | {b.name}
-                      </option>
-                    );
-                  })}
-                  {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
+              {form.bookingMode === 'broker' && (
+                <div>
+                  <label className={labelClass}>Broker Name</label>
+                  <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
+                    <option value="">Select Broker</option>
+                    {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => {
+                      const numA = parseInt(a.dsa_code.replace(/^\D+/g, '')) || 0;
+                      const numB = parseInt(b.dsa_code.replace(/^\D+/g, '')) || 0;
+                      return numA - numB;
+                    }).map((b: any) => {
+                      const number = b.dsa_code.replace(/^\D+/g, '');
+                      const prefixMatch = b.dsa_code.match(/^MEH([A-Z]+)/);
+                      const initials = prefixMatch ? prefixMatch[1] : '';
+                      return (
+                        <option key={b.id} value={b.id}>
+                          {`MEH${initials}${number}`} | {b.name}
+                        </option>
+                      );
+                    })}
+                    {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              )}
               {form.assignedBankId && (
                 <>
                   <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
@@ -1029,7 +1043,7 @@ export default function CreateLoan() {
             </div>
 
             {/* Broker Payout Summary (Inline) */}
-            {computedCommission.amount > 0 && form.assignedBrokerId && (
+            {form.bookingMode === 'broker' && computedCommission.amount > 0 && form.assignedBrokerId && (
               <div className="mt-4 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Broker Payout Summary</span>
