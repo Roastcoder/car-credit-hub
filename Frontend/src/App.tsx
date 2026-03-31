@@ -100,7 +100,8 @@ function AppRoutes() {
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
       <Route path="/loans/:id/edit" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
       <Route path="/add-lead" element={<ProtectedRoute><AddLead /></ProtectedRoute>} />
-      <Route path="/leads-list" element={<ProtectedRoute><LeadsList /></ProtectedRoute>} />
+      <Route path="/leads-list" element={<ProtectedRoute><LeadsList mode="branch" /></ProtectedRoute>} />
+      <Route path="/broker-leads" element={<ProtectedRoute><LeadsList mode="broker" /></ProtectedRoute>} />
       <Route path="/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />

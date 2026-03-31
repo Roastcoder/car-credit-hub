@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
@@ -7,7 +7,11 @@ import { getRolePermissions } from '@/lib/permissions';
 import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function LeadsList() {
+interface LeadsListProps {
+  mode?: 'branch' | 'broker';
+}
+
+export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
@@ -65,7 +69,11 @@ export default function LeadsList() {
     ).values()
   );
 
-  const filtered = leads.filter((l: any) => {
+  const modeFilteredLeads = useMemo(() => (
+    leads.filter((lead: any) => mode === 'broker' ? lead.creator_role === 'broker' : lead.creator_role !== 'broker')
+  ), [leads, mode]);
+
+  const filtered = modeFilteredLeads.filter((l: any) => {
     const matchesSearch =
       !search ||
       l.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -82,10 +90,10 @@ export default function LeadsList() {
     <div className="pb-20 lg:pb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Leads</h1>
+          <h1 className="text-2xl font-bold text-foreground">{mode === 'broker' ? 'Broker Leads' : 'Branch Leads'}</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} leads found</p>
         </div>
-        {permissions.canCreateLead && (
+        {permissions.canCreateLead && mode === 'branch' && (
           <Link to="/add-lead" className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm">
             <Plus size={16} /> Add Lead
           </Link>
@@ -104,6 +112,7 @@ export default function LeadsList() {
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
             />
           </div>
+          {mode === 'broker' && (
           <div className="sm:w-72 relative">
             <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <select
@@ -117,6 +126,7 @@ export default function LeadsList() {
               ))}
             </select>
           </div>
+          )}
         </div>
       </div>
 
@@ -172,7 +182,7 @@ export default function LeadsList() {
                 >
                   <Copy size={13} className="text-accent" /> {copiedId === lead.customer_id ? 'Copied' : 'Copy ID'}
                 </button>
-                {permissions.canCreateLoan && (
+                {permissions.canCreateLoan && mode === 'branch' && (
                   <button
                     onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:opacity-90 transition-colors"
@@ -267,7 +277,7 @@ export default function LeadsList() {
                           >
                             <Eye size={16} />
                           </button>
-                          {permissions.canCreateLoan && (
+                          {permissions.canCreateLoan && mode === 'branch' && (
                             <button
                               onClick={() => navigate(`/loans/new?leadId=${lead.id}`)}
                               className="p-1.5 rounded-lg hover:bg-accent/10 text-accent transition-colors"

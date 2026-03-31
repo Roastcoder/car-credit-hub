@@ -13,6 +13,7 @@ interface NavItem {
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'New', path: '/loans/new', icon: <Car size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },

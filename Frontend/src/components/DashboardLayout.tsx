@@ -31,7 +31,16 @@ const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard, 
     roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] 
   },
-  { title: 'Leads', path: '/leads-list', icon: UserPlus, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  {
+    title: 'Leads',
+    path: '/leads-list',
+    icon: UserPlus,
+    roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'],
+    children: [
+      { title: 'Branch Leads', path: '/leads-list', icon: MapPin },
+      { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck },
+    ],
+  },
   { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, roles: ['super_admin', 'admin', 'manager', 'employee'] },
@@ -112,7 +121,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 relative z-10">
           {filteredNav.map(item => {
             const isAccountantLink = item.path.startsWith('/account');
-            const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account'));
+            const hasActiveChild = !!item.children?.some((child) => location.pathname === child.path);
+            const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account')) || hasActiveChild;
             const IconComponent = item.icon;
 
             return (
@@ -135,7 +145,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   )}
                 </Link>
 
-                {!collapsed && item.children && (isActive || location.pathname.startsWith(item.path)) && (
+                {!collapsed && item.children && isActive && (
                   <div className="ml-6 flex flex-col gap-1 border-l border-white/20 dark:border-white/5 pl-4 mt-1">
                     {item.children.map((child) => {
                       const ChildIconComponent = child.icon;
