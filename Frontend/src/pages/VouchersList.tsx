@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Eye, FileText, Download, Receipt, Calendar, User, DollarSign, ArrowRight } from 'lucide-react';
+import { Search, Filter, Eye, Download, Receipt, Calendar, DollarSign } from 'lucide-react';
 import { paymentApplicationAPI } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { toast } from 'sonner';
 
 export default function VouchersList() {
   const navigate = useNavigate();
@@ -18,14 +16,34 @@ export default function VouchersList() {
     queryFn: () => paymentApplicationAPI.getAll(),
   });
 
+  const matchesPeriod = (dateValue: string) => {
+    if (filterPeriod === 'all') return true;
+
+    const date = new Date(dateValue);
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    if (filterPeriod === 'today') return date >= startOfToday;
+    if (filterPeriod === 'this-week') return date >= startOfWeek;
+    if (filterPeriod === 'this-month') return date >= startOfMonth;
+
+    return true;
+  };
+
   // Filter for items that have a voucher generated
-  const vouchers = applications.filter((app: any) => 
-    app.voucher_number && (
+  const vouchers = applications.filter((app: any) => {
+    if (!app.voucher_number) return false;
+
+    const matchesSearch =
       app.voucher_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.payment_id?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+      app.payment_id?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesSearch && matchesPeriod(app.voucher_date || app.created_at);
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -132,109 +150,97 @@ export default function VouchersList() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : vouchers.length > 0 ? (
-        <>
-          {/* Mobile Card View */}
-          <div className="md:hidden space-y-4 mb-8">
-            {vouchers.map((v: any) => (
-              <div key={v.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group">
-                <div className="flex items-center justify-between mb-3 relative z-10">
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(v.status)}`}>
-                    {statusLabel(v.status)}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          {vouchers.map((v: any) => (
+            <div
+              key={v.id}
+              className="relative overflow-hidden rounded-[2rem] border border-[#d8cdf9] bg-[linear-gradient(135deg,#f7f1ff_0%,#fffaf5_52%,#ffffff_100%)] shadow-[0_20px_60px_rgba(94,53,177,0.12)]"
+            >
+              <div className="absolute inset-y-0 left-0 hidden sm:flex w-24 items-center justify-center bg-[linear-gradient(180deg,#5b2fd1_0%,#7d56f3_100%)] text-white">
+                <span className="rotate-180 text-lg font-extrabold tracking-[0.35em] [writing-mode:vertical-rl]">
+                  VOUCHER
+                </span>
+              </div>
+
+              <div className="absolute left-[5.35rem] top-1/2 hidden h-10 w-10 -translate-y-1/2 -translate-x-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
+              <div className="absolute right-0 top-1/2 hidden h-10 w-10 translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
+
+              <div className="relative p-5 sm:pl-32 sm:pr-8 sm:py-7">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#6f5f89]">
+                      Voucher for {v.payment_purpose || 'Payment Release'}
+                    </p>
+                    <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-[#241a3d]">
+                      {v.voucher_number}
+                    </h3>
+                    <p className="mt-2 text-sm text-[#5e5873]">
+                      {v.applicant_name}
+                    </p>
                   </div>
-                  <div className="text-[10px] text-gray-500 font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
-                    {v.voucher_number}
-                  </div>
-                </div>
-                
-                <div className="flex items-start justify-between mb-4 relative z-10">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-1">{v.applicant_name}</h3>
-                    <p className="text-xs text-gray-500 mb-2 truncate max-w-[200px]">{v.payment_purpose}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                      <Calendar size={10} />
-                      {new Date(v.voucher_date || v.created_at).toLocaleDateString()}
+
+                  <div className="flex items-center gap-3 self-start rounded-full border border-[#eadfff] bg-white/80 px-3 py-2">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#efe7ff] bg-[#faf6ff]">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7b43f1]">
+                        <div className="h-3.5 w-3.5 rounded-full bg-[#ff9559]" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(parseFloat(v.payment_amount || v.amount || 0))}</p>
-                    <p className="text-[10px] text-gray-500 font-mono lowercase">{v.payment_method?.replace('_', ' ')}</p>
+                    <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold tracking-[0.18em] ${getStatusColor(v.status)}`}>
+                      {statusLabel(v.status)}
+                    </span>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/10 relative z-10">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full gap-2 rounded-xl text-xs h-9 bg-white/50 dark:bg-white/5"
+                <div className="grid grid-cols-1 gap-4 text-sm text-[#5f5a70] sm:grid-cols-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Amount</p>
+                    <p className="mt-1 text-2xl font-black text-[#1e8e57]">
+                      {formatCurrency(parseFloat(v.payment_amount || v.amount || 0))}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Method</p>
+                    <p className="mt-1 font-semibold capitalize text-[#241a3d]">
+                      {v.payment_method?.replace('_', ' ') || 'Not set'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Date</p>
+                    <p className="mt-1 font-semibold text-[#241a3d]">
+                      {new Date(v.voucher_date || v.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-[1.5rem] border border-dashed border-[#e1d7f8] bg-white/70 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Payment Request</p>
+                  <p className="mt-1 truncate text-sm font-semibold text-[#241a3d]">
+                    {v.payment_id || `PAY-${v.id}`}
+                  </p>
+                  <p className="mt-1 truncate text-sm text-[#5f5a70]">
+                    {v.payment_purpose || 'No purpose added'}
+                  </p>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-sm text-[#655b7f]">
+                    <Calendar size={15} className="text-[#7b43f1]" />
+                    <span>Voucher ready for release tracking</span>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-white text-[#3e2b74] shadow-sm hover:bg-[#f4edff]"
                     onClick={() => navigate(`/payments/${v.id}`)}
                   >
-                    <Eye size={14} />
-                    View Details
-                    <ArrowRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Eye size={15} className="mr-2" />
+                    Open Voucher
                   </Button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block glass-card rounded-2xl border border-white/20 dark:border-white/10 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-white/10">
-                  <tr>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Voucher No</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Date</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant / Vendor</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Method</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                  {vouchers.map((v: any) => (
-                    <tr key={v.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-blue-600 dark:text-blue-400 font-mono text-sm">{v.voucher_number}</div>
-                        <div className="text-[10px] text-gray-400 font-mono">{v.payment_id || `PAY-${v.id}`}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(v.voucher_date || v.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-semibold text-gray-900 dark:text-white">{v.applicant_name}</div>
-                        <div className="text-[10px] text-gray-500 truncate max-w-xs">{v.payment_purpose}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-green-600 dark:text-green-400 text-base">{formatCurrency(parseFloat(v.payment_amount || v.amount || 0))}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400 capitalize">
-                        {v.payment_method?.replace('_', ' ') || '—'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(v.status)}`}>
-                          {statusLabel(v.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 gap-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30"
-                          onClick={() => navigate(`/payments/${v.id}`)}
-                        >
-                          <Eye size={16} />
-                          Details
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-          </div>
-        </>
+          ))}
+        </div>
       ) : (
         <div className="glass-card p-20 text-center rounded-3xl border border-white/20 dark:border-white/10 shadow-sm bg-white/30 dark:bg-white/5">
           <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
