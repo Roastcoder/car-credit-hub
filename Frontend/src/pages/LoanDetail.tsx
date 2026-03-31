@@ -443,7 +443,7 @@ export default function LoanDetail() {
               </>
             )}
             
-            {['approved', 'disbursed'].includes(loan.status) && (
+            {loan.status === 'approved' && (
               <button
                 onClick={() => navigate(`/payments/loan/${loan.id}`)}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 shadow-md transition-all active:scale-95"

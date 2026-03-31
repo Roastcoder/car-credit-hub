@@ -111,6 +111,8 @@ export default function PaymentApplicationsList() {
     }).format(amount);
   };
 
+  const canAccountProcess = ['accountant', 'admin', 'super_admin'].includes(user?.role || '');
+
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
@@ -254,14 +256,36 @@ export default function PaymentApplicationsList() {
                     </>
                   )}
 
-                  {(user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'manager_approved' && (
+                  {canAccountProcess && app.status === 'manager_approved' && (
                     <Button 
                       size="sm" 
-                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-purple-600 hover:bg-purple-700 min-w-[80px]"
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-purple-600 hover:bg-purple-700 min-w-[110px]"
                       onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
                     >
                       <FileText size={14} />
-                      Voucher
+                      Generate Voucher
+                    </Button>
+                  )}
+
+                  {canAccountProcess && app.status === 'voucher_created' && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-blue-600 hover:bg-blue-700 min-w-[90px]"
+                      onClick={() => navigate(`/payments/${app.id}`)}
+                    >
+                      <CreditCard size={14} />
+                      Add UTR
+                    </Button>
+                  )}
+
+                  {canAccountProcess && app.status === 'payment_released' && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-emerald-600 hover:bg-emerald-700 min-w-[110px]"
+                      onClick={() => navigate(`/payments/${app.id}`)}
+                    >
+                      <Download size={14} />
+                      Upload Proof
                     </Button>
                   )}
                 </div>
@@ -322,7 +346,7 @@ export default function PaymentApplicationsList() {
                             </div>
                           )}
 
-                          {(user?.role === 'accountant' || user?.role === 'super_admin') && app.status === 'manager_approved' && (
+                          {canAccountProcess && app.status === 'manager_approved' && (
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -330,7 +354,31 @@ export default function PaymentApplicationsList() {
                               onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
                             >
                               <FileText size={14} />
-                              Voucher
+                              Generate Voucher
+                            </Button>
+                          )}
+
+                          {canAccountProcess && app.status === 'voucher_created' && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider"
+                              onClick={() => navigate(`/payments/${app.id}`)}
+                            >
+                              <CreditCard size={14} />
+                              Add UTR
+                            </Button>
+                          )}
+
+                          {canAccountProcess && app.status === 'payment_released' && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 gap-1.5 text-emerald-600 font-bold text-[10px] uppercase tracking-wider"
+                              onClick={() => navigate(`/payments/${app.id}`)}
+                            >
+                              <Download size={14} />
+                              Upload Proof
                             </Button>
                           )}
                         </div>

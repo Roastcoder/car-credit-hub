@@ -58,6 +58,16 @@ export default function VouchersList() {
     return status.replace('_', ' ').toUpperCase();
   };
 
+  const getPrimaryAction = (voucher: any) => {
+    if (voucher.status === 'voucher_created') {
+      return 'Add UTR';
+    }
+    if (voucher.status === 'payment_released') {
+      return 'Upload Proof';
+    }
+    return 'Open Voucher';
+  };
+
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
@@ -150,51 +160,51 @@ export default function VouchersList() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : vouchers.length > 0 ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {vouchers.map((v: any) => (
             <div
               key={v.id}
-              className="relative overflow-hidden rounded-[2rem] border border-[#d8cdf9] bg-[linear-gradient(135deg,#f7f1ff_0%,#fffaf5_52%,#ffffff_100%)] shadow-[0_20px_60px_rgba(94,53,177,0.12)]"
+              className="relative overflow-hidden rounded-[1.6rem] border border-[#d8cdf9] bg-[linear-gradient(135deg,#f7f1ff_0%,#fffaf5_52%,#ffffff_100%)] shadow-[0_14px_38px_rgba(94,53,177,0.10)]"
             >
-              <div className="absolute inset-y-0 left-0 hidden sm:flex w-24 items-center justify-center bg-[linear-gradient(180deg,#5b2fd1_0%,#7d56f3_100%)] text-white">
-                <span className="rotate-180 text-lg font-extrabold tracking-[0.35em] [writing-mode:vertical-rl]">
+              <div className="absolute inset-y-0 left-0 hidden sm:flex w-20 items-center justify-center bg-[linear-gradient(180deg,#5b2fd1_0%,#7d56f3_100%)] text-white">
+                <span className="rotate-180 text-base font-extrabold tracking-[0.28em] [writing-mode:vertical-rl]">
                   VOUCHER
                 </span>
               </div>
 
-              <div className="absolute left-[5.35rem] top-1/2 hidden h-10 w-10 -translate-y-1/2 -translate-x-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
-              <div className="absolute right-0 top-1/2 hidden h-10 w-10 translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
+              <div className="absolute left-[4.5rem] top-1/2 hidden h-8 w-8 -translate-y-1/2 -translate-x-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
+              <div className="absolute right-0 top-1/2 hidden h-8 w-8 translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e9dcff] bg-white sm:block" />
 
-              <div className="relative p-5 sm:pl-32 sm:pr-8 sm:py-7">
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="relative p-4 sm:pl-24 sm:pr-6 sm:py-5">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#6f5f89]">
+                    <p className="text-xs font-semibold text-[#6f5f89]">
                       Voucher for {v.payment_purpose || 'Payment Release'}
                     </p>
-                    <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-[#241a3d]">
+                    <h3 className="mt-1 truncate text-2xl font-black tracking-tight text-[#241a3d]">
                       {v.voucher_number}
                     </h3>
-                    <p className="mt-2 text-sm text-[#5e5873]">
+                    <p className="mt-1.5 text-sm text-[#5e5873]">
                       {v.applicant_name}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 self-start rounded-full border border-[#eadfff] bg-white/80 px-3 py-2">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#efe7ff] bg-[#faf6ff]">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7b43f1]">
-                        <div className="h-3.5 w-3.5 rounded-full bg-[#ff9559]" />
+                  <div className="flex items-center gap-2 self-start rounded-full border border-[#eadfff] bg-white/80 px-2.5 py-1.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#efe7ff] bg-[#faf6ff]">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7b43f1]">
+                        <div className="h-3 w-3 rounded-full bg-[#ff9559]" />
                       </div>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold tracking-[0.18em] ${getStatusColor(v.status)}`}>
+                    <span className={`rounded-full px-2.5 py-1 text-[9px] font-extrabold tracking-[0.16em] ${getStatusColor(v.status)}`}>
                       {statusLabel(v.status)}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 text-sm text-[#5f5a70] sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 text-sm text-[#5f5a70] sm:grid-cols-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Amount</p>
-                    <p className="mt-1 text-2xl font-black text-[#1e8e57]">
+                    <p className="mt-1 text-xl font-black text-[#1e8e57]">
                       {formatCurrency(parseFloat(v.payment_amount || v.amount || 0))}
                     </p>
                   </div>
@@ -212,7 +222,7 @@ export default function VouchersList() {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-[1.5rem] border border-dashed border-[#e1d7f8] bg-white/70 px-4 py-3">
+                <div className="mt-4 rounded-[1.15rem] border border-dashed border-[#e1d7f8] bg-white/70 px-3.5 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7da8]">Payment Request</p>
                   <p className="mt-1 truncate text-sm font-semibold text-[#241a3d]">
                     {v.payment_id || `PAY-${v.id}`}
@@ -222,20 +232,36 @@ export default function VouchersList() {
                   </p>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 text-sm text-[#655b7f]">
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-xs text-[#655b7f]">
                     <Calendar size={15} className="text-[#7b43f1]" />
-                    <span>Voucher ready for release tracking</span>
+                    <span>
+                      {v.status === 'voucher_created'
+                        ? 'Waiting for UTR update'
+                        : v.status === 'payment_released'
+                        ? 'Waiting for proof upload'
+                        : 'Voucher completed'}
+                    </span>
                   </div>
 
-                  <Button
-                    size="sm"
-                    className="rounded-full bg-white text-[#3e2b74] shadow-sm hover:bg-[#f4edff]"
-                    onClick={() => navigate(`/payments/${v.id}`)}
-                  >
-                    <Eye size={15} className="mr-2" />
-                    Open Voucher
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full border-[#e4d9ff] bg-white text-[#3e2b74] hover:bg-[#f8f2ff]"
+                      onClick={() => navigate(`/payments/${v.id}`)}
+                    >
+                      <Eye size={14} className="mr-2" />
+                      Details
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="rounded-full bg-[#5b2fd1] text-white hover:bg-[#4c25b3]"
+                      onClick={() => navigate(`/payments/${v.id}`)}
+                    >
+                      {getPrimaryAction(v)}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
