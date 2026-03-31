@@ -25,11 +25,8 @@ export default function Dashboard() {
         const loansData = Array.isArray(data) ? data : (data.data || []);
         
         // Filter based on role
-        if (user?.role === 'employee') {
+        if (user?.role === 'manager' || user?.role === 'employee') {
           return loansData.filter((l: any) => l.user_id === user.id);
-        }
-        if (user?.role === 'manager') {
-          return loansData.filter((l: any) => l.branch_id === user.branch_id);
         }
         if (user?.role === 'broker') {
           return loansData.filter((l: any) => l.broker_id === user.id);
@@ -80,9 +77,9 @@ export default function Dashboard() {
 
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
-      <div className="px-2 sm:px-4 pt-4 pb-20 lg:p-8">
+      <div className="px-2 sm:px-4 pt-3 pb-20 lg:p-4 sm:lg:p-6">
         {user?.role === 'employee' && (
-          <div className="stat-card mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
+          <div className="stat-card mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
             <div>
               <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">Refer a Broker</h2>
               <p className="text-sm text-blue-700 dark:text-blue-300">Share this link to invite brokers. They will automatically report to you.</p>

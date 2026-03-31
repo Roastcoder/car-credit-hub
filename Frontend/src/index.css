@@ -117,7 +117,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    @apply rounded-[2rem];
+    @apply rounded-2xl sm:rounded-[1.5rem];
     will-change: transform, opacity;
   }
 
@@ -142,11 +142,11 @@
   }
 
   .stat-card {
-    @apply glass-card p-6 flex flex-col shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply glass-card p-4 sm:p-5 flex flex-col shadow-sm transition-all duration-200 hover:shadow-md;
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 text-text-muted-light dark:text-text-muted-dark hover:bg-white/40 dark:hover:bg-white/5;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-text-muted-light dark:text-text-muted-dark hover:bg-white/40 dark:hover:bg-white/5;
   }
 
   .sidebar-link-active {

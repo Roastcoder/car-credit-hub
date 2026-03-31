@@ -596,6 +596,8 @@ export default function LoanDetail() {
                   <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
                   <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
                   <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
+                  <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
+                  <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
                 </>
               ) : (
                 <>

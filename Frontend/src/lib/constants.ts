@@ -2,12 +2,10 @@ import type { LoanStatus } from './types';
 
 export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[] = [
   { value: 'draft', label: 'Draft', color: 'status-draft' },
-  { value: 'submitted', label: 'Submitted (Waiting Admin)', color: 'status-submitted' },
   { value: 'under_review', label: 'Under Review', color: 'status-review' },
   { value: 'approved', label: 'Approved', color: 'status-approved' },
   { value: 'disbursed', label: 'Disbursed', color: 'status-disbursed' },
-  { value: 'sent_back_employee', label: 'Sent Back (Emp)', color: 'status-sent-back' },
-  { value: 'sent_back_admin', label: 'Sent Back (Adm)', color: 'status-sent-back' },
+  { value: 'sent_back', label: 'Sent Back', color: 'status-sent-back' },
   { value: 'rejected', label: 'Rejected', color: 'status-rejected' },
   { value: 'cancelled', label: 'Cancelled', color: 'status-cancelled' },
 ];
@@ -21,45 +19,41 @@ export const WORKFLOW_STEPS = [
 
 export const WORKFLOW_CONFIG = {
   employee: {
-    initialStatus: 'submitted',
+    initialStatus: 'draft',
     initialOwner: 'employee',
     canCreate: true,
     actions: [
-      { action: 'send_forward', nextStatus: 'under_review', nextOwner: 'admin', label: 'Send to Admin', type: 'forward', requiresRemarks: true },
+      { action: 'send_forward', nextStatus: 'under_review', nextOwner: 'admin', label: 'Submit to Admin', type: 'forward', requiresRemarks: true },
     ],
   },
   manager: {
-    canCreate: false,
-    actions: [
-      { action: 'send_forward', nextStatus: 'approved', nextOwner: 'admin', label: 'Send to Admin', type: 'forward', requiresRemarks: true },
-      { action: 'send_back', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true },
-    ],
+    canCreate: true,
+    actions: [],
   },
   admin: {
     canCreate: false,
     actions: [
-      { action: 'approve', nextStatus: 'approved', nextOwner: 'admin', label: 'Approve', type: 'approve', requiresRemarks: true },
-      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Disburse', type: 'approve', requiresRemarks: true },
-      { action: 'send_back', nextStatus: 'sent_back_employee', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true },
+      { action: 'approve', nextStatus: 'approved', nextOwner: 'admin', label: 'Approve', type: 'forward', requiresRemarks: true },
+      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Mark as Disbursed', type: 'forward', requiresRemarks: true },
+      { action: 'send_back', nextStatus: 'sent_back', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true },
+      { action: 'reject', nextStatus: 'rejected', nextOwner: 'employee', label: 'Reject Application', type: 'back', requiresRemarks: true },
     ],
   },
   super_admin: {
     canCreate: false,
     actions: [
-      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Disburse', type: 'approve', requiresRemarks: true },
-      { action: 'send_back', nextStatus: 'sent_back_admin', nextOwner: 'admin', label: 'Send Back to Admin', type: 'back', requiresRemarks: true },
+      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Disburse', type: 'forward', requiresRemarks: true },
+      { action: 'send_back', nextStatus: 'sent_back', nextOwner: 'employee', label: 'Send Back', type: 'back', requiresRemarks: true },
     ],
   },
 };
 
 export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
   draft: 'employee',
-  submitted: 'employee',
   under_review: 'admin',
   approved: 'admin',
   disbursed: 'admin',
-  sent_back_employee: 'employee',
-  sent_back_admin: 'admin',
+  sent_back: 'employee',
   rejected: 'employee',
   cancelled: 'employee',
 };

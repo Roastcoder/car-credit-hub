@@ -37,6 +37,7 @@ export default function CreateLoan() {
     // RTO Details
     rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
+    fcAmount: '', fcDate: '',
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
@@ -386,6 +387,8 @@ export default function CreateLoan() {
         sourcingPersonName: existingLoan.sourcing_person_name || '',
         remark: existingLoan.remark || '',
         fileStatus: existingLoan.status || 'submitted',
+        fcAmount: String(existingLoan.fc_amount || ''),
+        fcDate: formatDate(existingLoan.fc_date),
         aadharFront: null, aadharBack: null, panCard: null,
         bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
         customerPhoto: null, insurance: null, customerLedger: null,
@@ -430,6 +433,8 @@ export default function CreateLoan() {
       irr: lead.irr_requested ? String(lead.irr_requested) : '',
       sourcingPersonName: lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
+      fcAmount: '',
+      fcDate: '',
     }));
 
     // Auto-fetch vehicle details if RC number exists
@@ -642,6 +647,8 @@ export default function CreateLoan() {
           rc_expiry_date: form.rcExpiryDate || null,
           challan_status: form.challan,
           rto_papers: form.rtoPapers,
+          fc_amount: form.fcAmount || null,
+          fc_date: form.fcDate || null,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -928,6 +935,8 @@ export default function CreateLoan() {
               <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
               <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
               <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+              <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
+              <div><label className={labelClass}>FC Date (Foreclosure Date)</label><input type="date" className={inputClass} value={form.fcDate} onChange={e => update('fcDate', e.target.value)} /></div>
             </div>
 
             {/* EMI Details */}

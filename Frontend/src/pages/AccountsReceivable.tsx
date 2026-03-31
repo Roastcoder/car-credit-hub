@@ -50,11 +50,11 @@ export default function AccountsReceivable() {
   };
 
   return (
-    <div className="p-4 md:p-6 pb-24 md:pb-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
+    <div className="p-3 md:p-4 pb-24 md:pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Accounts Receivable</h1>
-          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">Manage and track your incoming revenue</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Accounts Receivable</h1>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">Manage and track your incoming revenue</p>
         </div>
         
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -75,48 +75,48 @@ export default function AccountsReceivable() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="glass-card p-4 rounded-xl border border-white/20 dark:border-white/10">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+        <div className="glass-card p-3.5 rounded-xl border border-white/20 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Outstanding</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.totalOutstanding)}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-medium">Total Outstanding</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalOutstanding)}</p>
             </div>
           </div>
         </div>
-        <div className="glass-card p-4 rounded-xl border border-white/20 dark:border-white/10">
+        <div className="glass-card p-3.5 rounded-xl border border-white/20 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Overdue</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.overdue)}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-medium">Overdue</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">{formatCurrency(stats.overdue)}</p>
             </div>
           </div>
         </div>
-        <div className="glass-card p-4 rounded-xl border border-white/20 dark:border-white/10">
+        <div className="glass-card p-3.5 rounded-xl border border-white/20 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Due Soon</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.dueSoon)}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-medium">Due Soon</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">{formatCurrency(stats.dueSoon)}</p>
             </div>
           </div>
         </div>
-        <div className="glass-card p-4 rounded-xl border border-white/20 dark:border-white/10">
+        <div className="glass-card p-3.5 rounded-xl border border-white/20 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Paid/Settled</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.current)}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide font-medium">Paid/Settled</p>
+              <p className="text-base font-bold text-gray-900 dark:text-white">{formatCurrency(stats.current)}</p>
             </div>
           </div>
         </div>
@@ -219,47 +219,47 @@ export default function AccountsReceivable() {
               <table className="w-full">
                 <thead className="bg-slate-50/50 dark:bg-slate-900/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Customer</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Due Date</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Days</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Customer</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Due Date</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Days</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {filteredReceivables.map((item: any) => (
                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-semibold text-gray-900 dark:text-white">{item.customer_name}</div>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-white">{item.customer_name}</div>
                         <div className="text-[10px] text-gray-500 font-mono">{item.invoice_number}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 dark:text-white">{formatCurrency(parseFloat(item.amount))}</div>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-bold text-sm text-gray-900 dark:text-white">{formatCurrency(parseFloat(item.amount))}</div>
                         <div className="text-[10px] text-gray-500">Bal: {formatCurrency(parseFloat(item.outstanding_amount))}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                         {new Date(item.due_date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(item.status)}`}>
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                         {item.days_overdue > 0 ? (
                           <span className="text-red-500 font-medium">{item.days_overdue} days late</span>
                         ) : (
                           <span className="text-green-500 font-medium">Due in {Math.abs(item.days_overdue)} days</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => navigate(item.application_id ? `/account/payments/${item.application_id}` : `/loans/${item.loan_id}`)}>
-                            <Eye size={16} />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(item.application_id ? `/account/payments/${item.application_id}` : `/loans/${item.loan_id}`)}>
+                            <Eye size={14} />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500" onClick={() => navigate(item.application_id ? `/account/payments/edit/${item.application_id}` : `/loans/${item.loan_id}/edit`)}>
-                            <Edit size={16} />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500" onClick={() => navigate(item.application_id ? `/account/payments/edit/${item.application_id}` : `/loans/${item.loan_id}/edit`)}>
+                            <Edit size={14} />
                           </Button>
                         </div>
                       </td>

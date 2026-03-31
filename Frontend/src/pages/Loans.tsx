@@ -261,6 +261,10 @@ export default function Loans() {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Bank</p>
                   <p className="text-foreground truncate">{loan.bank_name || loan.assigned_bank_name || '—'}</p>
                 </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Branch</p>
+                  <p className="text-foreground truncate">{loan.branch_name || '—'}</p>
+                </div>
               </div>
               <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-2" onClick={e => e.stopPropagation()}>
                 <button
@@ -341,6 +345,7 @@ export default function Loans() {
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
                     {user?.role !== 'broker' && <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>}
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
@@ -370,6 +375,7 @@ export default function Loans() {
                         <p className="text-xs text-muted-foreground">{loan.vehicle_number || loan.car_variant}</p>
                       </td>
                       <td className="py-3.5 px-3 text-muted-foreground">{loan.bank_name || loan.assigned_bank_name || '—'}</td>
+                      <td className="py-3.5 px-3 text-muted-foreground font-medium">{loan.branch_name || '—'}</td>
                       <td className="py-3.5 px-3 text-right font-medium text-foreground">{formatCurrency(Number(loan.loan_amount))}</td>
                       {user?.role !== 'broker' && <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>}
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>

@@ -11,9 +11,9 @@ interface NavItem {
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
-  { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee', 'accountant'] },
+  { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee', 'accountant'] },
+  { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'New', path: '/loans/new', icon: <Car size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager'] },
@@ -23,8 +23,10 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Branches', path: '/branches', icon: <MapPin size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Send Notification', path: '/broadcast', icon: <Send size={20} />, roles: ['super_admin', 'admin'] },
-  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['super_admin', 'admin', 'accountant'] },
-  { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['super_admin', 'admin', 'accountant'] },
+  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
+  { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'] },
+  { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'] },
+  { label: 'Account Home', path: '/account', icon: <LayoutDashboard size={20} />, roles: ['accountant'] },
 ];
 
 export default function MobileBottomNav() {
@@ -48,7 +50,7 @@ export default function MobileBottomNav() {
   } else if (user.role === 'bank') {
     primaryNavPaths = ['/dashboard', '/loans', '/loans/new'];
   } else if (user.role === 'accountant') {
-    primaryNavPaths = ['/dashboard', '/account/receivables', '/account/payables'];
+    primaryNavPaths = ['/account', '/account/receivables', '/account/payables', '/account/vouchers'];
   } else {
     // employee and others
     primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/loans/new'];
