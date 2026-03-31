@@ -680,14 +680,12 @@ export default function LoanDetail() {
           {user?.role !== 'broker' && (
             <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Total Deduction" value={formatCurrency(Number((loan as any).total_deduction || 0))} />
                 <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
                 <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
                 <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
                 <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
                 <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
                 <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
-                <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_pf || 0))} />
                 <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
               </div>
             </Section>

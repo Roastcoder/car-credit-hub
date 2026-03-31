@@ -13,7 +13,7 @@ const FIELD_GROUPS = {
   financier: ['assigned_bank_id', 'assigned_broker_id', 'sanction_amount', 'sanction_date'],
   insurance: ['insurance_company_name', 'premium_amount', 'insurance_policy_number', 'insurance_date'],
   rto: ['rc_owner_name', 'rto_agent_name', 'agent_mobile_no'],
-  deduction: ['total_deduction', 'net_disbursement_amount', 'payment_received_date'],
+  deduction: ['net_disbursement_amount', 'payment_received_date'],
 };
 
 const ROLES = ['user', 'tl', 'manager'];

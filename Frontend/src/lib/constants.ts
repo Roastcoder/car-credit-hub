@@ -81,7 +81,7 @@ export const VERTICALS = [
 ];
 
 export const SCHEMES = [
-  'Standard', 'Low ROI', 'Zero ROI', 'Multi Segment', 'Fleet', 'Rental', 'Exchange'
+  'Purchase', 'BT', 'Purchase & BT', 'Refinance', 'SHSV/SHOV'
 ];
 
 export const LOAN_TYPES = [

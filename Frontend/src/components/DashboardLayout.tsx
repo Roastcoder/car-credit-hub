@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-3 lg:mr-1.5 rounded-[1.5rem] sm:rounded-[2rem] lg:h-[calc(100vh-1.5rem)] will-change-transform`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-56'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-3 lg:mr-1.5 rounded-[1.5rem] sm:rounded-[2rem] lg:h-[calc(100vh-1.5rem)] will-change-transform`}>
         {/* Logo */}
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
           <div className="glass-card rounded-2xl p-2 shadow-sm">
@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 relative z-10">
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 relative z-10">
           {filteredNav.map(item => {
             const isAccountantLink = item.path.startsWith('/account');
             const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account'));
@@ -121,7 +121,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   title={collapsed ? item.title : undefined}
-                  className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${isActive
+                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${isActive
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
                     : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
                     }`}
@@ -174,8 +174,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        {/* User */}
-        <div className={`px-4 pb-6 pt-6 border-t border-white/20 dark:border-white/5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        {/* User (Mobile only - hidden on desktop) */}
+        <div className={`lg:hidden px-4 pb-6 pt-6 border-t border-white/20 dark:border-white/5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {!collapsed && (
             <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20">
@@ -210,7 +210,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Page title / User greeting */}
-          <div className="hidden lg:flex flex-1 min-w-0 flex items-center ml-2 border-l border-white/50 dark:border-white/10 pl-6 h-8">
+          <div className="hidden lg:flex flex-1 min-w-0 items-center ml-2 border-l border-white/50 dark:border-white/10 pl-4 h-8">
             <div>
               <p className="text-base font-bold text-blue-950 dark:text-white truncate lg:text-lg tracking-tight drop-shadow-sm">
                 Hi, <span className="text-blue-600 dark:text-blue-400">{user.name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}</span>
@@ -228,8 +228,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
 
-          {/* Profile Dropdown - Mobile always, Desktop only for accountants */}
-          <div className={`${user.role === 'accountant' ? 'block' : 'lg:hidden'} relative`}>
+          {/* Profile Dropdown */}
+          <div className="block relative">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all"

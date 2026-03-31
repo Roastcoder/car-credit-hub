@@ -45,7 +45,7 @@ export default function CreateLoan() {
     // Insurance Details
     insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
     // Deductions & Disbursement Details
-    processingFee: '', totalDeduction: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', meharPf: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
+    processingFee: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
     // Others
     loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
     // Documents
@@ -373,11 +373,9 @@ export default function CreateLoan() {
         insuranceMadeBy: existingLoan.insurance_made_by || '',
         insuranceReminderEnabled: existingLoan.insurance_reminder_enabled || false,
         processingFee: String(existingLoan.processing_fee || ''),
-        totalDeduction: String(existingLoan.total_deduction || ''),
         netDisbursementAmount: String(existingLoan.net_disbursement_amount || ''),
         paymentReceivedDate: formatDate(existingLoan.payment_received_date),
         meharDeduction: String(existingLoan.mehar_deduction || ''),
-        meharPf: String(existingLoan.mehar_pf || ''),
         holdAmount: String(existingLoan.hold_amount || ''),
         netSeedAmount: String(existingLoan.net_seed_amount || ''),
         paymentInFavour: existingLoan.payment_in_favour || '',
@@ -615,11 +613,9 @@ export default function CreateLoan() {
           insurance_made_by: form.insuranceMadeBy || null,
           insurance_reminder_enabled: form.insuranceReminderEnabled || false,
           mehar_deduction: Number(form.meharDeduction) || null,
-          mehar_pf: Number(form.meharPf) || null,
           hold_amount: Number(form.holdAmount) || null,
           net_seed_amount: Number(form.netSeedAmount) || null,
           payment_in_favour: form.paymentInFavour || null,
-          total_deduction: Number(form.totalDeduction) || null,
           net_disbursement_amount: Number(form.netDisbursementAmount) || null,
           payment_received_date: form.paymentReceivedDate || null,
           rc_owner_name: form.rcOwnerName || null,
@@ -1033,8 +1029,6 @@ export default function CreateLoan() {
               <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
-                <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharPf} onChange={e => update('meharPf', e.target.value)} /></div>
-                <div><label className={labelClass}>Total Deduction (₹)</label><input type="number" className={inputClass} value={form.totalDeduction} onChange={e => update('totalDeduction', e.target.value)} /></div>
               </div>
             </div>
 
