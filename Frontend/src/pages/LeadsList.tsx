@@ -4,13 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
-import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X } from 'lucide-react';
+import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LeadsList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [selectedBroker, setSelectedBroker] = useState('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const permissions = getRolePermissions(user?.role || 'employee');
@@ -56,11 +57,26 @@ export default function LeadsList() {
     enabled: !!user,
   });
 
-  const filtered = leads.filter((l: any) =>
-    !search ||
-    l.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-    l.phone_no?.includes(search)
+  const brokerOptions = Array.from(
+    new Map(
+      leads
+        .filter((lead: any) => lead.creator_role === 'broker' && lead.creator_name)
+        .map((lead: any) => [String(lead.created_by), { id: String(lead.created_by), name: lead.creator_name }])
+    ).values()
   );
+
+  const filtered = leads.filter((l: any) => {
+    const matchesSearch =
+      !search ||
+      l.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
+      l.phone_no?.includes(search);
+
+    const matchesBroker =
+      selectedBroker === 'all' ||
+      (l.creator_role === 'broker' && String(l.created_by) === selectedBroker);
+
+    return matchesSearch && matchesBroker;
+  });
 
   return (
     <div className="pb-20 lg:pb-0">
@@ -77,15 +93,30 @@ export default function LeadsList() {
       </div>
 
       <div className="stat-card mb-4">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by name or phone..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by name or phone..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div className="sm:w-72 relative">
+            <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <select
+              value={selectedBroker}
+              onChange={e => setSelectedBroker(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent appearance-none"
+            >
+              <option value="all">All Brokers</option>
+              {brokerOptions.map((broker) => (
+                <option key={broker.id} value={broker.id}>{broker.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
