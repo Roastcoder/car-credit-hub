@@ -309,7 +309,8 @@ export default function LeadDetail() {
             {user?.role !== 'broker' && (
               <>
                 <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />
-                <Field label="Manager Name" value={lead.manager_name} />
+                <Field label="Branch Manager" value={lead.branch_manager_name || lead.manager_name} />
+                <Field label="Referred By" value={lead.referred_by_name} />
               </>
             )}
           </div>
@@ -323,6 +324,7 @@ export default function LeadDetail() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Our Branch" value={lead.our_branch} />
             {user?.role !== 'broker' && <Field label="Sourcing Person" value={lead.sourcing_person_name} />}
+            {user?.role !== 'broker' && <Field label="Lead Creator" value={lead.creator_name} />}
             <Field label="Created" value={new Date(lead.created_at).toLocaleDateString('en-IN')} />
             <Field label="Last Updated" value={new Date(lead.updated_at).toLocaleDateString('en-IN')} />
           </div>
