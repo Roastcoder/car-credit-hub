@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS } from '@/lib/constants';
+import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
@@ -478,13 +478,12 @@ export default function CreateLoan() {
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
-    const verticalToUse = form.financierTeamVertical || form.vertical;
-    return calculateAdvancedCommission(financierName, verticalToUse, Number(form.loanAmount) || 0, calculatedTenure);
-  }, [form.assignedBankId, form.financierTeamVertical, form.vertical, form.loanAmount, calculatedTenure, banks]);
+    return calculateAdvancedCommission(financierName, form.vertical, Number(form.loanAmount) || 0, calculatedTenure);
+  }, [form.assignedBankId, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
   const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
-  const effectiveVertical = form.financierTeamVertical || form.vertical || '';
+  const effectiveVertical = form.vertical || '';
 
   const uploadDocuments = async (loanId: string) => {
     const documents = [
@@ -987,6 +986,15 @@ export default function CreateLoan() {
               </div>
               <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
               <div><label className={labelClass}>Disbursement Branch</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} /></div>
+              <div>
+                <label className={labelClass}>Financier Team Vertical</label>
+                <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
+                  <option value="">Select Financier Team Vertical</option>
+                  {FINANCIER_TEAM_VERTICAL_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className={labelClass}>Vertical (Read only)</label>
                 <input disabled className={`${inputClass} bg-muted/30 cursor-not-allowed`} value={form.vertical} />

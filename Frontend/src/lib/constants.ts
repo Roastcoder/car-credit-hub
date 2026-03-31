@@ -80,6 +80,14 @@ export const VERTICALS = [
   'LCV', 'HCV', 'Car', 'Tractor', 'CE', 'Two Wheeler', 'Three Wheeler'
 ];
 
+export const FINANCIER_TEAM_VERTICAL_OPTIONS = [
+  { value: 'LCV', label: 'LCV (Light Commercial Vehicle)' },
+  { value: 'HCV', label: 'HCV (Heavy Commercial Vehicle)' },
+  { value: 'Car', label: 'Car' },
+  { value: 'Tractor', label: 'Tractor' },
+  { value: 'CE', label: 'CE (Construction Equipment)' },
+];
+
 export const SCHEMES = [
   'Purchase', 'BT', 'Purchase & BT', 'Refinance', 'SHSV/SHOV'
 ];
