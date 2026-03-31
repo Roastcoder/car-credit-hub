@@ -41,7 +41,7 @@ export default function CreateLoan() {
     // EMI Details
     irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
-    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: 'MEH', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
+    assignedBankId: '', assignedBrokerId: '', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
     insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
     // Deductions & Disbursement Details
@@ -484,6 +484,7 @@ export default function CreateLoan() {
 
   const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
+  const effectiveVertical = form.financierTeamVertical || form.vertical || '';
 
   const uploadDocuments = async (loanId: string) => {
     const documents = [
@@ -634,7 +635,7 @@ export default function CreateLoan() {
           purpose_loan_amount: form.purposeLoanAmount || null,
           emi_mode: form.emiMode || 'Monthly',
           financier_executive_name: form.financierExecutiveName || null,
-          financier_team_vertical: 'MEH',
+          financier_team_vertical: effectiveVertical || null,
           disburse_branch_name: form.disburseBranchName || null,
           hpn_at_login: form.hpnAtLogin || null,
           is_financed: form.isFinanced || null,
