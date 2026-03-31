@@ -191,7 +191,6 @@ export default function LoanDetail() {
   });
 
 
-  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
@@ -255,11 +254,11 @@ export default function LoanDetail() {
         ? doc.file_url
         : `${baseUrl}${normalizedPath}`;
 
-      console.log('Preview URL:', fileUrl);
-      setPreviewDoc({ url: fileUrl, name: doc.document_name || doc.file_name });
+      console.log('Opening in new tab:', fileUrl);
+      window.open(fileUrl, '_blank');
     } catch (error) {
-      console.error('Preview error:', error);
-      toast.error('Failed to load document');
+      console.error('View error:', error);
+      toast.error('Failed to open document');
     } finally {
       setLoadingPreview(null);
     }
@@ -956,7 +955,6 @@ export default function LoanDetail() {
         </div>
       )}
 
-      {/* Remarks Modal */}
       <RemarksModal
         open={remarksModal.open}
         onClose={() => setRemarksModal({ open: false, currentRemarks: '' })}
@@ -967,59 +965,6 @@ export default function LoanDetail() {
           setRemarksModal({ open: false, currentRemarks: '' });
         }}
       />
-
-      {/* Document Preview Modal */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground truncate">
-                {previewDoc.name}
-              </h3>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <X size={20} className="text-muted-foreground" />
-              </button>
-            </div>
-            <div className="p-4 max-h-[calc(90vh-80px)] overflow-auto">
-              {previewDoc.url.toLowerCase().includes('.pdf') ? (
-                <iframe
-                  src={previewDoc.url}
-                  className="w-full h-[600px] border border-border rounded-lg"
-                  title={previewDoc.name}
-                />
-              ) : (
-                <img
-                  src={previewDoc.url}
-                  alt={previewDoc.name}
-                  className="max-w-full h-auto rounded-lg"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-document.png';
-                  }}
-                />
-              )}
-            </div>
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-border">
-              <a
-                href={previewDoc.url}
-                download={previewDoc.name}
-                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity"
-              >
-                <Download size={16} />
-                Download
-              </a>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="px-4 py-2 border border-border bg-card text-foreground rounded-lg hover:bg-muted transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
