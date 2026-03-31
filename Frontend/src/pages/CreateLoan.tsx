@@ -39,7 +39,7 @@ export default function CreateLoan() {
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
     fcAmount: '', fcDate: '',
     // EMI Details
-    irr: '', tenure: '60', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
+    irr: '', tenure: '60', emiAmount: '', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
     // Financier Details
     assignedBankId: '', assignedBrokerId: '', bookingMode: 'self', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
     // Insurance Details
@@ -356,6 +356,7 @@ export default function CreateLoan() {
         rtoPapers: existingLoan.rto_papers || '',
         irr: String(existingLoan.irr || existingLoan.interest_rate || ''),
         tenure: String(existingLoan.tenure || '60'),
+        emiAmount: String(existingLoan.emi || existingLoan.emi_amount || ''),
         emiMode: existingLoan.emi_mode || 'Monthly',
         emiStartDate: formatDate(existingLoan.emi_start_date),
         emiEndDate: formatDate(existingLoan.emi_end_date),
@@ -596,7 +597,7 @@ export default function CreateLoan() {
           engine_number: form.engineNumber || null,
           vertical: form.vertical || effectiveVertical || null,
           scheme: form.scheme || null,
-          emi_amount: emi || null,
+          emi_amount: Number(form.emiAmount) || emi || null,
           total_emi: calculatedTenure || null,
           total_interest: (totalInterest > 0 ? totalInterest : null),
           irr: Number(form.irr) || null,
@@ -604,7 +605,7 @@ export default function CreateLoan() {
           emi_start_date: form.emiStartDate || null,
           emi_end_date: form.emiEndDate || null,
           processing_fee: Number(form.processingFee) || null,
-          emi: emi || null,
+          emi: Number(form.emiAmount) || emi || null,
           interest_rate: Number(form.irr) || null,
           assigned_bank_id: form.assignedBankId || null,
           assigned_broker_id: form.bookingMode === 'broker' ? (form.assignedBrokerId || null) : null,
@@ -941,8 +942,9 @@ export default function CreateLoan() {
             </div>
 
             {/* EMI Details */}
-            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} /></div>
+              <div><label className={labelClass}>Manual EMI (₹)</label><input type="number" className={inputClass} value={form.emiAmount} onChange={e => update('emiAmount', e.target.value)} placeholder="Auto-calculated" /></div>
               <div>
                 <label className={labelClass}>Tenure (Months) *</label>
                 {!showCustomTenure ? (
@@ -971,11 +973,12 @@ export default function CreateLoan() {
 
             {emi > 0 && (
               <div className="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
-                <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider text-xs">EMI Calculator</span></div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Monthly EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
+                <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider">EMI Calculator Preview</span></div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Calculated EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
                   <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
                   <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
+                  <button type="button" onClick={() => update('emiAmount', String(emi))} className="h-full px-4 rounded-lg bg-accent text-accent-foreground font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"><Calculator size={16} /> Apply EMI</button>
                 </div>
               </div>
             )}
