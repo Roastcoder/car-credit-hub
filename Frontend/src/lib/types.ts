@@ -1,13 +1,20 @@
 export type LoanStatus =
   | 'draft'
+  | 'submitted'
   | 'under_review'
+  | 'manager_review'
+  | 'manager_approved'
+  | 'admin_approved'
   | 'approved'
   | 'disbursed'
   | 'sent_back'
+  | 'sent_back_employee'
+  | 'sent_back_manager'
+  | 'sent_back_admin'
   | 'rejected'
   | 'cancelled';
 
-export type LoanStatusFilter = 'all' | 'draft' | 'under_review' | 'approved' | 'disbursed' | 'sent_back' | 'rejected' | 'cancelled';
+export type LoanStatusFilter = 'all' | LoanStatus;
 
 export interface WorkflowAuditLog {
   id: string;

@@ -89,7 +89,7 @@ export default function Loans() {
   const canCreateLoan = permissions.canCreateLoan;
   const hasFinalLoanNumber = (loan: any) => Boolean(
     loan.loan_number &&
-    loan.status === 'disbursed' &&
+    (loan.status === 'approved' || loan.status === 'disbursed') &&
     !loan.loan_number.startsWith('APP-') &&
     !loan.loan_number.startsWith('TEMP-')
   );
@@ -443,7 +443,9 @@ export default function Loans() {
                                 disabled={updateStatus.isPending}
                                 className="px-2 py-1 rounded-md border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent"
                               >
-                                {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                {LOAN_STATUSES
+                                  .filter(s => s.value !== 'disbursed' || loan.status === 'disbursed')
+                                  .map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                               </select>
                             )}
                           </div>

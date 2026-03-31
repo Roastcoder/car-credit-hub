@@ -293,7 +293,7 @@ export default function LoanDetail() {
 
   const hasFinalLoanNumber = Boolean(
     (loan as any).loan_number &&
-    loan.status === 'disbursed' &&
+    (loan.status === 'approved' || loan.status === 'disbursed') &&
     !(loan as any).loan_number.startsWith('APP-') &&
     !(loan as any).loan_number.startsWith('TEMP-')
   );

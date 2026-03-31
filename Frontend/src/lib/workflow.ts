@@ -216,6 +216,7 @@ export class WorkflowService {
       'manager_approved': 60,
       'admin_approved': 80,
       'disbursed': 100,
+      'sent_back': 15,
       'sent_back_employee': 15,
       'sent_back_manager': 35,
       'sent_back_admin': 55,
