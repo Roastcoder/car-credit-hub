@@ -6,18 +6,10 @@ import {
   CreditCard, FileText, TrendingUp, Receipt, Activity, Clock
 } from 'lucide-react';
 
-interface SideNavItem {
-  label: string;
-  path: string;
-  icon: React.ReactNode;
-  description: string;
-}
-
 export default function AccountDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sideNavOpen, setSideNavOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     waiting_for_voucher: 0,
@@ -26,8 +18,6 @@ export default function AccountDashboard() {
     total_completed: 0,
     total_disbursed: 0
   });
-  const [recentTransactions, setRecentTransactions] = useState([]);
-
   const isOverviewPage = location.pathname === '/account';
 
   useEffect(() => {
@@ -46,7 +36,6 @@ export default function AccountDashboard() {
       ]);
       
       setStats(paymentStats);
-      setRecentTransactions(overviewData.recentTransactions);
     } catch (error) {
       console.error('Error fetching account overview:', error);
     } finally {
@@ -119,56 +108,6 @@ export default function AccountDashboard() {
                     {formatCurrency(Number(stats.total_disbursed || 0))}
                   </p>
                   <p className="text-[10px] text-gray-500 mt-0.5">From {stats.total_completed} apps</p>
-                </div>
-              </div>
-            )}
-
-            {/* Branch Summary - Centralized View */}
-            {branchSummary.length > 0 && (
-              <div className="glass-card rounded-2xl border border-white/20 dark:border-white/10 mb-8">
-                <div className="p-6 border-b border-white/20 dark:border-white/10">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Branch-wise Payment Summary</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Centralized account department managing all branches</p>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {branchSummary.map((branch: any) => (
-                      <div key={branch.branch_id} className="p-4 rounded-xl bg-white/20 dark:bg-white/5 border border-white/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">{branch.branch_name}</h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{branch.branch_code}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                              {branch.total_payment_applications}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Applications</p>
-                          </div>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white">
-                              {formatCurrency(parseFloat(branch.total_payment_amount))}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Pending:</span>
-                            <span className="text-yellow-600 dark:text-yellow-400 font-medium">
-                              {branch.pending_approvals}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Ready:</span>
-                            <span className="text-green-600 dark:text-green-400 font-medium">
-                              {branch.ready_for_processing}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
