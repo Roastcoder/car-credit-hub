@@ -424,16 +424,6 @@ export default function LoanDetail() {
             />
             {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
               <>
-                <select
-                  value={loan.status}
-                  onChange={e => updateStatus.mutate(e.target.value)}
-                  disabled={updateStatus.isPending}
-                  className="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground focus:outline-none focus:border-accent transition-colors"
-                >
-                  {LOAN_STATUSES.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
                 <button
                   onClick={() => navigate(`/loans/${id}/edit`)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
@@ -453,13 +443,13 @@ export default function LoanDetail() {
               </>
             )}
             
-            {loan.status === 'disbursed' && (
+            {['approved', 'disbursed'].includes(loan.status) && (
               <button
-                onClick={() => navigate(`/payments/applications/loan/${loan.id}`)}
+                onClick={() => navigate(`/payments/loan/${loan.id}`)}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 shadow-md transition-all active:scale-95"
               >
                 <CreditCard size={14} className="mr-1" />
-                Create Payment Application
+                Create Account Request
               </button>
             )}
           </div>
@@ -580,6 +570,8 @@ export default function LoanDetail() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
               <Field label="Application ID" value={applicationIdentifier} />
+              <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
+              <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
               <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
               {user?.role !== 'broker' ? (
                 <>
@@ -611,7 +603,7 @@ export default function LoanDetail() {
           <Section title="Bank Information" icon={<Building2 size={16} />}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
-              {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).assigned_broker_name || loan.assignedBroker || '—'} />}
+              {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
               {user?.role !== 'broker' && (
                 <>
                   <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />

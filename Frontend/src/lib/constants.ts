@@ -13,8 +13,8 @@ export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[
 export const WORKFLOW_STEPS = [
   { status: 'submitted', label: 'Submitted', description: 'Application created by employee', role: 'Employee' },
   { status: 'under_review', label: 'Admin Review', description: 'Admin is reviewing application', role: 'Admin' },
-  { status: 'approved', label: 'Approved', description: 'Ready for disbursement', role: 'Admin' },
-  { status: 'disbursed', label: 'Disbursed', description: 'Final disbursement by Admin', role: 'Admin' },
+  { status: 'approved', label: 'Approved', description: 'Ready for accounts request', role: 'Admin' },
+  { status: 'disbursed', label: 'Disbursed', description: 'Marked by accounts after transfer', role: 'Accounts' },
 ];
 
 export const WORKFLOW_CONFIG = {
@@ -34,7 +34,6 @@ export const WORKFLOW_CONFIG = {
     canCreate: false,
     actions: [
       { action: 'approve', nextStatus: 'approved', nextOwner: 'admin', label: 'Approve', type: 'forward', requiresRemarks: true },
-      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Mark as Disbursed', type: 'forward', requiresRemarks: true },
       { action: 'send_back', nextStatus: 'sent_back', nextOwner: 'employee', label: 'Send Back to Employee', type: 'back', requiresRemarks: true },
       { action: 'reject', nextStatus: 'rejected', nextOwner: 'employee', label: 'Reject Application', type: 'back', requiresRemarks: true },
     ],
@@ -42,7 +41,6 @@ export const WORKFLOW_CONFIG = {
   super_admin: {
     canCreate: false,
     actions: [
-      { action: 'disburse', nextStatus: 'disbursed', nextOwner: 'admin', label: 'Disburse', type: 'forward', requiresRemarks: true },
       { action: 'send_back', nextStatus: 'sent_back', nextOwner: 'employee', label: 'Send Back', type: 'back', requiresRemarks: true },
     ],
   },

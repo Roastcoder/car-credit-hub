@@ -5,8 +5,8 @@ import { ROLE_LABELS } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
-  LogOut, Menu, X, Car, Bell, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, User, Wallet,
-  Activity, TrendingUp, Receipt, Landmark, BookOpen, PieChart, Clock, Target, Calculator, DollarSign
+  LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
+  Activity, Receipt
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -57,13 +57,8 @@ const NAV_ITEMS: NavItem[] = [
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
   { title: 'Overview', path: '/account', icon: Activity, roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Process Payments', path: '/payments', icon: CreditCard, roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Receivables', path: '/account/receivables', icon: TrendingUp, roles: ['accountant'] },
-  { title: 'Payables', path: '/account/payables', icon: Receipt, roles: ['accountant'] },
-  { title: 'Payment Vouchers', path: '/account/vouchers', icon: FileText, roles: ['accountant'] },
-  { title: 'General Ledger', path: '/account/ledger', icon: BookOpen, roles: ['accountant'] },
-  { title: 'Financial Reports', path: '/account/reports', icon: BarChart3, roles: ['accountant'] },
-  { title: 'Audit Trail', path: '/account/audit', icon: Clock, roles: ['accountant'] },
+  { title: 'Payment Requests', path: '/payments', icon: CreditCard, roles: ['accountant', 'admin', 'super_admin'] },
+  { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, roles: ['accountant', 'admin', 'super_admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -82,6 +77,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   const filteredNav = getNavItems().filter(item => !user.role || item.roles.includes(user.role));
+
+  const isPathActive = (itemPath: string) => {
+    if (location.pathname === itemPath) return true;
+    if (itemPath === '/account') return location.pathname === '/account';
+    return location.pathname.startsWith(`${itemPath}/`);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -120,9 +121,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 relative z-10">
           {filteredNav.map(item => {
-            const isAccountantLink = item.path.startsWith('/account');
             const hasActiveChild = !!item.children?.some((child) => location.pathname === child.path);
-            const isActive = location.pathname === item.path || (isAccountantLink && location.pathname.startsWith('/account')) || hasActiveChild;
+            const isActive = isPathActive(item.path) || hasActiveChild;
             const IconComponent = item.icon;
 
             return (

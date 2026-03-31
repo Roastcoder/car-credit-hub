@@ -161,9 +161,9 @@ export class WorkflowService {
   static getVisibleLoansForRole(userRole: string): string[] {
     switch (userRole) {
       case 'employee':
-        return ['draft', 'submitted', 'sent_back_employee', 'rejected', 'cancelled', 'disbursed'];
+        return ['draft', 'submitted', 'approved', 'sent_back_employee', 'rejected', 'cancelled', 'disbursed'];
       case 'manager':
-        return ['submitted', 'manager_review', 'under_review', 'sent_back_manager', 'disbursed'];
+        return ['submitted', 'manager_review', 'under_review', 'approved', 'sent_back_manager', 'disbursed'];
       case 'admin':
         return ['manager_approved', 'approved', 'sent_back_admin', 'disbursed'];
       case 'broker':

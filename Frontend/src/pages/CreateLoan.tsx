@@ -361,7 +361,7 @@ export default function CreateLoan() {
         emiEndDate: formatDate(existingLoan.emi_end_date),
         assignedBankId: existingLoan.assigned_bank_id || '',
         assignedBrokerId: existingLoan.assigned_broker_id || '',
-        bookingMode: existingLoan.booking_mode || (existingLoan.assigned_broker_id ? 'broker' : 'self'),
+        bookingMode: existingLoan.assigned_broker_id ? 'broker' : (existingLoan.booking_mode || 'self'),
         financierExecutiveName: existingLoan.financier_executive_name || '',
         financierTeamVertical: existingLoan.financier_team_vertical || '',
         disburseBranchName: existingLoan.disburse_branch_name || '',

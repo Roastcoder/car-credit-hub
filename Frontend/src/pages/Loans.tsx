@@ -272,6 +272,10 @@ export default function Loans() {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Branch</p>
                   <p className="text-foreground truncate">{loan.branch_name || '—'}</p>
                 </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Created By</p>
+                  <p className="text-foreground truncate">{loan.creator_name || loan.user_name || '—'}</p>
+                </div>
               </div>
               <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-2" onClick={e => e.stopPropagation()}>
                 <button
@@ -376,6 +380,7 @@ export default function Loans() {
                       <td className="py-3.5 px-3">
                         <p className="font-medium text-foreground">{loan.applicant_name}</p>
                         <p className="text-xs text-muted-foreground">{loan.mobile}</p>
+                        <p className="text-xs text-muted-foreground">Created by: {loan.creator_name || loan.user_name || '—'}</p>
                       </td>
                       <td className="py-3.5 px-3">
                         <p className="text-foreground">{loan.maker_name || loan.car_make} {loan.model_variant_name || loan.car_model}</p>

@@ -166,6 +166,9 @@ export default function PaymentApplicationForm() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [loanId, id]);
 
+  const editableStatuses = ['draft', 'submitted', 'manager_rejected'];
+  const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status);
+
   const fetchApplicationData = async () => {
     try {
       const data = await paymentApplicationAPI.getById(parseInt(id || '0'));
@@ -333,6 +336,7 @@ export default function PaymentApplicationForm() {
   };
 
   const handlePddDocumentToggle = (docIdentifier: string) => {
+    if (isReadOnly) return;
     setSelectedPddDocs(prev => {
       const updated = prev.includes(docIdentifier)
         ? prev.filter(doc => doc !== docIdentifier)
@@ -348,11 +352,13 @@ export default function PaymentApplicationForm() {
   };
 
   const handleBankingDocUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isReadOnly) return;
     const files = Array.from(e.target.files || []);
     setBankingDocs(prev => [...prev, ...files]);
   };
 
   const removeBankingDoc = (index: number) => {
+    if (isReadOnly) return;
     setBankingDocs(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -477,6 +483,11 @@ export default function PaymentApplicationForm() {
       </div>
 
       <form className="space-y-8">
+        {isReadOnly && (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-300">
+            This request is closed after accounts processing. Voucher, UTR, and proof can still be viewed from the payment detail page, but the form is now read-only.
+          </div>
+        )}
         {/* 1. Customer Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
@@ -484,10 +495,10 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">1. Customer Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Customer Name" name="applicant_name" value={formData.applicant_name} onChange={handleInputChange} required />
+            <FormField label="Customer Name" name="applicant_name" value={formData.applicant_name} onChange={handleInputChange} required disabled={isReadOnly} />
             <FormField label="Loan Number" name="loan_number" value={formData.loan_number} onChange={handleInputChange} disabled />
-            <FormField label="Mobile Number" name="applicant_phone" value={formData.applicant_phone} onChange={handleInputChange} required />
-            <FormSelect label="KYC Documents" name="kyc_documents" value={formData.kyc_documents} onChange={handleInputChange} options={['Yes', 'No']} />
+            <FormField label="Mobile Number" name="applicant_phone" value={formData.applicant_phone} onChange={handleInputChange} required disabled={isReadOnly} />
+            <FormSelect label="KYC Documents" name="kyc_documents" value={formData.kyc_documents} onChange={handleInputChange} options={['Yes', 'No']} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -498,16 +509,16 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Loan Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} />
-            <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} />
-            <FormField label="Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} />
-            <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} />
-            <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} />
-            <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} />
-            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} />
-            <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} />
-            <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} />
-            <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} />
+            <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
+            <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -518,10 +529,10 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Vehicle Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} />
-            <FormField label="Vehicle Model" name="vehicle_model" value={formData.vehicle_model} onChange={handleInputChange} />
-            <FormField label="Vehicle Number" name="vehicle_number" value={formData.vehicle_number} onChange={handleInputChange} />
-            <FormField label="Vehicle Type" name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} />
+            <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Vehicle Model" name="vehicle_model" value={formData.vehicle_model} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Vehicle Number" name="vehicle_number" value={formData.vehicle_number} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Vehicle Type" name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -532,9 +543,9 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Branch & Manager Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} />
-            <FormField label="Disbursement Branch" name="disbursement_branch" value={formData.disbursement_branch} onChange={handleInputChange} />
-            <FormField label="Branch Manager Name" name="branch_manager_name" value={formData.branch_manager_name} onChange={handleInputChange} />
+            <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Disbursement Branch" name="disbursement_branch" value={formData.disbursement_branch} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Branch Manager Name" name="branch_manager_name" value={formData.branch_manager_name} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -545,11 +556,11 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">5. RTO Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} />
-            <FormField label="RTO Mobile Number" name="rto_mobile" value={formData.rto_mobile} onChange={handleInputChange} />
-            <FormField label="DTO Location" name="dto_location" value={formData.dto_location} onChange={handleInputChange} />
-            <FormField label="RTO Work" name="rto_work_type" value={formData.rto_work_type} onChange={handleInputChange} />
-            <FormField label="RTO Document Location" name="rto_doc_location" value={formData.rto_doc_location} onChange={handleInputChange} />
+            <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="RTO Mobile Number" name="rto_mobile" value={formData.rto_mobile} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="DTO Location" name="dto_location" value={formData.dto_location} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="RTO Work" name="rto_work_type" value={formData.rto_work_type} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="RTO Document Location" name="rto_doc_location" value={formData.rto_doc_location} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -560,13 +571,13 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">6. Document & Status Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} />
-            <FormSelect label="NOC Status" name="noc_status" value={formData.noc_status} onChange={handleInputChange} options={['Pending', 'OK']} />
-            <FormField label="Checked By (NOC Status)" name="noc_checked_by" value={formData.noc_checked_by} onChange={handleInputChange} />
-            <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} />
-            <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} />
-            <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} />
-            <FormCheckbox label="Third Party" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} />
+            <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
+            <FormSelect label="NOC Status" name="noc_status" value={formData.noc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
+            <FormField label="Checked By (NOC Status)" name="noc_checked_by" value={formData.noc_checked_by} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormCheckbox label="Third Party" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -577,10 +588,10 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">7. Payment & Foreclosure Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} />
-            <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} />
-            <FormField label="Old Payment Release Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} />
-            <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} />
+            <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Old Payment Release Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
               <label className="text-xs font-semibold text-blue-600 uppercase mb-1 block text-left">Total Payment Release Amount</label>
               <p className="text-xl font-bold text-blue-900 dark:text-blue-100 text-left">₹{formData.total_release_amount?.toLocaleString()}</p>
@@ -599,12 +610,12 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField label="Hold Amount" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} />
+            <FormField label="Hold Amount" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
               <label className="text-xs font-semibold text-yellow-600 uppercase mb-1 block text-left">Hold Amount (%)</label>
               <p className="text-xl font-bold text-yellow-900 dark:text-yellow-100 text-left">{formData.hold_percentage}%</p>
             </div>
-            <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} />
+            <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -616,12 +627,12 @@ export default function PaymentApplicationForm() {
             <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FormField label="Payment In Favour (Beneficiary Name) *" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} required placeholder="Enter beneficiary name" />
-            <FormField label="Bank Name *" name="bank_name" value={formData.bank_name} onChange={handleInputChange} required placeholder="Enter bank name" />
-            <FormField label="Account Number *" name="account_number" value={formData.account_number} onChange={handleInputChange} required placeholder="Enter account number" />
-            <FormField label="IFSC Code *" name="ifsc_code" value={formData.ifsc_code} onChange={handleInputChange} required placeholder="e.g. SBIN0001234" />
-            <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" />
-            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} />
+            <FormField label="Payment In Favour (Beneficiary Name) *" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} required placeholder="Enter beneficiary name" disabled={isReadOnly} />
+            <FormField label="Bank Name *" name="bank_name" value={formData.bank_name} onChange={handleInputChange} required placeholder="Enter bank name" disabled={isReadOnly} />
+            <FormField label="Account Number *" name="account_number" value={formData.account_number} onChange={handleInputChange} required placeholder="Enter account number" disabled={isReadOnly} />
+            <FormField label="IFSC Code *" name="ifsc_code" value={formData.ifsc_code} onChange={handleInputChange} required placeholder="e.g. SBIN0001234" disabled={isReadOnly} />
+            <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" disabled={isReadOnly} />
+            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
@@ -672,16 +683,16 @@ export default function PaymentApplicationForm() {
             {/* Banking Docs */}
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Banking Documents</label>
-              <input type="file" id="banking-docs" multiple onChange={handleBankingDocUpload} className="hidden" />
-              <label htmlFor="banking-docs" className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+              <input type="file" id="banking-docs" multiple onChange={handleBankingDocUpload} className="hidden" disabled={isReadOnly} />
+              <label htmlFor="banking-docs" className={`flex items-center justify-center p-4 border-2 border-dashed rounded-lg transition-colors ${isReadOnly ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-900/30 dark:border-gray-800' : 'border-gray-300 rounded-lg cursor-pointer hover:border-blue-500'}`}>
                 <Upload size={20} className="mr-2 text-gray-400" />
-                <span className="text-sm text-gray-500">Upload bank docs</span>
+                <span className="text-sm text-gray-500">{isReadOnly ? 'Closed for upload' : 'Upload bank docs'}</span>
               </label>
               <div className="mt-2 space-y-1">
                 {bankingDocs.map((file, i) => (
                   <div key={i} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <span className="truncate">{file.name}</span>
-                    <X size={14} className="text-red-500 cursor-pointer" onClick={() => removeBankingDoc(i)} />
+                    {!isReadOnly && <X size={14} className="text-red-500 cursor-pointer" onClick={() => removeBankingDoc(i)} />}
                   </div>
                 ))}
               </div>
@@ -695,6 +706,7 @@ export default function PaymentApplicationForm() {
               value={formData.remarks}
               onChange={handleInputChange}
               rows={3}
+              disabled={isReadOnly}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               placeholder="Additional information..."
             />
@@ -710,22 +722,26 @@ export default function PaymentApplicationForm() {
           >
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('draft')}
-            disabled={loading}
-            className="px-8 py-3 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-semibold disabled:opacity-50"
-          >
-            Save Draft
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('submitted')}
-            disabled={loading}
-            className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
-          >
-            {loading ? 'Submitting...' : 'Submit Now'}
-          </button>
+          {!isReadOnly && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSubmit('draft')}
+                disabled={loading}
+                className="px-8 py-3 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition-all font-semibold disabled:opacity-50"
+              >
+                Save Draft
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSubmit('submitted')}
+                disabled={loading}
+                className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
+              >
+                {loading ? 'Submitting...' : 'Submit Now'}
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>
@@ -758,7 +774,7 @@ function FormField({ label, name, type = 'text', value, onChange, disabled, requ
   );
 }
 
-function FormSelect({ label, name, value, onChange, options }: any) {
+function FormSelect({ label, name, value, onChange, options, disabled }: any) {
   return (
     <div className="space-y-1.5 text-left">
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>
@@ -766,7 +782,8 @@ function FormSelect({ label, name, value, onChange, options }: any) {
         name={name}
         value={value || ''}
         onChange={onChange}
-        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        disabled={disabled}
+        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
       >
         {options.map((opt: string) => (
           <option key={opt} value={opt}>{opt}</option>
@@ -776,14 +793,15 @@ function FormSelect({ label, name, value, onChange, options }: any) {
   );
 }
 
-function FormCheckbox({ label, name, checked, onChange }: any) {
+function FormCheckbox({ label, name, checked, onChange, disabled }: any) {
   return (
-    <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all cursor-pointer">
+    <div className={`flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg transition-all ${disabled ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer'}`}>
       <input
         type="checkbox"
         id={name}
         name={name}
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange({ target: { name, value: e.target.checked, type: 'checkbox' } })}
         className="h-5 w-5 rounded text-blue-600 border-gray-300"
       />
