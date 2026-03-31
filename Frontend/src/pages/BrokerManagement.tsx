@@ -43,11 +43,25 @@ export default function BrokerManagement() {
     setModalOpen(true);
   };
 
-  const filtered = (brokers as any[]).filter(b =>
-    b.name.toLowerCase().includes(search.toLowerCase()) ||
-    (b.area || '').toLowerCase().includes(search.toLowerCase()) ||
-    (b.dsa_code || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = (brokers as any[])
+    .filter(b =>
+      b.name.toLowerCase().includes(search.toLowerCase()) ||
+      (b.area || '').toLowerCase().includes(search.toLowerCase()) ||
+      (b.dsa_code || '').toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const numA = parseInt(a.dsa_code?.replace(/^\D+/g, '')) || 0;
+      const numB = parseInt(b.dsa_code?.replace(/^\D+/g, '')) || 0;
+      return numA - numB;
+    });
+
+  const formatDSACode = (code: string) => {
+    if (!code || !code.startsWith('MEH')) return code || '—';
+    const number = code.replace(/^\D+/g, '');
+    const prefixMatch = code.match(/^MEH([A-Z]+)/);
+    const initials = prefixMatch ? prefixMatch[1] : '';
+    return `MEH${initials}${number}`;
+  };
 
   const totalPending = (loans as any[])
     .filter(l => l.status !== 'disbursed')
@@ -106,7 +120,7 @@ export default function BrokerManagement() {
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">{b.dsa_code && <span className="text-accent font-medium">{b.dsa_code} • </span>}{b.email || b.phone || '—'}</p>
+                      <p className="text-xs text-muted-foreground">{b.dsa_code && <span className="text-accent font-medium">{formatDSACode(b.dsa_code)} • </span>}{b.email || b.phone || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -164,7 +178,7 @@ export default function BrokerManagement() {
                           </div>
                         </div>
                        </td>
-                      <td className="py-3 px-3 text-accent font-medium mono text-xs">{b.dsa_code || '—'}</td>
+                      <td className="py-3 px-3 text-accent font-medium mono text-xs">{formatDSACode(b.dsa_code)}</td>
                       <td className="py-3 px-3 text-muted-foreground">{b.area || '—'}</td>
                       <td className="py-3 px-3 text-muted-foreground mono text-xs">{b.phone || '—'}</td>
                       <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>

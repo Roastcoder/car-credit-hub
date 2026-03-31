@@ -85,7 +85,7 @@ export const SCHEMES = [
 ];
 
 export const LOAN_TYPES = [
-  'New Vehicle Loan', 'Used Vehicle Loan', 'Top-up', 'Refinance', 'Purchase and Refinance'
+  'New Vehicle Loan', 'Used Vehicle Loan'
 ];
 
 export const INSURANCE_MADE_BY_OPTIONS = [
