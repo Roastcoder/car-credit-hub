@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [adminFilterMode, setAdminFilterMode] = useState<'all' | 'month' | 'day'>('all');
   const [selectedMonth, setSelectedMonth] = useState(todayString.slice(0, 7));
   const [selectedDay, setSelectedDay] = useState(todayString);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   const { data: loans = [], isLoading: isLoadingLoans } = useQuery({
     queryKey: ['loans-dashboard', user?.branch_id],
@@ -104,8 +105,13 @@ export default function Dashboard() {
     };
   }).filter((item) => item.count > 0);
 
+  const displayLoans = useMemo(() => {
+    if (!selectedStatus) return dashboardLoans;
+    return dashboardLoans.filter((l: any) => l.status === selectedStatus);
+  }, [dashboardLoans, selectedStatus]);
+
   // Consider all loans with a bank assigned for the chart
-  const loansWithBank = dashboardLoans.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name));
+  const loansWithBank = displayLoans.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name));
   const bankNames = [...new Set(loansWithBank.map((l: any) => l.bank_name || l.assigned_bank_name || l.banks?.name).filter(Boolean))];
   const bankData = bankNames.map(bank => ({
     name: (bank as string).replace(' Bank', '').replace(' NBFC', ''),
@@ -203,8 +209,8 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-3 sm:gap-4 mb-6">
               <div
-                onClick={() => navigate(buildLoansFilterUrl())}
-                className="stat-card cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+                onClick={() => setSelectedStatus(null)}
+                className={`stat-card cursor-pointer transition-all ${!selectedStatus ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Total Files</p>
                 <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{totalLoans}</p>
@@ -213,8 +219,8 @@ export default function Dashboard() {
               {statusKpis.map((item) => (
                 <div
                   key={item.value}
-                  onClick={() => navigate(buildLoansFilterUrl(item.value))}
-                  className="stat-card cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+                  onClick={() => setSelectedStatus(selectedStatus === item.value ? null : item.value)}
+                  className={`stat-card cursor-pointer transition-all ${selectedStatus === item.value ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">{item.label}</p>
                   <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{item.count}</p>
@@ -326,8 +332,8 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-6 order-1 lg:order-2">
               <div
-                onClick={() => navigate('/loans')}
-                className="stat-card col-span-2 lg:col-span-1 cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+                onClick={() => setSelectedStatus(null)}
+                className={`stat-card col-span-2 lg:col-span-1 cursor-pointer transition-all ${!selectedStatus ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
@@ -353,8 +359,8 @@ export default function Dashboard() {
               </div>
 
               <div
-                onClick={() => navigate('/loans?status=disbursed')}
-                className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+                onClick={() => setSelectedStatus(selectedStatus === 'disbursed' ? null : 'disbursed')}
+                className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'disbursed' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed Amount</h2>
                 <div className="flex items-end gap-2 mb-1">
@@ -366,8 +372,8 @@ export default function Dashboard() {
                 </div>
               </div>
               <div
-                onClick={() => navigate('/loans?status=under_review')}
-                className="stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all"
+                onClick={() => setSelectedStatus(selectedStatus === 'under_review' ? null : 'under_review')}
+                className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'under_review' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Under Review</h2>
                 <div className="flex items-end gap-2 mb-1">
@@ -422,15 +428,17 @@ export default function Dashboard() {
 
           <div className="stat-card flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Recent Applications</h2>
-              <Link to="/loans" className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
+              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                {selectedStatus ? `${LOAN_STATUSES.find(s => s.value === selectedStatus)?.label || 'Filtered'} Applications` : 'Recent Applications'}
+              </h2>
+              <Link to={buildLoansFilterUrl(selectedStatus || undefined)} className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
                 View all <ChevronRight size={16} />
               </Link>
             </div>
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-sm">
                 <tbody>
-                  {dashboardLoans.slice(0, 5).map((loan: any) => (
+                  {displayLoans.slice(0, 5).map((loan: any) => (
                     <tr key={loan.id} className="border-b border-blue-100 dark:border-blue-900 last:border-0 hover:bg-white/40 dark:hover:bg-blue-900/40 transition-colors">
                       <td className="py-3 px-2">
                         <div className="font-medium text-blue-900 dark:text-blue-200">{loan.applicant_name}</div>
@@ -440,8 +448,8 @@ export default function Dashboard() {
                       <td className="py-3 px-2 text-right"><LoanStatusBadge status={loan.status} /></td>
                     </tr>
                   ))}
-                  {dashboardLoans.length === 0 && (
-                    <tr><td colSpan={3} className="py-8 text-center text-blue-500">No applications yet. <Link to="/loans/new" className="text-primary hover:underline">Create your first loan →</Link></td></tr>
+                  {displayLoans.length === 0 && (
+                    <tr><td colSpan={3} className="py-8 text-center text-blue-500">No applications found.</td></tr>
                   )}
                 </tbody>
               </table>
