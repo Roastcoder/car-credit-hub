@@ -22,8 +22,24 @@ export function calculateEMI(principal: number, rate: number, tenure: number): n
   );
 }
 
+export function normalizeLoanNumberVertical(vertical?: string | null): string | null {
+  if (!vertical) return null;
+
+  const normalized = String(vertical).trim().toUpperCase();
+  const verticalMap: Record<string, string> = {
+    CAR: 'CAR',
+    LCV: 'LCV',
+    HCV: 'HCV',
+    TRACTOR: 'TRACTOR',
+    CE: 'CE',
+  };
+
+  return verticalMap[normalized] || null;
+}
+
 export function generateLoanNumber(vertical: string, lastLoanNumber?: string): string {
-  const prefix = vertical ? `MEH${vertical.toUpperCase()}` : 'MEH';
+  const normalizedVertical = normalizeLoanNumberVertical(vertical);
+  const prefix = normalizedVertical ? `MEH${normalizedVertical}` : 'MEH';
   
   if (!lastLoanNumber) {
     return `${prefix}0001`;

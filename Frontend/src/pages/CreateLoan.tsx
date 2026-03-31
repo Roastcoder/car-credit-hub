@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
-import { calculateEMI, formatCurrency } from '@/lib/utils';
+import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -483,7 +483,7 @@ export default function CreateLoan() {
 
   const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
-  const effectiveVertical = form.vertical || '';
+  const effectiveVertical = normalizeLoanNumberVertical(form.financierTeamVertical || form.vertical) || '';
 
   const uploadDocuments = async (loanId: string) => {
     const documents = [
@@ -590,7 +590,7 @@ export default function CreateLoan() {
           mfg_year: form.mfgYear || null,
           chassis_number: form.chassisNumber || null,
           engine_number: form.engineNumber || null,
-          vertical: form.vertical || null,
+          vertical: form.vertical || effectiveVertical || null,
           scheme: form.scheme || null,
           emi_amount: emi || null,
           total_emi: calculatedTenure || null,
