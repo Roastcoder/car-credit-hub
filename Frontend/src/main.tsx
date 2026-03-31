@@ -1,6 +1,28 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import App from "./App";
 import "./index.css";
-import { requestNotificationPermission, subscribeUserToPush } from "./lib/notifications";
+import { requestNotificationPermission } from "./lib/notifications";
+
+// Register Service Worker and handle updates
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New update available
+              if (window.confirm('A new version of Mehar Finance is available. Reload to update?')) {
+                window.location.reload();
+              }
+            }
+          });
+        }
+      });
+    });
+  });
+}
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'mehar-finance-v2';
+const CACHE_NAME = 'mehar-finance-v3'; // Version bump
 const urlsToCache = [
   '/',
   '/index.html',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -14,12 +15,31 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Don't cache API requests
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url);
+
+  // 1. Don't cache API requests
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
     return;
   }
   
+  // 2. Network-First for HTML (prevents white screen)
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, clonedResponse);
+          });
+          return response;
+        })
+        .catch(() => caches.match('/index.html') || caches.match('/'))
+    );
+    return;
+  }
+
+  // 3. Cache-First for other assets (JS, CSS, Images)
   event.respondWith(
     caches.match(event.request)
       .then((response) => response || fetch(event.request))
