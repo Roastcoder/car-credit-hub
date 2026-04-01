@@ -14,6 +14,7 @@ interface RoleAssignModalProps {
 export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignModalProps) {
   const [role, setRole] = useState(user?.role || 'employee');
   const [branchId, setBranchId] = useState(user?.branch_id || '');
+  const [isBranchManager, setIsBranchManager] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { data: branches = [] } = useQuery({
@@ -31,8 +32,12 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     if (user) {
       setRole(user.role || 'employee');
       setBranchId(user.branch_id || '');
+      
+      // Check if this user is already the manager of their branch
+      const currentBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
+      setIsBranchManager(currentBranch?.manager_id === user.id);
     }
-  }, [user]);
+  }, [user, branches]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,11 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: JSON.stringify({ role, branch_id: branchId || null }),
+        body: JSON.stringify({ 
+          role, 
+          branch_id: branchId || null,
+          is_branch_manager: isBranchManager 
+        }),
       });
       if (!res.ok) throw new Error('Failed to update user');
       
@@ -85,6 +94,22 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
               ))}
             </select>
           </div>
+          {branchId && (
+            <div className="bg-accent/5 p-3 rounded-lg border border-accent/10">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={isBranchManager} 
+                  onChange={e => setIsBranchManager(e.target.checked)} 
+                  className="w-4 h-4 rounded border-border" 
+                />
+                <div>
+                  <span className="text-sm font-semibold text-foreground">Set as Official Branch Manager</span>
+                  <p className="text-[10px] text-muted-foreground">This user will be the main contact for this branch.</p>
+                </div>
+              </label>
+            </div>
+          )}
           <div className="flex gap-3 justify-end pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium">Cancel</button>
             <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold disabled:opacity-60">{loading ? 'Saving...' : 'Save Changes'}</button>
