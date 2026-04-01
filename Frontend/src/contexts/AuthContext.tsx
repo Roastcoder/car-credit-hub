@@ -11,6 +11,7 @@ export interface AppUser {
   phone?: string;
   status?: string;
   branch_id?: number | string;
+  referred_by_name?: string;
 }
 
 interface AuthContextType {
