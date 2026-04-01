@@ -436,6 +436,10 @@ export default function CreateLoan() {
       irr: lead.irr_requested ? String(lead.irr_requested) : '',
       sourcingPersonName: lead.referred_by_name || lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
+      mfgYear: lead.mfg_year || '',
+      rcExpiryDate: lead.rc_expiry_date || '',
+      challan: lead.challan_status || 'No',
+      rtoPapers: lead.rto_papers || 'No',
       fcAmount: '',
       fcDate: '',
     }));

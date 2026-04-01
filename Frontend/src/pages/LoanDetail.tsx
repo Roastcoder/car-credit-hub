@@ -491,8 +491,8 @@ export default function LoanDetail() {
               <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
               {user?.role !== 'broker' && (
                 <>
-                  <Field label="PAN Number" value={(loan as any).pan || '—'} />
-                  <Field label="Aadhaar Number" value={(loan as any).aadhaar || '—'} />
+                  <Field label="PAN Number" value={(loan as any).pan_number || '—'} />
+                  <Field label="Aadhaar Number" value={(loan as any).aadhar_number || '—'} />
                 </>
               )}
               <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
@@ -583,6 +583,8 @@ export default function LoanDetail() {
                   <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
                   <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
                   <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
+                  <Field label="Mfg Year" value={String((loan as any).mfg_year || '—')} />
+                  <Field label="RC Expiry" value={formatDisplayDate((loan as any).rc_expiry_date)} />
                   <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
                   <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
                   <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
@@ -661,6 +663,7 @@ export default function LoanDetail() {
                 </div>
                 <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
                 <Field label="Challans" value={(loan as any).challan_status || 'No'} />
+                <Field label="RTO Papers" value={(loan as any).rto_papers || 'No'} />
                 <Field label="Pollution" value={(loan as any).pollution_status || '—'} />
                 <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
               </div>
