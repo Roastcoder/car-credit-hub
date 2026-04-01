@@ -473,6 +473,31 @@ export default function CreateLoan() {
     return getTenureFromDates(form.emiStartDate, form.emiEndDate) || Number(form.tenure) || 0;
   }, [form.emiEndDate, form.emiStartDate, form.tenure]);
 
+  // Auto-calculate EMI End Date when Start Date or Tenure changes
+  useEffect(() => {
+    if (form.emiStartDate && form.tenure && !isNaN(Number(form.tenure))) {
+      try {
+        const start = new Date(form.emiStartDate);
+        if (isNaN(start.getTime())) return;
+        
+        const months = Number(form.tenure);
+        if (months <= 0) return;
+
+        const end = new Date(start);
+        // Standard calculation: Start Date + Tenure months - 1 day/month
+        // e.g., Jan 1st for 12 months ends on Dec 1st
+        end.setMonth(end.getMonth() + months - 1);
+        
+        const formattedEnd = end.toISOString().split('T')[0];
+        if (form.emiEndDate !== formattedEnd) {
+          update('emiEndDate', formattedEnd);
+        }
+      } catch (error) {
+        console.error('Error calculating EMI end date:', error);
+      }
+    }
+  }, [form.emiStartDate, form.tenure]);
+
   const emi = useMemo(() => {
     const p = Number(form.loanAmount);
     const r = Number(form.irr);
