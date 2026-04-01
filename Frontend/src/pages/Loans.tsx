@@ -249,6 +249,16 @@ export default function Loans() {
                 <div className="flex flex-col items-end gap-1">
                   <LoanStatusBadge status={loan.status} />
                   <PDDStatusBadge status={loan.pdd_status} />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {loan.created_at ? new Date(loan.created_at).toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false
+                    }) : '—'}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -361,6 +371,8 @@ export default function Loans() {
                     {user?.role !== 'broker' && <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>}
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date & Time</th>
+                    {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
                     {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
                     {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
                     <th className="py-3 px-3"></th>
@@ -392,6 +404,16 @@ export default function Loans() {
                       {user?.role !== 'broker' && <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>}
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                       <td className="py-3.5 px-3"><PDDStatusBadge status={loan.pdd_status} /></td>
+                      <td className="py-3.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {loan.created_at ? new Date(loan.created_at).toLocaleString('en-IN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }) : '—'}
+                      </td>
                       {user?.role === 'broker' && <td className="py-3.5 px-3 text-muted-foreground">{loan.district || '—'}</td>}
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
