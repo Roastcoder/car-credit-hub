@@ -108,17 +108,22 @@ export default function AddLead() {
   }, [availableBranches, form.our_branch]);
 
   useEffect(() => {
-    if (user?.role === 'broker' && user?.name && !form.sourcing_person_name) {
+    if (user?.name && !form.sourcing_person_name) {
       setForm(prev => ({ ...prev, sourcing_person_name: user.name }));
     }
   }, [user]);
 
-  // Set manager name automatically if user has a referrer
+  // Set manager name automatically: Referred By or Branch Manager
   useEffect(() => {
-    if ((user as any)?.referred_by_name && !form.manager_name) {
+    if ((user as any)?.referred_by_name) {
       setForm(prev => ({ ...prev, manager_name: (user as any).referred_by_name }));
+    } else if (user?.branch_id && branches.length > 0) {
+      const userBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
+      if (userBranch?.manager_name) {
+        setForm(prev => ({ ...prev, manager_name: userBranch.manager_name }));
+      }
     }
-  }, [user]);
+  }, [user, branches]);
 
   const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {

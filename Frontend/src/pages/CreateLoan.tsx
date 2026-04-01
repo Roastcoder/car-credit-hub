@@ -434,7 +434,7 @@ export default function CreateLoan() {
       vehicleNumber: lead.vehicle_no || '',
       purposeLoanAmount: lead.loan_amount_required ? String(lead.loan_amount_required) : '',
       irr: lead.irr_requested ? String(lead.irr_requested) : '',
-      sourcingPersonName: lead.sourcing_person_name || '',
+      sourcingPersonName: lead.referred_by_name || lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
       fcAmount: '',
       fcDate: '',

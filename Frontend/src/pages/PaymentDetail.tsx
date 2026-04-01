@@ -424,7 +424,11 @@ export default function PaymentDetail() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="Our Branch" value={payment.branch_name} />
               <Field label="Disbursement Branch" value={payment.disbursement_branch} />
-              <Field label="Branch Manager" value={payment.branch_manager_name} />
+              { (payment.creator_role === 'broker' || (payment as any).referred_by_name) ? (
+                <Field label="Referred By" value={(payment as any).referred_by_name} />
+              ) : (
+                <Field label="Branch Manager" value={payment.branch_manager_name} />
+              )}
               <Field label="NOC Checked By" value={payment.noc_checked_by} />
               <Field label="RC Status" value={payment.rc_status} />
               <Field label="NOC Status" value={payment.noc_status} />
