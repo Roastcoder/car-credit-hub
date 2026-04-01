@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { requestAllNativePermissions } from "./lib/permissions";
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -75,7 +77,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
-      {/* Account Department Routes - Only for super_admin, admin, and accountant */}
+      {/* Account Department Routes */}
       <Route path="/account" element={
         <ProtectedRoute>
           <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'accountant']}>
@@ -89,7 +91,6 @@ function AppRoutes() {
         <Route path="ledger" element={<GeneralLedger />} />
         <Route path="reports" element={<FinancialReports />} />
         <Route path="vouchers/create/:applicationId" element={<PaymentVoucherForm />} />
-        {/* Mirror payment application routes so accountant stays in context */}
         <Route path="payments/:id" element={<PaymentDetail />} />
         <Route path="payments/edit/:id" element={<PaymentApplicationForm />} />
       </Route>
@@ -117,21 +118,11 @@ function AppRoutes() {
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
-      
-      {/* Consolidated Payment Routes */}
       <Route path="/payments" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
       <Route path="/payments/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       <Route path="/payments/loan/:loanId" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetail /></ProtectedRoute>} />
       <Route path="/payments/edit/:id" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
-      
-      {/* Legacy Redirects for old paths */}
-      <Route path="/payments/applications" element={<Navigate to="/payments" replace />} />
-      <Route path="/payments/applications/new" element={<Navigate to="/payments/new" replace />} />
-      <Route path="/payments/applications/edit/:id" element={<Navigate to="/payments/edit/:id" replace />} />
-      <Route path="/payments/applications/loan/:loanId" element={<Navigate to="/payments/loan/:loanId" replace />} />
-      <Route path="/payments/applications/:id" element={<Navigate to="/payments/:id" replace />} />
-      
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
       <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
@@ -139,24 +130,29 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Suspense fallback={
-            <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <AppRoutes />
-          </Suspense>
-        </AuthProvider>
-      </BrowserRouter>
-      <Toaster />
-      <Sonner />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Suspense fallback={
+              <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            }>
+              <AppRoutes />
+            </Suspense>
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

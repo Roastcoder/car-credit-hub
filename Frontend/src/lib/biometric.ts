@@ -5,15 +5,18 @@ import { NativeBiometric, BiometryType } from '@capgo/capacitor-native-biometric
  */
 export const biometricAuth = {
   /**
-   * Checks if the device supports biometric auth (FaceID, Fingerprint, etc.)
+   * Checks if the device supports biometric auth and returns the type.
    */
-  async checkAvailability(): Promise<boolean> {
+  async checkAvailability(): Promise<{ isAvailable: boolean; type: BiometryType | 'NONE' }> {
     try {
       const result = await NativeBiometric.isAvailable();
-      return !!result.isAvailable;
+      return {
+        isAvailable: !!result.isAvailable,
+        type: result.biometryType as BiometryType || 'NONE'
+      };
     } catch (error) {
       console.warn('Biometrics not available:', error);
-      return false;
+      return { isAvailable: false, type: 'NONE' };
     }
   },
 

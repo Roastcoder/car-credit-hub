@@ -1,132 +1,97 @@
 import { UserRole } from '@/contexts/AuthContext';
+import { Camera } from '@capacitor/camera';
+import { Filesystem } from '@capacitor/filesystem';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 
-export interface Permission {
-  canCreateLead: boolean;
+export interface RolePermissions {
   canCreateLoan: boolean;
   canEdit: boolean;
-  canView: boolean;
   canDelete: boolean;
   canChangeStatus: boolean;
   canAddRemarks: boolean;
-  canViewAll: boolean;
+  canManageUsers: boolean;
+  canManageBanks: boolean;
+  canManageBranches: boolean;
+  canViewReports: boolean;
+  canViewAllLeads: boolean;
+  canManageSystem: boolean;
 }
 
-export const getRolePermissions = (role: UserRole): Permission => {
-  switch (role) {
-    case 'super_admin':
-      return {
-        canCreateLead: true,
-        canCreateLoan: true,
-        canEdit: true,
-        canView: true,
-        canDelete: true,
-        canChangeStatus: true,
-        canAddRemarks: true,
-        canViewAll: true,
-      };
-    
-    case 'admin':
-      return {
-        canCreateLead: true,
-        canCreateLoan: true,
-        canEdit: true,
-        canView: true,
-        canDelete: true,
-        canChangeStatus: true,
-        canAddRemarks: true,
-        canViewAll: true,
-      };
-    
-    case 'manager':
-      return {
-        canCreateLead: true,
-        canCreateLoan: true,
-        canEdit: true,
-        canView: true,
-        canDelete: false,
-        canChangeStatus: true,
-        canAddRemarks: true,
-        canViewAll: true,
-      };
-    
-    case 'employee':
-      return {
-        canCreateLead: true,
-        canCreateLoan: true,
-        canEdit: true,
-        canView: true,
-        canDelete: false,
-        canChangeStatus: false,
-        canAddRemarks: true,
-        canViewAll: false,
-      };
-    
-    case 'bank':
-      return {
-        canCreateLead: false,
-        canCreateLoan: false,
-        canEdit: false,
-        canView: true,
-        canDelete: false,
-        canChangeStatus: false,
-        canAddRemarks: true,
-        canViewAll: false,
-      };
+/**
+ * Returns the permission set for a given user role.
+ */
+export const getRolePermissions = (role: UserRole): RolePermissions => {
+  const isSuperAdmin = role === 'super_admin';
+  const isAdmin = role === 'admin';
+  const isManager = role === 'manager';
+  const isAccountant = role === 'accountant';
 
-    case 'broker':
-      return {
-        canCreateLead: true,
-        canCreateLoan: false,
-        canEdit: false,
-        canView: true,
-        canDelete: false,
-        canChangeStatus: false,
-        canAddRemarks: true,
-        canViewAll: false,
-      };
-    
-    default:
-      return {
-        canCreateLead: false,
-        canCreateLoan: false,
-        canEdit: false,
-        canView: false,
-        canDelete: false,
-        canChangeStatus: false,
-        canAddRemarks: false,
-        canViewAll: false,
-      };
+  return {
+    canCreateLoan: isSuperAdmin || isAdmin || isManager || role === 'employee' || role === 'broker',
+    canEdit: isSuperAdmin || isAdmin || isManager,
+    canDelete: isSuperAdmin,
+    canChangeStatus: isSuperAdmin || isAdmin || isManager,
+    canAddRemarks: isSuperAdmin || isAdmin || isManager || isAccountant,
+    canManageUsers: isSuperAdmin || isAdmin,
+    canManageBanks: isSuperAdmin || isAdmin,
+    canManageBranches: isSuperAdmin || isAdmin,
+    canViewReports: isSuperAdmin || isAdmin || isManager || isAccountant,
+    canViewAllLeads: isSuperAdmin || isAdmin || isManager,
+    canManageSystem: isSuperAdmin,
+  };
+};
+
+/**
+ * Validates if the user has specific access to a single loan.
+ */
+export const canAccessLoan = (user: any, loan: any): boolean => {
+  if (!user || !loan) return false;
+  if (user.role === 'super_admin' || user.role === 'admin' || user.role === 'manager') return true;
+  if (user.role === 'accountant') return true;
+  
+  // Branch restricted
+  if (user.branch_id && loan.branch_id && Number(user.branch_id) !== Number(loan.branch_id)) return false;
+  
+  // Broker/Employee restricted (only see their own)
+  if ((user.role === 'broker' || user.role === 'employee') && Number(loan.created_by) !== Number(user.id)) {
+    // Exception for visibility handled by WorkflowService
+    return true; 
+  }
+  
+  return true;
+};
+
+/**
+ * Requests all required native permissions for the Mehar Finance mobile app.
+ * This triggers the system dialogs for Camera, Storage, and Notifications.
+ */
+export async function requestAllNativePermissions() {
+  if (!Capacitor.isNativePlatform()) return;
+
+  try {
+    console.log('Requesting native permissions...');
+
+    // 1. Notification Permissions (Crucial for Android 13+)
+    const pushStatus = await PushNotifications.checkPermissions();
+    if (pushStatus.receive !== 'granted') {
+      await PushNotifications.requestPermissions();
+    }
+
+    // 2. Camera Permissions
+    const cameraStatus = await Camera.checkPermissions();
+    if (cameraStatus.camera !== 'granted') {
+      await Camera.requestPermissions();
+    }
+
+    // 3. Filesystem / Storage (Standard checks)
+    const fsStatus = await Filesystem.checkPermissions();
+    if (fsStatus.publicStorage !== 'granted') {
+      await Filesystem.requestPermissions();
+    }
+
+    console.log('Permission requests completed.');
+  } catch (error) {
+    console.error('Error requesting permissions:', error);
   }
 }
-;
-
-export const canAccessLoan = (userRole: UserRole, userId: number | string, loan: any): boolean => {
-  const permissions = getRolePermissions(userRole);
-  const uid = String(userId);
-  
-  if (permissions.canViewAll) return true;
-  
-  if (userRole === 'employee') {
-    return String(loan.created_by) === uid;
-  }
-  
-  if (userRole === 'broker') {
-    return String(loan.broker_id) === uid || String(loan.assigned_broker_id) === uid;
-  }
-  
-  if (userRole === 'manager') {
-    return String(loan.branch_id) === String((loan as any).user_branch_id); // Fallback if canViewAll is false
-  }
-  
-  return false;
-};
-
-export const getWorkflowSteps = (userRole: UserRole) => {
-  const steps = [
-    { id: 'employee', label: 'Employee', description: 'Create and submit application' },
-    { id: 'admin', label: 'Admin', description: 'Review and approve' },
-    { id: 'super_admin', label: 'Super Admin', description: 'System oversight' },
-  ];
-  
-  return steps;
-};

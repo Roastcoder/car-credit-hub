@@ -31,8 +31,8 @@ export default function Login() {
       setIsStandalone(standalone);
 
       if (native) {
-        const available = await biometricAuth.checkAvailability();
-        setIsBiometricAvailable(available);
+        const result = await biometricAuth.checkAvailability();
+        setIsBiometricAvailable(result.isAvailable);
       }
     };
     checkEnvironment();

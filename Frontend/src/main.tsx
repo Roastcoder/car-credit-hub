@@ -3,7 +3,6 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import App from "./App";
 import "./index.css";
-import { requestNotificationPermission } from "./lib/notifications";
 
 // Register Service Worker and handle updates
 if ('serviceWorker' in navigator) {
@@ -35,6 +34,7 @@ CapacitorApp.addListener('backButton', ({ canGoBack }) => {
     window.history.back();
   }
 });
+
 
 // Hide splash screen when app is ready
 SplashScreen.hide();
