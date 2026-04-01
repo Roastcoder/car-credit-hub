@@ -4,64 +4,153 @@ import { Filesystem } from '@capacitor/filesystem';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
-export interface RolePermissions {
+export interface Permission {
+  canCreate: boolean;
   canCreateLead: boolean;
   canCreateLoan: boolean;
   canEdit: boolean;
+  canView: boolean;
   canDelete: boolean;
   canChangeStatus: boolean;
   canAddRemarks: boolean;
-  canManageUsers: boolean;
-  canManageBanks: boolean;
-  canManageBranches: boolean;
-  canViewReports: boolean;
-  canViewAllLeads: boolean;
-  canManageSystem: boolean;
+  canViewAll: boolean;
 }
 
 /**
  * Returns the permission set for a given user role.
+ * Maps original 'canCreate' to modern 'canCreateLead' and 'canCreateLoan' for UI compatibility.
  */
-export const getRolePermissions = (role: UserRole): RolePermissions => {
-  const isSuperAdmin = role === 'super_admin';
-  const isAdmin = role === 'admin';
-  const isManager = role === 'manager';
-  const isAccountant = role === 'accountant';
+export const getRolePermissions = (role: UserRole | string | null | undefined): Permission => {
+  const normalizedRole = (role || '').toLowerCase();
+  
+  switch (normalizedRole) {
+    case 'super_admin':
+      return {
+        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
+        canEdit: true,
+        canView: true,
+        canDelete: true,
+        canChangeStatus: true,
+        canAddRemarks: true,
+        canViewAll: true,
+      };
+    
+    case 'admin':
+      return {
+        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
+        canEdit: true,
+        canView: true,
+        canDelete: true,
+        canChangeStatus: true,
+        canAddRemarks: true,
+        canViewAll: true,
+      };
+    
+    case 'manager':
+      return {
+        canCreate: false, // Managers cannot create loans/leads
+        canCreateLead: false,
+        canCreateLoan: false,
+        canEdit: true,    // Can edit existing ones
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false, 
+        canAddRemarks: true,
+        canViewAll: false, 
+      };
+    
+    case 'employee':
+      return {
+        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: true,
+        canEdit: true,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: false, 
+      };
+    
+    case 'bank':
+    case 'broker':
+      return {
+        canCreate: false, 
+        canCreateLead: true, // Brokers can create leads
+        canCreateLoan: false, // Brokers cannot create loans directly
+        canEdit: true,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: false,
+      };
+    
+    case 'accountant':
+      return {
+        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
+        canEdit: false,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: false,
+      };
 
-  return {
-    canCreateLead: isSuperAdmin || isAdmin || role === 'broker' || role === 'employee',
-    canCreateLoan: isSuperAdmin || isAdmin || isManager || role === 'employee' || role === 'broker',
-    canEdit: isSuperAdmin || isAdmin || isManager,
-    canDelete: isSuperAdmin,
-    canChangeStatus: isSuperAdmin || isAdmin || isManager,
-    canAddRemarks: isSuperAdmin || isAdmin || isManager || isAccountant,
-    canManageUsers: isSuperAdmin || isAdmin,
-    canManageBanks: isSuperAdmin || isAdmin,
-    canManageBranches: isSuperAdmin || isAdmin,
-    canViewReports: isSuperAdmin || isAdmin || isManager || isAccountant,
-    canViewAllLeads: isSuperAdmin || isAdmin || isManager,
-    canManageSystem: isSuperAdmin,
-  };
+    default:
+      return {
+        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
+        canEdit: false,
+        canView: false,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: false,
+        canViewAll: false,
+      };
+  }
 };
 
 /**
  * Validates if the user has specific access to a single loan.
  */
-export const canAccessLoan = (user: any, loan: any): boolean => {
-  if (!user || !loan) return false;
-  if (user.role === 'super_admin' || user.role === 'admin' || user.role === 'manager') return true;
-  if (user.role === 'accountant') return true;
+export const canAccessLoan = (userRole: string, userId: number | string, loan: any): boolean => {
+  const normalizedRole = (userRole || '').toLowerCase();
+  const permissions = getRolePermissions(normalizedRole);
   
-  // Branch restricted
-  if (user.branch_id && loan.branch_id && Number(user.branch_id) !== Number(loan.branch_id)) return false;
+  if (permissions.canViewAll) return true;
   
-  // Broker/Employee restricted (only see their own)
-  if ((user.role === 'broker' || user.role === 'employee') && Number(loan.created_by) !== Number(user.id)) {
-    // Exception for visibility handled by WorkflowService
-    return true; 
+  if (normalizedRole === 'employee') {
+    return Number(loan.created_by) === Number(userId);
   }
   
-  return true;
+  if (normalizedRole === 'manager') {
+    return Number(loan.branch_id) === Number(userId); // Assuming manager's identity check matches
+  }
+  
+  return false;
+};
+
+/**
+ * Returns the steps for the loan workflow.
+ */
+export const getWorkflowSteps = (userRole: string) => {
+  const normalizedRole = (userRole || '').toLowerCase();
+  const steps = [
+    { id: 'employee', label: 'Employee', description: 'Create and submit application' },
+    { id: 'manager', label: 'Manager', description: 'Review and approve' },
+    { id: 'admin', label: 'Admin', description: 'Final processing' },
+    { id: 'super_admin', label: 'Super Admin', description: 'System oversight' },
+  ];
+  
+  return steps;
 };
 
 /**
