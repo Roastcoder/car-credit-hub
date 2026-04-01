@@ -477,16 +477,27 @@ export default function CreateLoan() {
     const p = Number(form.loanAmount);
     const r = Number(form.irr);
     const t = calculatedTenure;
-    if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t);
+    const mode = form.emiMode || 'Monthly';
+    if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t, mode);
     return 0;
-  }, [form.loanAmount, form.irr, calculatedTenure]);
+  }, [form.loanAmount, form.irr, calculatedTenure, form.emiMode]);
+
+  const totalPayable = useMemo(() => {
+    const t = calculatedTenure;
+    const mode = form.emiMode || 'Monthly';
+    let periods = t;
+    if (mode === 'Quarterly') periods = t / 3;
+    else if (mode === 'Half Yearly') periods = t / 6;
+    else if (mode === 'Yearly') periods = t / 12;
+    
+    return emi * periods;
+  }, [emi, calculatedTenure, form.emiMode]);
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
     return calculateAdvancedCommission(financierName, form.vertical, Number(form.loanAmount) || 0, calculatedTenure);
   }, [form.assignedBankId, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
-  const totalPayable = emi * calculatedTenure;
   const totalInterest = totalPayable - Number(form.loanAmount);
   const effectiveVertical = normalizeLoanNumberVertical(form.financierTeamVertical || form.vertical) || '';
 

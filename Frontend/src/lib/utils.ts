@@ -13,12 +13,29 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function calculateEMI(principal: number, rate: number, tenure: number): number {
-  const monthlyRate = rate / 12 / 100;
-  if (monthlyRate === 0) return principal / tenure;
+export function calculateEMI(principal: number, rate: number, tenureMonths: number, mode: string = 'Monthly'): number {
+  let periodsPerYear = 12;
+  let monthsPerPeriod = 1;
+
+  if (mode === 'Quarterly') {
+    periodsPerYear = 4;
+    monthsPerPeriod = 3;
+  } else if (mode === 'Half Yearly') {
+    periodsPerYear = 2;
+    monthsPerPeriod = 6;
+  } else if (mode === 'Yearly') {
+    periodsPerYear = 1;
+    monthsPerPeriod = 12;
+  }
+
+  const periodicRate = rate / periodsPerYear / 100;
+  const numberOfPeriods = tenureMonths / monthsPerPeriod;
+
+  if (periodicRate === 0) return Math.round(principal / numberOfPeriods);
+
   return Math.round(
-    (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure)) /
-      (Math.pow(1 + monthlyRate, tenure) - 1),
+    (principal * periodicRate * Math.pow(1 + periodicRate, numberOfPeriods)) /
+      (Math.pow(1 + periodicRate, numberOfPeriods) - 1),
   );
 }
 
