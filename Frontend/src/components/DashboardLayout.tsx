@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: UserPlus,
     roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'],
     children: [
+      { title: 'Create Lead', path: '/add-lead', icon: UserPlus },
       { title: 'Branch Leads', path: '/leads-list', icon: MapPin },
       { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck },
     ],

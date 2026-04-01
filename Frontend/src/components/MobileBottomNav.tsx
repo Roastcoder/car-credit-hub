@@ -13,6 +13,7 @@ interface NavItem {
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'Leads', path: '/leads-list', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
+  { label: 'Create Lead', path: '/add-lead', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
   { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
   { label: 'New', path: '/loans/new', icon: <Car size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
@@ -47,14 +48,14 @@ export default function MobileBottomNav() {
   } else if (user.role === 'manager') {
     primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/reports'];
   } else if (user.role === 'broker') {
-    primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/commission'];
+    primaryNavPaths = ['/dashboard', '/add-lead', '/loans', '/commission'];
   } else if (user.role === 'bank') {
     primaryNavPaths = ['/dashboard', '/loans', '/loans/new'];
   } else if (user.role === 'accountant') {
     primaryNavPaths = ['/account', '/account/receivables', '/account/payables', '/account/vouchers'];
   } else {
     // employee and others
-    primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/loans/new'];
+    primaryNavPaths = ['/dashboard', '/add-lead', '/loans', '/loans/new'];
   }
 
   // Ensure moreNav only contains items NOT present in the primaryNav
