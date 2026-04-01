@@ -363,6 +363,7 @@ export default function Loans() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan Number</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date & Time</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
@@ -371,7 +372,6 @@ export default function Loans() {
                     {user?.role !== 'broker' && <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>}
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date & Time</th>
                     {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
                     {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
                     {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
@@ -389,6 +389,16 @@ export default function Loans() {
                           </p>
                         </div>
                       </td>
+                      <td className="py-3.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {loan.created_at ? new Date(loan.created_at).toLocaleString('en-IN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '—'}
+                      </td>
                       <td className="py-3.5 px-3">
                         <p className="font-medium text-foreground">{loan.applicant_name}</p>
                         <p className="text-xs text-muted-foreground">{loan.mobile}</p>
@@ -404,16 +414,6 @@ export default function Loans() {
                       {user?.role !== 'broker' && <td className="py-3.5 px-3 text-right text-muted-foreground">{formatCurrency(Number(loan.emi))}/mo</td>}
                       <td className="py-3.5 px-3"><LoanStatusBadge status={loan.status} /></td>
                       <td className="py-3.5 px-3"><PDDStatusBadge status={loan.pdd_status} /></td>
-                      <td className="py-3.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {loan.created_at ? new Date(loan.created_at).toLocaleString('en-IN', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true
-                        }) : '—'}
-                      </td>
                       {user?.role === 'broker' && <td className="py-3.5 px-3 text-muted-foreground">{loan.district || '—'}</td>}
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
