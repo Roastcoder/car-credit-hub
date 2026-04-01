@@ -57,10 +57,6 @@ export default function AddLead() {
     manager_name: '',
     our_branch: '',
     financier_name: '',
-    mfg_year: '',
-    rc_expiry_date: '',
-    challan_status: 'No',
-    rto_papers: 'No',
   });
 
   const [rcFront, setRcFront] = useState<File | null>(null);
@@ -341,26 +337,6 @@ export default function AddLead() {
                 <div>
                   <label className={labelClass}>Aadhar (Back) *</label>
                   <input type="file" required className={fileInputClass} onChange={e => setAadharBack(e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Vehicle Reg./Mfg Year</label>
-                    <input type="text" className={inputClass} value={form.mfg_year} onChange={e => setForm({...form, mfg_year: e.target.value})} placeholder="e.g. 2022" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>RC Expiry Date</label>
-                    <input type="date" className={inputClass} value={form.rc_expiry_date} onChange={e => setForm({...form, rc_expiry_date: e.target.value})} />
-                  </div>
-                  <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
-                      <input type="checkbox" className="rounded border-border" checked={form.challan_status === 'Yes'} onChange={e => setForm({...form, challan_status: e.target.checked ? 'Yes' : 'No'})} />
-                      Challan
-                    </label>
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
-                      <input type="checkbox" className="rounded border-border" checked={form.rto_papers === 'Yes'} onChange={e => setForm({...form, rto_papers: e.target.checked ? 'Yes' : 'No'})} />
-                      RTO Papers
-                    </label>
-                  </div>
                 </div>
               </div>
             </div>

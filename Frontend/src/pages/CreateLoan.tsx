@@ -436,10 +436,6 @@ export default function CreateLoan() {
       irr: lead.irr_requested ? String(lead.irr_requested) : '',
       sourcingPersonName: lead.referred_by_name || lead.sourcing_person_name || '',
       ourBranch: lead.our_branch || '',
-      mfgYear: lead.mfg_year || '',
-      rcExpiryDate: lead.rc_expiry_date || '',
-      challan: lead.challan_status || 'No',
-      rtoPapers: lead.rto_papers || 'No',
       fcAmount: '',
       fcDate: '',
     }));
@@ -870,7 +866,7 @@ export default function CreateLoan() {
               <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
               <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
               <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
-              <div><label className={labelClass}>Mfg Year</label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
+              <div><label className={labelClass}>Mfg Year <span className="text-[10px] text-accent opacity-70 ml-1 font-normal">(Auto)</span></label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
               <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
               <div><label className={labelClass}>Engine Number</label><input type="text" autoComplete="off" className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
             </div>
