@@ -5,6 +5,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
 export interface RolePermissions {
+  canCreateLead: boolean;
   canCreateLoan: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -28,6 +29,7 @@ export const getRolePermissions = (role: UserRole): RolePermissions => {
   const isAccountant = role === 'accountant';
 
   return {
+    canCreateLead: isSuperAdmin || isAdmin || role === 'broker' || role === 'employee',
     canCreateLoan: isSuperAdmin || isAdmin || isManager || role === 'employee' || role === 'broker',
     canEdit: isSuperAdmin || isAdmin || isManager,
     canDelete: isSuperAdmin,
