@@ -256,7 +256,7 @@ export default function Loans() {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
-                      hour12: false
+                      hour12: true
                     }) : '—'}
                   </p>
                 </div>
@@ -411,7 +411,7 @@ export default function Loans() {
                           year: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit',
-                          hour12: false
+                          hour12: true
                         }) : '—'}
                       </td>
                       {user?.role === 'broker' && <td className="py-3.5 px-3 text-muted-foreground">{loan.district || '—'}</td>}
