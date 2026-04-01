@@ -113,17 +113,35 @@ export default function AddLead() {
     }
   }, [user]);
 
+  const { data: managers = [] } = useQuery({
+    queryKey: ['managers-list'],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users?role=manager`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+      } catch {
+        return [];
+      }
+    },
+  });
+
   // Set manager name automatically: Referred By or Branch Manager
   useEffect(() => {
-    if ((user as any)?.referred_by_name) {
-      setForm(prev => ({ ...prev, manager_name: (user as any).referred_by_name }));
+    if (user?.referred_by_name) {
+      setForm(prev => ({ ...prev, manager_name: user.referred_by_name }));
     } else if (user?.branch_id && branches.length > 0) {
       const userBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
       if (userBranch?.manager_name) {
         setForm(prev => ({ ...prev, manager_name: userBranch.manager_name }));
+      } else if (managers.length > 0) {
+        // Fallback: Use the first manager in the system if branch has no assigned manager
+        setForm(prev => ({ ...prev, manager_name: managers[0].full_name || managers[0].name }));
       }
     }
-  }, [user, branches]);
+  }, [user, branches, managers]);
 
   const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {
