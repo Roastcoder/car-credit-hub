@@ -29,14 +29,6 @@ export default function Dashboard() {
       try {
         const data = await loansAPI.getAll();
         const loansData = Array.isArray(data) ? data : (data.data || []);
-        
-        // Filter based on role
-        if (user?.role === 'manager' || user?.role === 'employee') {
-          return loansData.filter((l: any) => l.user_id === user.id);
-        }
-        if (user?.role === 'broker') {
-          return loansData.filter((l: any) => l.broker_id === user.id);
-        }
         return loansData;
       } catch (error) {
         console.error('Dashboard fetch error:', error);

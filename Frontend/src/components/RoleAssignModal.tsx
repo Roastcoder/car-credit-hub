@@ -88,7 +88,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
           <div>
             <label className="block text-sm font-medium mb-1.5">Select Branch</label>
             <select className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={branchId} onChange={e => setBranchId(e.target.value)}>
-              <option value="">No Branch</option>
+              <option value="">All Branches (Global Access)</option>
               {branches.map((branch: any) => (
                 <option key={branch.id} value={branch.id}>{branch.name} ({branch.code})</option>
               ))}

@@ -121,7 +121,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent appearance-none"
             >
               <option value="all">All Brokers</option>
-              {brokerOptions.map((broker) => (
+              {brokerOptions.map((broker: any) => (
                 <option key={broker.id} value={broker.id}>{broker.name}</option>
               ))}
             </select>
