@@ -1,26 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Building2, MapPin, Phone, Mail, Edit, Trash2 } from 'lucide-react';
+import { Plus, Building2, UserCircle, Edit, Trash2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BranchManagement() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    phone: '',
-    email: '',
-    manager_name: '',
-    is_active: true,
+    manager_id: '',
+    status: 'active',
   });
 
-  const { data: branches = [], isLoading } = useQuery({
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  const { data: branches = [], isLoading: isLoadingBranches } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
@@ -31,21 +29,44 @@ export default function BranchManagement() {
     },
   });
 
+  // Fetch only users with manager role for the dropdown
+  const { data: managers = [] } = useQuery({
+    queryKey: ['users', 'manager'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users?role=manager`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch managers');
+      return res.json();
+    },
+  });
+
   const saveBranch = useMutation({
     mutationFn: async (data: any) => {
       const method = editingBranch ? 'PUT' : 'POST';
       const url = editingBranch 
         ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches/${editingBranch.id}`
         : `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`;
+      
+      const payload = {
+        name: data.name,
+        code: data.code,
+        manager_id: data.manager_id ? Number(data.manager_id) : null,
+        status: data.status,
+      };
+
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Failed to save branch');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to save branch');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -54,7 +75,7 @@ export default function BranchManagement() {
       setShowModal(false);
       resetForm();
     },
-    onError: () => toast.error('Failed to save branch'),
+    onError: (error: any) => toast.error(error.message || 'Failed to save branch'),
   });
 
   const deleteBranch = useMutation({
@@ -76,21 +97,20 @@ export default function BranchManagement() {
     setFormData({
       name: '',
       code: '',
-      address: '',
-      city: '',
-      state: '',
-      pincode: '',
-      phone: '',
-      email: '',
-      manager_name: '',
-      is_active: true,
+      manager_id: '',
+      status: 'active',
     });
     setEditingBranch(null);
   };
 
   const handleEdit = (branch: any) => {
     setEditingBranch(branch);
-    setFormData(branch);
+    setFormData({
+      name: branch.name,
+      code: branch.code,
+      manager_id: branch.manager_id || '',
+      status: branch.status || 'active',
+    });
     setShowModal(true);
   };
 
@@ -106,185 +126,161 @@ export default function BranchManagement() {
           <h1 className="text-2xl font-bold text-foreground">Branch Management</h1>
           <p className="text-sm text-muted-foreground mt-1">{branches.length} branches</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm"
-        >
-          <Plus size={16} /> Add Branch
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm"
+          >
+            <Plus size={16} /> Add Branch
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {branches.map((branch: any) => (
           <div key={branch.id} className="stat-card">
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Building2 size={18} className="text-accent" />
-                <h3 className="font-semibold text-foreground">{branch.name}</h3>
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Building2 size={20} className="text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground leading-none">{branch.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Code: {branch.code}</p>
+                </div>
               </div>
-              <span className={`text-xs px-2 py-1 rounded ${branch.is_active ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-800'}`}>
-                {branch.is_active ? 'Active' : 'Inactive'}
+              <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full ${branch.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                {branch.status === 'active' ? 'Active' : 'Inactive'}
               </span>
             </div>
-            <div className="space-y-2 text-sm">
-              <p className="text-muted-foreground">Code: <span className="text-foreground font-medium">{branch.code}</span></p>
-              <div className="flex items-start gap-2">
-                <MapPin size={14} className="text-muted-foreground mt-0.5" />
-                <p className="text-muted-foreground">{branch.address}, {branch.city}, {branch.state} - {branch.pincode}</p>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <UserCircle size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Official Manager</p>
+                  <p className="text-sm font-semibold text-foreground">{branch.manager_name || 'No Manager Assigned'}</p>
+                </div>
               </div>
-              {branch.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-muted-foreground" />
-                  <p className="text-muted-foreground">{branch.phone}</p>
-                </div>
-              )}
-              {branch.email && (
-                <div className="flex items-center gap-2">
-                  <Mail size={14} className="text-muted-foreground" />
-                  <p className="text-muted-foreground">{branch.email}</p>
-                </div>
-              )}
-              {branch.manager_name && (
-                <p className="text-muted-foreground">Manager: <span className="text-foreground">{branch.manager_name}</span></p>
-              )}
             </div>
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => handleEdit(branch)}
-                className="flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm transition-colors"
-              >
-                <Edit size={14} /> Edit
-              </button>
-              <button
-                onClick={() => deleteBranch.mutate(branch.id)}
-                className="flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive text-sm transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
+
+            {isAdmin && (
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={() => handleEdit(branch)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-accent/5 hover:bg-accent/10 text-accent text-sm font-semibold transition-colors"
+                >
+                  <Edit size={14} /> Update
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this branch?')) {
+                      deleteBranch.mutate(branch.id);
+                    }
+                  }}
+                  className="flex items-center justify-center py-2 px-3 rounded-lg bg-destructive/5 hover:bg-destructive/10 text-destructive transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
           </div>
         ))}
+        {branches.length === 0 && !isLoadingBranches && (
+          <div className="col-span-full py-12 text-center bg-muted/30 rounded-2xl border-2 border-dashed border-border">
+            <Building2 size={40} className="mx-auto text-muted-foreground mb-3 opacity-20" />
+            <p className="text-muted-foreground font-medium">No branches configured yet.</p>
+          </div>
+        )}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-foreground mb-4">{editingBranch ? 'Edit Branch' : 'Add Branch'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-border animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                <Building2 size={20} className="text-accent-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground leading-none">{editingBranch ? 'Update Branch' : 'Create New Branch'}</h2>
+                <p className="text-xs text-muted-foreground mt-1">Fill in the essential location details below.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Branch Name *</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Branch Name *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Jaipur HQ"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm font-medium"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Branch Code *</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Branch Code *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. JPR-01"
                     value={formData.code}
                     onChange={e => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm font-medium"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Address *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.address}
-                  onChange={e => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
+
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                  />
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Official Branch Manager</label>
+                  <div className="relative">
+                    <select
+                      value={formData.manager_id}
+                      onChange={e => setFormData({ ...formData, manager_id: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground appearance-none focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm font-medium"
+                    >
+                      <option value="">No Manager Assigned</option>
+                      {managers.map((m: any) => (
+                        <option key={m.id} value={m.id}>{m.full_name} ({m.email})</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                      <UserCircle size={16} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-accent font-medium mt-2 flex items-center gap-1">
+                    <MapPin size={10} /> This user will be the main contact for this branch.
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">State *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.state}
-                    onChange={e => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Pincode *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.pincode}
-                    onChange={e => setFormData({ ...formData, pincode: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                  />
+
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status: formData.status === 'active' ? 'inactive' : 'active' })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.status === 'active' ? 'bg-accent' : 'bg-muted'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.status === 'active' ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                  <label className="text-xs font-bold text-foreground">Branch is {formData.status === 'active' ? 'Active' : 'Inactive'}</label>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Manager Name</label>
-                <input
-                  type="text"
-                  value={formData.manager_name}
-                  onChange={e => setFormData({ ...formData, manager_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_active}
-                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded"
-                />
-                <label className="text-sm text-foreground">Active</label>
-              </div>
-              <div className="flex gap-3 pt-2">
+
+              <div className="flex gap-3 pt-4 border-t border-border">
                 <button
                   type="submit"
                   disabled={saveBranch.isPending}
-                  className="flex-1 bg-accent text-accent-foreground font-semibold py-2.5 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+                  className="flex-1 bg-accent text-accent-foreground font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-accent/20"
                 >
-                  {saveBranch.isPending ? 'Saving...' : 'Save Branch'}
+                  {saveBranch.isPending ? 'Saving...' : editingBranch ? 'Update Details' : 'Create Branch'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="px-4 py-2.5 rounded-xl border border-border hover:bg-muted transition-colors"
+                  className="px-6 py-3 rounded-xl border border-border hover:bg-muted font-bold text-sm transition-colors"
                 >
                   Cancel
                 </button>
