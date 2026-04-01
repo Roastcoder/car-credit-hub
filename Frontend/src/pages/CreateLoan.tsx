@@ -582,8 +582,8 @@ export default function CreateLoan() {
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
           mobile: form.mobile,
-          pan_number: form.panNumber || null,
-          aadhar_number: form.aadharNumber || null,
+          pan_number: form.panNumber?.trim() || null,
+          aadhar_number: form.aadharNumber?.trim() || null,
           our_branch: form.ourBranch || null,
           current_address: form.currentAddress || null,
           current_village: form.currentVillage || null,
@@ -648,7 +648,7 @@ export default function CreateLoan() {
           // Newly Synced Fields
           current_state: form.currentState || null,
           permanent_state: form.permanentState || null,
-          purpose_loan_amount: form.purposeLoanAmount || null,
+          purpose_loan_amount: Number(form.purposeLoanAmount) || null,
           emi_mode: form.emiMode || 'Monthly',
           financier_executive_name: form.financierExecutiveName || null,
           financier_team_vertical: effectiveVertical || null,
@@ -660,7 +660,7 @@ export default function CreateLoan() {
           rc_expiry_date: form.rcExpiryDate || null,
           challan_status: form.challan,
           rto_papers: form.rtoPapers,
-          fc_amount: form.fcAmount || null,
+          fc_amount: Number(form.fcAmount) || null,
           fc_date: form.fcDate || null,
         }),
       });
