@@ -177,7 +177,7 @@ export default function Login() {
             </div>
 
             {!isStandalone && (
-              <a href="/mehar-finance.apk" download className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-950 text-white py-3 rounded-xl font-bold text-sm mb-6 hover:bg-slate-800 transition-colors">
+              <a href="/CarCreditHub.apk" download className="lg:hidden w-full flex items-center justify-center gap-2 bg-slate-950 text-white py-3 rounded-xl font-bold text-sm mb-6 hover:bg-slate-800 transition-colors">
                 <Download size={18} /> Download mobile app
               </a>
             )}
