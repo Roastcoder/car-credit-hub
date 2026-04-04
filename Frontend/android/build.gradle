@@ -24,6 +24,35 @@ allprojects {
     }
 }
 
+// Force all subprojects to use the appropriate Java version via Toolchains
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+                // Use toolchain to ensure we can build even if host JDK is too high
+                if (project.android.hasProperty('kotlinOptions')) {
+                    kotlinOptions {
+                        jvmTarget = '17'
+                    }
+                }
+            }
+        }
+        
+        // Also apply toolchain to the Java plugin if it exists
+        plugins.withType(JavaPlugin).configureEach {
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
