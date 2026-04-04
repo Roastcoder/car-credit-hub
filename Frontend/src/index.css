@@ -99,11 +99,19 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     background: linear-gradient(to bottom, #f8fafc 0%, #eff6ff 100%);
-    /* Removed background-attachment: fixed for performance */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   .dark body {
@@ -119,6 +127,8 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     @apply rounded-2xl sm:rounded-[1.5rem];
     will-change: transform, opacity;
+    contain: paint;
+    transform: translateZ(0);
   }
 
   .dark .glass-card {
@@ -142,7 +152,7 @@
   }
 
   .stat-card {
-    @apply glass-card p-4 sm:p-5 flex flex-col shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply glass-card p-4 sm:p-5 flex flex-col shadow-sm transition-[transform,box-shadow] duration-300 hover:shadow-md hover:-translate-y-0.5;
   }
 
   .sidebar-link {
