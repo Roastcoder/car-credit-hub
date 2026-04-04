@@ -52,7 +52,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
         });
         if (!response.ok) return [];
         const data = await response.json();
-        
+
         return data;
       } catch {
         return [];
@@ -113,19 +113,19 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
             />
           </div>
           {mode === 'broker' && (
-          <div className="sm:w-72 relative">
-            <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <select
-              value={selectedBroker}
-              onChange={e => setSelectedBroker(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent appearance-none"
-            >
-              <option value="all">All Brokers</option>
-              {brokerOptions.map((broker: any) => (
-                <option key={broker.id} value={broker.id}>{broker.name}</option>
-              ))}
-            </select>
-          </div>
+            <div className="sm:w-72 relative">
+              <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <select
+                value={selectedBroker}
+                onChange={e => setSelectedBroker(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent appearance-none"
+              >
+                <option value="all">All Brokers</option>
+                {brokerOptions.map((broker: any) => (
+                  <option key={broker.id} value={broker.id}>{broker.name}</option>
+                ))}
+              </select>
+            </div>
           )}
         </div>
       </div>
@@ -227,8 +227,8 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                 </thead>
                 <tbody>
                   {filtered.map((lead: any) => (
-                    <tr 
-                      key={lead.id} 
+                    <tr
+                      key={lead.id}
                       className="border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer group/row"
                       onClick={() => navigate(`/leads/${lead.id}`)}
                     >

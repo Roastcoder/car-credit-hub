@@ -1,12 +1,12 @@
 import { ReactNode, useState, ElementType } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { ROLE_LABELS } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole, ROLE_LABELS } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
-  Activity, Receipt
+  Activity, Receipt, Shield
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -49,6 +49,7 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Commission', path: '/commission', icon: CreditCard, roles: ['super_admin', 'admin', 'broker'] },
   { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Permission Control', path: '/permissions', icon: Shield, roles: ['super_admin'] },
   { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
   { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
   { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, roles: ['employee'] },

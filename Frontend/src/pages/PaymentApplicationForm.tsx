@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { 
   Upload, FileText, Plus, X, Save, Send, 
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List
 } from 'lucide-react';
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 interface PaymentApplication {
   id?: number;
@@ -76,9 +77,15 @@ interface PaymentApplication {
 export default function PaymentApplicationForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loanId, id } = useParams();
   const [loading, setLoading] = useState(false);
   const [loanData, setLoanData] = useState<any>(null);
+
+  const appSwitcherOptions = [
+    { label: 'Application List', path: '/payments', icon: <List size={18} /> },
+    { label: id ? 'Edit App' : 'New App', path: location.pathname, icon: <Plus size={18} /> },
+  ];
   const [pddDocuments, setPddDocuments] = useState<any[]>([]);
   const [selectedPddDocs, setSelectedPddDocs] = useState<string[]>([]);
   const [bankingDocs, setBankingDocs] = useState<File[]>([]);
@@ -425,8 +432,9 @@ export default function PaymentApplicationForm() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto pb-20">
+      <MobilePageSwitcher options={appSwitcherOptions} activeLabel={id ? 'Edit App' : 'New App'} />
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <CreditCard className="h-8 w-8 text-blue-600" />
             {id ? 'Edit Payment Application' : 'New Payment Application'}

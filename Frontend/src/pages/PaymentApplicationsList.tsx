@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
   Plus, Search, Filter, Eye, Edit, CheckCircle, X,
-  Clock, FileText, CreditCard, AlertCircle, Download, FileCheck, Receipt
+  Clock, FileText, CreditCard, AlertCircle, Download, FileCheck, Receipt, List
 } from 'lucide-react';
 import { paymentApplicationAPI } from '@/lib/api';
 import { Button } from "@/components/ui/button";
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 interface PaymentApplication {
   id: number;
@@ -34,6 +35,11 @@ export default function PaymentApplicationsList() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadingForId, setUploadingForId] = useState<number | null>(null);
+
+  const appSwitcherOptions = [
+    { label: 'Application List', path: '/payments', icon: <List size={18} /> },
+    { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
+  ];
 
   useEffect(() => {
     fetchApplications();

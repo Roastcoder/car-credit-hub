@@ -13,7 +13,8 @@ import { RemarksModal } from '@/components/RemarksModal';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck } from 'lucide-react';
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admin_approved' | 'disbursed' | 'rejected' | 'cancelled';
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
@@ -33,6 +34,12 @@ export default function Loans() {
   const statusFilter = searchParams.get('status');
   const monthFilter = searchParams.get('month');
   const dayFilter = searchParams.get('day');
+
+  const loanSwitcherOptions = [
+    { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
+    { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
+    ...(permissions.canCreateLoan ? [{ label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> }] : []),
+  ];
 
   const { data: loans = [], isLoading } = useQuery({
     queryKey: ['loans', user?.id, user?.role],

@@ -43,6 +43,7 @@ const CreatePaymentApplication = lazy(() => import("@/pages/CreatePaymentApplica
 const CreatePaymentVoucher = lazy(() => import("@/pages/CreatePaymentVoucher"));
 const PaymentDetail = lazy(() => import("./pages/PaymentDetail"));
 const VouchersList = lazy(() => import("@/pages/VouchersList"));
+const PermissionManagement = lazy(() => import("@/pages/PermissionManagement"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -105,6 +106,13 @@ function AppRoutes() {
       <Route path="/broker-leads" element={<ProtectedRoute><LeadsList mode="broker" /></ProtectedRoute>} />
       <Route path="/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+      <Route path="/permissions" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <PermissionManagement />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
       <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
       <Route path="/my-brokers" element={

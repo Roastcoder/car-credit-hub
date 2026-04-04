@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI, api } from '@/lib/api';
-
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'bank' | 'broker' | 'employee' | 'accountant';
+import { UserRole, UserPermissions } from '@/lib/auth';
 
 export interface AppUser {
   id: number;
@@ -12,6 +11,7 @@ export interface AppUser {
   status?: string;
   branch_id?: number | string;
   referred_by_name?: string;
+  permissions?: UserPermissions;
 }
 
 interface AuthContextType {

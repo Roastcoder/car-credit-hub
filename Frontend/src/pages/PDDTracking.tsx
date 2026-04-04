@@ -1,10 +1,12 @@
-import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import PDDEditModal from '@/components/PDDEditModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getRolePermissions } from '@/lib/permissions';
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 const getPddStatusStyles = (status?: string) => {
   if (status === 'approved') {
@@ -24,6 +26,13 @@ export default function PDDTracking() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
+  const permissions = getRolePermissions(user?.role || 'employee');
+
+  const loanSwitcherOptions = [
+    { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
+    { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
+    ...(permissions.canCreateLoan ? [{ label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> }] : []),
+  ];
 
   const formatDisplayDate = (value: unknown) => {
     if (!value) return '—';
@@ -111,9 +120,13 @@ export default function PDDTracking() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-foreground mb-1">PDD Tracking</h1>
-      <p className="text-sm text-muted-foreground mb-6">Post Disbursement Documents & RTO Status</p>
+    <div className="pb-20 lg:pb-0">
+      <MobilePageSwitcher options={loanSwitcherOptions} activeLabel="PDD Tracking" />
+
+      <div className="hidden lg:block mb-1">
+        <h1 className="text-2xl font-bold text-foreground">PDD Tracking</h1>
+        <p className="text-sm text-muted-foreground">Post Disbursement Documents & RTO Status</p>
+      </div>
 
       <div className="space-y-4">
         {loans.length === 0 ? (

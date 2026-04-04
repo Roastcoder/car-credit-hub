@@ -1,4 +1,5 @@
-import { UserRole } from '@/contexts/AuthContext';
+import { AppUser } from '@/contexts/AuthContext';
+import { UserRole } from '@/lib/auth';
 import { Camera } from '@capacitor/camera';
 import { Filesystem } from '@capacitor/filesystem';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -14,11 +15,15 @@ export interface Permission {
   canChangeStatus: boolean;
   canAddRemarks: boolean;
   canViewAll: boolean;
+  // Dynamic flags
+  canManagePdd?: boolean;
+  canManagePayments?: boolean;
+  canViewReports?: boolean;
 }
 
 /**
  * Returns the permission set for a given user role.
- * Maps original 'canCreate' to modern 'canCreateLead' and 'canCreateLoan' for UI compatibility.
+ * This provides the base "blueprint" for each role.
  */
 export const getRolePermissions = (role: UserRole | string | null | undefined): Permission => {
   const normalizedRole = (role || '').toLowerCase();
@@ -35,6 +40,9 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canChangeStatus: true,
         canAddRemarks: true,
         canViewAll: true,
+        canManagePdd: true,
+        canManagePayments: true,
+        canViewReports: true,
       };
     
     case 'admin':
@@ -48,19 +56,25 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canChangeStatus: true,
         canAddRemarks: true,
         canViewAll: true,
+        canManagePdd: true,
+        canManagePayments: true,
+        canViewReports: true,
       };
     
     case 'manager':
       return {
-        canCreate: false, // Managers cannot create loans/leads
+        canCreate: false,
         canCreateLead: false,
         canCreateLoan: false,
-        canEdit: true,    // Can edit existing ones
+        canEdit: true,
         canView: true,
         canDelete: false,
         canChangeStatus: false, 
         canAddRemarks: true,
-        canViewAll: false, 
+        canViewAll: false,
+        canManagePdd: false,
+        canManagePayments: false,
+        canViewReports: true,
       };
     
     case 'employee':
@@ -73,15 +87,15 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canDelete: false,
         canChangeStatus: false,
         canAddRemarks: true,
-        canViewAll: false, 
+        canViewAll: false,
       };
     
     case 'bank':
     case 'broker':
       return {
         canCreate: false, 
-        canCreateLead: true, // Brokers can create leads
-        canCreateLoan: false, // Brokers cannot create loans directly
+        canCreateLead: true,
+        canCreateLoan: false,
         canEdit: true,
         canView: true,
         canDelete: false,
@@ -101,6 +115,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canChangeStatus: false,
         canAddRemarks: true,
         canViewAll: false,
+        canManagePayments: true,
       };
 
     default:
@@ -116,6 +131,32 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canViewAll: false,
       };
   }
+};
+
+/**
+ * Merges role-based permissions with individual user overrides.
+ */
+export const getUserPermissions = (user: AppUser | null | undefined): Permission => {
+  if (!user) return getRolePermissions(null);
+  
+  const base = getRolePermissions(user.role);
+  
+  // If no granular permissions, return base
+  if (!user.permissions) return base;
+  
+  const overrides = user.permissions;
+  
+  return {
+    ...base,
+    // Override base with granular settings if they exist
+    ...(overrides.can_view_leads !== undefined && { canView: overrides.can_view_leads }),
+    ...(overrides.can_create_lead !== undefined && { canCreateLead: overrides.can_create_lead }),
+    ...(overrides.can_view_loans !== undefined && { canView: overrides.can_view_loans }),
+    ...(overrides.can_edit_loans !== undefined && { canEdit: overrides.can_edit_loans }),
+    ...(overrides.can_manage_pdd !== undefined && { canManagePdd: overrides.can_manage_pdd }),
+    ...(overrides.can_manage_payments !== undefined && { canManagePayments: overrides.can_manage_payments }),
+    ...(overrides.can_view_reports !== undefined && { canViewReports: overrides.can_view_reports }),
+  };
 };
 
 /**

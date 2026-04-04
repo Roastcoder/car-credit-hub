@@ -6,9 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 export default function CreateLoan() {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ export default function CreateLoan() {
   const queryClient = useQueryClient();
   const permissions = getRolePermissions(user?.role || 'employee');
   const [activeStep, setActiveStep] = useState(0);
+
+  const loanSwitcherOptions = [
+    { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
+    { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
+    { label: id ? 'Edit Loan' : 'New Loan', path: location.pathname, icon: <Plus size={18} /> },
+  ];
 
   const [form, setForm] = useState({
     // Customer Details

@@ -11,3 +11,15 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   accountant: 'Accountant',
 };
 
+export interface UserPermissions {
+  can_view_leads?: boolean;
+  can_edit_leads?: boolean;
+  can_view_loans?: boolean;
+  can_edit_loans?: boolean;
+  can_manage_pdd?: boolean;
+  can_manage_payments?: boolean;
+  can_view_reports?: boolean;
+  can_manage_users?: boolean;
+  [key: string]: boolean | undefined;
+}
+

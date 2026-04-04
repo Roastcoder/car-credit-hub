@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, UserPlus, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, UserPlus, AlertTriangle, List, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 export default function AddLead() {
   const navigate = useNavigate();
@@ -12,11 +13,18 @@ export default function AddLead() {
   const queryClient = useQueryClient();
   const permissions = getRolePermissions(user?.role || 'employee');
 
+  const leadSwitcherOptions = [
+    { label: 'Branch Leads', path: '/leads-list', icon: <List size={18} /> },
+    { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={18} /> },
+    { label: 'Create Lead', path: '/add-lead', icon: <UserPlus size={18} /> },
+  ];
+
   // Check if user can create leads
   if (!permissions.canCreateLead) {
     return (
       <div>
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <MobilePageSwitcher options={leadSwitcherOptions} activeLabel="Create Lead" />
+        <button onClick={() => navigate(-1)} className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft size={16} /> Back
         </button>
         

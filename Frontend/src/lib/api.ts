@@ -237,6 +237,13 @@ export const paymentApplicationAPI = {
   getAccountantStats: () => api.get('/payments/stats/accountant'),
 };
 
+// Permissions API
+export const permissionsAPI = {
+  getAllUsers: () => api.get('/permissions/users'),
+  getByUserId: (userId: number | string) => api.get(`/permissions/user/${userId}`),
+  update: (userId: number | string, permissions: any) => api.put(`/permissions/user/${userId}`, { permissions }),
+};
+
 // Legacy supabase compatibility shim (for components using supabase.auth.*)
 export const supabase = {
   auth: {

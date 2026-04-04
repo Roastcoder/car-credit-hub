@@ -1,23 +1,59 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { LayoutDashboard, FileText, Car, Users, UserPlus, BarChart3, MoreHorizontal, Building2, UserCheck, MapPin, CreditCard, Send, X, ClipboardCheck, TrendingUp, Receipt } from 'lucide-react';
-import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/lib/auth';
+import { 
+  LayoutDashboard, FileText, Car, Users, UserPlus, 
+  BarChart3, MoreHorizontal, Building2, UserCheck, 
+  MapPin, CreditCard, Send, X, ClipboardCheck, 
+  TrendingUp, Receipt, Plus, ChevronRight, Activity, Shield
+} from 'lucide-react';
+import { useState, useMemo } from 'react';
 
-interface NavItem {
+interface NavSubItem {
   label: string;
   path: string;
   icon: React.ReactNode;
+}
+
+interface NavItem {
+  label: string;
+  path?: string;
+  icon: React.ReactNode;
   roles: UserRole[];
+  children?: NavSubItem[];
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
-  { label: 'Leads', path: '/leads-list', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'Create Lead', path: '/add-lead', icon: <UserPlus size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'Loans', path: '/loans', icon: <FileText size={20} />, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
-  { label: 'New', path: '/loans/new', icon: <Car size={20} />, roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'] },
-  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { 
+    label: 'Leads', 
+    icon: <UserPlus size={20} />, 
+    roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'],
+    children: [
+      { label: 'Leads List', path: '/leads-list', icon: <FileText size={18} /> },
+      { label: 'Create Lead', path: '/add-lead', icon: <Plus size={18} /> },
+      { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={18} /> },
+    ]
+  },
+  { 
+    label: 'Loans', 
+    icon: <FileText size={20} />, 
+    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'],
+    children: [
+      { label: 'Loans List', path: '/loans', icon: <FileText size={18} /> },
+      { label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> },
+      { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
+    ]
+  },
+  {
+    label: 'Apps',
+    icon: <Activity size={20} />,
+    roles: ['super_admin', 'admin', 'manager', 'employee', 'accountant'],
+    children: [
+      { label: 'Application List', path: '/payments', icon: <FileText size={18} /> },
+      { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
+    ]
+  },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={20} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'manager'] },
@@ -25,6 +61,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Branches', path: '/branches', icon: <MapPin size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Send Notification', path: '/broadcast', icon: <Send size={20} />, roles: ['super_admin', 'admin'] },
+  { label: 'Permissions', path: '/permissions', icon: <Shield size={20} />, roles: ['super_admin'] },
   { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
   { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'] },
   { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'] },
@@ -35,105 +72,222 @@ export default function MobileBottomNav() {
   const { user } = useAuth();
   const location = useLocation();
   const [showMore, setShowMore] = useState(false);
+  const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
 
   if (!user) return null;
 
   const filteredNav = ALL_NAV_ITEMS.filter(item => !user.role || item.roles.includes(user.role));
   
-  // Define primary nav items based on role
-  let primaryNavPaths: string[] = [];
-  
-  if (user.role === 'super_admin' || user.role === 'admin') {
-    primaryNavPaths = ['/dashboard', '/loans', '/users', '/reports'];
-  } else if (user.role === 'manager') {
-    primaryNavPaths = ['/dashboard', '/leads-list', '/loans', '/reports'];
-  } else if (user.role === 'broker') {
-    primaryNavPaths = ['/dashboard', '/add-lead', '/loans', '/commission'];
-  } else if (user.role === 'bank') {
-    primaryNavPaths = ['/dashboard', '/loans', '/loans/new'];
-  } else if (user.role === 'accountant') {
-    primaryNavPaths = ['/account', '/account/receivables', '/account/payables', '/account/vouchers'];
-  } else {
-    // employee and others
-    primaryNavPaths = ['/dashboard', '/add-lead', '/loans', '/loans/new'];
-  }
+  // Define primary nav items based on role - using labels or common sets
+  const primaryNavItems = useMemo(() => {
+    let labels: string[] = [];
+    if (user.role === 'super_admin' || user.role === 'admin') {
+      labels = ['Home', 'Leads', 'Loans', 'Apps'];
+    } else if (user.role === 'manager') {
+      labels = ['Home', 'Leads', 'Loans', 'Reports'];
+    } else if (user.role === 'broker') {
+      labels = ['Home', 'Leads', 'Loans', 'Commission'];
+    } else if (user.role === 'accountant') {
+      labels = ['Account Home', 'Receivables', 'Payables', 'Vouchers'];
+    } else {
+      labels = ['Home', 'Leads', 'Loans', 'Apps'];
+    }
+    return filteredNav.filter(item => labels.includes(item.label));
+  }, [user.role, filteredNav]);
 
-  // Ensure moreNav only contains items NOT present in the primaryNav
-  const primaryNav = filteredNav.filter(item => primaryNavPaths.includes(item.path));
-  
-  // Create an array of the actual rendered primary paths to make sure we filter correctly
-  const renderedPrimaryPaths = primaryNav.map(item => item.path);
-  const moreNav = filteredNav.filter(item => !renderedPrimaryPaths.includes(item.path));
+  const moreNav = filteredNav.filter(item => !primaryNavItems.find(p => p.label === item.label));
+
+  const isNavActive = (item: NavItem) => {
+    if (item.path) return location.pathname === item.path;
+    if (item.children) {
+      return item.children.some(child => location.pathname === child.path);
+    }
+    return false;
+  };
 
   return (
     <>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-border z-40 safe-area-bottom">
-        <div className="flex items-center justify-around px-1 py-2">
-          {primaryNav.map(item => {
-            const active = location.pathname === item.path;
+      {/* Bottom Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-border z-40 safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        <div className="flex items-center justify-around px-2 py-2">
+          {primaryNavItems.map(item => {
+            const active = isNavActive(item);
+            const hasChildren = !!item.children;
+
+            if (hasChildren) {
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => setActiveSubMenu(activeSubMenu === item.label ? null : item.label)}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 min-w-0 flex-1 relative ${
+                    active || activeSubMenu === item.label
+                      ? 'text-accent scale-105'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-xl transition-colors ${active || activeSubMenu === item.label ? 'bg-accent/10' : ''}`}>
+                    {item.icon}
+                  </div>
+                  <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+                  {active && !activeSubMenu && <div className="absolute -bottom-1 w-1 h-1 bg-accent rounded-full" />}
+                </button>
+              );
+            }
+
             return (
               <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0 flex-1 ${active
-                  ? 'text-accent'
-                  : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                key={item.label}
+                to={item.path!}
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 min-w-0 flex-1 relative ${
+                  active
+                    ? 'text-accent scale-105'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <span className={active ? 'scale-110' : ''}>{item.icon}</span>
-                <span className="text-[10px] font-medium text-center">{item.label}</span>
+                <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-accent/10' : ''}`}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+                {active && <div className="absolute -bottom-1 w-1 h-1 bg-accent rounded-full" />}
               </Link>
             );
           })}
+          
           {moreNav.length > 0 && (
             <button
               onClick={() => setShowMore(true)}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0 flex-1 text-muted-foreground hover:text-foreground"
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 min-w-0 flex-1 text-muted-foreground hover:text-foreground active:scale-95"
             >
-              <MoreHorizontal size={20} />
-              <span className="text-[10px] font-medium text-center">More</span>
+              <div className="p-1.5 rounded-xl">
+                <MoreHorizontal size={20} />
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">More</span>
             </button>
           )}
         </div>
       </nav>
+
+      {/* Sub Menu / Bottom Sheet */}
+      {activeSubMenu && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden animate-in fade-in duration-200" 
+            onClick={() => setActiveSubMenu(null)} 
+          />
+          <div className="fixed bottom-20 left-4 right-4 z-50 lg:hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="glass-panel rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-xl">
+              <div className="p-2 space-y-1">
+                <div className="px-5 py-3 flex items-center justify-between border-b border-border/50">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    {primaryNavItems.find(i => i.label === activeSubMenu)?.icon}
+                    {activeSubMenu}
+                  </h3>
+                  <button 
+                    onClick={() => setActiveSubMenu(null)}
+                    className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
+                  >
+                    <X size={16} className="text-muted-foreground" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-1 p-2">
+                  {primaryNavItems.find(i => i.label === activeSubMenu)?.children?.map(child => {
+                    const active = location.pathname === child.path;
+                    return (
+                      <Link
+                        key={child.path}
+                        to={child.path}
+                        onClick={() => setActiveSubMenu(null)}
+                        className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all ${
+                          active
+                            ? 'bg-accent text-accent-foreground shadow-md font-bold'
+                            : 'text-foreground hover:bg-muted/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`p-1.5 rounded-lg ${active ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'}`}>
+                            {child.icon}
+                          </span>
+                          <span className="text-sm">{child.label}</span>
+                        </div>
+                        {active ? <div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" /> : <ChevronRight size={14} className="text-muted-foreground/50" />}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* More Menu Popup */}
       {showMore && (
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden" onClick={() => setShowMore(false)} />
           <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
-            <div className="glass-panel rounded-t-[2.5rem] border-t border-white/20 dark:border-white/10 shadow-2xl max-h-[70vh] overflow-y-auto backdrop-blur-lg">
-              <div className="sticky top-0 glass-panel border-b border-border px-6 py-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-foreground">More Options</h3>
+            <div className="glass-panel rounded-t-[2.5rem] border-t border-white/20 dark:border-white/10 shadow-2xl max-h-[75vh] overflow-y-auto backdrop-blur-lg">
+              <div className="sticky top-0 glass-panel border-b border-border/50 px-6 py-5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">More Options</h3>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Navigation</p>
+                </div>
                 <button
                   onClick={() => setShowMore(false)}
-                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                  className="p-2.5 rounded-full hover:bg-muted transition-colors shadow-sm"
                 >
                   <X size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <div className="p-4 space-y-2">
+              <div className="p-4 grid grid-cols-1 gap-2">
                 {moreNav.map(item => {
-                  const active = location.pathname === item.path;
+                  const active = isNavActive(item);
+                  const hasChildren = !!item.children;
+
                   return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setShowMore(false)}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
-                        active
-                          ? 'bg-accent text-accent-foreground shadow-md'
-                          : 'text-foreground active:bg-muted'
-                      }`}
-                    >
-                      <span className={active ? 'scale-110' : ''}>{item.icon}</span>
-                      <span className="text-sm font-medium">{item.label}</span>
-                      {active && <div className="ml-auto w-2 h-2 bg-accent-foreground rounded-full" />}
-                    </Link>
+                    <div key={item.label} className="space-y-1">
+                      {hasChildren ? (
+                        <>
+                          <div className="px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2">{item.label}</div>
+                          {item.children.map(child => {
+                            const childActive = location.pathname === child.path;
+                            return (
+                              <Link
+                                key={child.path}
+                                to={child.path}
+                                onClick={() => setShowMore(false)}
+                                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${
+                                  childActive
+                                    ? 'bg-accent text-accent-foreground shadow-lg'
+                                    : 'text-foreground hover:bg-muted/50'
+                                }`}
+                              >
+                                <span className={childActive ? 'scale-110' : 'text-accent'}>{child.icon}</span>
+                                <span className="text-sm font-semibold">{child.label}</span>
+                                {childActive && <div className="ml-auto w-2 h-2 bg-accent-foreground rounded-full" />}
+                              </Link>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <Link
+                          to={item.path!}
+                          onClick={() => setShowMore(false)}
+                          className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${
+                            active
+                              ? 'bg-accent text-accent-foreground shadow-lg'
+                              : 'text-foreground hover:bg-muted/50'
+                          }`}
+                        >
+                          <span className={active ? 'scale-110' : 'text-accent'}>{item.icon}</span>
+                          <span className="text-sm font-semibold">{item.label}</span>
+                          {active && <div className="ml-auto w-2 h-2 bg-accent-foreground rounded-full" />}
+                        </Link>
+                      )}
+                    </div>
                   );
                 })}
               </div>
-              <div className="h-4" />
+              <div className="h-8" />
             </div>
           </div>
         </>
@@ -141,3 +295,4 @@ export default function MobileBottomNav() {
     </>
   );
 }
+
