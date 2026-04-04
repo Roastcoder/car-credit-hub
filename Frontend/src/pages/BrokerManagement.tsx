@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
-import { UserCheck, Search, Plus, FileText, IndianRupee, Edit } from 'lucide-react';
+import { UserCheck, Search, Plus, FileText, IndianRupee, Edit, Trash2 } from 'lucide-react';
 import { BrokerFormModal } from '@/components/BrokerFormModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function BrokerManagement() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editBroker, setEditBroker] = useState<any>(null);
+  const { user } = useAuth();
 
   const { data: brokers = [], isLoading, refetch } = useQuery({
     queryKey: ['brokers'],
@@ -41,6 +44,24 @@ export default function BrokerManagement() {
   const handleEditBroker = (broker: any) => {
     setEditBroker(broker);
     setModalOpen(true);
+  };
+
+  const handleDeleteBroker = async (broker: any) => {
+    if (!window.confirm(`Are you sure you want to delete broker "${broker.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers/${broker.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete broker');
+      toast.success('Broker deleted successfully');
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete broker');
+    }
   };
 
   const filtered = (brokers as any[])
@@ -130,6 +151,11 @@ export default function BrokerManagement() {
                     <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
                       <Edit size={14} />
                     </button>
+                    {user?.role === 'super_admin' && (
+                      <button onClick={() => handleDeleteBroker(b)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center border-t border-border pt-3">
@@ -189,9 +215,16 @@ export default function BrokerManagement() {
                         </span>
                       </td>
                       <td className="py-3 px-3">
-                        <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-                          <Edit size={14} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                            <Edit size={14} />
+                          </button>
+                          {user?.role === 'super_admin' && (
+                            <button onClick={() => handleDeleteBroker(b)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
