@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "/", // Explicitly set base path to prevent MIME type issues on nested routes
   server: {
     host: "::",
     port: 3000,
