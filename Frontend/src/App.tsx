@@ -44,6 +44,8 @@ const CreatePaymentVoucher = lazy(() => import("@/pages/CreatePaymentVoucher"));
 const PaymentDetail = lazy(() => import("./pages/PaymentDetail"));
 const VouchersList = lazy(() => import("@/pages/VouchersList"));
 const PermissionManagement = lazy(() => import("@/pages/PermissionManagement"));
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -132,6 +134,8 @@ function AppRoutes() {
       <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetail /></ProtectedRoute>} />
       <Route path="/payments/edit/:id" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />
       <Route path="/broadcast" element={<ProtectedRoute><BroadcastNotification /></ProtectedRoute>} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
