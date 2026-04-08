@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { biometricAuth } from '@/lib/biometric';
@@ -171,6 +171,11 @@ export default function Login() {
                   Sign Up
                 </a>
               </p>
+              <div className="mt-4 flex justify-center gap-4 text-[10px] text-blue-500/70 dark:text-blue-400/50 font-semibold uppercase tracking-widest">
+                <Link to="/privacy" className="hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Privacy Policy</Link>
+                <span>•</span>
+                <Link to="/terms" className="hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Terms of Service</Link>
+              </div>
             </div>
           </div>
 
@@ -291,6 +296,11 @@ export default function Login() {
                   Sign Up
                 </a>
               </p>
+              <div className="mt-4 flex justify-center gap-4 text-[10px] text-blue-500/70 dark:text-blue-400/50 font-semibold uppercase tracking-widest">
+                <Link to="/privacy" className="hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Privacy Policy</Link>
+                <span>•</span>
+                <Link to="/terms" className="hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Terms of Service</Link>
+              </div>
             </div>
           </div>
           
