@@ -13,10 +13,101 @@ import WorkflowStatus from '@/components/WorkflowStatus';
 import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2 } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
+
+const DocumentPreviewCard = ({ 
+  doc, 
+  onView, 
+  onDelete, 
+  onReupload, 
+  canDelete,
+  isUploading 
+}: { 
+  doc: any; 
+  onView: (doc: any) => void;
+  onDelete: (doc: any) => void;
+  onReupload: (e: React.ChangeEvent<HTMLInputElement>, id: string, type: string) => void;
+  canDelete: boolean;
+  isUploading: boolean;
+}) => {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const baseUrl = apiUrl.replace(/\/api$/, '');
+  const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
+  const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;
+
+  const isImage = fileUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)/i);
+
+  return (
+    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest truncate flex-1">
+            {doc.document_type?.replace(/_/g, ' ')}
+          </h4>
+          <span className="px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[8px] font-bold border border-green-500/20">
+            SAVED
+          </span>
+        </div>
+        
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
+          {isImage ? (
+            <img src={fileUrl} alt={doc.document_type} className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <FileText size={32} className="text-accent/60" />
+              <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
+            </div>
+          )}
+          
+          {/* Hover Actions */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button 
+              type="button"
+              onClick={() => onView(doc)}
+              className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
+            >
+              <Eye size={16} />
+            </button>
+            
+            {canDelete && (
+              <>
+                <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
+                  {isUploading ? <Clock size={16} className="animate-spin" /> : <Upload size={16} />}
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    onChange={(e) => onReupload(e, doc.id, doc.document_type)}
+                    accept="image/*,.pdf"
+                  />
+                </label>
+                <button 
+                  type="button"
+                  onClick={() => onDelete(doc)}
+                  className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+             {doc.document_name || doc.file_name}
+          </span>
+          <span className="text-[9px] text-muted-foreground uppercase font-medium">
+            {new Date(doc.created_at).toLocaleDateString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const DOC_TYPES = [
   { value: 'dm', label: 'DM' },
@@ -751,41 +842,22 @@ export default function LoanDetail() {
           {documents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {documents.map((doc: any) => (
-                <div key={doc.id} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {doc.document_name || doc.file_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.document_type?.replace(/_/g, ' ').toUpperCase()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <button
-                      onClick={() => previewDocument(doc)}
-                      disabled={loadingPreview === doc.id}
-                      className="flex items-center gap-1 px-2 py-1 text-xs bg-accent/10 text-accent rounded hover:bg-accent/20 transition-colors disabled:opacity-50"
-                    >
-                      <Eye size={12} />
-                      {loadingPreview === doc.id ? 'Loading...' : 'View'}
-                    </button>
-                    {permissions.canDelete && (
-                      <button
-                        onClick={() => handleDeleteDoc(doc)}
-                        className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/10 text-red-500 rounded hover:bg-red-500/20 transition-colors"
-                      >
-                        <X size={12} />
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <DocumentPreviewCard 
+                  key={doc.id}
+                  doc={doc}
+                  onView={previewDocument}
+                  onDelete={handleDeleteDoc}
+                  onReupload={handleReuploadDoc}
+                  canDelete={permissions.canDelete}
+                  isUploading={uploadingDocId === doc.id}
+                />
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+            <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
+              <Camera size={32} className="text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+            </div>
           )}
         </Section>
 

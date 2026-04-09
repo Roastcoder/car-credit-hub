@@ -5,7 +5,61 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
-import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info } from 'lucide-react';
+import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera } from 'lucide-react';
+
+const DocumentPreviewCard = ({ 
+  doc, 
+  onView 
+}: { 
+  doc: any; 
+  onView: (doc: any) => void;
+}) => {
+  const isImage = doc.url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i);
+
+  return (
+    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest truncate flex-1">
+            {doc.type || 'DOCUMENT'}
+          </h4>
+          <span className="px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[8px] font-bold border border-green-500/20">
+            SAVED
+          </span>
+        </div>
+        
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
+          {isImage ? (
+            <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <FileText size={32} className="text-accent/60" />
+              <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
+            </div>
+          )}
+          
+          {/* Hover Actions */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button 
+              type="button"
+              onClick={() => onView(doc)}
+              className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+             {doc.name}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
 
@@ -474,40 +528,41 @@ export default function PaymentDetail() {
         {/* Supporting Documents (Banking & PDD) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Section title="Banking Proofs" icon={<FileText size={20} />}>
-            <div className="grid grid-cols-1 gap-4">
-              {bankingDocuments.length > 0 ? bankingDocuments.map((doc, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <FileText size={16} className="text-blue-500 flex-shrink-0" />
-                    <span className="text-sm truncate">{doc.name}</span>
-                  </div>
-                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                    View
-                  </button>
-                </div>
-              )) : <p className="text-sm text-muted-foreground italic">No banking documents attached</p>}
-            </div>
+            {bankingDocuments.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {bankingDocuments.map((doc, idx) => (
+                  <DocumentPreviewCard 
+                    key={idx}
+                    doc={doc}
+                    onView={previewDocument}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">
+                <Camera size={24} className="text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground italic">No banking documents attached</p>
+              </div>
+            )}
           </Section>
 
           <Section title="Loan Documents" icon={<FileText size={20} />}>
-            <div className="grid grid-cols-1 gap-3">
-              {loanDocuments.length > 0 ? loanDocuments.map((doc: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <FileText size={16} className="text-purple-500 flex-shrink-0" />
-                    <div className="overflow-hidden">
-                      <p className="text-sm font-medium truncate">{doc.name}</p>
-                      {doc.type && doc.type !== doc.name && (
-                        <p className="text-xs text-muted-foreground">{doc.type}</p>
-                      )}
-                    </div>
-                  </div>
-                  <button onClick={() => previewDocument(doc)} className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex-shrink-0 ml-2">
-                    View
-                  </button>
-                </div>
-              )) : <p className="text-sm text-muted-foreground italic">No documents found for this loan</p>}
-            </div>
+            {loanDocuments.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {loanDocuments.map((doc: any, idx: number) => (
+                  <DocumentPreviewCard 
+                    key={idx}
+                    doc={doc}
+                    onView={previewDocument}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">
+                <Camera size={24} className="text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground italic">No documents found for this loan</p>
+              </div>
+            )}
           </Section>
         </div>
 
