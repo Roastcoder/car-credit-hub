@@ -136,6 +136,9 @@ function buildLoanHTML(loan: LoanData): string {
 
   ${sectionTitle('&#128196;', 'RTO Details')}
   ${row4('RC Owner', fmt(loan.rc_owner_name), 'HPN Status', fmt(loan.hpn_at_login), 'RTO Agent', fmt(loan.rto_agent_name), 'Agent Mobile', fmt(loan.agent_mobile_no))}
+  ${row4('RC Present', loan.rto_rc ? 'Yes' : 'No', 'NOC Present', loan.rto_noc ? 'Yes' : 'No', 'Permit Present', loan.rto_permit ? 'Yes' : 'No', 'Pollution Present', loan.rto_pollution ? 'Yes' : 'No')}
+  ${row4('29/30 Form', loan.rto_2930_form ? 'Yes' : 'No', 'Sell Agreement', loan.rto_sell_agreement ? 'Yes' : 'No', 'RC Owner KYC', loan.rto_rc_owner_kyc ? 'Yes' : 'No', 'Stamp Papers', loan.rto_stamp_papers ? 'Yes' : 'No')}
+  ${row4('DM Present', loan.rto_dm ? 'Yes' : 'No', '', '', '', '', '', '')}
 </table>
 
 <table class="sig-table">
@@ -285,7 +288,11 @@ function generatePDFBlob(loan: LoanData): Blob {
   ]);
 
   drawSection('RTO DETAILS', [
-    ['RC Owner', fmt(loan.rc_owner_name)], ['HPN Status', fmt(loan.hpn_at_login)], ['RTO Agent', fmt(loan.rto_agent_name)], ['Agent Mobile', fmt(loan.agent_mobile_no)]
+    ['RC Owner', fmt(loan.rc_owner_name)], ['HPN Status', fmt(loan.hpn_at_login)], ['RTO Agent', fmt(loan.rto_agent_name)],
+    ['Agent Mobile', fmt(loan.agent_mobile_no)], ['RC Present', loan.rto_rc ? 'Yes' : 'No'], ['NOC Present', loan.rto_noc ? 'Yes' : 'No'],
+    ['Permit Present', loan.rto_permit ? 'Yes' : 'No'], ['Pollution Present', loan.rto_pollution ? 'Yes' : 'No'], ['29/30 Form', loan.rto_2930_form ? 'Yes' : 'No'],
+    ['Sell Agreement', loan.rto_sell_agreement ? 'Yes' : 'No'], ['RC Owner KYC', loan.rto_rc_owner_kyc ? 'Yes' : 'No'], ['Stamp Papers', loan.rto_stamp_papers ? 'Yes' : 'No'],
+    ['DM Present', loan.rto_dm ? 'Yes' : 'No']
   ]);
 
   // Signature area

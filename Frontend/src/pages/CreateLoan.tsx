@@ -167,6 +167,7 @@ export default function CreateLoan() {
     // RTO Details
     rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
     rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
+    rtoRC: 'No', rtoNOC: 'No', rtoPermit: 'No', rtoPollution: 'No', rto2930Form: 'No', rtoSellAgreement: 'No', rtoRCOwnerKYC: 'No', rtoStampPapers: 'No', rtoDM: 'No',
     fcAmount: '', fcDate: '',
     // EMI Details
     irr: '', tenure: '60', emiAmount: '', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
@@ -183,12 +184,12 @@ export default function CreateLoan() {
     bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
     customerPhoto: null, insurance: null, customerLedger: null,
     // Other KYC Documents
-    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
+    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null, dmDocument: null,
     // Document checkboxes
     showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
     showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
     // Other KYC checkboxes
-    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
+    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false, showDmDocument: false,
   });
 
   if (!permissions.canCreateLoan && !id) {
@@ -560,13 +561,22 @@ export default function CreateLoan() {
         fileStatus: existingLoan.status || 'submitted',
         fcAmount: String(existingLoan.fc_amount || ''),
         fcDate: formatDate(existingLoan.fc_date),
+        rtoRC: existingLoan.rto_rc ? 'Yes' : 'No',
+        rtoNOC: existingLoan.rto_noc ? 'Yes' : 'No',
+        rtoPermit: existingLoan.rto_permit ? 'Yes' : 'No',
+        rtoPollution: existingLoan.rto_pollution ? 'Yes' : 'No',
+        rto2930Form: existingLoan.rto_2930_form ? 'Yes' : 'No',
+        rtoSellAgreement: existingLoan.rto_sell_agreement ? 'Yes' : 'No',
+        rtoRCOwnerKYC: existingLoan.rto_rc_owner_kyc ? 'Yes' : 'No',
+        rtoStampPapers: existingLoan.rto_stamp_papers ? 'Yes' : 'No',
+        rtoDM: existingLoan.rto_dm ? 'Yes' : 'No',
         aadharFront: null, aadharBack: null, panCard: null,
         bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
         customerPhoto: null, insurance: null, customerLedger: null,
-        rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null,
+        rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null, dmDocument: null,
         showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
         showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
-        showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
+        showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false, showDmDocument: false,
       });
 
       // Handle custom tenure for edit mode
@@ -636,6 +646,9 @@ export default function CreateLoan() {
               break;
             case 'tax_receipt':
               newForm.showTaxReceipt = true;
+              break;
+            case 'dm_document':
+              newForm.showDmDocument = true;
               break;
           }
         });
@@ -921,6 +934,15 @@ export default function CreateLoan() {
           rto_papers: form.rtoPapers,
           fc_amount: Number(form.fcAmount) || null,
           fc_date: form.fcDate || null,
+          rto_rc: form.rtoRC === 'Yes',
+          rto_noc: form.rtoNOC === 'Yes',
+          rto_permit: form.rtoPermit === 'Yes',
+          rto_pollution: form.rtoPollution === 'Yes',
+          rto_2930_form: form.rto2930Form === 'Yes',
+          rto_sell_agreement: form.rtoSellAgreement === 'Yes',
+          rto_rc_owner_kyc: form.rtoRCOwnerKYC === 'Yes',
+          rto_stamp_papers: form.rtoStampPapers === 'Yes',
+          rto_dm: form.rtoDM === 'Yes',
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -1194,6 +1216,18 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
 
+                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-border/30">
+                      <div><label className={labelClass}>RC Present?</label><select className={inputClass} value={form.rtoRC} onChange={e => update('rtoRC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>NOC Present?</label><select className={inputClass} value={form.rtoNOC} onChange={e => update('rtoNOC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>Permit Present?</label><select className={inputClass} value={form.rtoPermit} onChange={e => update('rtoPermit', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>Pollution Present?</label><select className={inputClass} value={form.rtoPollution} onChange={e => update('rtoPollution', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>29/30 Form?</label><select className={inputClass} value={form.rto2930Form} onChange={e => update('rto2930Form', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>Sell Agreement?</label><select className={inputClass} value={form.rtoSellAgreement} onChange={e => update('rtoSellAgreement', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>RC Owner KYC?</label><select className={inputClass} value={form.rtoRCOwnerKYC} onChange={e => update('rtoRCOwnerKYC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>Stamp Papers?</label><select className={inputClass} value={form.rtoStampPapers} onChange={e => update('rtoStampPapers', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div><label className={labelClass}>DM Present?</label><select className={inputClass} value={form.rtoDM} onChange={e => update('rtoDM', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -1439,7 +1473,8 @@ export default function CreateLoan() {
                         { file: form.stamp, name: 'Stamp', type: 'stamp' },
                         { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
                         { file: form.fitnessDocument, name: 'FC', type: 'fitness_document' },
-                        { file: form.taxReceipt, name: 'RBM / Tax Receipt', type: 'tax_receipt' },
+                        { file: form.taxReceipt, name: 'Tax Receipt', type: 'tax_receipt' },
+                        { file: form.dmDocument, name: 'DM', type: 'dm_document' },
                       ].filter(doc => doc.file).map((doc) => {
                         const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
                         return (
@@ -1678,7 +1713,11 @@ export default function CreateLoan() {
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
-                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">RBM / Tax Receipt</span>
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Tax Receipt</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showDmDocument} onChange={e => update('showDmDocument', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">DM</span>
                     </label>
                   </div>
 
@@ -1746,12 +1785,22 @@ export default function CreateLoan() {
                     )}
                     {form.showTaxReceipt && (
                       <DocumentUploadCard
-                        label="RBM / Tax Receipt"
+                        label="Tax Receipt"
                         type="tax_receipt"
                         file={form.taxReceipt as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'tax_receipt')}
                         onChange={val => update('taxReceipt', val)}
                         onClear={() => update('taxReceipt', null)}
+                      />
+                    )}
+                    {form.showDmDocument && (
+                      <DocumentUploadCard
+                        label="DM"
+                        type="dm_document"
+                        file={form.dmDocument as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'dm_document')}
+                        onChange={val => update('dmDocument', val)}
+                        onClear={() => update('dmDocument', null)}
                       />
                     )}
                   </div>

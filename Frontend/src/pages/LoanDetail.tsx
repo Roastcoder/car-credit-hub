@@ -751,8 +751,15 @@ export default function LoanDetail() {
                     </div>
                     <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
                     <Field label="Challans" value={(loan as any).challan_status || 'No'} />
-                    <Field label="Pollution" value={(loan as any).pollution_status || '—'} />
-                    <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
+                    <Field label="RC Present" value={(loan as any).rto_rc ? 'Yes' : 'No'} />
+                    <Field label="NOC Present" value={(loan as any).rto_noc ? 'Yes' : 'No'} />
+                    <Field label="Permit Present" value={(loan as any).rto_permit ? 'Yes' : 'No'} />
+                    <Field label="Pollution Present" value={(loan as any).rto_pollution ? 'Yes' : 'No'} />
+                    <Field label="29/30 Form" value={(loan as any).rto_2930_form ? 'Yes' : 'No'} />
+                    <Field label="Sell Agreement" value={(loan as any).rto_sell_agreement ? 'Yes' : 'No'} />
+                    <Field label="RC Owner KYC" value={(loan as any).rto_rc_owner_kyc ? 'Yes' : 'No'} />
+                    <Field label="Stamp Papers" value={(loan as any).rto_stamp_papers ? 'Yes' : 'No'} />
+                    <Field label="DM Present" value={(loan as any).rto_dm ? 'Yes' : 'No'} />
                   </div>
                 </Section>
               )}
