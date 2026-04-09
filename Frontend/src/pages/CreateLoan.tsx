@@ -1886,7 +1886,12 @@ export default function CreateLoan() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate(-1)}
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                        localStorage.removeItem('loan_form_draft');
+                        navigate(-1);
+                      }
+                    }}
                     className="w-full py-2.5 px-4 rounded-xl border border-border bg-card text-foreground font-bold text-xs hover:bg-muted transition-all"
                   >
                     Cancel
