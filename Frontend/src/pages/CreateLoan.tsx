@@ -217,6 +217,23 @@ export default function CreateLoan() {
     return defaultState;
   });
 
+  // Centralized Draft Saving Effect
+  useEffect(() => {
+    if (!id) { // Only save drafts for "New Loan" mode, not "Edit" mode
+      const draftToSave = { ...form };
+      // Remove file objects before saving to localStorage
+      const fileKeys = [
+        'aadharFront', 'aadharBack', 'panCard', 'bankStatement', 'cheque', 
+        'rcFront', 'rcBack', 'incomeProof', 'customerPhoto', 'insurance', 
+        'customerLedger', 'rtoDocument', 'noc', 'thirdParty', 'stamp', 
+        'rcDocument', 'fitnessDocument', 'taxReceipt', 'dmDocument'
+      ];
+      fileKeys.forEach(key => { delete (draftToSave as any)[key]; });
+      
+      localStorage.setItem('loan_form_draft', JSON.stringify(draftToSave));
+    }
+  }, [form, id]);
+
   if (!permissions.canCreateLoan && !id) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -688,8 +705,6 @@ export default function CreateLoan() {
       if (key === 'bookingMode' && val === 'self') {
         newForm.assignedBrokerId = '';
       }
-      // Save to localStorage
-      localStorage.setItem('loan_form_draft', JSON.stringify(newForm));
       return newForm;
     });
   };
