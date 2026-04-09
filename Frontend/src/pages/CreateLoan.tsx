@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, externalAPI, loansAPI } from '@/lib/api';
+import { supabase, externalAPI, loansAPI, branchesAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
@@ -213,7 +213,7 @@ export default function CreateLoan() {
         console.error('Failed to load form draft from localstorage', err);
       }
     }
-    
+
     return defaultState;
   });
 
@@ -223,13 +223,13 @@ export default function CreateLoan() {
       const draftToSave = { ...form };
       // Remove file objects before saving to localStorage
       const fileKeys = [
-        'aadharFront', 'aadharBack', 'panCard', 'bankStatement', 'cheque', 
-        'rcFront', 'rcBack', 'incomeProof', 'customerPhoto', 'insurance', 
-        'customerLedger', 'rtoDocument', 'noc', 'thirdParty', 'stamp', 
+        'aadharFront', 'aadharBack', 'panCard', 'bankStatement', 'cheque',
+        'rcFront', 'rcBack', 'incomeProof', 'customerPhoto', 'insurance',
+        'customerLedger', 'rtoDocument', 'noc', 'thirdParty', 'stamp',
         'rcDocument', 'fitnessDocument', 'taxReceipt', 'dmDocument'
       ];
       fileKeys.forEach(key => { delete (draftToSave as any)[key]; });
-      
+
       localStorage.setItem('loan_form_draft', JSON.stringify(draftToSave));
     }
   }, [form, id]);
@@ -326,6 +326,21 @@ export default function CreateLoan() {
         if (!response.ok) return [];
         const data = await response.json();
         return Array.isArray(data) ? data : (data.data || []);
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branches-list'],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/branches`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
       } catch {
         return [];
       }
@@ -792,6 +807,39 @@ export default function CreateLoan() {
     }
   }, [form.emiStartDate, form.tenure]);
 
+  // Auto-fill Branch Manager Name based on selected branch
+  useEffect(() => {
+    if (form.ourBranch && branches.length > 0) {
+      const selectedBranch = branches.find((b: any) => b.name === form.ourBranch);
+      if (selectedBranch && selectedBranch.manager_name && form.branchManagerName !== selectedBranch.manager_name) {
+        update('branchManagerName', selectedBranch.manager_name);
+      }
+    }
+  }, [form.ourBranch, branches]);
+
+  // Auto-calculate Total Deduction from Financer (Processing Fee)
+  useEffect(() => {
+    const proposed = Number(form.purposeLoanAmount) || 0;
+    const net = Number(form.netDisbursementAmount) || 0;
+    if (proposed > 0 || net > 0) {
+      const deduction = proposed - net;
+      if (deduction !== Number(form.processingFee)) {
+        update('processingFee', String(deduction));
+      }
+    }
+  }, [form.purposeLoanAmount, form.netDisbursementAmount]);
+
+  // Auto-fill Our Branch from logged-in user's branch
+  useEffect(() => {
+    if (!isEditMode && user && branches.length > 0 && !form.ourBranch) {
+      // If user object has branch_name, use it; otherwise look up by branch_id
+      const branchName = (user as any).branch_name || branches.find((b: any) => String(b.id) === String(user.branch_id))?.name;
+      if (branchName) {
+        update('ourBranch', branchName);
+      }
+    }
+  }, [user, branches, isEditMode]);
+
   const emi = useMemo(() => {
     const p = Number(form.loanAmount);
     const r = Number(form.irr);
@@ -840,6 +888,7 @@ export default function CreateLoan() {
       { file: form.rcDocument, type: 'rc_document', name: 'RC Document' },
       { file: form.fitnessDocument, type: 'fitness_document', name: 'FC' },
       { file: form.taxReceipt, type: 'tax_receipt', name: 'RBM / Tax Receipt' },
+      { file: form.dmDocument, type: 'dm_document', name: 'DM' },
     ].filter(doc => doc.file !== null);
 
     if (documents.length === 0) {
@@ -987,6 +1036,10 @@ export default function CreateLoan() {
           rto_rc_owner_kyc: form.rtoRCOwnerKYC === 'Yes',
           rto_stamp_papers: form.rtoStampPapers === 'Yes',
           rto_dm: form.rtoDM === 'Yes',
+          booking_month: form.bookingMonth || null,
+          manager_name: form.branchManagerName || null,
+          insurance_status: form.insuranceStatus || null,
+          insurance_start_date: form.insuranceStartDate || null,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -1133,8 +1186,29 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
                     <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
-                    <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
-                    <div><label className={labelClass}>Branch Manager Name</label><input className={inputClass} value={form.branchManagerName} onChange={e => update('branchManagerName', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>Our Branch</label>
+                      <input 
+                        className={inputClass} 
+                        value={form.ourBranch} 
+                        onChange={e => update('ourBranch', e.target.value)}
+                        list="branches-datalist"
+                      />
+                      <datalist id="branches-datalist">
+                        {branches.map((b: any) => (
+                          <option key={b.id} value={b.name} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Branch Manager Name</label>
+                      <input
+                        className={inputClass}
+                        value={form.branchManagerName}
+                        onChange={e => update('branchManagerName', e.target.value)}
+                        readOnly
+                      />
+                    </div>
                     <div><label className={labelClass}>Booking Month</label><input className={inputClass} value={form.bookingMonth} onChange={e => update('bookingMonth', e.target.value)} placeholder="e.g. April 2024" /></div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
@@ -1232,8 +1306,8 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                     <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
                     <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
-                     <div><label className={labelClass}>Insurance Start Date</label><input type="date" className={inputClass} value={form.insuranceStartDate} onChange={e => update('insuranceStartDate', e.target.value)} /></div>
-                     <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                    <div><label className={labelClass}>Insurance Start Date</label><input type="date" className={inputClass} value={form.insuranceStartDate} onChange={e => update('insuranceStartDate', e.target.value)} /></div>
+                    <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
                     <div>
                       <label className={labelClass}>Insurance Status</label>
                       <select className={inputClass} value={form.insuranceStatus} onChange={e => update('insuranceStatus', e.target.value)}>
@@ -1287,7 +1361,7 @@ export default function CreateLoan() {
 
                 {/* Loan Amounts */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Proposed Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
                   <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
                   <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
                   <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
@@ -1319,7 +1393,7 @@ export default function CreateLoan() {
                       <option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option>
                     </select>
                   </div>
-                  <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
+                  <div><label className={labelClass}>Total Deduction from Financer (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
                   <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
                   <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
                 </div>
@@ -1422,7 +1496,7 @@ export default function CreateLoan() {
                   <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">4</span>
                   Disbursement & Payout Details
                 </h2>
-                
+
                 {/* Deduction */}
                 <div>
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
