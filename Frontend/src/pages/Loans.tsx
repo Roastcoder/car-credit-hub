@@ -47,7 +47,6 @@ export default function Loans() {
       try {
         // Use the proper API wrapper that handles role-based filtering
         const response = await loansAPI.getAll();
-        console.log('API Response:', response);
         // Robust data extraction: handle {data: []} or just []
         let data = response;
         if (response && typeof response === 'object' && !Array.isArray(response) && response.data) {
@@ -55,7 +54,6 @@ export default function Loans() {
         }
         return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error('Failed to fetch loans:', error);
         return [];
       }
     },

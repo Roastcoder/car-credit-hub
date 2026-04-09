@@ -388,11 +388,9 @@ export default function CreateLoan() {
 
     setFetchingVehicleData(true);
     try {
-      console.log('Fetching from backend proxy');
       toast.info('Fetching vehicle details...');
 
       const rcData = await externalAPI.fetchRCData(rcNumber);
-      console.log('RC Proxy Response:', rcData);
 
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
@@ -788,11 +786,9 @@ export default function CreateLoan() {
     ].filter(doc => doc.file !== null);
 
     if (documents.length === 0) {
-      console.log('No documents to upload');
       return;
     }
 
-    console.log(`Uploading ${documents.length} documents for loan ${loanId}`);
     setUploadingDocs(true);
 
     try {
@@ -813,7 +809,6 @@ export default function CreateLoan() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Upload result:', result);
         setUploadedDocs(result.uploaded || []);
         toast.success(result.message || `${documents.length} document(s) uploaded successfully`);
       } else {

@@ -158,9 +158,7 @@ export default function LoanDetail() {
     queryKey: ['loan', id],
     queryFn: async () => {
       const response = await loansAPI.getById(id as any); // Don't convert to Number, keep as string
-      console.log('Loan detail API response:', response);
       const loanData = response.data || response;
-      console.log('Processed loan data:', loanData);
       return loanData;
     },
     enabled: !!id,
@@ -210,7 +208,6 @@ export default function LoanDetail() {
 
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
-      console.log('Updating status to:', newStatus, 'for loan ID:', id);
       // Use the same approach as Loans page - via loansAPI.update
       await loansAPI.update(id as any, { status: newStatus });
       return { message: 'Status updated successfully' };
@@ -345,7 +342,6 @@ export default function LoanDetail() {
         ? doc.file_url
         : `${baseUrl}${normalizedPath}`;
 
-      console.log('Opening in new tab:', fileUrl);
       window.open(fileUrl, '_blank');
     } catch (error) {
       console.error('View error:', error);

@@ -240,7 +240,6 @@ export async function requestAllNativePermissions() {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    console.log('Requesting native permissions...');
 
     // 1. Notification Permissions (Crucial for Android 13+)
     const pushStatus = await PushNotifications.checkPermissions();
@@ -260,7 +259,6 @@ export async function requestAllNativePermissions() {
       await Filesystem.requestPermissions();
     }
 
-    console.log('Permission requests completed.');
   } catch (error) {
     console.error('Error requesting permissions:', error);
   }

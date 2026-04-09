@@ -1,5 +1,4 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-console.log('Frontend connecting to API at:', API_URL);
 
 let authToken: string | null = localStorage.getItem('auth_token');
 
