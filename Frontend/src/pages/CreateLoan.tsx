@@ -151,45 +151,70 @@ export default function CreateLoan() {
     { label: id ? 'Edit Loan' : 'New Loan', path: location.pathname, icon: <Plus size={18} /> },
   ];
 
-  const [form, setForm] = useState({
-    // Customer Details
-    customerId: '', customerName: '', mobile: '', panNumber: '', aadharNumber: '', ourBranch: '',
-    currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
-    sameAsCurrentAddress: false,
-    permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
-    // Loan & Vehicle Details
-    loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
-    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '',
-    chassisNumber: '', engineNumber: '',
-    vertical: '', scheme: '',
-    // Income Details
-    incomeSource: '', monthlyIncome: '',
-    // RTO Details
-    rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
-    rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
-    rtoRC: 'No', rtoNOC: 'No', rtoPermit: 'No', rtoPollution: 'No', rto2930Form: 'No', rtoSellAgreement: 'No', rtoRCOwnerKYC: 'No', rtoStampPapers: 'No', rtoDM: 'No',
-    fcAmount: '', fcDate: '',
-    // EMI Details
-    irr: '', tenure: '60', emiAmount: '', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
-    // Financier Details
-    assignedBankId: '', assignedBrokerId: '', bookingMode: 'self', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
-    // Insurance Details
-    insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
-    // Deductions & Disbursement Details
-    processingFee: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
-    // Others
-    loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
-    // Documents
-    aadharFront: null, aadharBack: null, panCard: null,
-    bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
-    customerPhoto: null, insurance: null, customerLedger: null,
-    // Other KYC Documents
-    rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null, dmDocument: null,
-    // Document checkboxes
-    showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
-    showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
-    // Other KYC checkboxes
-    showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false, showDmDocument: false,
+  const [form, setForm] = useState(() => {
+    const defaultState = {
+      // Customer Details
+      customerId: '', customerName: '', mobile: '', panNumber: '', aadharNumber: '', ourBranch: '',
+      currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
+      sameAsCurrentAddress: false,
+      permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
+      // Loan & Vehicle Details
+      loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
+      vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '',
+      chassisNumber: '', engineNumber: '',
+      vertical: '', scheme: '',
+      // Income Details
+      incomeSource: '', monthlyIncome: '',
+      // RTO Details
+      rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
+      rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
+      rtoRC: 'No', rtoNOC: 'No', rtoPermit: 'No', rtoPollution: 'No', rto2930Form: 'No', rtoSellAgreement: 'No', rtoRCOwnerKYC: 'No', rtoStampPapers: 'No', rtoDM: 'No',
+      fcAmount: '', fcDate: '',
+      // EMI Details
+      irr: '', tenure: '60', emiAmount: '', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
+      // Financier Details
+      assignedBankId: '', assignedBrokerId: '', bookingMode: 'self', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
+      // Insurance Details
+      insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
+      // Deductions & Disbursement Details
+      processingFee: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
+      // Others
+      loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
+      // Documents
+      aadharFront: null, aadharBack: null, panCard: null,
+      bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
+      customerPhoto: null, insurance: null, customerLedger: null,
+      // Other KYC Documents
+      rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null, dmDocument: null,
+      // Document checkboxes
+      showAadhar: false, showPan: false, showBankStatement: false, showCheque: false,
+      showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
+      // Other KYC checkboxes
+      showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false, showDmDocument: false,
+    };
+
+    // Attempt to load from localStorage if we are not editing
+    if (!id) {
+      try {
+        const savedDraft = localStorage.getItem('loan_form_draft');
+        if (savedDraft) {
+          const parsed = JSON.parse(savedDraft);
+          // Files cannot be stored in localstorage effectively, so clear them
+          return {
+            ...defaultState,
+            ...parsed,
+            aadharFront: null, aadharBack: null, panCard: null,
+            bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
+            customerPhoto: null, insurance: null, customerLedger: null,
+            rtoDocument: null, noc: null, thirdParty: null, stamp: null, rcDocument: null, fitnessDocument: null, taxReceipt: null, dmDocument: null,
+          };
+        }
+      } catch (err) {
+        console.error('Failed to load form draft from localstorage', err);
+      }
+    }
+    
+    return defaultState;
   });
 
   if (!permissions.canCreateLoan && !id) {

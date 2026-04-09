@@ -54,14 +54,12 @@ export default function Dashboard() {
   const { data: smsBalance } = useQuery({
     queryKey: ['sms-balance'],
     queryFn: async () => {
-      if (user?.role !== 'super_admin') return null;
-      try {
+      if (user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager') {
         return await smsAPI.getBalance();
-      } catch {
-        return null;
       }
+      return null;
     },
-    enabled: !!user && user.role === 'super_admin',
+    enabled: user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager'
   });
 
   if (!user) return null;
@@ -163,6 +161,26 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {smsBalance && (
+          <div className="mb-2 flex flex-wrap gap-4 items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/50 w-fit">
+            <div className="flex items-center gap-2 text-blue-900 dark:text-blue-100 font-medium">
+              <MessagesSquare size={18} className="text-blue-500" />
+              <span>SMS Balance:</span>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
+                <span className="text-[10px] font-bold uppercase text-blue-500">Trans</span>
+                <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.transactional || 0}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
+                <span className="text-[10px] font-bold uppercase text-blue-500">Promo</span>
+                <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.promotional || 0}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isAdminDashboard ? (
           <>
             <div className="stat-card mb-6">
@@ -210,25 +228,6 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
-
-              {smsBalance && (
-                <div className="mt-4 flex flex-wrap gap-4 items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/50">
-                  <div className="flex items-center gap-2 text-blue-900 dark:text-blue-100 font-medium">
-                    <MessagesSquare size={18} className="text-blue-500" />
-                    <span>SMS Balance:</span>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
-                      <span className="text-[10px] font-bold uppercase text-blue-500">Trans</span>
-                      <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.transactional || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
-                      <span className="text-[10px] font-bold uppercase text-blue-500">Promo</span>
-                      <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.promotional || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-3 sm:gap-4 mb-6">
