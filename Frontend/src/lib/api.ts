@@ -243,6 +243,12 @@ export const permissionsAPI = {
   update: (userId: number | string, permissions: any) => api.put(`/permissions/user/${userId}`, { permissions }),
 };
 
+// SMS API
+export const smsAPI = {
+  getBalance: () => api.get('/sms/balance'),
+  sendTest: (data: { mobile: string; message: string }) => api.post('/sms/test', data),
+};
+
 // Legacy supabase compatibility shim (for components using supabase.auth.*)
 export const supabase = {
   auth: {

@@ -6,8 +6,8 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import { LOAN_STATUSES } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
-import { loansAPI, branchesAPI } from '@/lib/api';
-import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3 } from 'lucide-react';
+import { loansAPI, branchesAPI, smsAPI } from '@/lib/api';
+import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3, MessagesSquare } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -49,6 +49,19 @@ export default function Dashboard() {
       }
     },
     enabled: !!user?.branch_id,
+  });
+  
+  const { data: smsBalance } = useQuery({
+    queryKey: ['sms-balance'],
+    queryFn: async () => {
+      if (user?.role !== 'admin' && user?.role !== 'super_admin') return null;
+      try {
+        return await smsAPI.getBalance();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!user && (user.role === 'admin' || user.role === 'super_admin'),
   });
 
   if (!user) return null;
@@ -197,6 +210,25 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+
+              {smsBalance && (
+                <div className="mt-4 flex flex-wrap gap-4 items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                  <div className="flex items-center gap-2 text-blue-900 dark:text-blue-100 font-medium">
+                    <MessagesSquare size={18} className="text-blue-500" />
+                    <span>SMS Balance:</span>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
+                      <span className="text-[10px] font-bold uppercase text-blue-500">Trans</span>
+                      <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.transactional || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
+                      <span className="text-[10px] font-bold uppercase text-blue-500">Promo</span>
+                      <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.promotional || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-3 sm:gap-4 mb-6">
