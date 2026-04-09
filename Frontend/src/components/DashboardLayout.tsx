@@ -273,7 +273,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden px-0 py-3 pb-48 lg:p-4 sm:lg:p-5 scroll-smooth antialiased transform-gpu" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-0 py-3 pb-20 lg:p-4 sm:lg:p-5 scroll-smooth antialiased transform-gpu" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
           <div className="animate-fade-in min-h-full">
             {children}
           </div>

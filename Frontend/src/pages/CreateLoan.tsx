@@ -1767,7 +1767,7 @@ export default function CreateLoan() {
 
           {/* Right Sidebar */}
           <div className="w-full lg:w-96 space-y-6 shrink-0">
-            <div className="lg:sticky lg:top-4 h-fit space-y-6 pb-20">
+            <div className="lg:sticky lg:top-4 h-fit space-y-6">
               {/* Manager Remarks Section */}
               {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
                 <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-5 shadow-sm">
