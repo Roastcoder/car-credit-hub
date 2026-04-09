@@ -419,7 +419,7 @@ export default function LoanDetail() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 pb-20 lg:pb-4">
+      <div className="max-w-full mx-auto px-4 pb-20 lg:pb-4">
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft size={16} /> Back to Applications
@@ -573,8 +573,10 @@ export default function LoanDetail() {
           </div>
         </div>
 
-        {/* Loan Details Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* Loan Details Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Applicant Information */}
           <Section title="Applicant Information" icon={<User size={16} />}>
             <div className="grid grid-cols-2 gap-4">
@@ -837,91 +839,100 @@ export default function LoanDetail() {
           </Section>
         </div>
 
-        {/* Documents Section */}
-        <Section title="Documents" icon={<FileText size={16} />}>
-          {documents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc: any) => (
-                <DocumentPreviewCard 
-                  key={doc.id}
-                  doc={doc}
-                  onView={previewDocument}
-                  onDelete={handleDeleteDoc}
-                  onReupload={handleReuploadDoc}
-                  canDelete={permissions.canDelete}
-                  isUploading={uploadingDocId === doc.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
-              <Camera size={32} className="text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
-            </div>
-          )}
-        </Section>
-
-        {/* Remarks Section */}
-        {(loan as any).remark && (
-          <Section title="Latest Remarks" icon={<MessageSquare size={16} />}>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{(loan as any).remark}</p>
-          </Section>
-        )}
-
-        {/* Workflow History Section */}
-        {auditLogs.length > 0 && (
-          <Section title="Workflow History" icon={<Clock size={16} />}>
-            <div className="space-y-4">
-              {auditLogs.map((log: any, index: number) => (
-                <div key={log.id} className="relative pl-6 pb-4 last:pb-0">
-                  {/* Timeline connector */}
-                  {index < auditLogs.length - 1 && (
-                    <div className="absolute left-[7px] top-[18px] bottom-0 w-[2px] bg-border" />
-                  )}
-                  {/* Timeline dot */}
-                  <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background" />
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">
-                        {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase font-medium">
-                        {log.action_type?.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-muted-foreground">
-                      {new Date(log.performed_at).toLocaleString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs text-muted-foreground">
-                      Performed by <span className="text-foreground font-medium">{log.performed_by_name || 'System'}</span>
-                      {log.forwarded_to_role && (
-                        <span> • Forwarded to <span className="text-accent font-medium capitalize">{log.forwarded_to_role}</span></span>
-                      )}
-                    </p>
-                    {log.remarks && (
-                      <div className="mt-1.5 p-2.5 rounded-lg bg-accent/5 border border-accent/10">
-                        <p className="text-xs text-foreground italic whitespace-pre-wrap">
-                          "{log.remarks}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {/* Documents Section */}
+            <Section title="Documents" icon={<FileText size={16} />}>
+              {documents.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {documents.map((doc: any) => (
+                    <DocumentPreviewCard 
+                      key={doc.id}
+                      doc={doc}
+                      onView={previewDocument}
+                      onDelete={handleDeleteDoc}
+                      onReupload={handleReuploadDoc}
+                      canDelete={permissions.canDelete}
+                      isUploading={uploadingDocId === doc.id}
+                    />
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
+                  <Camera size={32} className="text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+                </div>
+              )}
+            </Section>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="w-full lg:w-96 space-y-6">
+            <div className="lg:sticky lg:top-4 h-fit space-y-6">
+              {/* Remarks Section */}
+              {(loan as any).remark && (
+                <Section title="Latest Remarks" icon={<MessageSquare size={16} />}>
+                  <div className="p-4 bg-accent/5 rounded-xl border border-accent/10">
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed italic">"{(loan as any).remark}"</p>
+                  </div>
+                </Section>
+              )}
+
+              {/* Workflow History Section */}
+              {auditLogs.length > 0 && (
+                <Section title="Workflow History" icon={<Clock size={16} />}>
+                  <div className="space-y-6 pb-2 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {auditLogs.map((log: any, index: number) => (
+                      <div key={log.id} className="relative pl-6">
+                        {/* Timeline connector */}
+                        {index < auditLogs.length - 1 && (
+                          <div className="absolute left-[7px] top-[18px] bottom-[-24px] w-[2px] bg-border" />
+                        )}
+                        {/* Timeline dot */}
+                        <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background z-10" />
+
+                        <div className="flex flex-col gap-1 mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-foreground">
+                              {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase font-bold tracking-tighter">
+                              {log.action_type?.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {new Date(log.performed_at).toLocaleString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[11px] text-muted-foreground leading-snug">
+                            By <span className="text-foreground font-semibold">{log.performed_by_name || 'System'}</span>
+                            {log.forwarded_to_role && (
+                              <span> → <span className="text-accent font-semibold capitalize">{log.forwarded_to_role}</span></span>
+                            )}
+                          </p>
+                          {log.remarks && (
+                            <div className="mt-1.5 p-2 rounded-lg bg-muted/40 border border-border/50">
+                              <p className="text-[11px] text-foreground italic whitespace-pre-wrap">
+                                "{log.remarks}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
             </div>
-          </Section>
-        )}
+          </div>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

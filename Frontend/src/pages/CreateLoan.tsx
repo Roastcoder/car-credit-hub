@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
@@ -299,6 +299,32 @@ export default function CreateLoan() {
     },
     enabled: !!leadId && !isEditMode,
   });
+
+  const { data: auditLogs = [] } = useQuery({
+    queryKey: ['loan-audit-logs', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/audit-logs`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
+    },
+    enabled: isEditMode && !!id,
+  });
+
+  const LOAN_STATUSES = [
+    { value: 'submitted', label: 'Submitted' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'sent_back', label: 'Sent Back' },
+    { value: 'disbursed', label: 'Disbursed' },
+    { value: 'pdd_pending', label: 'PDD Pending' },
+    { value: 'pdd_submitted', label: 'PDD Submitted' },
+    { value: 'pdd_approved', label: 'PDD Approved' },
+    { value: 'completed', label: 'Completed' },
+  ];
 
   const [leadSearch, setLeadSearch] = useState('');
   const [showLeadDropdown, setShowLeadDropdown] = useState(false);
@@ -972,25 +998,10 @@ export default function CreateLoan() {
           <p className="text-muted-foreground text-sm">Loading loan details...</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          {/* Manager Remarks Alert */}
-          {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
-            <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 flex items-start gap-3 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="text-amber-600 dark:text-amber-500" size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Manager Remarks</h3>
-                  <p className="text-sm text-amber-700 dark:text-amber-500 mt-1 leading-relaxed font-medium">
-                    {form.remark}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 min-w-0">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-8">
             {/* Customer Details */}
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
@@ -1719,34 +1730,131 @@ export default function CreateLoan() {
                 </div>
               </div>
             </div>
+          </form>
+        </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-end gap-3 pb-8">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-4 py-2 rounded-lg border border-border font-medium hover:bg-muted transition-all text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={createLoan.isPending}
-                className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-all disabled:opacity-60 text-sm"
-              >
-                {createLoan.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    {isEditMode ? 'Updating...' : 'Creating...'}
+        {/* Right Sidebar */}
+        <div className="w-full lg:w-96 space-y-6 shrink-0">
+          <div className="lg:sticky lg:top-4 h-fit space-y-6 pb-20">
+            {/* Manager Remarks Section */}
+            {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="text-amber-600 dark:text-amber-500" size={18} />
+                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Manager Remarks</h3>
+                </div>
+                <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-amber-200/50 dark:border-amber-900/30">
+                  <p className="text-sm text-amber-900 dark:text-amber-300 leading-relaxed font-medium italic">
+                    "{form.remark}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Application Summary Card */}
+            <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <ClipboardCheck size={16} className="text-accent" />
+                Application Summary
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
+                    form.fileStatus === 'approved' ? 'bg-green-500/10 text-green-500' :
+                    form.fileStatus === 'rejected' ? 'bg-red-500/10 text-red-500' :
+                    form.fileStatus === 'sent_back' ? 'bg-amber-500/10 text-amber-500' :
+                    'bg-blue-500/10 text-blue-500'
+                  }`}>
+                    {form.fileStatus || 'Submitted'}
                   </span>
-                ) : (isEditMode ? 'Update Application' : 'Create Application')}
-              </button>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Applicant</span>
+                  <span className="font-semibold text-foreground">{form.customerName || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Loan Amount</span>
+                  <span className="font-bold text-accent">{formatCurrency(Number(form.loanAmount || 0))}</span>
+                </div>
+              </div>
+
+              <div className="pt-4 space-y-3">
+                <button
+                  type="submit"
+                  form="loan-form"
+                  onClick={() => document.querySelector('form')?.requestSubmit()}
+                  disabled={createLoan.isPending}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-accent text-accent-foreground font-bold text-sm shadow-lg shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  {createLoan.isPending ? (
+                    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <CheckCircle2 size={18} />
+                  )}
+                  {isEditMode ? 'Update Application' : 'Submit Application'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="w-full py-2.5 px-4 rounded-xl border border-border bg-card text-foreground font-bold text-xs hover:bg-muted transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
+
+            {/* Workflow History Section */}
+            {isEditMode && auditLogs.length > 0 && (
+              <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+                <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/30">
+                  <Clock size={16} className="text-accent" />
+                  <h3 className="text-sm font-bold text-foreground">Workflow History</h3>
+                </div>
+                <div className="p-5 space-y-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                  {auditLogs.map((log: any, index: number) => (
+                    <div key={log.id} className="relative pl-6">
+                      {/* Timeline connector */}
+                      {index < auditLogs.length - 1 && (
+                        <div className="absolute left-[7px] top-[18px] bottom-[-24px] w-[2px] bg-border" />
+                      )}
+                      {/* Timeline dot */}
+                      <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background z-10" />
+
+                      <div className="flex flex-col gap-1 mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-foreground">
+                            {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {new Date(log.performed_at).toLocaleString('en-IN', {
+                            day: '2-digit', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit', hour12: true
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] text-muted-foreground">
+                          By <span className="text-foreground font-semibold">{log.performed_by_name || 'System'}</span>
+                        </p>
+                        {log.remarks && (
+                          <div className="mt-1 p-2 rounded-lg bg-muted/40 border border-border/50">
+                            <p className="text-[10px] text-foreground italic whitespace-pre-wrap">
+                              "{log.remarks}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </form>
+        </div>
+      </div>
       )}
     </div>
   );
