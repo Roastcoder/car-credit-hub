@@ -6,10 +6,131 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+
+const DocumentUploadCard = ({ 
+  label, 
+  type, 
+  file, 
+  existingDoc, 
+  onChange, 
+  onClear 
+}: { 
+  label: string; 
+  type: string; 
+  file: File | null; 
+  existingDoc?: any; 
+  onChange: (file: File | null) => void;
+  onClear: () => void;
+}) => {
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (existingDoc?.file_url) {
+      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+      setPreview(`${baseUrl}${existingDoc.file_url}`);
+    } else {
+      setPreview(null);
+    }
+  }, [file, existingDoc]);
+
+  const isImage = (url: string | null) => {
+    if (!url) return false;
+    return url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || url.startsWith('blob:');
+  };
+
+  return (
+    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
+      <div className="flex flex-col gap-3">
+        <h4 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">{label}</h4>
+        
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
+          {preview ? (
+            isImage(preview) ? (
+              <img src={preview} alt={label} className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <FileText size={32} className="text-accent/60" />
+                <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Camera size={24} className="text-muted-foreground/40" />
+              <span className="text-[10px] font-medium text-muted-foreground/60">No Document</span>
+            </div>
+          )}
+          
+          {/* Status Badge */}
+          {(file || existingDoc) && (
+            <div className="absolute top-2 right-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/90 text-[9px] font-bold text-white shadow-lg backdrop-blur-sm">
+                <CheckCircle2 size={10} /> {file ? 'NEW' : 'SAVED'}
+              </span>
+            </div>
+          )}
+
+          {/* Hover Actions */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
+              <Upload size={16} />
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={(e) => onChange(e.target.files?.[0] || null)}
+                accept="image/*,.pdf"
+              />
+            </label>
+            {preview && (
+              <button 
+                type="button"
+                onClick={() => window.open(preview, '_blank')}
+                className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
+              >
+                <Eye size={16} />
+              </button>
+            )}
+            {(file || existingDoc) && (
+              <button 
+                type="button"
+                onClick={onClear}
+                className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {!preview && (
+          <label className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg border border-border bg-background text-[10px] font-semibold hover:bg-muted transition-colors cursor-pointer text-muted-foreground">
+            <Plus size={12} /> CHOOSE FILE
+            <input 
+              type="file" 
+              className="hidden" 
+              onChange={(e) => onChange(e.target.files?.[0] || null)}
+              accept="image/*,.pdf"
+            />
+          </label>
+        )}
+        
+        {file && (
+          <div className="flex items-center gap-1 overflow-hidden">
+            <span className="text-[10px] text-accent font-medium truncate">✓ {file.name}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 
 export default function CreateLoan() {
   const navigate = useNavigate();
@@ -1373,215 +1494,116 @@ export default function CreateLoan() {
                 </div>
 
                 {/* Document Upload Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {form.showAadhar && (
                     <>
-                      <div>
-                        <label className={labelClass}>Aadhar Card Front</label>
-                        <input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                        {form.aadharFront && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharFront as File).name}</p>}
-                        {uploadedDocs.find(d => d.document_type === 'aadhar_front') && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                            <button 
-                              type="button" 
-                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'aadhar_front').file_url}`, '_blank')}
-                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                            >
-                              <Eye size={10} /> View Existing
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <label className={labelClass}>Aadhar Card Back</label>
-                        <input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                        {form.aadharBack && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharBack as File).name}</p>}
-                        {uploadedDocs.find(d => d.document_type === 'aadhar_back') && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                            <button 
-                              type="button" 
-                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'aadhar_back').file_url}`, '_blank')}
-                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                            >
-                              <Eye size={10} /> View Existing
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <DocumentUploadCard 
+                        label="Aadhar Card Front"
+                        type="aadhar_front"
+                        file={form.aadharFront as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_front')}
+                        onChange={val => update('aadharFront', val)}
+                        onClear={() => update('aadharFront', null)}
+                      />
+                      <DocumentUploadCard 
+                        label="Aadhar Card Back"
+                        type="aadhar_back"
+                        file={form.aadharBack as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_back')}
+                        onChange={val => update('aadharBack', val)}
+                        onClear={() => update('aadharBack', null)}
+                      />
                     </>
                   )}
                   {form.showPan && (
-                    <div>
-                      <label className={labelClass}>Pan Card</label>
-                      <input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.panCard && <p className="text-xs text-green-600 mt-1">✓ {(form.panCard as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'pan_card') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'pan_card').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Pan Card"
+                      type="pan_card"
+                      file={form.panCard as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'pan_card')}
+                      onChange={val => update('panCard', val)}
+                      onClear={() => update('panCard', null)}
+                    />
                   )}
                   {form.showBankStatement && (
-                    <div>
-                      <label className={labelClass}>Last 6 Month Bank Statement</label>
-                      <input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.bankStatement && <p className="text-xs text-green-600 mt-1">✓ {(form.bankStatement as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'bank_statement') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'bank_statement').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Bank Statement"
+                      type="bank_statement"
+                      file={form.bankStatement as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'bank_statement')}
+                      onChange={val => update('bankStatement', val)}
+                      onClear={() => update('bankStatement', null)}
+                    />
                   )}
                   {form.showCheque && (
-                    <div>
-                      <label className={labelClass}>Cheque</label>
-                      <input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.cheque && <p className="text-xs text-green-600 mt-1">✓ {(form.cheque as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'cheque') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'cheque').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Cheque"
+                      type="cheque"
+                      file={form.cheque as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'cheque')}
+                      onChange={val => update('cheque', val)}
+                      onClear={() => update('cheque', null)}
+                    />
                   )}
                   {form.showRC && (
                     <>
-                      <div>
-                        <label className={labelClass}>RC (Front)</label>
-                        <input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                        {form.rcFront && <p className="text-xs text-green-600 mt-1">✓ {(form.rcFront as File).name}</p>}
-                        {uploadedDocs.find(d => d.document_type === 'rc_front') && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                            <button 
-                              type="button" 
-                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'rc_front').file_url}`, '_blank')}
-                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                            >
-                              <Eye size={10} /> View Existing
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <label className={labelClass}>RC (Back)</label>
-                        <input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                        {form.rcBack && <p className="text-xs text-green-600 mt-1">✓ {(form.rcBack as File).name}</p>}
-                        {uploadedDocs.find(d => d.document_type === 'rc_back') && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                            <button 
-                              type="button" 
-                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'rc_back').file_url}`, '_blank')}
-                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                            >
-                              <Eye size={10} /> View Existing
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <DocumentUploadCard 
+                        label="RC (Front)"
+                        type="rc_front"
+                        file={form.rcFront as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'rc_front')}
+                        onChange={val => update('rcFront', val)}
+                        onClear={() => update('rcFront', null)}
+                      />
+                      <DocumentUploadCard 
+                        label="RC (Back)"
+                        type="rc_back"
+                        file={form.rcBack as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'rc_back')}
+                        onChange={val => update('rcBack', val)}
+                        onClear={() => update('rcBack', null)}
+                      />
                     </>
                   )}
                   {form.showIncomeProof && (
-                    <div>
-                      <label className={labelClass}>Income Proof</label>
-                      <input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.incomeProof && <p className="text-xs text-green-600 mt-1">✓ {(form.incomeProof as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'income_proof') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'income_proof').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Income Proof"
+                      type="income_proof"
+                      file={form.incomeProof as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'income_proof')}
+                      onChange={val => update('incomeProof', val)}
+                      onClear={() => update('incomeProof', null)}
+                    />
                   )}
                   {form.showCustomerPhoto && (
-                    <div>
-                      <label className={labelClass}>Customer Photo</label>
-                      <input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" />
-                      {form.customerPhoto && <p className="text-xs text-green-600 mt-1">✓ {(form.customerPhoto as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'customer_photo') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'customer_photo').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Customer Photo"
+                      type="customer_photo"
+                      file={form.customerPhoto as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'customer_photo')}
+                      onChange={val => update('customerPhoto', val)}
+                      onClear={() => update('customerPhoto', null)}
+                    />
                   )}
                   {form.showInsurance && (
-                    <div>
-                      <label className={labelClass}>Insurance</label>
-                      <input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.insurance && <p className="text-xs text-green-600 mt-1">✓ {(form.insurance as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'insurance') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'insurance').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Insurance"
+                      type="insurance"
+                      file={form.insurance as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'insurance')}
+                      onChange={val => update('insurance', val)}
+                      onClear={() => update('insurance', null)}
+                    />
                   )}
                   {form.showCustomerLedger && (
-                    <div>
-                      <label className={labelClass}>Customer Ledger</label>
-                      <input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.customerLedger && <p className="text-xs text-green-600 mt-1">✓ {(form.customerLedger as File).name}</p>}
-                      {uploadedDocs.find(d => d.document_type === 'customer_ledger') && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'customer_ledger').file_url}`, '_blank')}
-                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                          >
-                            <Eye size={10} /> View Existing
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Customer Ledger"
+                      type="customer_ledger"
+                      file={form.customerLedger as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'customer_ledger')}
+                      onChange={val => update('customerLedger', val)}
+                      onClear={() => update('customerLedger', null)}
+                    />
                   )}
                 </div>
               </div>
@@ -1623,55 +1645,76 @@ export default function CreateLoan() {
                 </div>
 
                 {/* Document Upload Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {form.showRtoDocument && (
-                    <div>
-                      <label className={labelClass}>RTO Document</label>
-                      <input type="file" className={inputClass} onChange={e => update('rtoDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.rtoDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.rtoDocument as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="RTO Document"
+                      type="rto_document"
+                      file={form.rtoDocument as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'rto_document')}
+                      onChange={val => update('rtoDocument', val)}
+                      onClear={() => update('rtoDocument', null)}
+                    />
                   )}
                   {form.showNoc && (
-                    <div>
-                      <label className={labelClass}>NOC</label>
-                      <input type="file" className={inputClass} onChange={e => update('noc', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.noc && <p className="text-xs text-green-600 mt-1">✓ {(form.noc as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="NOC"
+                      type="noc"
+                      file={form.noc as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'noc')}
+                      onChange={val => update('noc', val)}
+                      onClear={() => update('noc', null)}
+                    />
                   )}
                   {form.showThirdParty && (
-                    <div>
-                      <label className={labelClass}>3rd Party</label>
-                      <input type="file" className={inputClass} onChange={e => update('thirdParty', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.thirdParty && <p className="text-xs text-green-600 mt-1">✓ {(form.thirdParty as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="3rd Party"
+                      type="third_party"
+                      file={form.thirdParty as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'third_party')}
+                      onChange={val => update('thirdParty', val)}
+                      onClear={() => update('thirdParty', null)}
+                    />
                   )}
                   {form.showStamp && (
-                    <div>
-                      <label className={labelClass}>Stamp</label>
-                      <input type="file" className={inputClass} onChange={e => update('stamp', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.stamp && <p className="text-xs text-green-600 mt-1">✓ {(form.stamp as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="Stamp"
+                      type="stamp"
+                      file={form.stamp as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'stamp')}
+                      onChange={val => update('stamp', val)}
+                      onClear={() => update('stamp', null)}
+                    />
                   )}
                   {form.showRcDocument && (
-                    <div>
-                      <label className={labelClass}>RC Document</label>
-                      <input type="file" className={inputClass} onChange={e => update('rcDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.rcDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.rcDocument as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="RC Document"
+                      type="rc_document"
+                      file={form.rcDocument as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'rc_document')}
+                      onChange={val => update('rcDocument', val)}
+                      onClear={() => update('rcDocument', null)}
+                    />
                   )}
                   {form.showFitnessDoc && (
-                    <div>
-                      <label className={labelClass}>FC</label>
-                      <input type="file" className={inputClass} onChange={e => update('fitnessDocument', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.fitnessDocument && <p className="text-xs text-green-600 mt-1">✓ {(form.fitnessDocument as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="FC"
+                      type="fitness_document"
+                      file={form.fitnessDocument as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'fitness_document')}
+                      onChange={val => update('fitnessDocument', val)}
+                      onClear={() => update('fitnessDocument', null)}
+                    />
                   )}
                   {form.showTaxReceipt && (
-                    <div>
-                      <label className={labelClass}>DM</label>
-                      <input type="file" className={inputClass} onChange={e => update('taxReceipt', e.target.files?.[0] || null)} accept="image/*,.pdf" />
-                      {form.taxReceipt && <p className="text-xs text-green-600 mt-1">✓ {(form.taxReceipt as File).name}</p>}
-                    </div>
+                    <DocumentUploadCard 
+                      label="DM"
+                      type="tax_receipt"
+                      file={form.taxReceipt as File}
+                      existingDoc={uploadedDocs.find(d => d.document_type === 'tax_receipt')}
+                      onChange={val => update('taxReceipt', val)}
+                      onClear={() => update('taxReceipt', null)}
+                    />
                   )}
                 </div>
               </div>
