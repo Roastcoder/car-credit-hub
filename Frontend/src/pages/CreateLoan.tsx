@@ -162,7 +162,7 @@ export default function CreateLoan() {
       loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
       vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '',
       chassisNumber: '', engineNumber: '',
-      vertical: '', scheme: '',
+      vertical: '', scheme: '', bookingMonth: '', branchManagerName: '',
       // Income Details
       incomeSource: '', monthlyIncome: '',
       // RTO Details
@@ -175,7 +175,7 @@ export default function CreateLoan() {
       // Financier Details
       assignedBankId: '', assignedBrokerId: '', bookingMode: 'self', financierExecutiveName: '', financierTeamVertical: '', disburseBranchName: '', sanctionAmount: '', sanctionDate: '',
       // Insurance Details
-      insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceReminderEnabled: false,
+      insuranceCompanyName: '', premiumAmount: '', insuranceDate: '', insurancePolicyNumber: '', insuranceMadeBy: '', insuranceStatus: 'Pending', insuranceStartDate: '', insuranceReminderEnabled: true,
       // Deductions & Disbursement Details
       processingFee: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
       // Others
@@ -552,6 +552,8 @@ export default function CreateLoan() {
         engineNumber: existingLoan.engine_number || '',
         vertical: existingLoan.vertical || '',
         scheme: existingLoan.scheme || '',
+        bookingMonth: existingLoan.booking_month || '',
+        branchManagerName: existingLoan.manager_name || existingLoan.branch_manager_name || '',
         incomeSource: existingLoan.income_source || '',
         monthlyIncome: String(existingLoan.monthly_income || ''),
         rcOwnerName: existingLoan.rc_owner_name || '',
@@ -585,8 +587,10 @@ export default function CreateLoan() {
         insuranceCompanyName: existingLoan.insurance_company_name || '',
         premiumAmount: String(existingLoan.premium_amount || ''),
         insuranceDate: formatDate(existingLoan.insurance_date),
+        insuranceStartDate: formatDate(existingLoan.insurance_start_date),
         insurancePolicyNumber: existingLoan.insurance_policy_number || '',
         insuranceMadeBy: existingLoan.insurance_made_by || '',
+        insuranceStatus: existingLoan.insurance_status || 'Pending',
         insuranceReminderEnabled: existingLoan.insurance_reminder_enabled || false,
         processingFee: String(existingLoan.processing_fee || ''),
         netDisbursementAmount: String(existingLoan.net_disbursement_amount || ''),
@@ -1130,6 +1134,8 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                     <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
+                    <div><label className={labelClass}>Branch Manager Name</label><input className={inputClass} value={form.branchManagerName} onChange={e => update('branchManagerName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Booking Month</label><input className={inputClass} value={form.bookingMonth} onChange={e => update('bookingMonth', e.target.value)} placeholder="e.g. April 2024" /></div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                     <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
@@ -1226,7 +1232,17 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
                     <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
                     <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
-                    <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                     <div><label className={labelClass}>Insurance Start Date</label><input type="date" className={inputClass} value={form.insuranceStartDate} onChange={e => update('insuranceStartDate', e.target.value)} /></div>
+                     <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>Insurance Status</label>
+                      <select className={inputClass} value={form.insuranceStatus} onChange={e => update('insuranceStatus', e.target.value)}>
+                        <option value="Pending">Pending</option>
+                        <option value="Active">Active</option>
+                        <option value="Expired">Expired</option>
+                        <option value="Renewed">Renewed</option>
+                      </select>
+                    </div>
                     <div>
                       <label className={labelClass}>Insurance Made By</label>
                       <select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}>

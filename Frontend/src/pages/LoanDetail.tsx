@@ -719,16 +719,15 @@ export default function LoanDetail() {
                       <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
                       <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
                       <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
-                      <Field label="Policy Date" value={formatDisplayDate((loan as any).insurance_date)} />
+                      <Field label="Policy Start Date" value={formatDisplayDate((loan as any).insurance_start_date)} />
+                      <Field label="Policy End Date" value={formatDisplayDate((loan as any).insurance_date)} />
                       <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
                     </>
                   )}
                   <Field label="Insurance Status" value={(loan as any).insurance_status || 'Pending'} />
+                  <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
                   {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
-                      <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
-                    </>
+                    <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
                   )}
                 </div>
               </Section>
