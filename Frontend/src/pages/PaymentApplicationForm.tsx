@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { 
   Upload, FileText, Plus, X, Save, Send, 
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
@@ -25,10 +25,11 @@ interface PaymentApplication {
   pdd_documents: string[];
   banking_documents: string[];
   remarks: string;
-  status: 'draft' | 'submitted' | 'manager_approved' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
+  status: 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
   created_by: number;
   approved_by?: number;
   processed_by?: number;
+  manager_remarks?: string;
   
   // New fields
   kyc_documents?: string;
@@ -173,7 +174,7 @@ export default function PaymentApplicationForm() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [loanId, id]);
 
-  const editableStatuses = ['draft', 'submitted', 'manager_rejected'];
+  const editableStatuses = ['draft', 'submitted', 'manager_rejected', 'sent_back'];
   const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status);
 
   const fetchApplicationData = async () => {
@@ -524,6 +525,17 @@ export default function PaymentApplicationForm() {
         {isReadOnly && (
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-300">
             This request is closed after accounts processing. Voucher, UTR, and proof can still be viewed from the payment detail page, but the form is now read-only.
+          </div>
+        )}
+        {formData.status === 'sent_back' && formData.manager_remarks && (
+          <div className="rounded-xl border border-orange-200 bg-orange-50 px-5 py-4 text-sm text-orange-800 dark:border-orange-900/40 dark:bg-orange-900/10 dark:text-orange-300 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-orange-900 dark:text-orange-200 mb-1">Attention: Required Corrections</p>
+                <p className="whitespace-pre-wrap opacity-90">{formData.manager_remarks}</p>
+              </div>
+            </div>
           </div>
         )}
         {/* 1. Customer Details */}

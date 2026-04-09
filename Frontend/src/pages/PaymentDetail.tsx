@@ -7,13 +7,14 @@ import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
 import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info } from 'lucide-react';
 
-type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
+type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
 
 const PAYMENT_STATUSES = [
   { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: FileText },
   { value: 'submitted', label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: Calendar },
   { value: 'manager_approved', label: 'Manager Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
   { value: 'manager_rejected', label: 'Manager Rejected', color: 'bg-red-100 text-red-800', icon: XCircle },
+  { value: 'sent_back', label: 'Sent Back', color: 'bg-orange-100 text-orange-800', icon:ArrowLeft },
   { value: 'voucher_created', label: 'Voucher Created', color: 'bg-purple-100 text-purple-800', icon: FileText },
   { value: 'payment_released', label: 'Payment Released', color: 'bg-blue-100 text-blue-800', icon: DollarSign },
   { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle }
@@ -87,7 +88,7 @@ export default function PaymentDetail() {
 
   // Update payment status (manager action)
   const managerAction = useMutation({
-    mutationFn: async ({ action, remarks }: { action: 'approve' | 'reject'; remarks?: string }) => {
+    mutationFn: async ({ action, remarks }: { action: 'approve' | 'reject' | 'send_back'; remarks?: string }) => {
       const result = await paymentApplicationAPI.managerAction(parseInt(id!), action, remarks);
       return result;
     },
@@ -255,6 +256,17 @@ export default function PaymentDetail() {
                 >
                   <CheckCircle size={16} />
                   {managerAction.isPending ? 'Processing...' : 'Approve'}
+                </button>
+                <button
+                  onClick={() => {
+                    const remarks = prompt('Enter send back remarks (instructions for corrections):');
+                    if (remarks) managerAction.mutate({ action: 'send_back', remarks });
+                  }}
+                  disabled={managerAction.isPending}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <ArrowLeft size={16} />
+                  Send Back
                 </button>
                 <button
                   onClick={() => {
@@ -500,8 +512,17 @@ export default function PaymentDetail() {
         </div>
 
         {/* Remarks */}
+        {payment.manager_remarks && (
+          <Section title="Manager Remarks" icon={<Info size={20} className="text-orange-500" />}>
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">Feedback from Approval Manager:</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{payment.manager_remarks}</p>
+            </div>
+          </Section>
+        )}
+
         {payment.remarks && (
-          <Section title="Remarks" icon={<FileText size={20} />}>
+          <Section title="Applicant Remarks" icon={<FileText size={20} />}>
             <p className="text-sm text-foreground whitespace-pre-wrap">{payment.remarks}</p>
           </Section>
         )}
