@@ -18,15 +18,15 @@ import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
 
-const DocumentPreviewCard = ({ 
-  doc, 
-  onView, 
-  onDelete, 
-  onReupload, 
+const DocumentPreviewCard = ({
+  doc,
+  onView,
+  onDelete,
+  onReupload,
   canDelete,
-  isUploading 
-}: { 
-  doc: any; 
+  isUploading
+}: {
+  doc: any;
   onView: (doc: any) => void;
   onDelete: (doc: any) => void;
   onReupload: (e: React.ChangeEvent<HTMLInputElement>, id: string, type: string) => void;
@@ -51,7 +51,7 @@ const DocumentPreviewCard = ({
             SAVED
           </span>
         </div>
-        
+
         <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
           {isImage ? (
             <img src={fileUrl} alt={doc.document_type} className="w-full h-full object-cover" />
@@ -61,29 +61,29 @@ const DocumentPreviewCard = ({
               <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
             </div>
           )}
-          
+
           {/* Hover Actions */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button 
+            <button
               type="button"
               onClick={() => onView(doc)}
               className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
             >
               <Eye size={16} />
             </button>
-            
+
             {canDelete && (
               <>
                 <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
                   {isUploading ? <Clock size={16} className="animate-spin" /> : <Upload size={16} />}
-                  <input 
-                    type="file" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    className="hidden"
                     onChange={(e) => onReupload(e, doc.id, doc.document_type)}
                     accept="image/*,.pdf"
                   />
                 </label>
-                <button 
+                <button
                   type="button"
                   onClick={() => onDelete(doc)}
                   className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
@@ -97,7 +97,7 @@ const DocumentPreviewCard = ({
 
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
-             {doc.document_name || doc.file_name}
+            {doc.document_name || doc.file_name}
           </span>
           <span className="text-[9px] text-muted-foreground uppercase font-medium">
             {new Date(doc.created_at).toLocaleDateString()}
@@ -533,7 +533,7 @@ export default function LoanDetail() {
                 </button>
               </>
             )}
-            
+
             {loan.status === 'approved' && (
               <button
                 onClick={() => navigate(`/payments/loan/${loan.id}`)}
@@ -577,274 +577,275 @@ export default function LoanDetail() {
           <div className="flex-1 min-w-0 space-y-6">
             {/* Loan Details Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Applicant Information */}
-          <Section title="Applicant Information" icon={<User size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Applicant Name" value={loan.applicant_name || (loan as any).customer_name} />
-              <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="PAN Number" value={(loan as any).pan_number || '—'} />
-                  <Field label="Aadhaar Number" value={(loan as any).aadhar_number || '—'} />
-                </>
-              )}
-              <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
-              {user?.role !== 'broker' && <Field label="Sourcing Person" value={(loan as any).sourcing_person_name || '—'} />}
-              <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
-              <div className="col-span-2">
-                <Field
-                  label="Current Address"
-                  value={user?.role === 'broker'
-                    ? (loan as any).current_district || '—'
-                    : [
-                      (loan as any).current_address,
-                      (loan as any).current_village,
-                      (loan as any).current_tehsil,
-                      (loan as any).current_district,
-                      (loan as any).current_state,
-                      (loan as any).current_pincode
-                    ].filter(Boolean).join(', ') || '—'}
-                />
-              </div>
-              {user?.role !== 'broker' && (
-                <div className="col-span-2">
-                  <Field
-                    label="Permanent Address"
-                    value={[
-                      (loan as any).permanent_address,
-                      (loan as any).permanent_village,
-                      (loan as any).permanent_tehsil,
-                      (loan as any).permanent_district,
-                      (loan as any).permanent_state,
-                      (loan as any).permanent_pincode
-                    ].filter(Boolean).join(', ') || '—'}
-                  />
-                </div>
-              )}
-            </div>
-          </Section>
-
-          {/* Co-Applicant & Guarantor Details */}
-          {user?.role !== 'broker' && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
-            <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
-                <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
-                <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
-                <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
-              </div>
-            </Section>
-          )}
-
-          {/* Vehicle Information */}
-          <Section title="Vehicle Information" icon={<Car size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
-              <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
-              <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
-              <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
-              <Field label="Vertical" value={(loan as any).vertical || '—'} />
-              <Field label="Scheme" value={(loan as any).scheme || '—'} />
-              <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
-              <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
-                  <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
-                  <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
-                  <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
-                </>
-              )}
-            </div>
-          </Section>
-
-          {/* Loan Information */}
-          <Section title="Loan Information" icon={<IndianRupee size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
-              <Field label="Application ID" value={applicationIdentifier} />
-              <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
-              <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
-              <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
-              {user?.role !== 'broker' ? (
-                <>
-                  <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
-                  <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                  <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
-                  <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
-                  <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
-                  <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
-                  <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
-                  <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
-                  <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
-                  <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
-                  <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
-                  <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
-                  <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
-                  <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
-                </>
-              ) : (
-                <>
-                  <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                  <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
-                </>
-              )}
-            </div>
-          </Section>
-
-          {/* Bank Information */}
-          <Section title="Bank Information" icon={<Building2 size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
-              {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
-                  <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
-                </>
-              )}
-              <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
-                  <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
-                  <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
-                </>
-              )}
-            </div>
-          </Section>
-
-          {/* Insurance Information */}
-          <Section title="Insurance Details" icon={<FileText size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
-                  <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
-                  <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
-                  <Field label="Policy Date" value={formatDisplayDate((loan as any).insurance_date)} />
-                  <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
-                </>
-              )}
-              <Field label="Insurance Status" value={(loan as any).insurance_status || 'Pending'} />
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
-                  <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
-                </>
-              )}
-            </div>
-          </Section>
-
-          {/* RTO details */}
-          {user?.role !== 'broker' && (
-            <Section title="RTO Details" icon={<MapPin size={16} />}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
-                <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
-                <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
-                <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
-                <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
-                <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
-                <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
-                <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
-                <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
-                <div className="col-span-2">
-                  <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
-                </div>
-                <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
-                <Field label="Challans" value={(loan as any).challan_status || 'No'} />
-                <Field label="Pollution" value={(loan as any).pollution_status || '—'} />
-                <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
-              </div>
-            </Section>
-          )}
-
-          {/* Disbursement details */}
-          {user?.role !== 'broker' && (
-            <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
-                <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
-                <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
-                <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
-                <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
-                <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
-                <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
-              </div>
-            </Section>
-          )}
-
-          {/* Broker Commission */}
-          {user?.role !== 'broker' && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
-            <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field
-                  label="Broker Name"
-                  value={commissionRecord?.broker_name || (loan as any).assigned_broker_name || '—'}
-                />
-                <Field
-                  label="Commission Amount"
-                  value={formatCurrency(Number(commissionRecord?.commission_amount || commissionRecord?.amount || computedCommission.amount || 0))}
-                />
-                <Field
-                  label="Commission Rate"
-                  value={commissionRecord?.commission_rate ? `${commissionRecord.commission_rate}%` : (computedCommission.rate ? `${computedCommission.rate}%` : '—')}
-                />
-                <Field
-                  label="Status"
-                  value={commissionRecord?.status
-                    ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1)
-                    : (computedCommission.amount > 0 ? 'Calculated (Pending)' : '—')
-                  }
-                />
-              </div>
-            </Section>
-          )}
-
-          {/* FC & NOC Details */}
-          {user?.role !== 'broker' && (
-            <Section title="FC & NOC Details" icon={<FileText size={16} />}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
-                <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
-                <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
-                <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
-                <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
-                <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
-                <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
-                <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
-                <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
-              </div>
-            </Section>
-          )}
-
-          {/* PDD Tracking Detail */}
-          <Section title="PDD Tracking" icon={<FileText size={16} />}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="PDD Status" value={(loan as any).pdd_status || 'pending'} />
-              {user?.role !== 'broker' && (
-                <>
-                  <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
-                  <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
-                  <Field label="Approved By" value={(loan as any).pdd_approved_by_name || '—'} />
-                  <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
-                  <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
+              {/* Applicant Information */}
+              <Section title="Applicant Information" icon={<User size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Applicant Name" value={loan.applicant_name || (loan as any).customer_name} />
+                  <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="PAN Number" value={(loan as any).pan_number || '—'} />
+                      <Field label="Aadhaar Number" value={(loan as any).aadhar_number || '—'} />
+                    </>
+                  )}
+                  <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
+                  {user?.role !== 'broker' && <Field label="Branch Manager" value={(loan as any).branch_manager_name || (loan as any).manager_name || '—'} />}
+                  {user?.role !== 'broker' && <Field label="Sourcing Person" value={(loan as any).sourcing_person_name || '—'} />}
+                  <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
                   <div className="col-span-2">
-                    <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+                    <Field
+                      label="Current Address"
+                      value={user?.role === 'broker'
+                        ? (loan as any).current_district || '—'
+                        : [
+                          (loan as any).current_address,
+                          (loan as any).current_village,
+                          (loan as any).current_tehsil,
+                          (loan as any).current_district,
+                          (loan as any).current_state,
+                          (loan as any).current_pincode
+                        ].filter(Boolean).join(', ') || '—'}
+                    />
                   </div>
-                </>
+                  {user?.role !== 'broker' && (
+                    <div className="col-span-2">
+                      <Field
+                        label="Permanent Address"
+                        value={[
+                          (loan as any).permanent_address,
+                          (loan as any).permanent_village,
+                          (loan as any).permanent_tehsil,
+                          (loan as any).permanent_district,
+                          (loan as any).permanent_state,
+                          (loan as any).permanent_pincode
+                        ].filter(Boolean).join(', ') || '—'}
+                      />
+                    </div>
+                  )}
+                </div>
+              </Section>
+
+              {/* Co-Applicant & Guarantor Details */}
+              {user?.role !== 'broker' && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
+                <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
+                    <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
+                    <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
+                    <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
+                  </div>
+                </Section>
               )}
+
+              {/* Vehicle Information */}
+              <Section title="Vehicle Information" icon={<Car size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
+                  <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
+                  <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
+                  <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
+                  <Field label="Vertical" value={(loan as any).vertical || '—'} />
+                  <Field label="Scheme" value={(loan as any).scheme || '—'} />
+                  <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
+                  <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
+                      <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
+                      <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
+                      <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
+                    </>
+                  )}
+                </div>
+              </Section>
+
+              {/* Loan Information */}
+              <Section title="Loan Information" icon={<IndianRupee size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
+                  <Field label="Application ID" value={applicationIdentifier} />
+                  <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
+                  <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
+                  <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
+                  {user?.role !== 'broker' ? (
+                    <>
+                      <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
+                      <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+                      <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
+                      <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
+                      <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
+                      <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
+                      <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
+                      <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
+                      <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
+                      <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
+                      <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
+                      <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
+                      <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
+                      <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
+                    </>
+                  ) : (
+                    <>
+                      <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+                      <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
+                    </>
+                  )}
+                </div>
+              </Section>
+
+              {/* Bank Information */}
+              <Section title="Bank Information" icon={<Building2 size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
+                  {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
+                      <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
+                    </>
+                  )}
+                  <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
+                      <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
+                      <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
+                    </>
+                  )}
+                </div>
+              </Section>
+
+              {/* Insurance Information */}
+              <Section title="Insurance Details" icon={<FileText size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
+                      <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
+                      <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
+                      <Field label="Policy Date" value={formatDisplayDate((loan as any).insurance_date)} />
+                      <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
+                    </>
+                  )}
+                  <Field label="Insurance Status" value={(loan as any).insurance_status || 'Pending'} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
+                      <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
+                    </>
+                  )}
+                </div>
+              </Section>
+
+              {/* RTO details */}
+              {user?.role !== 'broker' && (
+                <Section title="RTO Details" icon={<MapPin size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
+                    <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
+                    <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
+                    <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
+                    <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
+                    <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
+                    <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
+                    <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
+                    <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
+                    <div className="col-span-2">
+                      <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
+                    </div>
+                    <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
+                    <Field label="Challans" value={(loan as any).challan_status || 'No'} />
+                    <Field label="Pollution" value={(loan as any).pollution_status || '—'} />
+                    <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
+                  </div>
+                </Section>
+              )}
+
+              {/* Disbursement details */}
+              {user?.role !== 'broker' && (
+                <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
+                    <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
+                    <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
+                    <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
+                    <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
+                    <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+                    <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
+                  </div>
+                </Section>
+              )}
+
+              {/* Broker Commission */}
+              {user?.role !== 'broker' && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
+                <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field
+                      label="Broker Name"
+                      value={commissionRecord?.broker_name || (loan as any).assigned_broker_name || '—'}
+                    />
+                    <Field
+                      label="Commission Amount"
+                      value={formatCurrency(Number(commissionRecord?.commission_amount || commissionRecord?.amount || computedCommission.amount || 0))}
+                    />
+                    <Field
+                      label="Commission Rate"
+                      value={commissionRecord?.commission_rate ? `${commissionRecord.commission_rate}%` : (computedCommission.rate ? `${computedCommission.rate}%` : '—')}
+                    />
+                    <Field
+                      label="Status"
+                      value={commissionRecord?.status
+                        ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1)
+                        : (computedCommission.amount > 0 ? 'Calculated (Pending)' : '—')
+                      }
+                    />
+                  </div>
+                </Section>
+              )}
+
+              {/* FC & NOC Details */}
+              {user?.role !== 'broker' && (
+                <Section title="FC & NOC Details" icon={<FileText size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
+                    <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
+                    <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
+                    <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
+                    <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
+                    <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
+                    <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
+                    <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
+                    <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
+                  </div>
+                </Section>
+              )}
+
+              {/* PDD Tracking Detail */}
+              <Section title="PDD Tracking" icon={<FileText size={16} />}>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="PDD Status" value={(loan as any).pdd_status || 'pending'} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
+                      <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
+                      <Field label="PDD Manager" value={(loan as any).pdd_approved_by_name || '—'} />
+                      <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
+                      <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
+                      <div className="col-span-2">
+                        <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Section>
             </div>
-          </Section>
-        </div>
 
             {/* Documents Section */}
             <Section title="Documents" icon={<FileText size={16} />}>
               {documents.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {documents.map((doc: any) => (
-                    <DocumentPreviewCard 
+                    <DocumentPreviewCard
                       key={doc.id}
                       doc={doc}
                       onView={previewDocument}
@@ -869,7 +870,7 @@ export default function LoanDetail() {
             <div className="lg:sticky lg:top-4 h-fit space-y-6">
               {/* Remarks Section */}
               {(loan as any).remark && (
-                <Section title="Latest Remarks" icon={<MessageSquare size={16} />}>
+                <Section title="Branch Manager Remarks" icon={<MessageSquare size={16} />}>
                   <div className="p-4 bg-accent/5 rounded-xl border border-accent/10">
                     <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed italic">"{(loan as any).remark}"</p>
                   </div>

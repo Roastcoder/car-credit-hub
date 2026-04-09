@@ -66,8 +66,8 @@ type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejec
 const PAYMENT_STATUSES = [
   { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: FileText },
   { value: 'submitted', label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: Calendar },
-  { value: 'manager_approved', label: 'Manager Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
-  { value: 'manager_rejected', label: 'Manager Rejected', color: 'bg-red-100 text-red-800', icon: XCircle },
+  { value: 'manager_approved', label: 'RBM Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
+  { value: 'manager_rejected', label: 'RBM Rejected', color: 'bg-red-100 text-red-800', icon: XCircle },
   { value: 'sent_back', label: 'Sent Back', color: 'bg-orange-100 text-orange-800', icon:ArrowLeft },
   { value: 'voucher_created', label: 'Voucher Created', color: 'bg-purple-100 text-purple-800', icon: FileText },
   { value: 'payment_released', label: 'Payment Released', color: 'bg-blue-100 text-blue-800', icon: DollarSign },
@@ -309,7 +309,7 @@ export default function PaymentDetail() {
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <CheckCircle size={16} />
-                  {managerAction.isPending ? 'Processing...' : 'Approve'}
+                  {managerAction.isPending ? 'Processing...' : 'RBM Approve'}
                 </button>
                 <button
                   onClick={() => {
@@ -394,7 +394,7 @@ export default function PaymentDetail() {
                 <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
                 <Field label="Branch Name" value={payment.branch_name} />
                 <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
-                <Field label="DM Approval Status" value={payment.dm_approval ? 'APPROVED' : 'PENDING'} />
+                <Field label="RBM Approval Status" value={payment.dm_approval ? 'APPROVED' : 'PENDING'} />
               </div>
             </Section>
           </div>
@@ -568,9 +568,9 @@ export default function PaymentDetail() {
 
         {/* Remarks */}
         {payment.manager_remarks && (
-          <Section title="Manager Remarks" icon={<Info size={20} className="text-orange-500" />}>
+          <Section title="RBM Remarks" icon={<Info size={20} className="text-orange-500" />}>
             <div className="p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg">
-              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">Feedback from Approval Manager:</p>
+              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">Feedback from RBM (Regional Business Manager):</p>
               <p className="text-sm text-foreground whitespace-pre-wrap">{payment.manager_remarks}</p>
             </div>
           </Section>

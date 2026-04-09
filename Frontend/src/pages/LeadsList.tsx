@@ -221,6 +221,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden md:table-cell">Vehicle</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Loan Amount</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden sm:table-cell">Branch</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground hidden lg:table-cell">Branch Manager</th>
                     <th className="text-center py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="py-3 px-3"></th>
                   </tr>
@@ -261,6 +262,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                       <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{lead.vehicle_no || '—'}</td>
                       <td className="py-3 px-3 text-right font-medium text-foreground">₹{Number(lead.loan_amount_required || 0).toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell">{lead.our_branch || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground hidden lg:table-cell">{lead.branch_manager_name || lead.manager_name || '—'}</td>
                       <td className="py-3 px-3 text-center">
                         {lead.converted_to_loan ? (
                           <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">Converted</span>

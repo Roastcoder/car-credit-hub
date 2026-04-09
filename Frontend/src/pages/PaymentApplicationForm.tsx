@@ -708,8 +708,8 @@ export default function PaymentApplicationForm() {
                       <div
                         key={index}
                         className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${isSelected
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
                           }`}
                         onClick={() => handlePddDocumentToggle(docKey)}
                       >

@@ -11,18 +11,18 @@ import { toast } from 'sonner';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
-const DocumentUploadCard = ({ 
-  label, 
-  type, 
-  file, 
-  existingDoc, 
-  onChange, 
-  onClear 
-}: { 
-  label: string; 
-  type: string; 
-  file: File | null; 
-  existingDoc?: any; 
+const DocumentUploadCard = ({
+  label,
+  type,
+  file,
+  existingDoc,
+  onChange,
+  onClear
+}: {
+  label: string;
+  type: string;
+  file: File | null;
+  existingDoc?: any;
   onChange: (file: File | null) => void;
   onClear: () => void;
 }) => {
@@ -34,8 +34,10 @@ const DocumentUploadCard = ({
       setPreview(url);
       return () => URL.revokeObjectURL(url);
     } else if (existingDoc?.file_url) {
-      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
-      setPreview(`${baseUrl}${existingDoc.file_url}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const baseUrl = apiUrl.replace(/\/api$/, '');
+      const normalizedPath = existingDoc.file_url.startsWith('/uploads') ? `/api${existingDoc.file_url}` : existingDoc.file_url;
+      setPreview(existingDoc.file_url.startsWith('http') ? existingDoc.file_url : `${baseUrl}${normalizedPath}`);
     } else {
       setPreview(null);
     }
@@ -50,7 +52,7 @@ const DocumentUploadCard = ({
     <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
       <div className="flex flex-col gap-3">
         <h4 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">{label}</h4>
-        
+
         <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
           {preview ? (
             isImage(preview) ? (
@@ -67,7 +69,7 @@ const DocumentUploadCard = ({
               <span className="text-[10px] font-medium text-muted-foreground/60">No Document</span>
             </div>
           )}
-          
+
           {/* Status Badge */}
           {(file || existingDoc) && (
             <div className="absolute top-2 right-2">
@@ -81,15 +83,15 @@ const DocumentUploadCard = ({
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
               <Upload size={16} />
-              <input 
-                type="file" 
-                className="hidden" 
+              <input
+                type="file"
+                className="hidden"
                 onChange={(e) => onChange(e.target.files?.[0] || null)}
                 accept="image/*,.pdf"
               />
             </label>
             {preview && (
-              <button 
+              <button
                 type="button"
                 onClick={() => window.open(preview, '_blank')}
                 className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
@@ -98,7 +100,7 @@ const DocumentUploadCard = ({
               </button>
             )}
             {(file || existingDoc) && (
-              <button 
+              <button
                 type="button"
                 onClick={onClear}
                 className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
@@ -112,15 +114,15 @@ const DocumentUploadCard = ({
         {!preview && (
           <label className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg border border-border bg-background text-[10px] font-semibold hover:bg-muted transition-colors cursor-pointer text-muted-foreground">
             <Plus size={12} /> CHOOSE FILE
-            <input 
-              type="file" 
-              className="hidden" 
+            <input
+              type="file"
+              className="hidden"
               onChange={(e) => onChange(e.target.files?.[0] || null)}
               accept="image/*,.pdf"
             />
           </label>
         )}
-        
+
         {file && (
           <div className="flex items-center gap-1 overflow-hidden">
             <span className="text-[10px] text-accent font-medium truncate">✓ {file.name}</span>
@@ -157,7 +159,7 @@ export default function CreateLoan() {
     permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
     // Loan & Vehicle Details
     loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
-    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '', 
+    vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '',
     chassisNumber: '', engineNumber: '',
     vertical: '', scheme: '',
     // Income Details
@@ -388,7 +390,7 @@ export default function CreateLoan() {
     try {
       console.log('Fetching from backend proxy');
       toast.info('Fetching vehicle details...');
-      
+
       const rcData = await externalAPI.fetchRCData(rcNumber);
       console.log('RC Proxy Response:', rcData);
 
@@ -568,7 +570,7 @@ export default function CreateLoan() {
         showRC: false, showIncomeProof: false, showCustomerPhoto: false, showInsurance: false, showCustomerLedger: false,
         showRtoDocument: false, showNoc: false, showThirdParty: false, showStamp: false, showRcDocument: false, showFitnessDoc: false, showTaxReceipt: false,
       });
-      
+
       // Handle custom tenure for edit mode
       const existingTenure = String(existingLoan.tenure || '60');
       if (!tenureOptions.includes(Number(existingTenure))) {
@@ -581,7 +583,7 @@ export default function CreateLoan() {
   useEffect(() => {
     if (isEditMode && existingDocuments.length > 0) {
       setUploadedDocs(existingDocuments);
-      
+
       // Auto-enable visibility checkboxes based on existing documents
       setForm(f => {
         const newForm = { ...f };
@@ -716,7 +718,7 @@ export default function CreateLoan() {
       try {
         const start = new Date(form.emiStartDate);
         if (isNaN(start.getTime())) return;
-        
+
         const months = Number(form.tenure);
         if (months <= 0) return;
 
@@ -724,7 +726,7 @@ export default function CreateLoan() {
         // Standard calculation: Start Date + Tenure months - 1 day/month
         // e.g., Jan 1st for 12 months ends on Dec 1st
         end.setMonth(end.getMonth() + months - 1);
-        
+
         const formattedEnd = end.toISOString().split('T')[0];
         if (form.emiEndDate !== formattedEnd) {
           update('emiEndDate', formattedEnd);
@@ -751,7 +753,7 @@ export default function CreateLoan() {
     if (mode === 'Quarterly') periods = t / 3;
     else if (mode === 'Half Yearly') periods = t / 6;
     else if (mode === 'Yearly') periods = t / 12;
-    
+
     return emi * periods;
   }, [emi, calculatedTenure, form.emiMode]);
 
@@ -782,7 +784,7 @@ export default function CreateLoan() {
       { file: form.stamp, type: 'stamp', name: 'Stamp' },
       { file: form.rcDocument, type: 'rc_document', name: 'RC Document' },
       { file: form.fitnessDocument, type: 'fitness_document', name: 'FC' },
-      { file: form.taxReceipt, type: 'tax_receipt', name: 'DM' },
+      { file: form.taxReceipt, type: 'tax_receipt', name: 'RBM / Tax Receipt' },
     ].filter(doc => doc.file !== null);
 
     if (documents.length === 0) {
@@ -998,863 +1000,863 @@ export default function CreateLoan() {
           <p className="text-muted-foreground text-sm">Loading loan details...</p>
         </div>
       ) : (
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 min-w-0">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-8">
-            {/* Customer Details */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative" ref={dropdownRef}>
-                  <label className={labelClass}>Customer ID</label>
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    <input
-                      type="text"
-                      className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-                      value={leadSearch || form.customerId}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setLeadSearch(value);
-                        setForm(f => ({ ...f, customerId: value }));
-                        setShowLeadDropdown(true);
-                      }}
-                      onFocus={() => setShowLeadDropdown(true)}
-                      placeholder="Search by ID, name or phone..."
-                    />
-                    {leadSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLeadSearch('');
-                          setForm(f => ({ ...f, customerId: '' }));
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                  {showLeadDropdown && filteredLeads.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredLeads.slice(0, 10).map((l: any) => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          onClick={() => {
-                            handleLeadSelect(l);
-                            setLeadSearch(l.customer_id);
-                            setShowLeadDropdown(false);
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 min-w-0">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-8">
+                {/* Customer Details */}
+                <div>
+                  <h2 className="text-lg font-bold text-foreground mb-4">Customer Details</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative" ref={dropdownRef}>
+                      <label className={labelClass}>Customer ID</label>
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <input
+                          type="text"
+                          className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                          value={leadSearch || form.customerId}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setLeadSearch(value);
+                            setForm(f => ({ ...f, customerId: value }));
+                            setShowLeadDropdown(true);
                           }}
-                          className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-0"
-                        >
-                          <div className="font-medium text-foreground text-sm flex items-center justify-between">
-                            <span>{l.customer_name}</span>
-                            {(l.pan_number || l.aadhar_number) && (
-                              <div className="flex gap-1.5">
-                                {l.pan_number && <span className="bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded text-[10px] border border-blue-500/20">PAN: {l.pan_number}</span>}
-                                {l.aadhar_number && <span className="bg-purple-500/10 text-purple-600 px-1.5 py-0.5 rounded text-[10px] border border-purple-500/20">AADHAAR: {l.aadhar_number}</span>}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-0.5 flex items-center justify-between">
-                            <div><span className="font-mono text-accent">{l.customer_id}</span> • {l.phone_no}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
-                <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
-                <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
-                <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
-                <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
-
-                <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
-                <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
-                <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
-                <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.currentTehsil} onChange={e => update('currentTehsil', e.target.value)} /></div>
-                <div><label className={labelClass}>District</label><input className={inputClass} value={form.currentDistrict} onChange={e => update('currentDistrict', e.target.value)} /></div>
-                <div><label className={labelClass}>State</label><input className={inputClass} value={form.currentState} onChange={e => update('currentState', e.target.value)} /></div>
-                <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.currentPincode} onChange={e => update('currentPincode', e.target.value)} maxLength={6} /></div>
-                <div className="md:col-span-3 mt-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.sameAsCurrentAddress} onChange={e => handleSameAddress(e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium text-foreground">Same As Current Address</span>
-                  </label>
-                </div>
-                {!form.sameAsCurrentAddress && (
-                  <>
-                    <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Permanent Address</h3></div>
-                    <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.permanentAddress} onChange={e => update('permanentAddress', e.target.value)} /></div>
-                    <div><label className={labelClass}>Village</label><input className={inputClass} value={form.permanentVillage} onChange={e => update('permanentVillage', e.target.value)} /></div>
-                    <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.permanentTehsil} onChange={e => update('permanentTehsil', e.target.value)} /></div>
-                    <div><label className={labelClass}>District</label><input className={inputClass} value={form.permanentDistrict} onChange={e => update('permanentDistrict', e.target.value)} /></div>
-                    <div><label className={labelClass}>State</label><input className={inputClass} value={form.permanentState} onChange={e => update('permanentState', e.target.value)} /></div>
-                    <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.permanentPincode} onChange={e => update('permanentPincode', e.target.value)} maxLength={6} /></div>
-                  </>
-                )}
-              </div>
-            </div>
-
-          {/* ─── SECTION 2: Vehicle, Insurance & RTO Details ─── */}
-          <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
-              <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">2</span>
-              Vehicle, Insurance & RTO Details
-            </h2>
-
-            {/* Vehicle Details */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <label className={labelClass}>Vehicle Reg. No</label>
-                <input
-                  className={inputClass}
-                  value={form.vehicleNumber}
-                  onChange={e => {
-                    const value = e.target.value.toUpperCase();
-                    update('vehicleNumber', value);
-                    if (value.length >= 8) fetchVehicleDetails(value);
-                  }}
-                  placeholder="e.g., RJ60SW9525"
-                />
-                {fetchingVehicleData && (
-                  <div className="absolute right-3 top-8">
-                    <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
-              </div>
-              <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
-              <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
-              <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
-              <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
-              <div><label className={labelClass}>Mfg Year <span className="text-[10px] text-accent opacity-70 ml-1 font-normal">(Auto)</span></label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
-              <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
-              <div><label className={labelClass}>Engine Number</label><input type="text" autoComplete="off" className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
-            </div>
-
-            {/* Categorization Dropdowns (Moved after RC fields) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-              <div>
-                <label className={labelClass}>Vertical</label>
-                <select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}>
-                  <option value="">Select Vertical</option>
-                  {VERTICALS.map(v => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Scheme</label>
-                <select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}>
-                  <option value="">Select Scheme</option>
-                  {SCHEMES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Loan Type</label>
-                <select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}>
-                  <option value="">Select Type</option>
-                  {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Insurance details */}
-            <div className="pt-4 border-t border-border/50">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
-                <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
-                <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
-                <div>
-                  <label className={labelClass}>Insurance Made By</label>
-                  <select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}>
-                    <option value="">Select</option>
-                    {INSURANCE_MADE_BY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-                <div className="md:col-span-1 pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.insuranceReminderEnabled} onChange={e => update('insuranceReminderEnabled', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-xs font-medium text-foreground">Send Expiry Reminder</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* RTO Details */}
-            <div className="pt-4 border-t border-border/50">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
-                <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
-                <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
-                <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
-                <div className="md:col-span-2"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
-                
-                {/* Dropdowns/Special fields moved here */}
-                <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
-
-              </div>
-            </div>
-          </div>
-
-          {/* ─── SECTION 3: Loan, EMI & Financier Details ─── */}
-          <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
-              <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">3</span>
-              Loan, EMI & Finance Details
-            </h2>
-
-            {/* Loan Amounts */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
-              <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
-              <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
-              <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
-              <div><label className={labelClass}>FC Date (Foreclosure Date)</label><input type="date" className={inputClass} value={form.fcDate} onChange={e => update('fcDate', e.target.value)} /></div>
-            </div>
-
-            {/* EMI Details */}
-            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} /></div>
-              <div><label className={labelClass}>Manual EMI (₹)</label><input type="number" className={inputClass} value={form.emiAmount} onChange={e => update('emiAmount', e.target.value)} placeholder="Auto-calculated" /></div>
-              <div>
-                <label className={labelClass}>Tenure (Months) *</label>
-                {!showCustomTenure ? (
-                  <select required className={inputClass} value={tenureOptions.includes(Number(form.tenure)) ? form.tenure : 'custom'} onChange={e => handleTenureChange(e.target.value)}>
-                    {tenureOptions.map(t => <option key={t} value={t}>{t} MONTHS</option>)}
-                    <option value="custom">Other (Manual)</option>
-                  </select>
-                ) : (
-                  <div className="flex gap-2">
-                    <input required type="number" min="1" max="120" className={inputClass} value={customTenure} onChange={e => handleCustomTenureChange(e.target.value)} />
-                    <button type="button" onClick={() => { setShowCustomTenure(false); setCustomTenure(''); update('tenure', '60'); }} className="px-2 py-2 rounded-lg border border-border hover:bg-muted">↩</button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className={labelClass}>EMI Mode</label>
-                <select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}>
-                  <option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option>
-                  <option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option>
-                </select>
-              </div>
-              <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
-               <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
-              <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
-            </div>
-
-            {emi > 0 && (
-              <div className="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
-                <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider">EMI Calculator Preview</span></div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Calculated EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
-                  <button type="button" onClick={() => update('emiAmount', String(emi))} className="h-full px-4 rounded-lg bg-accent text-accent-foreground font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"><Calculator size={16} /> Apply EMI</button>
-                </div>
-              </div>
-            )}
-
-            {/* Financier Details */}
-            <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className={labelClass}>Financier</label>
-                <select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}>
-                  <option value="">Select Financier</option>
-                  {(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
-              <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
-              <div><label className={labelClass}>Disbursement Branch</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} /></div>
-              <div>
-                <label className={labelClass}>Booking Mode</label>
-                <select className={inputClass} value={form.bookingMode} onChange={e => update('bookingMode', e.target.value)}>
-                  <option value="self">Self</option>
-                  <option value="broker">Broker</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Financier Team Vertical</label>
-                <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
-                  <option value="">Select Financier Team Vertical</option>
-                  {FINANCIER_TEAM_VERTICAL_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Vertical (Read only)</label>
-                <input disabled className={`${inputClass} bg-muted/30 cursor-not-allowed`} value={form.vertical} />
-              </div>
-              {form.bookingMode === 'broker' && (
-                <div>
-                  <label className={labelClass}>Broker Name</label>
-                  <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
-                    <option value="">Select Broker</option>
-                    {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => {
-                      const numA = parseInt(a.dsa_code.replace(/^\D+/g, '')) || 0;
-                      const numB = parseInt(b.dsa_code.replace(/^\D+/g, '')) || 0;
-                      return numA - numB;
-                    }).map((b: any) => {
-                      const number = b.dsa_code.replace(/^\D+/g, '');
-                      const prefixMatch = b.dsa_code.match(/^MEH([A-Z]+)/);
-                      const initials = prefixMatch ? prefixMatch[1] : '';
-                      return (
-                        <option key={b.id} value={b.id}>
-                          {`MEH${initials}${number}`} | {b.name}
-                        </option>
-                      );
-                    })}
-                    {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-              )}
-              {form.assignedBankId && (
-                <>
-                  <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
-                </>
-              )}
-            </div>
-
-            {/* Broker Payout Summary (Inline) */}
-            {form.bookingMode === 'broker' && computedCommission.amount > 0 && form.assignedBrokerId && (
-              <div className="mt-4 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Broker Payout Summary</span>
-                  {computedCommission.payoutType && (
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' : computedCommission.payoutType === 'Half Payout' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{computedCommission.payoutType}</span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Calculation Rate</p><p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p></div>
-                  <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Payout Amount</p><p className="text-lg font-bold text-green-600">{formatCurrency(computedCommission.amount)}</p></div>
-                  <div className="text-center p-2 rounded-lg bg-background/50 flex flex-col justify-center"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Vertical</p><p className="text-xs font-bold text-foreground">{computedCommission.calculationBreakdown?.vertical}</p></div>
-                </div>
-              </div>
-            )}
-          </div>
-
-            {/* Deduction */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
-              </div>
-            </div>
-
-            {/* Disbursement */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
-                <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
-                <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
-                <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
-                <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
-                <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
-                <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} /></div>
-              </div>
-            </div>
-
-            {/* Documents */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
-
-              {/* Document Preview Box */}
-              {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
-                <div className="mb-6 p-4 rounded-xl border border-border bg-muted/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-foreground">Selected Documents</h3>
-                    <span className="text-xs text-muted-foreground bg-accent/10 px-2 py-1 rounded-full">
-                      {Object.values(form).filter(v => v instanceof File).length} files
-                    </span>
-                  </div>
-
-                  {uploadingDocs && (
-                    <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-sm text-blue-600 font-medium">Uploading documents...</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {uploadedDocs.length > 0 && (
-                    <div className="mb-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-sm text-green-600 font-medium">{uploadedDocs.length} documents uploaded successfully</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {[
-                      { file: form.aadharFront, name: 'Aadhar Front', type: 'aadhar_front' },
-                      { file: form.aadharBack, name: 'Aadhar Back', type: 'aadhar_back' },
-                      { file: form.panCard, name: 'PAN Card', type: 'pan_card' },
-                      { file: form.bankStatement, name: 'Bank Statement', type: 'bank_statement' },
-                      { file: form.cheque, name: 'Cheque', type: 'cheque' },
-                      { file: form.rcFront, name: 'RC Front', type: 'rc_front' },
-                      { file: form.rcBack, name: 'RC Back', type: 'rc_back' },
-                      { file: form.incomeProof, name: 'Income Proof', type: 'income_proof' },
-                      { file: form.customerPhoto, name: 'Customer Photo', type: 'customer_photo' },
-                      { file: form.insurance, name: 'Insurance', type: 'insurance' },
-                      { file: form.customerLedger, name: 'Customer Ledger', type: 'customer_ledger' },
-                      { file: form.rtoDocument, name: 'RTO Document', type: 'rto_document' },
-                      { file: form.noc, name: 'NOC', type: 'noc' },
-                      { file: form.thirdParty, name: 'Third Party', type: 'third_party' },
-                      { file: form.stamp, name: 'Stamp', type: 'stamp' },
-                      { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
-                      { file: form.fitnessDocument, name: 'FC', type: 'fitness_document' },
-                      { file: form.taxReceipt, name: 'DM', type: 'tax_receipt' },
-                    ].filter(doc => doc.file).map((doc) => {
-                      const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
-                      return (
-                        <div key={doc.type} className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
-                          <div className="flex-shrink-0">
-                            {uploaded ? (
-                              <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{(doc.file as File).name}</p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const url = URL.createObjectURL(doc.file as File);
-                                window.open(url, '_blank');
-                              }}
-                              className="p-1 hover:bg-muted rounded text-accent"
-                              title="Preview"
-                            >
-                              <Eye size={14} />
-                            </button>
-                            {uploaded && (
-                              <span className="text-[10px] text-green-600 font-medium whitespace-nowrap">Uploaded</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Customer Documents */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Customer Documents</h3>
-
-                {/* Document Selection Checkboxes */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showAadhar} onChange={e => update('showAadhar', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Aadhar Card</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showPan} onChange={e => update('showPan', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Pan Card</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showBankStatement} onChange={e => update('showBankStatement', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Bank Statement</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showCheque} onChange={e => update('showCheque', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Cheque</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showRC} onChange={e => update('showRC', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">RC</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showIncomeProof} onChange={e => update('showIncomeProof', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Income Proof</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showCustomerPhoto} onChange={e => update('showCustomerPhoto', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Customer Photo</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showInsurance} onChange={e => update('showInsurance', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Insurance</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showCustomerLedger} onChange={e => update('showCustomerLedger', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Customer Ledger</span>
-                  </label>
-                </div>
-
-                {/* Document Upload Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {form.showAadhar && (
-                    <>
-                      <DocumentUploadCard 
-                        label="Aadhar Card Front"
-                        type="aadhar_front"
-                        file={form.aadharFront as File}
-                        existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_front')}
-                        onChange={val => update('aadharFront', val)}
-                        onClear={() => update('aadharFront', null)}
-                      />
-                      <DocumentUploadCard 
-                        label="Aadhar Card Back"
-                        type="aadhar_back"
-                        file={form.aadharBack as File}
-                        existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_back')}
-                        onChange={val => update('aadharBack', val)}
-                        onClear={() => update('aadharBack', null)}
-                      />
-                    </>
-                  )}
-                  {form.showPan && (
-                    <DocumentUploadCard 
-                      label="Pan Card"
-                      type="pan_card"
-                      file={form.panCard as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'pan_card')}
-                      onChange={val => update('panCard', val)}
-                      onClear={() => update('panCard', null)}
-                    />
-                  )}
-                  {form.showBankStatement && (
-                    <DocumentUploadCard 
-                      label="Bank Statement"
-                      type="bank_statement"
-                      file={form.bankStatement as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'bank_statement')}
-                      onChange={val => update('bankStatement', val)}
-                      onClear={() => update('bankStatement', null)}
-                    />
-                  )}
-                  {form.showCheque && (
-                    <DocumentUploadCard 
-                      label="Cheque"
-                      type="cheque"
-                      file={form.cheque as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'cheque')}
-                      onChange={val => update('cheque', val)}
-                      onClear={() => update('cheque', null)}
-                    />
-                  )}
-                  {form.showRC && (
-                    <>
-                      <DocumentUploadCard 
-                        label="RC (Front)"
-                        type="rc_front"
-                        file={form.rcFront as File}
-                        existingDoc={uploadedDocs.find(d => d.document_type === 'rc_front')}
-                        onChange={val => update('rcFront', val)}
-                        onClear={() => update('rcFront', null)}
-                      />
-                      <DocumentUploadCard 
-                        label="RC (Back)"
-                        type="rc_back"
-                        file={form.rcBack as File}
-                        existingDoc={uploadedDocs.find(d => d.document_type === 'rc_back')}
-                        onChange={val => update('rcBack', val)}
-                        onClear={() => update('rcBack', null)}
-                      />
-                    </>
-                  )}
-                  {form.showIncomeProof && (
-                    <DocumentUploadCard 
-                      label="Income Proof"
-                      type="income_proof"
-                      file={form.incomeProof as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'income_proof')}
-                      onChange={val => update('incomeProof', val)}
-                      onClear={() => update('incomeProof', null)}
-                    />
-                  )}
-                  {form.showCustomerPhoto && (
-                    <DocumentUploadCard 
-                      label="Customer Photo"
-                      type="customer_photo"
-                      file={form.customerPhoto as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'customer_photo')}
-                      onChange={val => update('customerPhoto', val)}
-                      onClear={() => update('customerPhoto', null)}
-                    />
-                  )}
-                  {form.showInsurance && (
-                    <DocumentUploadCard 
-                      label="Insurance"
-                      type="insurance"
-                      file={form.insurance as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'insurance')}
-                      onChange={val => update('insurance', val)}
-                      onClear={() => update('insurance', null)}
-                    />
-                  )}
-                  {form.showCustomerLedger && (
-                    <DocumentUploadCard 
-                      label="Customer Ledger"
-                      type="customer_ledger"
-                      file={form.customerLedger as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'customer_ledger')}
-                      onChange={val => update('customerLedger', val)}
-                      onClear={() => update('customerLedger', null)}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Other KYC Documents */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Other KYC / RTO Documents</h3>
-
-                {/* Document Selection Checkboxes */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showRtoDocument} onChange={e => update('showRtoDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">RTO Document</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showNoc} onChange={e => update('showNoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">NOC</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showThirdParty} onChange={e => update('showThirdParty', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">3rd Party</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showStamp} onChange={e => update('showStamp', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">Stamp</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">RC Document</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showFitnessDoc} onChange={e => update('showFitnessDoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">FC</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                    <span className="text-sm font-medium">DM</span>
-                  </label>
-                </div>
-
-                {/* Document Upload Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {form.showRtoDocument && (
-                    <DocumentUploadCard 
-                      label="RTO Document"
-                      type="rto_document"
-                      file={form.rtoDocument as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'rto_document')}
-                      onChange={val => update('rtoDocument', val)}
-                      onClear={() => update('rtoDocument', null)}
-                    />
-                  )}
-                  {form.showNoc && (
-                    <DocumentUploadCard 
-                      label="NOC"
-                      type="noc"
-                      file={form.noc as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'noc')}
-                      onChange={val => update('noc', val)}
-                      onClear={() => update('noc', null)}
-                    />
-                  )}
-                  {form.showThirdParty && (
-                    <DocumentUploadCard 
-                      label="3rd Party"
-                      type="third_party"
-                      file={form.thirdParty as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'third_party')}
-                      onChange={val => update('thirdParty', val)}
-                      onClear={() => update('thirdParty', null)}
-                    />
-                  )}
-                  {form.showStamp && (
-                    <DocumentUploadCard 
-                      label="Stamp"
-                      type="stamp"
-                      file={form.stamp as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'stamp')}
-                      onChange={val => update('stamp', val)}
-                      onClear={() => update('stamp', null)}
-                    />
-                  )}
-                  {form.showRcDocument && (
-                    <DocumentUploadCard 
-                      label="RC Document"
-                      type="rc_document"
-                      file={form.rcDocument as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'rc_document')}
-                      onChange={val => update('rcDocument', val)}
-                      onClear={() => update('rcDocument', null)}
-                    />
-                  )}
-                  {form.showFitnessDoc && (
-                    <DocumentUploadCard 
-                      label="FC"
-                      type="fitness_document"
-                      file={form.fitnessDocument as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'fitness_document')}
-                      onChange={val => update('fitnessDocument', val)}
-                      onClear={() => update('fitnessDocument', null)}
-                    />
-                  )}
-                  {form.showTaxReceipt && (
-                    <DocumentUploadCard 
-                      label="DM"
-                      type="tax_receipt"
-                      file={form.taxReceipt as File}
-                      existingDoc={uploadedDocs.find(d => d.document_type === 'tax_receipt')}
-                      onChange={val => update('taxReceipt', val)}
-                      onClear={() => update('taxReceipt', null)}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="w-full lg:w-96 space-y-6 shrink-0">
-          <div className="lg:sticky lg:top-4 h-fit space-y-6 pb-20">
-            {/* Manager Remarks Section */}
-            {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="text-amber-600 dark:text-amber-500" size={18} />
-                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Manager Remarks</h3>
-                </div>
-                <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-amber-200/50 dark:border-amber-900/30">
-                  <p className="text-sm text-amber-900 dark:text-amber-300 leading-relaxed font-medium italic">
-                    "{form.remark}"
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Application Summary Card */}
-            <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <ClipboardCheck size={16} className="text-accent" />
-                Application Summary
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
-                    form.fileStatus === 'approved' ? 'bg-green-500/10 text-green-500' :
-                    form.fileStatus === 'rejected' ? 'bg-red-500/10 text-red-500' :
-                    form.fileStatus === 'sent_back' ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-blue-500/10 text-blue-500'
-                  }`}>
-                    {form.fileStatus || 'Submitted'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Applicant</span>
-                  <span className="font-semibold text-foreground">{form.customerName || '—'}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Loan Amount</span>
-                  <span className="font-bold text-accent">{formatCurrency(Number(form.loanAmount || 0))}</span>
-                </div>
-              </div>
-
-              <div className="pt-4 space-y-3">
-                <button
-                  type="submit"
-                  form="loan-form"
-                  onClick={() => document.querySelector('form')?.requestSubmit()}
-                  disabled={createLoan.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-accent text-accent-foreground font-bold text-sm shadow-lg shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-                >
-                  {createLoan.isPending ? (
-                    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <CheckCircle2 size={18} />
-                  )}
-                  {isEditMode ? 'Update Application' : 'Submit Application'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="w-full py-2.5 px-4 rounded-xl border border-border bg-card text-foreground font-bold text-xs hover:bg-muted transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-
-            {/* Workflow History Section */}
-            {isEditMode && auditLogs.length > 0 && (
-              <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/30">
-                  <Clock size={16} className="text-accent" />
-                  <h3 className="text-sm font-bold text-foreground">Workflow History</h3>
-                </div>
-                <div className="p-5 space-y-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                  {auditLogs.map((log: any, index: number) => (
-                    <div key={log.id} className="relative pl-6">
-                      {/* Timeline connector */}
-                      {index < auditLogs.length - 1 && (
-                        <div className="absolute left-[7px] top-[18px] bottom-[-24px] w-[2px] bg-border" />
-                      )}
-                      {/* Timeline dot */}
-                      <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background z-10" />
-
-                      <div className="flex flex-col gap-1 mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-foreground">
-                            {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          {new Date(log.performed_at).toLocaleString('en-IN', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit', hour12: true
-                          })}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[10px] text-muted-foreground">
-                          By <span className="text-foreground font-semibold">{log.performed_by_name || 'System'}</span>
-                        </p>
-                        {log.remarks && (
-                          <div className="mt-1 p-2 rounded-lg bg-muted/40 border border-border/50">
-                            <p className="text-[10px] text-foreground italic whitespace-pre-wrap">
-                              "{log.remarks}"
-                            </p>
-                          </div>
+                          onFocus={() => setShowLeadDropdown(true)}
+                          placeholder="Search by ID, name or phone..."
+                        />
+                        {leadSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLeadSearch('');
+                              setForm(f => ({ ...f, customerId: '' }));
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            <X size={16} />
+                          </button>
                         )}
                       </div>
+                      {showLeadDropdown && filteredLeads.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {filteredLeads.slice(0, 10).map((l: any) => (
+                            <button
+                              key={l.id}
+                              type="button"
+                              onClick={() => {
+                                handleLeadSelect(l);
+                                setLeadSearch(l.customer_id);
+                                setShowLeadDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-0"
+                            >
+                              <div className="font-medium text-foreground text-sm flex items-center justify-between">
+                                <span>{l.customer_name}</span>
+                                {(l.pan_number || l.aadhar_number) && (
+                                  <div className="flex gap-1.5">
+                                    {l.pan_number && <span className="bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded text-[10px] border border-blue-500/20">PAN: {l.pan_number}</span>}
+                                    {l.aadhar_number && <span className="bg-purple-500/10 text-purple-600 px-1.5 py-0.5 rounded text-[10px] border border-purple-500/20">AADHAAR: {l.aadhar_number}</span>}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5 flex items-center justify-between">
+                                <div><span className="font-mono text-accent">{l.customer_id}</span> • {l.phone_no}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
+                    <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
+                    <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
+                    <div><label className={labelClass}>Our Branch</label><input className={inputClass} value={form.ourBranch} onChange={e => update('ourBranch', e.target.value)} /></div>
+
+                    <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
+                    <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
+                    <div><label className={labelClass}>Village</label><input className={inputClass} value={form.currentVillage} onChange={e => update('currentVillage', e.target.value)} /></div>
+                    <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.currentTehsil} onChange={e => update('currentTehsil', e.target.value)} /></div>
+                    <div><label className={labelClass}>District</label><input className={inputClass} value={form.currentDistrict} onChange={e => update('currentDistrict', e.target.value)} /></div>
+                    <div><label className={labelClass}>State</label><input className={inputClass} value={form.currentState} onChange={e => update('currentState', e.target.value)} /></div>
+                    <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.currentPincode} onChange={e => update('currentPincode', e.target.value)} maxLength={6} /></div>
+                    <div className="md:col-span-3 mt-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={form.sameAsCurrentAddress} onChange={e => handleSameAddress(e.target.checked)} className="w-4 h-4 rounded border-border" />
+                        <span className="text-sm font-medium text-foreground">Same As Current Address</span>
+                      </label>
+                    </div>
+                    {!form.sameAsCurrentAddress && (
+                      <>
+                        <div className="md:col-span-3"><h3 className="font-semibold text-foreground mb-3">Permanent Address</h3></div>
+                        <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.permanentAddress} onChange={e => update('permanentAddress', e.target.value)} /></div>
+                        <div><label className={labelClass}>Village</label><input className={inputClass} value={form.permanentVillage} onChange={e => update('permanentVillage', e.target.value)} /></div>
+                        <div><label className={labelClass}>Tehsil</label><input className={inputClass} value={form.permanentTehsil} onChange={e => update('permanentTehsil', e.target.value)} /></div>
+                        <div><label className={labelClass}>District</label><input className={inputClass} value={form.permanentDistrict} onChange={e => update('permanentDistrict', e.target.value)} /></div>
+                        <div><label className={labelClass}>State</label><input className={inputClass} value={form.permanentState} onChange={e => update('permanentState', e.target.value)} /></div>
+                        <div><label className={labelClass}>Pincode</label><input className={inputClass} value={form.permanentPincode} onChange={e => update('permanentPincode', e.target.value)} maxLength={6} /></div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* ─── SECTION 2: Vehicle, Insurance & RTO Details ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">2</span>
+                  Vehicle, Insurance & RTO Details
+                </h2>
+
+                {/* Vehicle Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="relative">
+                    <label className={labelClass}>Vehicle Reg. No</label>
+                    <input
+                      className={inputClass}
+                      value={form.vehicleNumber}
+                      onChange={e => {
+                        const value = e.target.value.toUpperCase();
+                        update('vehicleNumber', value);
+                        if (value.length >= 8) fetchVehicleDetails(value);
+                      }}
+                      placeholder="e.g., RJ60SW9525"
+                    />
+                    {fetchingVehicleData && (
+                      <div className="absolute right-3 top-8">
+                        <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
+                  <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
+                  <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
+                  <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
+                  <div><label className={labelClass}>Mfg Year <span className="text-[10px] text-accent opacity-70 ml-1 font-normal">(Auto)</span></label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
+                  <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
+                  <div><label className={labelClass}>Engine Number</label><input type="text" autoComplete="off" className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
+                </div>
+
+                {/* Categorization Dropdowns (Moved after RC fields) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                  <div>
+                    <label className={labelClass}>Vertical</label>
+                    <select className={inputClass} value={form.vertical} onChange={e => update('vertical', e.target.value)}>
+                      <option value="">Select Vertical</option>
+                      {VERTICALS.map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Scheme</label>
+                    <select className={inputClass} value={form.scheme} onChange={e => update('scheme', e.target.value)}>
+                      <option value="">Select Scheme</option>
+                      {SCHEMES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Loan Type</label>
+                    <select className={inputClass} value={form.loanTypeVehicle} onChange={e => update('loanTypeVehicle', e.target.value)}>
+                      <option value="">Select Type</option>
+                      {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Insurance details */}
+                <div className="pt-4 border-t border-border/50">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                    <div><label className={labelClass}>Insurance Company</label><input className={inputClass} value={form.insuranceCompanyName} onChange={e => update('insuranceCompanyName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Policy Number</label><input className={inputClass} value={form.insurancePolicyNumber} onChange={e => update('insurancePolicyNumber', e.target.value)} /></div>
+                    <div><label className={labelClass}>Premium Amount (₹)</label><input type="number" className={inputClass} value={form.premiumAmount} onChange={e => update('premiumAmount', e.target.value)} /></div>
+                    <div><label className={labelClass}>Insurance Expiry Date</label><input type="date" className={inputClass} value={form.insuranceDate} onChange={e => update('insuranceDate', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>Insurance Made By</label>
+                      <select className={inputClass} value={form.insuranceMadeBy} onChange={e => update('insuranceMadeBy', e.target.value)}>
+                        <option value="">Select</option>
+                        {INSURANCE_MADE_BY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                    <div className="md:col-span-1 pt-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={form.insuranceReminderEnabled} onChange={e => update('insuranceReminderEnabled', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                        <span className="text-xs font-medium text-foreground">Send Expiry Reminder</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RTO Details */}
+                <div className="pt-4 border-t border-border/50">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
+                    <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
+                    <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
+                    <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
+                    <div className="md:col-span-2"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
+
+                    {/* Dropdowns/Special fields moved here */}
+                    <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                    <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
+
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── SECTION 3: Loan, EMI & Financier Details ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border/50">
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">3</span>
+                  Loan, EMI & Finance Details
+                </h2>
+
+                {/* Loan Amounts */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><label className={labelClass}>Purpose Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+                  <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>FC Date (Foreclosure Date)</label><input type="date" className={inputClass} value={form.fcDate} onChange={e => update('fcDate', e.target.value)} /></div>
+                </div>
+
+                {/* EMI Details */}
+                <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div><label className={labelClass}>IRR (%) *</label><input required type="number" step="0.01" className={inputClass} value={form.irr} onChange={e => update('irr', e.target.value)} /></div>
+                  <div><label className={labelClass}>Manual EMI (₹)</label><input type="number" className={inputClass} value={form.emiAmount} onChange={e => update('emiAmount', e.target.value)} placeholder="Auto-calculated" /></div>
+                  <div>
+                    <label className={labelClass}>Tenure (Months) *</label>
+                    {!showCustomTenure ? (
+                      <select required className={inputClass} value={tenureOptions.includes(Number(form.tenure)) ? form.tenure : 'custom'} onChange={e => handleTenureChange(e.target.value)}>
+                        {tenureOptions.map(t => <option key={t} value={t}>{t} MONTHS</option>)}
+                        <option value="custom">Other (Manual)</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input required type="number" min="1" max="120" className={inputClass} value={customTenure} onChange={e => handleCustomTenureChange(e.target.value)} />
+                        <button type="button" onClick={() => { setShowCustomTenure(false); setCustomTenure(''); update('tenure', '60'); }} className="px-2 py-2 rounded-lg border border-border hover:bg-muted">↩</button>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className={labelClass}>EMI Mode</label>
+                    <select className={inputClass} value={form.emiMode} onChange={e => update('emiMode', e.target.value)}>
+                      <option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option>
+                      <option value="Half Yearly">Half Yearly</option><option value="Yearly">Yearly</option>
+                    </select>
+                  </div>
+                  <div><label className={labelClass}>Processing Fee (₹)</label><input type="number" className={inputClass} value={form.processingFee} onChange={e => update('processingFee', e.target.value)} /></div>
+                  <div><label className={labelClass}>EMI Start Date</label><input type="date" className={inputClass} value={form.emiStartDate} onChange={e => update('emiStartDate', e.target.value)} /></div>
+                  <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
+                </div>
+
+                {emi > 0 && (
+                  <div className="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
+                    <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider">EMI Calculator Preview</span></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Calculated EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
+                      <button type="button" onClick={() => update('emiAmount', String(emi))} className="h-full px-4 rounded-lg bg-accent text-accent-foreground font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"><Calculator size={16} /> Apply EMI</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Financier Details */}
+                <div className="pt-4 border-t border-border/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelClass}>Financier</label>
+                    <select className={inputClass} value={form.assignedBankId} onChange={e => update('assignedBankId', e.target.value)}>
+                      <option value="">Select Financier</option>
+                      {(banks as any[]).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div><label className={labelClass}>Executive Name</label><input className={inputClass} value={form.financierExecutiveName} onChange={e => update('financierExecutiveName', e.target.value)} /></div>
+                  <div><label className={labelClass}>Disbursement Branch</label><input className={inputClass} value={form.disburseBranchName} onChange={e => update('disburseBranchName', e.target.value)} /></div>
+                  <div>
+                    <label className={labelClass}>Booking Mode</label>
+                    <select className={inputClass} value={form.bookingMode} onChange={e => update('bookingMode', e.target.value)}>
+                      <option value="self">Self</option>
+                      <option value="broker">Broker</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Financier Team Vertical</label>
+                    <select className={inputClass} value={form.financierTeamVertical} onChange={e => update('financierTeamVertical', e.target.value)}>
+                      <option value="">Select Financier Team Vertical</option>
+                      {FINANCIER_TEAM_VERTICAL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Vertical (Read only)</label>
+                    <input disabled className={`${inputClass} bg-muted/30 cursor-not-allowed`} value={form.vertical} />
+                  </div>
+                  {form.bookingMode === 'broker' && (
+                    <div>
+                      <label className={labelClass}>Broker Name</label>
+                      <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
+                        <option value="">Select Broker</option>
+                        {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => {
+                          const numA = parseInt(a.dsa_code.replace(/^\D+/g, '')) || 0;
+                          const numB = parseInt(b.dsa_code.replace(/^\D+/g, '')) || 0;
+                          return numA - numB;
+                        }).map((b: any) => {
+                          const number = b.dsa_code.replace(/^\D+/g, '');
+                          const prefixMatch = b.dsa_code.match(/^MEH([A-Z]+)/);
+                          const initials = prefixMatch ? prefixMatch[1] : '';
+                          return (
+                            <option key={b.id} value={b.id}>
+                              {`MEH${initials}${number}`} | {b.name}
+                            </option>
+                          );
+                        })}
+                        {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {form.assignedBankId && (
+                    <>
+                      <div><label className={labelClass}>Sanction Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
+                      <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
+                    </>
+                  )}
+                </div>
+
+                {/* Broker Payout Summary (Inline) */}
+                {form.bookingMode === 'broker' && computedCommission.amount > 0 && form.assignedBrokerId && (
+                  <div className="mt-4 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Broker Payout Summary</span>
+                      {computedCommission.payoutType && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${computedCommission.payoutType === 'Zero Payout' ? 'bg-red-100 text-red-700' : computedCommission.payoutType === 'Half Payout' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{computedCommission.payoutType}</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Calculation Rate</p><p className="text-lg font-bold text-foreground">{computedCommission.rate}%</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Payout Amount</p><p className="text-lg font-bold text-green-600">{formatCurrency(computedCommission.amount)}</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50 flex flex-col justify-center"><p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-tighter">Vertical</p><p className="text-xs font-bold text-foreground">{computedCommission.calculationBreakdown?.vertical}</p></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Deduction */}
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Disbursement */}
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
+                  <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
+                  <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
+                  <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
+                  <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
+                  <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
+                  <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
+                  <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
+                  <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
+
+                {/* Document Preview Box */}
+                {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
+                  <div className="mb-6 p-4 rounded-xl border border-border bg-muted/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-foreground">Selected Documents</h3>
+                      <span className="text-xs text-muted-foreground bg-accent/10 px-2 py-1 rounded-full">
+                        {Object.values(form).filter(v => v instanceof File).length} files
+                      </span>
+                    </div>
+
+                    {uploadingDocs && (
+                      <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm text-blue-600 font-medium">Uploading documents...</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {uploadedDocs.length > 0 && (
+                      <div className="mb-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-sm text-green-600 font-medium">{uploadedDocs.length} documents uploaded successfully</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        { file: form.aadharFront, name: 'Aadhar Front', type: 'aadhar_front' },
+                        { file: form.aadharBack, name: 'Aadhar Back', type: 'aadhar_back' },
+                        { file: form.panCard, name: 'PAN Card', type: 'pan_card' },
+                        { file: form.bankStatement, name: 'Bank Statement', type: 'bank_statement' },
+                        { file: form.cheque, name: 'Cheque', type: 'cheque' },
+                        { file: form.rcFront, name: 'RC Front', type: 'rc_front' },
+                        { file: form.rcBack, name: 'RC Back', type: 'rc_back' },
+                        { file: form.incomeProof, name: 'Income Proof', type: 'income_proof' },
+                        { file: form.customerPhoto, name: 'Customer Photo', type: 'customer_photo' },
+                        { file: form.insurance, name: 'Insurance', type: 'insurance' },
+                        { file: form.customerLedger, name: 'Customer Ledger', type: 'customer_ledger' },
+                        { file: form.rtoDocument, name: 'RTO Document', type: 'rto_document' },
+                        { file: form.noc, name: 'NOC', type: 'noc' },
+                        { file: form.thirdParty, name: 'Third Party', type: 'third_party' },
+                        { file: form.stamp, name: 'Stamp', type: 'stamp' },
+                        { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
+                        { file: form.fitnessDocument, name: 'FC', type: 'fitness_document' },
+                        { file: form.taxReceipt, name: 'RBM / Tax Receipt', type: 'tax_receipt' },
+                      ].filter(doc => doc.file).map((doc) => {
+                        const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
+                        return (
+                          <div key={doc.type} className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
+                            <div className="flex-shrink-0">
+                              {uploaded ? (
+                                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{(doc.file as File).name}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = URL.createObjectURL(doc.file as File);
+                                  window.open(url, '_blank');
+                                }}
+                                className="p-1 hover:bg-muted rounded text-accent"
+                                title="Preview"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              {uploaded && (
+                                <span className="text-[10px] text-green-600 font-medium whitespace-nowrap">Uploaded</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Customer Documents */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Customer Documents</h3>
+
+                  {/* Document Selection Checkboxes */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showAadhar} onChange={e => update('showAadhar', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Aadhar Card</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showPan} onChange={e => update('showPan', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Pan Card</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showBankStatement} onChange={e => update('showBankStatement', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Bank Statement</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showCheque} onChange={e => update('showCheque', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Cheque</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showRC} onChange={e => update('showRC', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">RC</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showIncomeProof} onChange={e => update('showIncomeProof', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Income Proof</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showCustomerPhoto} onChange={e => update('showCustomerPhoto', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Customer Photo</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showInsurance} onChange={e => update('showInsurance', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Insurance</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showCustomerLedger} onChange={e => update('showCustomerLedger', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Customer Ledger</span>
+                    </label>
+                  </div>
+
+                  {/* Document Upload Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {form.showAadhar && (
+                      <>
+                        <DocumentUploadCard
+                          label="Aadhar Card Front"
+                          type="aadhar_front"
+                          file={form.aadharFront as File}
+                          existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_front')}
+                          onChange={val => update('aadharFront', val)}
+                          onClear={() => update('aadharFront', null)}
+                        />
+                        <DocumentUploadCard
+                          label="Aadhar Card Back"
+                          type="aadhar_back"
+                          file={form.aadharBack as File}
+                          existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_back')}
+                          onChange={val => update('aadharBack', val)}
+                          onClear={() => update('aadharBack', null)}
+                        />
+                      </>
+                    )}
+                    {form.showPan && (
+                      <DocumentUploadCard
+                        label="Pan Card"
+                        type="pan_card"
+                        file={form.panCard as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'pan_card')}
+                        onChange={val => update('panCard', val)}
+                        onClear={() => update('panCard', null)}
+                      />
+                    )}
+                    {form.showBankStatement && (
+                      <DocumentUploadCard
+                        label="Bank Statement"
+                        type="bank_statement"
+                        file={form.bankStatement as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'bank_statement')}
+                        onChange={val => update('bankStatement', val)}
+                        onClear={() => update('bankStatement', null)}
+                      />
+                    )}
+                    {form.showCheque && (
+                      <DocumentUploadCard
+                        label="Cheque"
+                        type="cheque"
+                        file={form.cheque as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'cheque')}
+                        onChange={val => update('cheque', val)}
+                        onClear={() => update('cheque', null)}
+                      />
+                    )}
+                    {form.showRC && (
+                      <>
+                        <DocumentUploadCard
+                          label="RC (Front)"
+                          type="rc_front"
+                          file={form.rcFront as File}
+                          existingDoc={uploadedDocs.find(d => d.document_type === 'rc_front')}
+                          onChange={val => update('rcFront', val)}
+                          onClear={() => update('rcFront', null)}
+                        />
+                        <DocumentUploadCard
+                          label="RC (Back)"
+                          type="rc_back"
+                          file={form.rcBack as File}
+                          existingDoc={uploadedDocs.find(d => d.document_type === 'rc_back')}
+                          onChange={val => update('rcBack', val)}
+                          onClear={() => update('rcBack', null)}
+                        />
+                      </>
+                    )}
+                    {form.showIncomeProof && (
+                      <DocumentUploadCard
+                        label="Income Proof"
+                        type="income_proof"
+                        file={form.incomeProof as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'income_proof')}
+                        onChange={val => update('incomeProof', val)}
+                        onClear={() => update('incomeProof', null)}
+                      />
+                    )}
+                    {form.showCustomerPhoto && (
+                      <DocumentUploadCard
+                        label="Customer Photo"
+                        type="customer_photo"
+                        file={form.customerPhoto as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'customer_photo')}
+                        onChange={val => update('customerPhoto', val)}
+                        onClear={() => update('customerPhoto', null)}
+                      />
+                    )}
+                    {form.showInsurance && (
+                      <DocumentUploadCard
+                        label="Insurance"
+                        type="insurance"
+                        file={form.insurance as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'insurance')}
+                        onChange={val => update('insurance', val)}
+                        onClear={() => update('insurance', null)}
+                      />
+                    )}
+                    {form.showCustomerLedger && (
+                      <DocumentUploadCard
+                        label="Customer Ledger"
+                        type="customer_ledger"
+                        file={form.customerLedger as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'customer_ledger')}
+                        onChange={val => update('customerLedger', val)}
+                        onClear={() => update('customerLedger', null)}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Other KYC Documents */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Other KYC / RTO Documents</h3>
+
+                  {/* Document Selection Checkboxes */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showRtoDocument} onChange={e => update('showRtoDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">RTO Document</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showNoc} onChange={e => update('showNoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">NOC</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showThirdParty} onChange={e => update('showThirdParty', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">3rd Party</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showStamp} onChange={e => update('showStamp', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">Stamp</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">RC Document</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showFitnessDoc} onChange={e => update('showFitnessDoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">FC</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border" />
+                      <span className="text-sm font-medium">RBM / Tax Receipt</span>
+                    </label>
+                  </div>
+
+                  {/* Document Upload Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {form.showRtoDocument && (
+                      <DocumentUploadCard
+                        label="RTO Document"
+                        type="rto_document"
+                        file={form.rtoDocument as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'rto_document')}
+                        onChange={val => update('rtoDocument', val)}
+                        onClear={() => update('rtoDocument', null)}
+                      />
+                    )}
+                    {form.showNoc && (
+                      <DocumentUploadCard
+                        label="NOC"
+                        type="noc"
+                        file={form.noc as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'noc')}
+                        onChange={val => update('noc', val)}
+                        onClear={() => update('noc', null)}
+                      />
+                    )}
+                    {form.showThirdParty && (
+                      <DocumentUploadCard
+                        label="3rd Party"
+                        type="third_party"
+                        file={form.thirdParty as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'third_party')}
+                        onChange={val => update('thirdParty', val)}
+                        onClear={() => update('thirdParty', null)}
+                      />
+                    )}
+                    {form.showStamp && (
+                      <DocumentUploadCard
+                        label="Stamp"
+                        type="stamp"
+                        file={form.stamp as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'stamp')}
+                        onChange={val => update('stamp', val)}
+                        onClear={() => update('stamp', null)}
+                      />
+                    )}
+                    {form.showRcDocument && (
+                      <DocumentUploadCard
+                        label="RC Document"
+                        type="rc_document"
+                        file={form.rcDocument as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'rc_document')}
+                        onChange={val => update('rcDocument', val)}
+                        onClear={() => update('rcDocument', null)}
+                      />
+                    )}
+                    {form.showFitnessDoc && (
+                      <DocumentUploadCard
+                        label="FC"
+                        type="fitness_document"
+                        file={form.fitnessDocument as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'fitness_document')}
+                        onChange={val => update('fitnessDocument', val)}
+                        onClear={() => update('fitnessDocument', null)}
+                      />
+                    )}
+                    {form.showTaxReceipt && (
+                      <DocumentUploadCard
+                        label="RBM / Tax Receipt"
+                        type="tax_receipt"
+                        file={form.taxReceipt as File}
+                        existingDoc={uploadedDocs.find(d => d.document_type === 'tax_receipt')}
+                        onChange={val => update('taxReceipt', val)}
+                        onClear={() => update('taxReceipt', null)}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="w-full lg:w-96 space-y-6 shrink-0">
+            <div className="lg:sticky lg:top-4 h-fit space-y-6 pb-20">
+              {/* Manager Remarks Section */}
+              {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="text-amber-600 dark:text-amber-500" size={18} />
+                    <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Branch Manager Remarks</h3>
+                  </div>
+                  <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-amber-200/50 dark:border-amber-900/30">
+                    <p className="text-sm text-amber-900 dark:text-amber-300 leading-relaxed font-medium italic">
+                      "{form.remark}"
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Application Summary Card */}
+              <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <ClipboardCheck size={16} className="text-accent" />
+                  Application Summary
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${form.fileStatus === 'approved' ? 'bg-green-500/10 text-green-500' :
+                      form.fileStatus === 'rejected' ? 'bg-red-500/10 text-red-500' :
+                        form.fileStatus === 'sent_back' ? 'bg-amber-500/10 text-amber-500' :
+                          'bg-blue-500/10 text-blue-500'
+                      }`}>
+                      {form.fileStatus || 'Submitted'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Applicant</span>
+                    <span className="font-semibold text-foreground">{form.customerName || '—'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Loan Amount</span>
+                    <span className="font-bold text-accent">{formatCurrency(Number(form.loanAmount || 0))}</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 space-y-3">
+                  <button
+                    type="submit"
+                    form="loan-form"
+                    onClick={() => document.querySelector('form')?.requestSubmit()}
+                    disabled={createLoan.isPending}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-accent text-accent-foreground font-bold text-sm shadow-lg shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {createLoan.isPending ? (
+                      <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <CheckCircle2 size={18} />
+                    )}
+                    {isEditMode ? 'Update Application' : 'Submit Application'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="w-full py-2.5 px-4 rounded-xl border border-border bg-card text-foreground font-bold text-xs hover:bg-muted transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              {/* Workflow History Section */}
+              {isEditMode && auditLogs.length > 0 && (
+                <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+                  <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/30">
+                    <Clock size={16} className="text-accent" />
+                    <h3 className="text-sm font-bold text-foreground">Workflow History</h3>
+                  </div>
+                  <div className="p-5 space-y-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                    {auditLogs.map((log: any, index: number) => (
+                      <div key={log.id} className="relative pl-6">
+                        {/* Timeline connector */}
+                        {index < auditLogs.length - 1 && (
+                          <div className="absolute left-[7px] top-[18px] bottom-[-24px] w-[2px] bg-border" />
+                        )}
+                        {/* Timeline dot */}
+                        <div className="absolute left-0 top-[6px] w-3.5 h-3.5 rounded-full border-2 border-accent bg-background z-10" />
+
+                        <div className="flex flex-col gap-1 mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-foreground">
+                              {LOAN_STATUSES.find(s => s.value === log.to_status)?.label || log.to_status}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {new Date(log.performed_at).toLocaleString('en-IN', {
+                              day: '2-digit', month: 'short', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit', hour12: true
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[10px] text-muted-foreground">
+                            By <span className="text-foreground font-semibold">{log.performed_by_name || 'System'}</span>
+                          </p>
+                          {log.remarks && (
+                            <div className="mt-1 p-2 rounded-lg bg-muted/40 border border-border/50">
+                              <p className="text-[10px] text-foreground italic whitespace-pre-wrap">
+                                "{log.remarks}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

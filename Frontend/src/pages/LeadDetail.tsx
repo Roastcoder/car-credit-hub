@@ -309,10 +309,11 @@ export default function LeadDetail() {
             {user?.role !== 'broker' && (
               <>
                 <Field label="IRR Requested" value={lead.irr_requested ? `${lead.irr_requested}%` : '—'} />
-                { (lead.creator_role === 'broker' || lead.referred_by_name) ? (
-                  <Field label="Referred By" value={lead.referred_by_name || lead.sourcing_person_name} />
-                ) : (
+                {(lead.branch_manager_name || lead.manager_name) && (
                   <Field label="Branch Manager" value={lead.branch_manager_name || lead.manager_name} />
+                )}
+                {(lead.creator_role === 'broker' || lead.referred_by_name) && (
+                  <Field label="Referred By" value={lead.referred_by_name || (lead.creator_role === 'broker' ? lead.sourcing_person_name : '')} />
                 )}
               </>
             )}

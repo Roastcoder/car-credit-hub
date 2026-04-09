@@ -27,7 +27,7 @@ export interface Permission {
  */
 export const getRolePermissions = (role: UserRole | string | null | undefined): Permission => {
   const normalizedRole = (role || '').toLowerCase();
-  
+
   switch (normalizedRole) {
     case 'super_admin':
       return {
@@ -44,7 +44,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canManagePayments: true,
         canViewReports: true,
       };
-    
+
     case 'admin':
       return {
         canCreate: true,
@@ -60,7 +60,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canManagePayments: true,
         canViewReports: true,
       };
-    
+
     case 'manager':
       return {
         canCreate: false,
@@ -69,14 +69,46 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canEdit: true,
         canView: true,
         canDelete: false,
-        canChangeStatus: false, 
+        canChangeStatus: false,
         canAddRemarks: true,
         canViewAll: false,
         canManagePdd: false,
         canManagePayments: false,
         canViewReports: true,
       };
-    
+
+    case 'rbm':
+      return {
+        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
+        canEdit: true,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: true,
+        canManagePdd: false,
+        canManagePayments: true,
+        canViewReports: true,
+      };
+
+    case 'pdd_manager':
+      return {
+        canCreate: false,
+        canCreateLead: false,
+        canCreateLoan: false,
+        canEdit: true,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: true,
+        canManagePdd: true,
+        canManagePayments: false,
+        canViewReports: true,
+      };
+
     case 'employee':
       return {
         canCreate: true,
@@ -89,11 +121,11 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canAddRemarks: true,
         canViewAll: false,
       };
-    
+
     case 'bank':
     case 'broker':
       return {
-        canCreate: false, 
+        canCreate: false,
         canCreateLead: true,
         canCreateLoan: false,
         canEdit: true,
@@ -103,7 +135,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canAddRemarks: true,
         canViewAll: false,
       };
-    
+
     case 'accountant':
       return {
         canCreate: false,
@@ -138,14 +170,14 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
  */
 export const getUserPermissions = (user: AppUser | null | undefined): Permission => {
   if (!user) return getRolePermissions(null);
-  
+
   const base = getRolePermissions(user.role);
-  
+
   // If no granular permissions, return base
   if (!user.permissions) return base;
-  
+
   const overrides = user.permissions;
-  
+
   return {
     ...base,
     // Override base with granular settings if they exist
@@ -165,17 +197,21 @@ export const getUserPermissions = (user: AppUser | null | undefined): Permission
 export const canAccessLoan = (userRole: string, userId: number | string, loan: any): boolean => {
   const normalizedRole = (userRole || '').toLowerCase();
   const permissions = getRolePermissions(normalizedRole);
-  
+
   if (permissions.canViewAll) return true;
-  
+
   if (normalizedRole === 'employee') {
     return Number(loan.created_by) === Number(userId);
   }
-  
+
   if (normalizedRole === 'manager') {
-    return Number(loan.branch_id) === Number(userId); // Assuming manager's identity check matches
+    return Number(loan.branch_id) === Number(userId) || Number(loan.created_by_branch_id) === Number(userId);
   }
-  
+
+  if (normalizedRole === 'rbm' || normalizedRole === 'pdd_manager') {
+    return true; // Regional roles can view all applicable loans
+  }
+
   return false;
 };
 
@@ -186,11 +222,13 @@ export const getWorkflowSteps = (userRole: string) => {
   const normalizedRole = (userRole || '').toLowerCase();
   const steps = [
     { id: 'employee', label: 'Employee', description: 'Create and submit application' },
-    { id: 'manager', label: 'Manager', description: 'Review and approve' },
+    { id: 'manager', label: 'Branch Manager', description: 'Review and add remarks' },
+    { id: 'rbm', label: 'RBM', description: 'Regional approval and payments' },
+    { id: 'pdd_manager', label: 'PDD Manager', description: 'PDD verification' },
     { id: 'admin', label: 'Admin', description: 'Final processing' },
     { id: 'super_admin', label: 'Super Admin', description: 'System oversight' },
   ];
-  
+
   return steps;
 };
 
