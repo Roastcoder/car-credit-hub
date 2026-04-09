@@ -54,14 +54,14 @@ export default function Dashboard() {
   const { data: smsBalance } = useQuery({
     queryKey: ['sms-balance'],
     queryFn: async () => {
-      if (user?.role !== 'admin' && user?.role !== 'super_admin') return null;
+      if (user?.role !== 'super_admin') return null;
       try {
         return await smsAPI.getBalance();
       } catch {
         return null;
       }
     },
-    enabled: !!user && (user.role === 'admin' || user.role === 'super_admin'),
+    enabled: !!user && user.role === 'super_admin',
   });
 
   if (!user) return null;
