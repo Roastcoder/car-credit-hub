@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
@@ -1341,25 +1341,46 @@ export default function CreateLoan() {
                 )}
               </div>
 
-              {/* Deduction */}
-              <div>
-                <h2 className="text-lg font-bold text-foreground mb-4">Deduction Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+              {/* ─── SECTION 4: Disbursement & Payout Details ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
+                <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">4</span>
+                  Disbursement & Payout Details
+                </h2>
+                
+                {/* Deduction */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee size={14} /> Deduction Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+                  </div>
+                </div>
+
+                {/* Disbursement */}
+                <div className="pt-4 border-t border-border/50">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+                    <Calculator size={14} /> Disbursement Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
+                    <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
+                    <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
+                    <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
+                    <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
+                    <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
+                  </div>
                 </div>
               </div>
 
-              {/* Disbursement */}
-              <div>
-                <h2 className="text-lg font-bold text-foreground mb-4">Disbursement Details</h2>
+              {/* ─── SECTION 5: Other Details & Tracking ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
+                <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">5</span>
+                  Other Details & Remarks
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
-                  <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
-                  <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
-                  <div className="md:col-span-3 mt-4"><h3 className="font-semibold text-foreground mb-3">Other Details</h3></div>
                   <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
@@ -1367,9 +1388,12 @@ export default function CreateLoan() {
                 </div>
               </div>
 
-              {/* Documents */}
-              <div>
-                <h2 className="text-lg font-bold text-foreground mb-4">Documents</h2>
+              {/* ─── SECTION 6: Document Uploads ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
+                <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">6</span>
+                  Document Uploads
+                </h2>
 
                 {/* Document Preview Box */}
                 {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
@@ -1464,46 +1488,48 @@ export default function CreateLoan() {
                 )}
 
                 {/* Customer Documents */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Customer Documents</h3>
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <User size={14} /> Customer Documents
+                  </h3>
 
                   {/* Document Selection Checkboxes */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showAadhar} onChange={e => update('showAadhar', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Aadhar Card</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted/20 rounded-xl border border-border/50">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showAadhar} onChange={e => update('showAadhar', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Aadhar Card</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showPan} onChange={e => update('showPan', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Pan Card</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showPan} onChange={e => update('showPan', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Pan Card</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showBankStatement} onChange={e => update('showBankStatement', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Bank Statement</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showBankStatement} onChange={e => update('showBankStatement', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Bank Statement</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showCheque} onChange={e => update('showCheque', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Cheque</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showCheque} onChange={e => update('showCheque', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Cheque</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showRC} onChange={e => update('showRC', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">RC</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showRC} onChange={e => update('showRC', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">RC</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showIncomeProof} onChange={e => update('showIncomeProof', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Income Proof</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showIncomeProof} onChange={e => update('showIncomeProof', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Income Proof</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showCustomerPhoto} onChange={e => update('showCustomerPhoto', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Customer Photo</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showCustomerPhoto} onChange={e => update('showCustomerPhoto', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Customer Photo</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showInsurance} onChange={e => update('showInsurance', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Insurance</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showInsurance} onChange={e => update('showInsurance', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Insurance</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showCustomerLedger} onChange={e => update('showCustomerLedger', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Customer Ledger</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showCustomerLedger} onChange={e => update('showCustomerLedger', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Customer Ledger</span>
                     </label>
                   </div>
 
@@ -1623,38 +1649,41 @@ export default function CreateLoan() {
                 </div>
 
                 {/* Other KYC Documents */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Other KYC / RTO Documents</h3>
+                {/* Other KYC / RTO Documents */}
+                <div className="space-y-4 pt-6 border-t border-border/50">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <FileText size={14} /> Other KYC / RTO Documents
+                  </h3>
 
                   {/* Document Selection Checkboxes */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showRtoDocument} onChange={e => update('showRtoDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">RTO Document</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted/20 rounded-xl border border-border/50">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showRtoDocument} onChange={e => update('showRtoDocument', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">RTO Document</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showNoc} onChange={e => update('showNoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">NOC</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showNoc} onChange={e => update('showNoc', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">NOC</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showThirdParty} onChange={e => update('showThirdParty', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">3rd Party</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showThirdParty} onChange={e => update('showThirdParty', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">3rd Party</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showStamp} onChange={e => update('showStamp', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">Stamp</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showStamp} onChange={e => update('showStamp', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">Stamp</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">RC Document</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showRcDocument} onChange={e => update('showRcDocument', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">RC Document</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showFitnessDoc} onChange={e => update('showFitnessDoc', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">FC</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showFitnessDoc} onChange={e => update('showFitnessDoc', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">FC</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border" />
-                      <span className="text-sm font-medium">RBM / Tax Receipt</span>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" checked={form.showTaxReceipt} onChange={e => update('showTaxReceipt', e.target.checked)} className="w-4 h-4 rounded border-border text-accent focus:ring-accent transition-all" />
+                      <span className="text-xs font-semibold text-foreground group-hover:text-accent transition-colors">RBM / Tax Receipt</span>
                     </label>
                   </div>
 
