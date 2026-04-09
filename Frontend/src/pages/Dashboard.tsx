@@ -450,10 +450,10 @@ export default function Dashboard() {
             )}
           </div>}
 
-          <div className="stat-card flex flex-col">
+          <div className={`stat-card flex flex-col ${user?.role === 'manager' ? 'lg:col-span-2' : ''}`}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                {selectedStatus ? `${LOAN_STATUSES.find(s => s.value === selectedStatus)?.label || 'Filtered'} Applications` : 'Recent Applications'}
+                {selectedStatus ? `${LOAN_STATUSES.find(s => s.value === selectedStatus)?.label || 'Filtered'} Applications` : (user?.role === 'manager' ? 'Branch Applications' : 'Recent Applications')}
               </h2>
               <Link to={buildLoansFilterUrl(selectedStatus || undefined)} className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
                 View all <ChevronRight size={16} />
@@ -462,12 +462,15 @@ export default function Dashboard() {
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-sm">
                 <tbody>
-                  {displayLoans.slice(0, 5).map((loan: any) => (
-                    <tr key={loan.id} className="border-b border-blue-100 dark:border-blue-900 last:border-0 hover:bg-white/40 dark:hover:bg-blue-900/40 transition-colors">
+                  {displayLoans.slice(0, user?.role === 'manager' ? 15 : 5).map((loan: any) => (
+                    <tr key={loan.id} className="border-b border-blue-100 dark:border-blue-900 last:border-0 hover:bg-white/40 dark:hover:bg-blue-900/40 transition-colors cursor-pointer" onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}>
                       <td className="py-3 px-2">
                         <div className="font-medium text-blue-900 dark:text-blue-200">{loan.applicant_name}</div>
                         <div className="text-xs text-blue-500">{loan.car_make} {loan.car_model}</div>
                       </td>
+                      {user?.role === 'manager' && (
+                        <td className="py-3 px-2 text-muted-foreground">{loan.creator_name || loan.user_name || '—'}</td>
+                      )}
                       <td className="py-3 px-2 font-medium text-blue-900 dark:text-blue-200">{formatCurrency(Number(loan.loan_amount))}</td>
                       <td className="py-3 px-2 text-right"><LoanStatusBadge status={loan.status} /></td>
                     </tr>

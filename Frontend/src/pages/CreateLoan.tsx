@@ -1216,17 +1216,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
 
-                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-border/30">
-                      <div><label className={labelClass}>RC Present?</label><select className={inputClass} value={form.rtoRC} onChange={e => update('rtoRC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>NOC Present?</label><select className={inputClass} value={form.rtoNOC} onChange={e => update('rtoNOC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>Permit Present?</label><select className={inputClass} value={form.rtoPermit} onChange={e => update('rtoPermit', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>Pollution Present?</label><select className={inputClass} value={form.rtoPollution} onChange={e => update('rtoPollution', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>29/30 Form?</label><select className={inputClass} value={form.rto2930Form} onChange={e => update('rto2930Form', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>Sell Agreement?</label><select className={inputClass} value={form.rtoSellAgreement} onChange={e => update('rtoSellAgreement', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>RC Owner KYC?</label><select className={inputClass} value={form.rtoRCOwnerKYC} onChange={e => update('rtoRCOwnerKYC', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>Stamp Papers?</label><select className={inputClass} value={form.rtoStampPapers} onChange={e => update('rtoStampPapers', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div><label className={labelClass}>DM Present?</label><select className={inputClass} value={form.rtoDM} onChange={e => update('rtoDM', e.target.value)}>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                    </div>
+
 
                   </div>
                 </div>
