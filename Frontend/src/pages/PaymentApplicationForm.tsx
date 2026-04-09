@@ -212,23 +212,35 @@ export default function PaymentApplicationForm() {
   };
 
   useEffect(() => {
-    // Calculate Total Release and Percentages
+    // Calculate Total Release and Percentages based on Net Disbursement Amount
     const oldAmt = Number(formData.old_release_amount) || 0;
     const todayAmt = Number(formData.today_release_amount) || 0;
     const totalAmt = oldAmt + todayAmt;
-    const loanAmt = Number(formData.loan_amount) || 0;
+    const disbursementAmt = Number(formData.disbursement_amount) || 0;
     const holdAmt = Number(formData.hold_amount) || 0;
 
-    const totalPerc = loanAmt > 0 ? (totalAmt / loanAmt) * 100 : 0;
-    const holdPerc = loanAmt > 0 ? (holdAmt / loanAmt) * 100 : 0;
+    const totalPerc = disbursementAmt > 0 ? (totalAmt / disbursementAmt) * 100 : 0;
+    const holdPerc = disbursementAmt > 0 ? (holdAmt / disbursementAmt) * 100 : 0;
 
-    setFormData(prev => ({
-      ...prev,
-      total_release_amount: totalAmt,
-      total_release_percentage: parseFloat(totalPerc.toFixed(2)),
-      hold_percentage: parseFloat(holdPerc.toFixed(2))
-    }));
-  }, [formData.old_release_amount, formData.today_release_amount, formData.loan_amount, formData.hold_amount]);
+    setFormData(prev => {
+      const totalReleasePerc = parseFloat(totalPerc.toFixed(2));
+      const hPerc = parseFloat(holdPerc.toFixed(2));
+      
+      // Only update if values actually changed to prevent unnecessary re-renders
+      if (prev.total_release_amount === totalAmt && 
+          prev.total_release_percentage === totalReleasePerc && 
+          prev.hold_percentage === hPerc) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        total_release_amount: totalAmt,
+        total_release_percentage: totalReleasePerc,
+        hold_percentage: hPerc
+      };
+    });
+  }, [formData.old_release_amount, formData.today_release_amount, formData.disbursement_amount, formData.hold_amount]);
 
   const fetchLoanData = async () => {
     if (loanId) await fetchLoanDataById(loanId);
@@ -335,11 +347,29 @@ export default function PaymentApplicationForm() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as any;
+    const numValue = type === 'number' ? parseFloat(value) || 0 : value;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
-    }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: numValue };
+      
+      // Reciprocal updates for Hold and Release amounts
+      const disbursementAmt = Number(newData.disbursement_amount) || 0;
+      const oldAmt = Number(newData.old_release_amount) || 0;
+      
+      if (name === 'today_release_amount') {
+        const remaining = disbursementAmt - oldAmt - (numValue as number);
+        newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
+      } else if (name === 'hold_amount') {
+        const releaseNeeded = disbursementAmt - oldAmt - (numValue as number);
+        newData.today_release_amount = Math.max(0, parseFloat(releaseNeeded.toFixed(2)));
+      } else if (name === 'disbursement_amount') {
+        // If disbursement changes, adjust hold to maintain today_release
+        const todayAmt = Number(newData.today_release_amount) || 0;
+        newData.hold_amount = Math.max(0, parseFloat((numValue as number - oldAmt - todayAmt).toFixed(2)));
+      }
+      
+      return newData;
+    });
   };
 
   const handlePddDocumentToggle = (docIdentifier: string) => {
