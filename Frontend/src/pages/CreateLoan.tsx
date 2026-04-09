@@ -117,6 +117,23 @@ export default function CreateLoan() {
     enabled: isEditMode,
   });
 
+  const { data: existingDocuments = [] } = useQuery({
+    queryKey: ['loan-documents', id],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        if (!res.ok) return [];
+        return await res.json();
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        return [];
+      }
+    },
+    enabled: isEditMode && !!id,
+  });
+
   const { data: brokers = [] } = useQuery({
     queryKey: ['brokers-list'],
     queryFn: async () => {
@@ -413,6 +430,72 @@ export default function CreateLoan() {
       }
     }
   }, [isEditMode, existingLoan]);
+
+  useEffect(() => {
+    if (isEditMode && existingDocuments.length > 0) {
+      setUploadedDocs(existingDocuments);
+      
+      // Auto-enable visibility checkboxes based on existing documents
+      setForm(f => {
+        const newForm = { ...f };
+        existingDocuments.forEach((doc: any) => {
+          switch (doc.document_type) {
+            case 'aadhar_front':
+            case 'aadhar_back':
+              newForm.showAadhar = true;
+              break;
+            case 'pan_card':
+              newForm.showPan = true;
+              break;
+            case 'bank_statement':
+              newForm.showBankStatement = true;
+              break;
+            case 'cheque':
+              newForm.showCheque = true;
+              break;
+            case 'rc_front':
+            case 'rc_back':
+              newForm.showRC = true;
+              break;
+            case 'income_proof':
+              newForm.showIncomeProof = true;
+              break;
+            case 'customer_photo':
+              newForm.showCustomerPhoto = true;
+              break;
+            case 'insurance':
+              newForm.showInsurance = true;
+              break;
+            case 'customer_ledger':
+              newForm.showCustomerLedger = true;
+              break;
+            case 'rto_document':
+              newForm.showRtoDocument = true;
+              break;
+            case 'noc':
+              newForm.showNoc = true;
+              break;
+            case 'third_party':
+              newForm.showThirdParty = true;
+              break;
+            case 'stamp':
+              newForm.showStamp = true;
+              break;
+            case 'rc_document':
+              newForm.showRcDocument = true;
+              break;
+            case 'fitness_document':
+              newForm.showFitnessDoc = true;
+              break;
+            case 'tax_receipt':
+              newForm.showTaxReceipt = true;
+              break;
+          }
+        });
+        return newForm;
+      });
+    }
+  }, [isEditMode, existingDocuments]);
 
   const update = (key: string, val: string | File | null | boolean) => {
     setForm(f => {
@@ -769,6 +852,23 @@ export default function CreateLoan() {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
+          {/* Manager Remarks Alert */}
+          {form.remark && (form.fileStatus === 'sent_back' || form.fileStatus === 'rejected') && (
+            <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="text-amber-600 dark:text-amber-500" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Manager Remarks</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-500 mt-1 leading-relaxed font-medium">
+                    {form.remark}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-card rounded-lg border border-border p-5 shadow-sm mb-6 space-y-8">
             {/* Customer Details */}
             <div>
@@ -1280,11 +1380,35 @@ export default function CreateLoan() {
                         <label className={labelClass}>Aadhar Card Front</label>
                         <input type="file" className={inputClass} onChange={e => update('aadharFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                         {form.aadharFront && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharFront as File).name}</p>}
+                        {uploadedDocs.find(d => d.document_type === 'aadhar_front') && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                            <button 
+                              type="button" 
+                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'aadhar_front').file_url}`, '_blank')}
+                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                            >
+                              <Eye size={10} /> View Existing
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className={labelClass}>Aadhar Card Back</label>
                         <input type="file" className={inputClass} onChange={e => update('aadharBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                         {form.aadharBack && <p className="text-xs text-green-600 mt-1">✓ {(form.aadharBack as File).name}</p>}
+                        {uploadedDocs.find(d => d.document_type === 'aadhar_back') && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                            <button 
+                              type="button" 
+                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'aadhar_back').file_url}`, '_blank')}
+                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                            >
+                              <Eye size={10} /> View Existing
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -1293,6 +1417,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Pan Card</label>
                       <input type="file" className={inputClass} onChange={e => update('panCard', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.panCard && <p className="text-xs text-green-600 mt-1">✓ {(form.panCard as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'pan_card') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'pan_card').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showBankStatement && (
@@ -1300,6 +1436,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Last 6 Month Bank Statement</label>
                       <input type="file" className={inputClass} onChange={e => update('bankStatement', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.bankStatement && <p className="text-xs text-green-600 mt-1">✓ {(form.bankStatement as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'bank_statement') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'bank_statement').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showCheque && (
@@ -1307,6 +1455,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Cheque</label>
                       <input type="file" className={inputClass} onChange={e => update('cheque', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.cheque && <p className="text-xs text-green-600 mt-1">✓ {(form.cheque as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'cheque') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'cheque').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showRC && (
@@ -1315,11 +1475,35 @@ export default function CreateLoan() {
                         <label className={labelClass}>RC (Front)</label>
                         <input type="file" className={inputClass} onChange={e => update('rcFront', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                         {form.rcFront && <p className="text-xs text-green-600 mt-1">✓ {(form.rcFront as File).name}</p>}
+                        {uploadedDocs.find(d => d.document_type === 'rc_front') && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                            <button 
+                              type="button" 
+                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'rc_front').file_url}`, '_blank')}
+                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                            >
+                              <Eye size={10} /> View Existing
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className={labelClass}>RC (Back)</label>
                         <input type="file" className={inputClass} onChange={e => update('rcBack', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                         {form.rcBack && <p className="text-xs text-green-600 mt-1">✓ {(form.rcBack as File).name}</p>}
+                        {uploadedDocs.find(d => d.document_type === 'rc_back') && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                            <button 
+                              type="button" 
+                              onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'rc_back').file_url}`, '_blank')}
+                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                            >
+                              <Eye size={10} /> View Existing
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -1328,6 +1512,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Income Proof</label>
                       <input type="file" className={inputClass} onChange={e => update('incomeProof', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.incomeProof && <p className="text-xs text-green-600 mt-1">✓ {(form.incomeProof as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'income_proof') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'income_proof').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showCustomerPhoto && (
@@ -1335,6 +1531,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Customer Photo</label>
                       <input type="file" className={inputClass} onChange={e => update('customerPhoto', e.target.files?.[0] || null)} accept="image/*" />
                       {form.customerPhoto && <p className="text-xs text-green-600 mt-1">✓ {(form.customerPhoto as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'customer_photo') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'customer_photo').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showInsurance && (
@@ -1342,6 +1550,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Insurance</label>
                       <input type="file" className={inputClass} onChange={e => update('insurance', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.insurance && <p className="text-xs text-green-600 mt-1">✓ {(form.insurance as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'insurance') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'insurance').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {form.showCustomerLedger && (
@@ -1349,6 +1569,18 @@ export default function CreateLoan() {
                       <label className={labelClass}>Customer Ledger</label>
                       <input type="file" className={inputClass} onChange={e => update('customerLedger', e.target.files?.[0] || null)} accept="image/*,.pdf" />
                       {form.customerLedger && <p className="text-xs text-green-600 mt-1">✓ {(form.customerLedger as File).name}</p>}
+                      {uploadedDocs.find(d => d.document_type === 'customer_ledger') && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded border border-green-200">Already Uploaded</span>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${uploadedDocs.find(d => d.document_type === 'customer_ledger').file_url}`, '_blank')}
+                            className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
+                          >
+                            <Eye size={10} /> View Existing
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

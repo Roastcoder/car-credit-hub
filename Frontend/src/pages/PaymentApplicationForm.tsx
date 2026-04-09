@@ -3,8 +3,8 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { paymentApplicationAPI, loansAPI } from '@/lib/api';
-import { 
-  Upload, FileText, Plus, X, Save, Send, 
+import {
+  Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
   AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info
 } from 'lucide-react';
@@ -30,7 +30,7 @@ interface PaymentApplication {
   approved_by?: number;
   processed_by?: number;
   manager_remarks?: string;
-  
+
   // New fields
   kyc_documents?: string;
   financier_name?: string;
@@ -94,7 +94,7 @@ export default function PaymentApplicationForm() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  
+
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
     applicant_name: '',
@@ -111,7 +111,7 @@ export default function PaymentApplicationForm() {
     remarks: '',
     status: 'draft',
     created_by: user?.id || 0,
-    
+
     // Initializing new fields
     kyc_documents: 'No',
     financier_name: '',
@@ -226,11 +226,11 @@ export default function PaymentApplicationForm() {
     setFormData(prev => {
       const totalReleasePerc = parseFloat(totalPerc.toFixed(2));
       const hPerc = parseFloat(holdPerc.toFixed(2));
-      
+
       // Only update if values actually changed to prevent unnecessary re-renders
-      if (prev.total_release_amount === totalAmt && 
-          prev.total_release_percentage === totalReleasePerc && 
-          prev.hold_percentage === hPerc) {
+      if (prev.total_release_amount === totalAmt &&
+        prev.total_release_percentage === totalReleasePerc &&
+        prev.hold_percentage === hPerc) {
         return prev;
       }
 
@@ -252,7 +252,7 @@ export default function PaymentApplicationForm() {
       const data = await loansAPI.getById(lId);
       setLoanData(data.data || data);
       const d = data.data || data;
-      
+
       // Pre-fill applicant and loan data
       setFormData(prev => ({
         ...prev,
@@ -314,7 +314,7 @@ export default function PaymentApplicationForm() {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (query.trim().length < 1) {
       setSearchResults([]);
       setShowSearchResults(false);
@@ -349,14 +349,14 @@ export default function PaymentApplicationForm() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as any;
     const numValue = type === 'number' ? parseFloat(value) || 0 : value;
-    
+
     setFormData(prev => {
       const newData = { ...prev, [name]: numValue };
-      
+
       // Reciprocal updates for Hold and Release amounts
       const disbursementAmt = Number(newData.disbursement_amount) || 0;
       const oldAmt = Number(newData.old_release_amount) || 0;
-      
+
       if (name === 'today_release_amount') {
         const remaining = disbursementAmt - oldAmt - (numValue as number);
         newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
@@ -368,7 +368,7 @@ export default function PaymentApplicationForm() {
         const todayAmt = Number(newData.today_release_amount) || 0;
         newData.hold_amount = Math.max(0, parseFloat((numValue as number - oldAmt - todayAmt).toFixed(2)));
       }
-      
+
       return newData;
     });
   };
@@ -379,12 +379,12 @@ export default function PaymentApplicationForm() {
       const updated = prev.includes(docIdentifier)
         ? prev.filter(doc => doc !== docIdentifier)
         : [...prev, docIdentifier];
-      
+
       setFormData(prevForm => ({
         ...prevForm,
         pdd_documents: updated
       }));
-      
+
       return updated;
     });
   };
@@ -402,7 +402,7 @@ export default function PaymentApplicationForm() {
 
   const uploadBankingDocuments = async () => {
     const uploadedPaths: string[] = [];
-    
+
     for (const file of bankingDocs) {
       try {
         const result = await paymentApplicationAPI.uploadDocument(file);
@@ -414,32 +414,32 @@ export default function PaymentApplicationForm() {
         toast.error(`Failed to upload ${file.name}`);
       }
     }
-    
+
     return uploadedPaths;
   };
 
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
       setLoading(true);
-      
+
       // Upload banking documents first
       const bankingDocPaths = await uploadBankingDocuments();
-      
+
       const applicationData = {
         ...formData,
         banking_documents: [...(formData.banking_documents || []), ...bankingDocPaths],
         status
       };
-      
+
       if (id) {
         await paymentApplicationAPI.update(parseInt(id), applicationData);
       } else {
         await paymentApplicationAPI.create(applicationData);
       }
-      
+
       toast.success(id ? 'Application updated successfully' : (status === 'draft' ? 'Application saved as draft' : 'Application submitted successfully'));
       navigate('/payments');
-      
+
     } catch (error) {
       console.error('Error submitting application:', error);
       toast.error('Failed to submit application');
@@ -474,17 +474,17 @@ export default function PaymentApplicationForm() {
             {id ? `Application ID: #${id}` : 'Search for a customer to auto-fill loan details'}
           </p>
         </div>
-        
+
         {/* Global Search Tool */}
         {!id && (
           <div className="w-full md:w-96 relative search-container">
-            <FormField 
-              label="Customer ID / Name / Mobile" 
-              name="lookup" 
+            <FormField
+              label="Customer ID / Name / Mobile"
+              name="lookup"
               placeholder="Search by ID, name or phone..."
-              icon={<Search className="h-5 w-5 !text-blue-500" />} 
-              value={searchQuery} 
-              onChange={(e: any) => handleSearch(e.target.value)} 
+              icon={<Search className="h-5 w-5 !text-blue-500" />}
+              value={searchQuery}
+              onChange={(e: any) => handleSearch(e.target.value)}
               onFocus={() => searchQuery.length > 0 && setShowSearchResults(true)}
             />
             {showSearchResults && searchResults.length > 0 && (
@@ -707,11 +707,10 @@ export default function PaymentApplicationForm() {
                     return (
                       <div
                         key={index}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${
-                          isSelected
+                        className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${isSelected
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                             : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
-                        }`}
+                          }`}
                         onClick={() => handlePddDocumentToggle(docKey)}
                       >
                         <div className="flex items-center gap-2">
