@@ -168,7 +168,6 @@ export default function CreateLoan() {
       // RTO Details
       rcOwnerName: '', rcMfgDate: '', rcExpiryDate: '', hpnAtLogin: '', isFinanced: '', newFinancier: '', rtoDocsHandoverDate: '',
       rtoAgentName: '', agentMobileNo: '', dtoLocation: '', rtoWorkDescription: '', challan: 'No', fc: 'No', rtoPapers: '',
-      rtoRC: 'No', rtoNOC: 'No', rtoPermit: 'No', rtoPollution: 'No', rto2930Form: 'No', rtoSellAgreement: 'No', rtoRCOwnerKYC: 'No', rtoStampPapers: 'No', rtoDM: 'No',
       fcAmount: '', fcDate: '',
       // EMI Details
       irr: '', tenure: '60', emiAmount: '', emiMode: 'Monthly', emiStartDate: '', emiEndDate: '',
@@ -622,15 +621,6 @@ export default function CreateLoan() {
         fileStatus: existingLoan.status || 'submitted',
         fcAmount: String(existingLoan.fc_amount || ''),
         fcDate: formatDate(existingLoan.fc_date),
-        rtoRC: existingLoan.rto_rc ? 'Yes' : 'No',
-        rtoNOC: existingLoan.rto_noc ? 'Yes' : 'No',
-        rtoPermit: existingLoan.rto_permit ? 'Yes' : 'No',
-        rtoPollution: existingLoan.rto_pollution ? 'Yes' : 'No',
-        rto2930Form: existingLoan.rto_2930_form ? 'Yes' : 'No',
-        rtoSellAgreement: existingLoan.rto_sell_agreement ? 'Yes' : 'No',
-        rtoRCOwnerKYC: existingLoan.rto_rc_owner_kyc ? 'Yes' : 'No',
-        rtoStampPapers: existingLoan.rto_stamp_papers ? 'Yes' : 'No',
-        rtoDM: existingLoan.rto_dm ? 'Yes' : 'No',
         aadharFront: null, aadharBack: null, panCard: null,
         bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
         customerPhoto: null, insurance: null, customerLedger: null,
@@ -915,7 +905,24 @@ export default function CreateLoan() {
 
       if (response.ok) {
         const result = await response.json();
-        setUploadedDocs(result.uploaded || []);
+        setUploadedDocs(prev => {
+          const nextDocs = Array.isArray(result.uploaded) ? result.uploaded : [];
+          const merged = [...prev];
+
+          for (const doc of nextDocs) {
+            const existingIndex = merged.findIndex(existing => existing.id === doc.id);
+            if (existingIndex >= 0) {
+              merged[existingIndex] = doc;
+            } else {
+              merged.push(doc);
+            }
+          }
+
+          return merged;
+        });
+        if (isEditMode && id) {
+          queryClient.invalidateQueries({ queryKey: ['loan-documents', id] });
+        }
         toast.success(result.message || `${documents.length} document(s) uploaded successfully`);
       } else {
         const error = await response.text();
@@ -1027,15 +1034,6 @@ export default function CreateLoan() {
           rto_papers: form.rtoPapers,
           fc_amount: Number(form.fcAmount) || null,
           fc_date: form.fcDate || null,
-          rto_rc: form.rtoRC === 'Yes',
-          rto_noc: form.rtoNOC === 'Yes',
-          rto_permit: form.rtoPermit === 'Yes',
-          rto_pollution: form.rtoPollution === 'Yes',
-          rto_2930_form: form.rto2930Form === 'Yes',
-          rto_sell_agreement: form.rtoSellAgreement === 'Yes',
-          rto_rc_owner_kyc: form.rtoRCOwnerKYC === 'Yes',
-          rto_stamp_papers: form.rtoStampPapers === 'Yes',
-          rto_dm: form.rtoDM === 'Yes',
           booking_month: form.bookingMonth || null,
           manager_name: form.branchManagerName || null,
           insurance_status: form.insuranceStatus || null,
@@ -1544,103 +1542,10 @@ export default function CreateLoan() {
                   Document Uploads
                 </h2>
 
-                {/* Document Preview Box */}
-                {(Object.values(form).filter(v => v instanceof File).length > 0 || uploadedDocs.length > 0) && (
-                  <div className="mb-6 p-4 rounded-xl border border-border bg-muted/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-foreground">Selected Documents</h3>
-                      <span className="text-xs text-muted-foreground bg-accent/10 px-2 py-1 rounded-full">
-                        {Object.values(form).filter(v => v instanceof File).length} files
-                      </span>
-                    </div>
-
-                    {uploadingDocs && (
-                      <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-blue-600 font-medium">Uploading documents...</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {uploadedDocs.length > 0 && (
-                      <div className="mb-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span className="text-sm text-green-600 font-medium">{uploadedDocs.length} documents uploaded successfully</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        { file: form.aadharFront, name: 'Aadhar Front', type: 'aadhar_front' },
-                        { file: form.aadharBack, name: 'Aadhar Back', type: 'aadhar_back' },
-                        { file: form.panCard, name: 'PAN Card', type: 'pan_card' },
-                        { file: form.bankStatement, name: 'Bank Statement', type: 'bank_statement' },
-                        { file: form.cheque, name: 'Cheque', type: 'cheque' },
-                        { file: form.rcFront, name: 'RC Front', type: 'rc_front' },
-                        { file: form.rcBack, name: 'RC Back', type: 'rc_back' },
-                        { file: form.incomeProof, name: 'Income Proof', type: 'income_proof' },
-                        { file: form.customerPhoto, name: 'Customer Photo', type: 'customer_photo' },
-                        { file: form.insurance, name: 'Insurance', type: 'insurance' },
-                        { file: form.customerLedger, name: 'Customer Ledger', type: 'customer_ledger' },
-                        { file: form.rtoDocument, name: 'RTO Document', type: 'rto_document' },
-                        { file: form.noc, name: 'NOC', type: 'noc' },
-                        { file: form.thirdParty, name: 'Third Party', type: 'third_party' },
-                        { file: form.stamp, name: 'Stamp', type: 'stamp' },
-                        { file: form.rcDocument, name: 'RC Document', type: 'rc_document' },
-                        { file: form.fitnessDocument, name: 'FC', type: 'fitness_document' },
-                        { file: form.taxReceipt, name: 'Tax Receipt', type: 'tax_receipt' },
-                        { file: form.dmDocument, name: 'DM', type: 'dm_document' },
-                      ].filter(doc => doc.file).map((doc) => {
-                        const uploaded = uploadedDocs.find(u => u.document_type === doc.type);
-                        return (
-                          <div key={doc.type} className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
-                            <div className="flex-shrink-0">
-                              {uploaded ? (
-                                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{(doc.file as File).name}</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const url = URL.createObjectURL(doc.file as File);
-                                  window.open(url, '_blank');
-                                }}
-                                className="p-1 hover:bg-muted rounded text-accent"
-                                title="Preview"
-                              >
-                                <Eye size={14} />
-                              </button>
-                              {uploaded && (
-                                <span className="text-[10px] text-green-600 font-medium whitespace-nowrap">Uploaded</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 {/* Customer Documents */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    <User size={14} /> Customer Documents
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                    CUSTOMER DOCUMENTS
                   </h3>
 
                   {/* Document Selection Checkboxes */}
@@ -1801,8 +1706,8 @@ export default function CreateLoan() {
                 {/* Other KYC Documents */}
                 {/* Other KYC / RTO Documents */}
                 <div className="space-y-4 pt-6 border-t border-border/50">
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    <FileText size={14} /> Other KYC / RTO Documents
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                    OTHER KYC / RTO DOCUMENTS
                   </h3>
 
                   {/* Document Selection Checkboxes */}

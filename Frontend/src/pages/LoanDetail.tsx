@@ -750,6 +750,12 @@ export default function LoanDetail() {
                     </div>
                     <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
                     <Field label="Challans" value={(loan as any).challan_status || 'No'} />
+                    <Field label="DM Status" value={(loan as any).rto_dm ? 'Received' : 'Pending'} />
+                    <Field label="RC Status" value={(loan as any).rto_rc ? 'Received' : 'Pending'} />
+                    <Field label="NOC Status" value={(loan as any).rto_noc ? 'Received' : 'Pending'} />
+                    <Field label="Tax Receipt" value={(loan as any).rto_tax_receipt ? 'Received' : 'Pending'} />
+                    <Field label="FC Status" value={(loan as any).rto_fitness_document ? 'Received' : 'Pending'} />
+                    <Field label="Stamp Status" value={(loan as any).rto_stamp_papers ? 'Received' : 'Pending'} />
 
                   </div>
                 </Section>
