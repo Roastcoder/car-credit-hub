@@ -498,6 +498,8 @@ export default function CreateLoan() {
   const [customTenure, setCustomTenure] = useState('');
   const [showCustomTenure, setShowCustomTenure] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
+  const [docToDelete, setDocToDelete] = useState<any>(null);
+  const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
   const tenureOptions = [12, 18, 24, 36, 48, 60, 72, 84];
@@ -934,6 +936,45 @@ export default function CreateLoan() {
       toast.error('Error uploading documents');
     } finally {
       setUploadingDocs(false);
+    }
+  };
+
+  const deleteDocument = useMutation({
+    mutationFn: async (docId: string) => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to delete document');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['loan-documents', id] });
+      }
+      if (docToDelete) {
+        setUploadedDocs(prev => prev.filter(d => d.id !== docToDelete.id));
+      }
+      toast.success('Document deleted successfully');
+      setShowDeleteDocModal(false);
+      setDocToDelete(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error deleting document');
+    }
+  });
+
+  const handleClearDocument = (field: string, existingDoc?: any) => {
+    if (existingDoc && isEditMode) {
+      setDocToDelete(existingDoc);
+      setShowDeleteDocModal(true);
+    } else {
+      update(field, null);
     }
   };
 
@@ -1592,13 +1633,13 @@ export default function CreateLoan() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {form.showAadhar && (
                       <>
-                        <DocumentUploadCard
+                         <DocumentUploadCard
                           label="Aadhar Card Front"
                           type="aadhar_front"
                           file={form.aadharFront as File}
                           existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_front')}
                           onChange={val => update('aadharFront', val)}
-                          onClear={() => update('aadharFront', null)}
+                          onClear={() => handleClearDocument('aadharFront', uploadedDocs.find(d => d.document_type === 'aadhar_front'))}
                         />
                         <DocumentUploadCard
                           label="Aadhar Card Back"
@@ -1606,7 +1647,7 @@ export default function CreateLoan() {
                           file={form.aadharBack as File}
                           existingDoc={uploadedDocs.find(d => d.document_type === 'aadhar_back')}
                           onChange={val => update('aadharBack', val)}
-                          onClear={() => update('aadharBack', null)}
+                          onClear={() => handleClearDocument('aadharBack', uploadedDocs.find(d => d.document_type === 'aadhar_back'))}
                         />
                       </>
                     )}
@@ -1617,7 +1658,7 @@ export default function CreateLoan() {
                         file={form.panCard as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'pan_card')}
                         onChange={val => update('panCard', val)}
-                        onClear={() => update('panCard', null)}
+                        onClear={() => handleClearDocument('panCard', uploadedDocs.find(d => d.document_type === 'pan_card'))}
                       />
                     )}
                     {form.showBankStatement && (
@@ -1627,7 +1668,7 @@ export default function CreateLoan() {
                         file={form.bankStatement as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'bank_statement')}
                         onChange={val => update('bankStatement', val)}
-                        onClear={() => update('bankStatement', null)}
+                        onClear={() => handleClearDocument('bankStatement', uploadedDocs.find(d => d.document_type === 'bank_statement'))}
                       />
                     )}
                     {form.showCheque && (
@@ -1637,7 +1678,7 @@ export default function CreateLoan() {
                         file={form.cheque as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'cheque')}
                         onChange={val => update('cheque', val)}
-                        onClear={() => update('cheque', null)}
+                        onClear={() => handleClearDocument('cheque', uploadedDocs.find(d => d.document_type === 'cheque'))}
                       />
                     )}
                     {form.showRC && (
@@ -1648,7 +1689,7 @@ export default function CreateLoan() {
                           file={form.rcFront as File}
                           existingDoc={uploadedDocs.find(d => d.document_type === 'rc_front')}
                           onChange={val => update('rcFront', val)}
-                          onClear={() => update('rcFront', null)}
+                          onClear={() => handleClearDocument('rcFront', uploadedDocs.find(d => d.document_type === 'rc_front'))}
                         />
                         <DocumentUploadCard
                           label="RC (Back)"
@@ -1656,7 +1697,7 @@ export default function CreateLoan() {
                           file={form.rcBack as File}
                           existingDoc={uploadedDocs.find(d => d.document_type === 'rc_back')}
                           onChange={val => update('rcBack', val)}
-                          onClear={() => update('rcBack', null)}
+                          onClear={() => handleClearDocument('rcBack', uploadedDocs.find(d => d.document_type === 'rc_back'))}
                         />
                       </>
                     )}
@@ -1667,7 +1708,7 @@ export default function CreateLoan() {
                         file={form.incomeProof as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'income_proof')}
                         onChange={val => update('incomeProof', val)}
-                        onClear={() => update('incomeProof', null)}
+                        onClear={() => handleClearDocument('incomeProof', uploadedDocs.find(d => d.document_type === 'income_proof'))}
                       />
                     )}
                     {form.showCustomerPhoto && (
@@ -1677,7 +1718,7 @@ export default function CreateLoan() {
                         file={form.customerPhoto as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'customer_photo')}
                         onChange={val => update('customerPhoto', val)}
-                        onClear={() => update('customerPhoto', null)}
+                        onClear={() => handleClearDocument('customerPhoto', uploadedDocs.find(d => d.document_type === 'customer_photo'))}
                       />
                     )}
                     {form.showInsurance && (
@@ -1687,7 +1728,7 @@ export default function CreateLoan() {
                         file={form.insurance as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'insurance')}
                         onChange={val => update('insurance', val)}
-                        onClear={() => update('insurance', null)}
+                        onClear={() => handleClearDocument('insurance', uploadedDocs.find(d => d.document_type === 'insurance'))}
                       />
                     )}
                     {form.showCustomerLedger && (
@@ -1697,7 +1738,7 @@ export default function CreateLoan() {
                         file={form.customerLedger as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'customer_ledger')}
                         onChange={val => update('customerLedger', val)}
-                        onClear={() => update('customerLedger', null)}
+                        onClear={() => handleClearDocument('customerLedger', uploadedDocs.find(d => d.document_type === 'customer_ledger'))}
                       />
                     )}
                   </div>
@@ -1755,7 +1796,7 @@ export default function CreateLoan() {
                         file={form.rtoDocument as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'rto_document')}
                         onChange={val => update('rtoDocument', val)}
-                        onClear={() => update('rtoDocument', null)}
+                        onClear={() => handleClearDocument('rtoDocument', uploadedDocs.find(d => d.document_type === 'rto_document'))}
                       />
                     )}
                     {form.showNoc && (
@@ -1765,7 +1806,7 @@ export default function CreateLoan() {
                         file={form.noc as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'noc')}
                         onChange={val => update('noc', val)}
-                        onClear={() => update('noc', null)}
+                        onClear={() => handleClearDocument('noc', uploadedDocs.find(d => d.document_type === 'noc'))}
                       />
                     )}
                     {form.showThirdParty && (
@@ -1775,7 +1816,7 @@ export default function CreateLoan() {
                         file={form.thirdParty as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'third_party')}
                         onChange={val => update('thirdParty', val)}
-                        onClear={() => update('thirdParty', null)}
+                        onClear={() => handleClearDocument('thirdParty', uploadedDocs.find(d => d.document_type === 'third_party'))}
                       />
                     )}
                     {form.showStamp && (
@@ -1785,7 +1826,7 @@ export default function CreateLoan() {
                         file={form.stamp as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'stamp')}
                         onChange={val => update('stamp', val)}
-                        onClear={() => update('stamp', null)}
+                        onClear={() => handleClearDocument('stamp', uploadedDocs.find(d => d.document_type === 'stamp'))}
                       />
                     )}
                     {form.showRcDocument && (
@@ -1795,7 +1836,7 @@ export default function CreateLoan() {
                         file={form.rcDocument as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'rc_document')}
                         onChange={val => update('rcDocument', val)}
-                        onClear={() => update('rcDocument', null)}
+                        onClear={() => handleClearDocument('rcDocument', uploadedDocs.find(d => d.document_type === 'rc_document'))}
                       />
                     )}
                     {form.showFitnessDoc && (
@@ -1805,7 +1846,7 @@ export default function CreateLoan() {
                         file={form.fitnessDocument as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'fitness_document')}
                         onChange={val => update('fitnessDocument', val)}
-                        onClear={() => update('fitnessDocument', null)}
+                        onClear={() => handleClearDocument('fitnessDocument', uploadedDocs.find(d => d.document_type === 'fitness_document'))}
                       />
                     )}
                     {form.showTaxReceipt && (
@@ -1815,7 +1856,7 @@ export default function CreateLoan() {
                         file={form.taxReceipt as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'tax_receipt')}
                         onChange={val => update('taxReceipt', val)}
-                        onClear={() => update('taxReceipt', null)}
+                        onClear={() => handleClearDocument('taxReceipt', uploadedDocs.find(d => d.document_type === 'tax_receipt'))}
                       />
                     )}
                     {form.showDmDocument && (
@@ -1825,7 +1866,7 @@ export default function CreateLoan() {
                         file={form.dmDocument as File}
                         existingDoc={uploadedDocs.find(d => d.document_type === 'dm_document')}
                         onChange={val => update('dmDocument', val)}
-                        onClear={() => update('dmDocument', null)}
+                        onClear={() => handleClearDocument('dmDocument', uploadedDocs.find(d => d.document_type === 'dm_document'))}
                       />
                     )}
                   </div>
@@ -1952,6 +1993,55 @@ export default function CreateLoan() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Document Confirmation Modal */}
+      {showDeleteDocModal && docToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                <FileText size={24} className="text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Saved Document?
+                </h3>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Are you sure you want to delete this document from the server?
+                </p>
+                <p className="text-sm font-medium text-red-500">
+                  This action cannot be undone.
+                </p>
+                <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Document Details:</p>
+                  <p className="text-sm font-medium text-foreground">{docToDelete.document_name || docToDelete.file_name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{docToDelete.document_type?.replace(/_/g, ' ').toUpperCase()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowDeleteDocModal(false);
+                  setDocToDelete(null);
+                }}
+                disabled={deleteDocument.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteDocument.mutate(docToDelete.id)}
+                disabled={deleteDocument.isPending}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleteDocument.isPending ? 'Deleting...' : 'Delete Document'}
+              </button>
             </div>
           </div>
         </div>
