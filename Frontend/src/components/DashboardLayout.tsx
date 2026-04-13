@@ -1,4 +1,4 @@
-import { ReactNode, useState, ElementType } from 'react';
+import { ReactNode, useState, ElementType, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole, ROLE_LABELS } from '@/lib/auth';
@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
-  Activity, Receipt, Shield, User
+  Activity, Receipt, Shield, User, Menu
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -26,11 +26,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { 
-    title: 'Dashboard', 
-    path: '/dashboard', 
-    icon: LayoutDashboard, 
-    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] 
+  {
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard,
+    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee']
   },
   {
     title: 'Leads',
@@ -74,6 +74,33 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (!user) return null;
 
+  useEffect(() => {
+    setSidebarOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth >= 1024) return;
+
+    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   const getNavItems = () => {
     if (user.role === 'accountant') return ACCOUNT_NAV_ITEMS;
     return NAV_ITEMS;
@@ -98,14 +125,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     : user.email ? user.email.slice(0, 2).toUpperCase() : 'U';
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-foreground/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-56'} glass-panel border-r border-white/50 dark:border-white/10 flex flex-col transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:m-3 lg:mr-1.5 rounded-[1.5rem] sm:rounded-[2rem] lg:h-[calc(100vh-1.5rem)] will-change-transform`}>
+    <div className="flex h-[100dvh] overflow-hidden">
+      {/* Sidebar - Desktop Only */}
+      <aside className={`hidden lg:flex static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} glass-panel border-r border-white/50 dark:border-white/10 flex-col transition-all duration-300 shadow-2xl m-3 mr-1.5 rounded-[1.5rem] h-[calc(100vh-1.5rem)] will-change-transform`}>
         {/* Logo */}
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
           <div className="glass-card rounded-2xl p-2 shadow-sm">
@@ -170,17 +192,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             "absolute left-0 top-1/2 -translate-y-1/2 w-3 h-[1px]",
                             isChildActive ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800/50"
                           )} />
-                          
+
                           {/* Indicator dot or small icon */}
                           <div className={cn(
                             "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                            isChildActive 
-                              ? "bg-blue-600 dark:bg-blue-400 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.5)]" 
+                            isChildActive
+                              ? "bg-blue-600 dark:bg-blue-400 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.5)]"
                               : "bg-blue-300 dark:bg-blue-800 group-hover/sub:bg-blue-500"
                           )} />
-                          
+
                           <span className="truncate tracking-wide">{child.title}</span>
-                          
+
                           {isChildActive && (
                             <div className="ml-auto w-1 h-3 bg-blue-600 dark:bg-blue-400 rounded-full animate-in fade-in slide-in-from-right-1" />
                           )}
