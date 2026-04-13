@@ -359,6 +359,18 @@ export default function CreateLoan() {
     enabled: !!leadId && !isEditMode,
   });
 
+  const { data: leadDocuments = [] } = useQuery({
+    queryKey: ['lead-documents', leadId],
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads/${leadId}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) return [];
+      return await response.json();
+    },
+    enabled: !!leadId && !isEditMode,
+  });
+
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['loan-audit-logs', id],
     queryFn: async () => {
@@ -784,9 +796,51 @@ export default function CreateLoan() {
     if (!leadToConvert || isEditMode || !leadId || prefilledLeadRef.current === leadId) return;
 
     handleLeadSelect(leadToConvert);
+
+    // Populate documents from lead
+    if (leadDocuments && leadDocuments.length > 0) {
+      setUploadedDocs(leadDocuments);
+      
+      setForm(f => {
+        const newForm = { ...f };
+        leadDocuments.forEach((doc: any) => {
+          switch (doc.document_type) {
+            case 'aadhar_front':
+            case 'aadhar_back':
+              newForm.showAadhar = true;
+              break;
+            case 'pan_card':
+              newForm.showPan = true;
+              break;
+            case 'bank_statement':
+              newForm.showBankStatement = true;
+              break;
+            case 'cheque':
+              newForm.showCheque = true;
+              break;
+            case 'rc_front':
+            case 'rc_back':
+              newForm.showRC = true;
+              break;
+            case 'income_proof':
+              newForm.showIncomeProof = true;
+              break;
+            case 'customer_photo':
+              newForm.showCustomerPhoto = true;
+              break;
+            case 'insurance':
+              newForm.showInsurance = true;
+              break;
+            // Add other KYC mappings as needed
+          }
+        });
+        return newForm;
+      });
+    }
+
     setLeadSearch(leadToConvert.customer_id || '');
     prefilledLeadRef.current = leadId;
-  }, [leadId, leadToConvert, isEditMode]);
+  }, [leadId, leadToConvert, leadDocuments, isEditMode]);
 
   const handleSameAddress = (checked: boolean) => {
     setForm(f => ({

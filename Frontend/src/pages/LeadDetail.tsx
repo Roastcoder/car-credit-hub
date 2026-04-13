@@ -23,7 +23,7 @@ export default function LeadDetail() {
   const queryClient = useQueryClient();
   const permissions = user?.role ? getRolePermissions(user.role) : null;
   const role = user?.role;
-  const canViewLeadDocuments = role === 'broker' || role === 'manager' || role === 'admin' || role === 'super_admin';
+  const canViewLeadDocuments = role && ['broker', 'manager', 'admin', 'super_admin', 'employee', 'sales', 'rbm', 'pdd_manager'].includes(role);
   const canUploadLeadDocuments = role === 'broker';
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
