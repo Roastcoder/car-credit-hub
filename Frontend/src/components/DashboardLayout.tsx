@@ -11,6 +11,7 @@ import {
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
+import ProfileCompletionModal from './ProfileCompletionModal';
 import { toast } from 'sonner';
 
 interface NavItem {
@@ -126,6 +127,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] overflow-hidden">
+      <ProfileCompletionModal />
+      
       {/* Sidebar - Desktop Only */}
       <aside className={`hidden lg:flex static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} glass-panel border-r border-white/50 dark:border-white/10 flex-col transition-all duration-300 shadow-2xl m-3 mr-1.5 rounded-[1.5rem] h-[calc(100vh-1.5rem)] will-change-transform`}>
         {/* Logo */}
