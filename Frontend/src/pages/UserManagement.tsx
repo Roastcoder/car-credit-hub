@@ -73,7 +73,7 @@ export default function UserManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage system users and their roles</p>
+          <p className="text-muted-foreground text-sm mt-1">Manage system users, roles, passwords, and branch allocation</p>
         </div>
       </div>
 

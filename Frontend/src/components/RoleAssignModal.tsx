@@ -94,7 +94,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         <DialogHeader>
           <DialogTitle>Edit User, Role & Password for {user?.full_name || user?.email}</DialogTitle>
           <DialogDescription>
-            Update this user's role, branch, and optionally set a new password.
+            Update this user's role, primary branch, branch access allocation, and optionally set a new password.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,7 +153,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
               })}
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Managers can be assigned one or more branches here.
+              Use this section for user branch allocation. Managers can be assigned one or more branches here.
             </p>
           </div>
           {branchId && (

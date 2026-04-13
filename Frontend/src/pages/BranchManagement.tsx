@@ -124,7 +124,10 @@ export default function BranchManagement() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Branch Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">{branches.length} branches and manager branch assignments</p>
+          <p className="text-sm text-muted-foreground mt-1">{branches.length} branches</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Use this page to set the official manager for each branch. For user branch allocation or multiple branch access, use User Management.
+          </p>
         </div>
         {isAdmin && (
           <button
@@ -205,7 +208,7 @@ export default function BranchManagement() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-foreground leading-none">{editingBranch ? 'Update Branch' : 'Create New Branch'}</h2>
-                <p className="text-xs text-muted-foreground mt-1">Fill in the essential location details below.</p>
+                <p className="text-xs text-muted-foreground mt-1">Set branch details and choose the official manager for this branch.</p>
               </div>
             </div>
 
@@ -253,7 +256,7 @@ export default function BranchManagement() {
                     </div>
                   </div>
                   <p className="text-[10px] text-accent font-medium mt-2 flex items-center gap-1">
-                    <MapPin size={10} /> This user will be the main contact and will get access to this branch.
+                    <MapPin size={10} /> This sets the official branch manager. For additional branch allocation, use User Management.
                   </p>
                 </div>
 
