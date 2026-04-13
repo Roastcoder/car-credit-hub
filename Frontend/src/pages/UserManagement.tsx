@@ -6,6 +6,54 @@ import { Users, Search, Shield, Edit } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
 import { usersAPI } from '@/lib/api';
 
+const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
+  const [error, setError] = useState(false);
+  const initials = (user.full_name || user.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  
+  const imageUrl = user.profile_image 
+    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`
+    : null;
+
+  return (
+    <div className={`rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold overflow-hidden shrink-0 ${className}`}>
+      {(imageUrl && !error) ? (
+        <img 
+          src={imageUrl} 
+          alt="" 
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
+};
+
+const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
+  const [error, setError] = useState(false);
+  const initials = (user.full_name || user.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  
+  const imageUrl = user.profile_image 
+    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`
+    : null;
+
+  return (
+    <div className={`rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold overflow-hidden shrink-0 ${className}`}>
+      {(imageUrl && !error) ? (
+        <img 
+          src={imageUrl} 
+          alt="" 
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
+};
+
 export default function UserManagement() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
@@ -93,12 +141,13 @@ export default function UserManagement() {
             <div key={u.id} className="stat-card">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-sm">
-                    {(u.full_name || u.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </div>
+                  <UserAvatar user={u} className="w-10 h-10 text-sm" />
                   <div className="min-w-0">
                     <p className="font-semibold text-foreground truncate">{u.full_name || '(No name)'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                      {u.phone && <p className="text-[10px] text-accent font-medium mono">{u.phone}</p>}
+                    </div>
                   </div>
                 </div>
                 {user?.role === 'super_admin' && (
@@ -139,7 +188,7 @@ export default function UserManagement() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Email</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Contact</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
@@ -151,13 +200,16 @@ export default function UserManagement() {
                   <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
-                          {(u.full_name || u.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                        </div>
+                        <UserAvatar user={u} className="w-8 h-8 text-xs" />
                         <span className="font-medium text-foreground">{u.full_name || '(No name)'}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-muted-foreground">{u.email}</td>
+                    <td className="py-3 px-3">
+                      <div className="flex flex-col">
+                        <span className="text-foreground text-xs">{u.email}</span>
+                        {u.phone && <span className="text-accent text-[10px] font-medium mono">{u.phone}</span>}
+                      </div>
+                    </td>
                     <td className="py-3 px-3">
                       {u.role ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">

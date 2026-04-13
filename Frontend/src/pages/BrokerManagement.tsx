@@ -6,6 +6,30 @@ import { BrokerFormModal } from '@/components/BrokerFormModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
+  const [error, setError] = useState(false);
+  const initials = (user.name || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  
+  const imageUrl = user.profile_image 
+    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`
+    : null;
+
+  return (
+    <div className={`rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold overflow-hidden shrink-0 ${className}`}>
+      {(imageUrl && !error) ? (
+        <img 
+          src={imageUrl} 
+          alt="" 
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
+};
+
 export default function BrokerManagement() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -136,9 +160,7 @@ export default function BrokerManagement() {
               <div key={b.id} className="stat-card">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-sm">
-                      {b.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                    </div>
+                    <UserAvatar user={b} className="w-10 h-10 text-sm" />
                     <div>
                       <p className="font-semibold text-foreground">{b.name}</p>
                       <p className="text-xs text-muted-foreground">{b.dsa_code && <span className="text-accent font-medium">{formatDSACode(b.dsa_code)} • </span>}{b.email || b.phone || '—'}</p>
@@ -195,9 +217,7 @@ export default function BrokerManagement() {
                     <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold text-xs">
-                            {b.name.split(' ').map((n: string) => n[0]).join('')}
-                          </div>
+                          <UserAvatar user={b} className="w-8 h-8 text-xs" />
                           <div>
                             <p className="font-medium text-foreground">{b.name}</p>
                             <p className="text-xs text-muted-foreground">{b.email}</p>
