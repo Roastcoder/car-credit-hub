@@ -136,14 +136,6 @@ export default function Dashboard() {
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-3 pb-20 lg:p-4 sm:lg:p-6">
-        {user?.channel_code && (
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex flex-col items-start sm:items-end px-5 py-3 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-xl shadow-blue-600/20 border border-white/20">
-              <span className="text-[10px] font-bold text-blue-100 uppercase tracking-[0.3em] mb-1">Unique ID</span>
-              <span className="text-2xl font-black text-white drop-shadow-md">{user.channel_code}</span>
-            </div>
-          </div>
-        )}
         {user?.role === 'employee' && (
           <div className="stat-card mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
             <div>

@@ -11,6 +11,7 @@ import {
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
+import { toast } from 'sonner';
 
 interface NavItem {
   title: string;
@@ -237,10 +238,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
 
           {user.channel_code && (
-            <div className="hidden sm:flex flex-col items-end mr-3 px-3 py-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50 shadow-sm backdrop-blur-md">
-              <span className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest leading-none mb-0.5">Unique ID</span>
-              <span className="text-sm font-black text-blue-900 dark:text-blue-100 leading-none">{user.channel_code}</span>
-            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(user.channel_code!);
+                toast.success('Unique ID copied!', {
+                  icon: <ClipboardCheck size={16} className="text-blue-500" />,
+                  duration: 2000
+                });
+              }}
+              className="hidden sm:flex flex-col items-center justify-center px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 rounded-2xl shadow-lg shadow-blue-600/20 border border-white/20 transition-all active:scale-95 group relative overflow-hidden"
+              title="Click to copy Unique ID"
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="text-[9px] font-bold text-blue-100/90 uppercase tracking-[0.2em] leading-none mb-0.5">Unique ID</span>
+              <span className="text-sm font-black text-white leading-none drop-shadow-sm">{user.channel_code}</span>
+            </button>
           )}
 
           {/* Notification Bell */}
