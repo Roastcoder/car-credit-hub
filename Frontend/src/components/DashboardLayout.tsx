@@ -150,9 +150,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
 
                 {!collapsed && item.children && isActive && (
-                  <div className="ml-10 flex flex-col gap-1 border-l-2 border-blue-500/10 dark:border-blue-400/5 pl-4 mt-1 mb-2">
+                  <div className="ml-11 flex flex-col gap-0.5 border-l border-blue-200 dark:border-blue-800/50 mt-1 mb-2">
                     {item.children.map((child) => {
-                      const ChildIconComponent = child.icon;
                       const isChildActive = location.pathname === child.path;
                       return (
                         <Link
@@ -160,14 +159,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           to={child.path}
                           onClick={() => setSidebarOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 py-2 text-[13px] font-bold transition-all rounded-xl px-3",
+                            "group/sub flex items-center gap-3 py-2.5 px-4 text-[13px] font-semibold transition-all relative",
                             isChildActive
-                              ? "text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm"
-                              : "text-blue-500/70 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white/40 dark:hover:bg-white/5"
+                              ? "text-blue-700 dark:text-blue-300"
+                              : "text-blue-500/70 hover:text-blue-950 dark:hover:text-white"
                           )}
                         >
-                          <ChildIconComponent size={14} className={isChildActive ? "opacity-100" : "opacity-60"} />
-                          {child.title}
+                          {/* Horizontal branch line */}
+                          <div className={cn(
+                            "absolute left-0 top-1/2 -translate-y-1/2 w-3 h-[1px]",
+                            isChildActive ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800/50"
+                          )} />
+                          
+                          {/* Indicator dot or small icon */}
+                          <div className={cn(
+                            "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                            isChildActive 
+                              ? "bg-blue-600 dark:bg-blue-400 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.5)]" 
+                              : "bg-blue-300 dark:bg-blue-800 group-hover/sub:bg-blue-500"
+                          )} />
+                          
+                          <span className="truncate tracking-wide">{child.title}</span>
+                          
+                          {isChildActive && (
+                            <div className="ml-auto w-1 h-3 bg-blue-600 dark:bg-blue-400 rounded-full animate-in fade-in slide-in-from-right-1" />
+                          )}
                         </Link>
                       );
                     })}
