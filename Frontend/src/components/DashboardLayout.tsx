@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
-  Activity, Receipt, Shield
+  Activity, Receipt, Shield, User
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -264,7 +264,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
                     <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 space-y-1">
+                    <button
+                      onClick={() => { navigate('/profile'); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-blue-900 dark:text-blue-100 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-800"
+                    >
+                      <User size={18} className="text-blue-500" />
+                      View Profile
+                    </button>
                     <button
                       onClick={() => { handleLogout(); setProfileOpen(false); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 rounded-xl transition-all"
