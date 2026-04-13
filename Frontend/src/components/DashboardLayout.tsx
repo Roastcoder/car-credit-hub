@@ -150,22 +150,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
 
                 {!collapsed && item.children && isActive && (
-                  <div className="ml-6 flex flex-col gap-1 border-l border-white/20 dark:border-white/5 pl-4 mt-1">
+                  <div className="ml-10 flex flex-col gap-1 border-l-2 border-blue-500/10 dark:border-blue-400/5 pl-4 mt-1 mb-2">
                     {item.children.map((child) => {
                       const ChildIconComponent = child.icon;
+                      const isChildActive = location.pathname === child.path;
                       return (
                         <Link
                           key={child.path}
                           to={child.path}
                           onClick={() => setSidebarOpen(false)}
                           className={cn(
-                            "flex items-center gap-2 py-1.5 text-xs font-medium transition-colors rounded-lg px-2",
-                            location.pathname === child.path
-                              ? "text-blue-600 dark:text-blue-400 bg-white/20 dark:bg-white/5"
-                              : "text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white/10 dark:hover:bg-white/5"
+                            "flex items-center gap-3 py-2 text-[13px] font-bold transition-all rounded-xl px-3",
+                            isChildActive
+                              ? "text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm"
+                              : "text-blue-500/70 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white/40 dark:hover:bg-white/5"
                           )}
                         >
-                          <ChildIconComponent size={14} />
+                          <ChildIconComponent size={14} className={isChildActive ? "opacity-100" : "opacity-60"} />
                           {child.title}
                         </Link>
                       );
