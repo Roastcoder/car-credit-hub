@@ -128,6 +128,7 @@ export const usersAPI = {
   getById: (id: number) => api.get(`/users/${id}`),
   create: (data: any) => api.post('/users', data),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),
+  resetPassword: (id: number, newPassword: string) => api.put(`/users/${id}/password`, { newPassword }),
   delete: (id: number) => api.delete(`/users/${id}`),
   updateProfile: (data: FormData | { name?: string; phone?: string }) => 
     api.request('/users/me/profile', { 

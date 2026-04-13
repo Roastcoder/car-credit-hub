@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
-  Plus, Search, Filter, Eye, Edit, CheckCircle, X,
-  Clock, FileText, CreditCard, AlertCircle, Download, FileCheck, Receipt, List
+  Plus, Search, Filter, Eye, CheckCircle, X,
+  FileText, CreditCard, Download, FileCheck, Receipt, List, User
 } from 'lucide-react';
 import { paymentApplicationAPI } from '@/lib/api';
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,23 @@ interface PaymentApplication {
   loan_id: string;
   loan_number: string;
   applicant_name: string;
+  applicant_phone: string;
   payment_amount: number;
   payment_purpose: string;
   status: 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
   created_at: string;
   created_by: number;
+  created_by_name?: string;
   approved_by?: number;
   processed_by?: number;
   utr_number?: string;
   payment_proof_path?: string;
+  vehicle_name?: string;
+  vehicle_model?: string;
+  vehicle_number?: string;
+  financier_name?: string;
+  disbursement_branch?: string;
+  emi_amount?: number;
 }
 
 export default function PaymentApplicationsList() {
@@ -138,6 +146,8 @@ export default function PaymentApplicationsList() {
         )}
       </div>
 
+      <MobilePageSwitcher options={appSwitcherOptions} activeLabel="Application List" />
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
         <div className="relative flex-1">
@@ -202,32 +212,61 @@ export default function PaymentApplicationsList() {
       ) : (
         <>
           {/* Mobile Card View */}
-          <div className="md:hidden space-y-4 mb-8">
+          <div className="grid gap-4 md:hidden">
             {filteredApplications.map((app) => (
               <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
                 <div className="flex items-center justify-between mb-3 relative z-10">
                   <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(app.status)}`}>
                     {app.status.replace('_', ' ')}
                   </div>
-                  <div className="text-[10px] text-gray-500 font-mono">#{app.id}</div>
+                  <div className="text-[10px] text-gray-500 font-mono italic">#{app.id.toString().padStart(4, '0')}</div>
                 </div>
                 
-                <div className="flex items-start justify-between mb-4 relative z-10">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-1">{app.applicant_name}</h3>
-                    <p className="text-xs text-gray-500 mb-2">{app.loan_number}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
-                      <Receipt size={10} className="text-blue-500" />
-                      {app.payment_purpose}
+                <div className="space-y-4 mb-4 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-0.5">{app.applicant_name}</h3>
+                      <p className="text-xs text-gray-500 flex items-center gap-1.5 mb-1">
+                        <User size={12} className="text-blue-500" /> {app.applicant_phone}
+                      </p>
+                      {app.created_by_name && (
+                         <p className="text-[10px] text-gray-400">Created by: {app.created_by_name}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 italic mb-1">{new Date(app.created_at).toLocaleString()}</p>
+                      <div className="text-[10px] font-bold text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-0.5 rounded border border-orange-200/50 dark:border-orange-800/30 inline-block uppercase">
+                        PDD Pending
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount)}</p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-tighter">{new Date(app.created_at).toLocaleDateString()}</p>
+
+                  <div className="grid grid-cols-2 gap-3 py-3 border-y border-gray-100 dark:border-gray-800">
+                     <div>
+                        <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Vehicle</p>
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{app.vehicle_name} {app.vehicle_model}</p>
+                        <p className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Financier</p>
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{app.financier_name || 'N/A'}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{app.disbursement_branch || 'N/A'}</p>
+                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount)}</p>
+                      {app.emi_amount && <p className="text-[10px] font-medium text-gray-500">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium italic">
+                      <Receipt size={10} className="text-blue-500" />
+                      {app.payment_purpose || 'Standard Disbursement'}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/10 relative z-10">
+                <div className="flex flex-wrap items-center gap-2 pt-2 relative z-10">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -305,49 +344,82 @@ export default function PaymentApplicationsList() {
               <table className="w-full">
                 <thead className="bg-slate-50/50 dark:bg-slate-900/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID / Loan</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Purpose</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Loan Number</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Date & Time</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vehicle</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Bank</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Branch</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">EMI</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">PDD</th>
+                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {filteredApplications.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-semibold text-gray-900 dark:text-white">#{app.id}</div>
-                        <div className="text-[10px] text-gray-500 font-mono italic">{app.loan_number}</div>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 dark:text-white text-xs">{app.loan_number}</div>
+                        <div className="text-[10px] text-gray-400 italic">ID: #{app.id.toString().padStart(4, '0')}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 dark:text-white">{app.applicant_name}</div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-tighter">{new Date(app.created_at).toLocaleDateString()}</div>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                         <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                           {new Date(app.created_at).toLocaleDateString()}
+                         </div>
+                         <div className="text-[10px] text-gray-500">
+                           {new Date(app.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 dark:text-white text-xs">{app.applicant_name}</div>
+                        <div className="text-[10px] text-blue-600 font-medium">{app.applicant_phone}</div>
+                        {app.created_by_name && (
+                          <div className="text-[9px] text-gray-400">Created by: {app.created_by_name}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">
+                           {app.vehicle_name} {app.vehicle_model}
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                        {app.financier_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                        {app.disbursement_branch || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-xs font-extrabold text-blue-700 dark:text-blue-400">
                         {formatCurrency(app.payment_amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {app.payment_purpose}
+                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
+                        {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
                           {app.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
-                            <Eye size={16} />
+                      <td className="px-4 py-4 whitespace-nowrap">
+                         <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-orange-50 text-orange-600 border border-orange-200 dark:bg-orange-900/10 dark:text-orange-400 dark:border-orange-800">
+                            PDD Pending
+                         </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-0.5">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
+                            <Eye size={14} />
                           </Button>
                           
                           {user?.role === 'manager' && app.status === 'submitted' && (
-                            <div className="flex items-center gap-1 ml-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handleManagerAction(app.id, 'approve')}>
-                                <CheckCircle size={16} />
+                            <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => handleManagerAction(app.id, 'approve')}>
+                                <CheckCircle size={14} />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => handleManagerAction(app.id, 'reject')}>
-                                <X size={16} />
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" onClick={() => handleManagerAction(app.id, 'reject')}>
+                                <X size={14} />
                               </Button>
                             </div>
                           )}
@@ -356,11 +428,10 @@ export default function PaymentApplicationsList() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-8 gap-1.5 text-purple-600 font-bold text-[10px] uppercase tracking-wider"
+                              className="h-7 px-2 text-purple-600 font-bold text-[9px] uppercase tracking-wider"
                               onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
                             >
-                              <FileText size={14} />
-                              Generate Voucher
+                              Voucher
                             </Button>
                           )}
 
@@ -368,11 +439,10 @@ export default function PaymentApplicationsList() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-8 gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider"
+                              className="h-7 px-2 text-blue-600 font-bold text-[9px] uppercase tracking-wider"
                               onClick={() => navigate(`/payments/${app.id}`)}
                             >
-                              <CreditCard size={14} />
-                              Add UTR
+                              UTR
                             </Button>
                           )}
 
@@ -380,11 +450,10 @@ export default function PaymentApplicationsList() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-8 gap-1.5 text-emerald-600 font-bold text-[10px] uppercase tracking-wider"
+                              className="h-7 px-2 text-emerald-600 font-bold text-[9px] uppercase tracking-wider"
                               onClick={() => navigate(`/payments/${app.id}`)}
                             >
-                              <Download size={14} />
-                              Upload Proof
+                              Proof
                             </Button>
                           )}
                         </div>

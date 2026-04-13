@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
-import { Users, Search, Shield, Edit } from 'lucide-react';
+import { Search, Shield, Edit, KeyRound } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
 import { usersAPI } from '@/lib/api';
 
@@ -128,8 +128,12 @@ export default function UserManagement() {
                   </div>
                 </div>
                 {user?.role === 'super_admin' && (
-                  <button onClick={() => handleAssignRole(u)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-                    <Edit size={14} />
+                  <button
+                    onClick={() => handleAssignRole(u)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/15 transition-colors text-xs font-semibold"
+                  >
+                    <KeyRound size={12} />
+                    Edit / Password
                   </button>
                 )}
               </div>
@@ -173,7 +177,7 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
-                  {user?.role === 'super_admin' && <th className="py-3 px-3"></th>}
+                  {user?.role === 'super_admin' && <th className="py-3 px-3 text-left font-medium text-muted-foreground">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -211,7 +215,18 @@ export default function UserManagement() {
                     </td>
                     {user?.role === 'super_admin' && (
                       <td className="py-3 px-3">
-                        <button onClick={() => handleAssignRole(u)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                        <button
+                          onClick={() => handleAssignRole(u)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/15 transition-colors text-xs font-semibold"
+                        >
+                          <KeyRound size={12} />
+                          Password
+                        </button>
+                        <button
+                          onClick={() => handleAssignRole(u)}
+                          className="ml-2 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          aria-label={`Edit ${u.full_name || u.email}`}
+                        >
                           <Edit size={14} />
                         </button>
                       </td>

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ROLE_LABELS } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
+import { usersAPI } from '@/lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface RoleAssignModalProps {
   open: boolean;
@@ -15,6 +17,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const [role, setRole] = useState(user?.role || 'employee');
   const [branchId, setBranchId] = useState(user?.branch_id || '');
   const [isBranchManager, setIsBranchManager] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { data: branches = [] } = useQuery({
@@ -32,6 +36,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     if (user) {
       setRole(user.role || 'employee');
       setBranchId(user.branch_id || '');
+      setNewPassword('');
+      setShowPassword(false);
       
       // Check if this user is already the manager of their branch
       const currentBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
@@ -43,7 +49,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/${user.id}/role`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/${user.id}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -54,14 +60,22 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
           branch_id: branchId || null,
           is_branch_manager: isBranchManager 
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({ error: 'Failed to update user' }));
+          throw new Error(error.error || 'Failed to update user');
+        }
       });
-      if (!res.ok) throw new Error('Failed to update user');
+
+      if (newPassword.trim()) {
+        await usersAPI.resetPassword(user.id, newPassword.trim());
+      }
       
-      toast.success('User updated successfully!');
+      toast.success(newPassword.trim() ? 'User and password updated successfully!' : 'User updated successfully!');
       onSuccess();
       onClose();
-    } catch (error) {
-      toast.error('Failed to update user');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user');
     } finally {
       setLoading(false);
     }
@@ -71,9 +85,9 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Assign Role & Branch to {user?.full_name || user?.email}</DialogTitle>
+          <DialogTitle>Edit User, Role & Password for {user?.full_name || user?.email}</DialogTitle>
           <DialogDescription>
-            Select a role and branch for this user. The role determines their permissions in the system.
+            Update this user's role, branch, and optionally set a new password.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -110,6 +124,29 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
               </label>
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Set New Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Leave blank to keep current password"
+                className="w-full px-3 py-2 pr-11 rounded-lg border border-border bg-background"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Only super admin can set a new password. Existing passwords cannot be shown because they are stored securely as hashes.
+            </p>
+          </div>
           <div className="flex gap-3 justify-end pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium">Cancel</button>
             <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold disabled:opacity-60">{loading ? 'Saving...' : 'Save Changes'}</button>
