@@ -184,6 +184,9 @@ export const financersAPI = {
 // External APIs (Proxied via backend)
 export const externalAPI = {
   fetchRCData: (rcNumber: string) => api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true }),
+  fetchRCFullData: (rcNumber: string) => api.post('/external/surepass/rc-full', { id_number: rcNumber }),
+  fetchChallanData: (params: { rc_number: string, chassis_number: string, engine_number: string }) => 
+    api.post('/external/surepass/challan', params),
 };
 
 // Account Department API
@@ -216,6 +219,10 @@ export const paymentApplicationAPI = {
     api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
   addUTR: (id: number, utr_number: string) => 
     api.post(`/payments/applications/${id}/utr`, { utr_number }),
+  initiateAadhaarVerification: (id: number, aadhaar_number: string) => 
+    api.post(`/payments/applications/${id}/aadhaar-verify/initiate`, { aadhaar_number }),
+  verifyAadhaarOTP: (id: number, otp: string) => 
+    api.post(`/payments/applications/${id}/aadhaar-verify/otp`, { otp }),
   uploadProof: (id: number, file: File) => {
     const formData = new FormData();
     formData.append('document', file);

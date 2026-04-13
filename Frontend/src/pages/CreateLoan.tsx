@@ -415,6 +415,40 @@ export default function CreateLoan() {
   });
 
   const [fetchingVehicleData, setFetchingVehicleData] = useState(false);
+  const [challanData, setChallanData] = useState<any>(null);
+  const [showChallanModal, setShowChallanModal] = useState(false);
+  const [fetchingChallans, setFetchingChallans] = useState(false);
+
+  const checkChallans = async () => {
+    if (!form.vehicleNumber || !form.chassisNumber || !form.engineNumber) {
+      toast.error('Vehicle number, Chassis number, and Engine number are required to check challans');
+      return;
+    }
+    setFetchingChallans(true);
+    try {
+      const data = await externalAPI.fetchChallanData({
+        rc_number: form.vehicleNumber,
+        chassis_number: form.chassisNumber,
+        engine_number: form.engineNumber,
+      });
+      setChallanData(data.data?.challan_details || data.challan_details || data);
+      setShowChallanModal(true);
+      const challans = data.data?.challan_details?.challans || [];
+      const pending = challans.filter((c: any) => c.challan_status === 'Pending');
+      if (pending.length > 0) {
+        const total = pending.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+        toast.warning(`${pending.length} pending challan(s) found. Total: ₹${total.toLocaleString()}`);
+      } else if (challans.length === 0) {
+        toast.success('No challans found for this vehicle');
+      } else {
+        toast.info(`${challans.length} challan(s) found (all cleared)`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch challan details');
+    } finally {
+      setFetchingChallans(false);
+    }
+  };
 
   const formatDateToInput = (dateStr: string | null | undefined): string => {
     if (!dateStr) return '';
@@ -447,7 +481,7 @@ export default function CreateLoan() {
     try {
       toast.info('Fetching vehicle details...');
 
-      const rcData = await externalAPI.fetchRCData(rcNumber);
+      const rcData = await externalAPI.fetchRCFullData(rcNumber);
 
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
@@ -470,6 +504,7 @@ export default function CreateLoan() {
           fc: (rc.fit_up_to || rc.fitness_upto) ? 'Yes' : 'No',
           customerName: f.customerName || rc.owner_name || '',
           mobile: f.mobile || rc.mobile_number || '',
+          fatherName: rc.father_name || f.fatherName || '',
 
           // Address from RC (only if empty)
           currentAddress: f.currentAddress || rc.present_address || rc.permanent_address || '',
@@ -483,9 +518,9 @@ export default function CreateLoan() {
           insuranceDate: formatDateToInput(rc.insurance_upto),
         }));
 
-        toast.success('Vehicle details fetched successfully!');
+        toast.success(`Vehicle details fetched for ${rc.owner_name || 'owner'}`);
       } else {
-        toast.error('Could not fetch vehicle details');
+        toast.error(rcData.message || 'Could not fetch vehicle details');
       }
     } catch (error: any) {
       console.error('Error fetching vehicle details:', error);
@@ -1227,9 +1262,9 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                     <div>
                       <label className={labelClass}>Our Branch</label>
-                      <input 
-                        className={inputClass} 
-                        value={form.ourBranch} 
+                      <input
+                        className={inputClass}
+                        value={form.ourBranch}
                         onChange={e => update('ourBranch', e.target.value)}
                         list="branches-datalist"
                       />
@@ -1313,6 +1348,33 @@ export default function CreateLoan() {
                   <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
                   <div><label className={labelClass}>Engine Number</label><input type="text" autoComplete="off" className={inputClass} value={form.engineNumber} onChange={e => update('engineNumber', e.target.value)} /></div>
                 </div>
+
+                {/* Check Challans Button */}
+                {(form.chassisNumber && form.engineNumber && form.vehicleNumber) && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={checkChallans}
+                      disabled={fetchingChallans}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 shadow-sm"
+                    >
+                      {fetchingChallans ? (
+                        <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Checking...</>
+                      ) : (
+                        <><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg> Check Challans</>
+                      )}
+                    </button>
+                    {challanData && (
+                      <button
+                        type="button"
+                        onClick={() => setShowChallanModal(true)}
+                        className="text-sm text-orange-600 underline hover:text-orange-700"
+                      >
+                        View Last Results
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Categorization Dropdowns (Moved after RC fields) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
@@ -1633,7 +1695,7 @@ export default function CreateLoan() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {form.showAadhar && (
                       <>
-                         <DocumentUploadCard
+                        <DocumentUploadCard
                           label="Aadhar Card Front"
                           type="aadhar_front"
                           file={form.aadharFront as File}
@@ -2046,6 +2108,121 @@ export default function CreateLoan() {
           </div>
         </div>
       )}
+      {/* Challan Details Modal */}
+      {showChallanModal && challanData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Challan Details</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">RC: {form.vehicleNumber}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const challans = challanData.challans || [];
+                  const pending = challans.filter((c: any) => c.challan_status === 'Pending');
+                  const pendingTotal = pending.reduce((s: number, c: any) => s + (c.amount || 0), 0);
+                  return challans.length > 0 ? (
+                    <div className="text-right">
+                      <span className={`text-sm font-bold ${pending.length > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {pending.length > 0 ? `₹${pendingTotal.toLocaleString()} Pending` : 'All Cleared'}
+                      </span>
+                      <p className="text-xs text-muted-foreground">{challans.length} total challan(s)</p>
+                    </div>
+                  ) : null;
+                })()}
+                <button
+                  onClick={() => setShowChallanModal(false)}
+                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-auto flex-1 p-5">
+              {(challanData.challans || []).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                  <p className="font-medium">No challans found</p>
+                  <p className="text-xs mt-1">This vehicle has a clean record across checked portals.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">#</th>
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Challan No.</th>
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Date</th>
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">State</th>
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Offense</th>
+                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Accused</th>
+                        <th className="text-right p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Amount</th>
+                        <th className="text-center p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(challanData.challans || []).map((c: any, idx: number) => (
+                        <tr key={idx} className={`border-b border-border/50 transition-colors ${
+                          c.challan_status === 'Pending' ? 'bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/70' : 'hover:bg-muted/30'
+                        }`}>
+                          <td className="p-3 text-muted-foreground">{idx + 1}</td>
+                          <td className="p-3 font-mono text-xs text-foreground">{c.challan_number}</td>
+                          <td className="p-3 text-foreground whitespace-nowrap">{c.challan_date || '—'}</td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold">{c.state}</span>
+                          </td>
+                          <td className="p-3 text-foreground max-w-[200px] truncate" title={c.offense_details}>{c.offense_details}</td>
+                          <td className="p-3 text-foreground">{c.accused_name || '—'}</td>
+                          <td className="p-3 text-right font-bold text-foreground">₹{(c.amount || 0).toLocaleString()}</td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                              c.challan_status === 'Pending'
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                : c.challan_status
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {c.challan_status || 'Unknown'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {/* Totals row */}
+                    {(challanData.challans || []).some((c: any) => c.challan_status === 'Pending') && (
+                      <tfoot>
+                        <tr className="bg-red-50/60 dark:bg-red-950/20">
+                          <td colSpan={6} className="p-3 font-bold text-red-600 text-sm">Total Pending Amount</td>
+                          <td className="p-3 text-right font-bold text-red-600 text-sm">
+                            ₹{(challanData.challans || []).filter((c: any) => c.challan_status === 'Pending').reduce((s: number, c: any) => s + (c.amount || 0), 0).toLocaleString()}
+                          </td>
+                          <td />
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
+              <span>Portals checked: DL, TS, KA, GJ</span>
+              <button
+                onClick={() => setShowChallanModal(false)}
+                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

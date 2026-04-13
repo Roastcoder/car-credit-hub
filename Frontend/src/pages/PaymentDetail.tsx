@@ -87,6 +87,12 @@ export default function PaymentDetail() {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
 
+  // Aadhaar Verification State
+  const [verificationStep, setVerificationStep] = useState<'aadhaar' | 'otp' | 'utr'>('aadhaar');
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [maskedPhone, setMaskedPhone] = useState('');
+
   // Fetch payment details
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', id],
@@ -184,6 +190,34 @@ export default function PaymentDetail() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to upload proof');
+    }
+  });
+
+  // Aadhaar Verification Mutations
+  const initiateAadhaarVerify = useMutation({
+    mutationFn: async (aadhaar: string) => {
+      return paymentApplicationAPI.initiateAadhaarVerification(parseInt(id!), aadhaar);
+    },
+    onSuccess: (data: any) => {
+      setMaskedPhone(data.phone || '');
+      setVerificationStep('otp');
+      toast.success(data.message || 'Verification code sent to customer');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Aadhaar verification failed');
+    }
+  });
+
+  const verifyOTP = useMutation({
+    mutationFn: async (otp: string) => {
+      return paymentApplicationAPI.verifyAadhaarOTP(parseInt(id!), otp);
+    },
+    onSuccess: (data: any) => {
+      setVerificationStep('utr');
+      toast.success(data.message || 'Verification successful. You can now enter the UTR.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Invalid or expired OTP');
     }
   });
 
@@ -348,7 +382,12 @@ export default function PaymentDetail() {
             
             {canAddUTR && (
               <button
-                onClick={() => setShowUTRModal(true)}
+                onClick={() => {
+                  setVerificationStep('aadhaar');
+                  setAadhaarNumber('');
+                  setOtpCode('');
+                  setShowUTRModal(true);
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 <DollarSign size={16} />
@@ -583,43 +622,113 @@ export default function PaymentDetail() {
         )}
       </div>
 
-      {/* UTR Number Modal */}
+      {/* UTR Number Modal - Multi-Step Verification */}
       {showUTRModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Add UTR / Transaction ID</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Enter the bank transaction reference number. This will release the payment to the user.
-            </p>
-            <form onSubmit={handleUTRSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">UTR Number *</label>
-                <input
-                  type="text"
-                  value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value)}
-                  className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  placeholder="Enter UTR number"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-foreground">
+                {verificationStep === 'aadhaar' && 'Identity Verification (Step 1/3)'}
+                {verificationStep === 'otp' && 'OTP Verification (Step 2/3)'}
+                {verificationStep === 'utr' && 'Add UTR / Transaction ID (Step 3/3)'}
+              </h3>
+              <button onClick={() => setShowUTRModal(false)} className="text-muted-foreground hover:text-foreground">
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            {/* Step 1: Aadhaar Input */}
+            {verificationStep === 'aadhaar' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Please enter the customer's Aadhaar number to verify their linked mobile number.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Aadhaar Number *</label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={aadhaarNumber}
+                    onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Enter 12 digit Aadhaar number"
+                  />
+                </div>
                 <button
-                  type="button"
-                  onClick={() => setShowUTRModal(false)}
-                  className="flex-1 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                  onClick={() => initiateAadhaarVerify.mutate(aadhaarNumber)}
+                  disabled={initiateAadhaarVerify.isPending || aadhaarNumber.length !== 12}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={addUTRNumber.isPending}
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
-                >
-                  {addUTRNumber.isPending ? 'Adding...' : 'Release Payment'}
+                  {initiateAadhaarVerify.isPending ? 'Verifying...' : 'Validate Aadhaar'}
                 </button>
               </div>
-            </form>
+            )}
+
+            {/* Step 2: OTP Input */}
+            {verificationStep === 'otp' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  A verification code has been sent to the mobile ending in <strong>{maskedPhone.slice(-4)}</strong>. 
+                  Please enter the code to proceed.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Verification Code (OTP) *</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-center tracking-[1em] font-bold text-lg"
+                    placeholder="000000"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setVerificationStep('aadhaar')}
+                    className="flex-1 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => verifyOTP.mutate(otpCode)}
+                    disabled={verifyOTP.isPending || otpCode.length !== 6}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+                  >
+                    {verifyOTP.isPending ? 'Verifying...' : 'Verify OTP'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: UTR Input */}
+            {verificationStep === 'utr' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Identity verified successfully. Enter the bank transaction reference number to complete the release.
+                </p>
+                <form onSubmit={handleUTRSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">UTR Number *</label>
+                    <input
+                      type="text"
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value)}
+                      className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="Enter UTR number"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={addUTRNumber.isPending}
+                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 font-bold"
+                  >
+                    {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release Payment'}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
