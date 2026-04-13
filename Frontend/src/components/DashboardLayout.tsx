@@ -72,6 +72,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (!user) return null;
 
@@ -235,8 +236,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {!collapsed && (
             <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20 overflow-hidden">
-                {user.profile_image ? (
-                  <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+                {(user.profile_image && !imageError) ? (
+                  <img 
+                    src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
                 ) : (
                   initials
                 )}
@@ -312,8 +318,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               onClick={() => setProfileOpen(!profileOpen)}
               className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all overflow-hidden"
             >
-              {user.profile_image ? (
-                <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+              {(user.profile_image && !imageError) ? (
+                <img 
+                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`} 
+                  alt="" 
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
               ) : (
                 initials
               )}

@@ -14,6 +14,11 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Local UI State
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
   // Profile State
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -31,12 +36,19 @@ export default function Profile() {
     mutationFn: async (data: any) => {
       return await usersAPI.updateProfile(data);
     },
+    onMutate: () => {
+      setIsUploading(true);
+    },
     onSuccess: async () => {
       toast.success('Profile updated successfully');
       await refreshUser();
+      setPreviewUrl(null);
+      setIsUploading(false);
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     },
     onError: (error: any) => {
+      setIsUploading(false);
+      setPreviewUrl(null);
       toast.error(error.message || 'Failed to update profile');
     },
   });
@@ -71,6 +83,11 @@ export default function Profile() {
     const formData = new FormData();
     formData.append('profile_image', file);
     
+    // Set local preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setImageError(false);
+    
     // We can just mutate with FormData. It sends to updateProfile.
     updateProfileMutation.mutate(formData);
   };
@@ -101,12 +118,26 @@ export default function Profile() {
         <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-xl border-4 border-white dark:border-slate-800 transition-transform group-hover:scale-105 duration-300 overflow-hidden relative">
-              {user.profile_image ? (
-                <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-xl border-4 border-white dark:border-slate-800 transition-transform group-hover:scale-105 duration-300 overflow-hidden relative ${isUploading ? 'opacity-75' : ''}`}>
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              ) : (user.profile_image && !imageError) ? (
+                <img 
+                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`} 
+                  alt="" 
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
               ) : (
                 user.name?.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || 'U'
               )}
+              
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera size={24} className="text-white drop-shadow-md" />
               </div>
