@@ -24,6 +24,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, branchId?: string, referredBy?: string) => Promise<{ error: string | null }>;
   requestOTP: (phone: string, purpose: 'login' | 'signup') => Promise<{ error: string | null }>;
   verifyOTP: (data: any) => Promise<{ error: string | null }>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,8 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const userData = await authAPI.getProfile();
+      setUser(userData);
+      setSession({ user: userData });
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, login, logout, signUp, requestOTP, verifyOTP }}>
+    <AuthContext.Provider value={{ user, session, isLoading, login, logout, signUp, requestOTP, verifyOTP, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

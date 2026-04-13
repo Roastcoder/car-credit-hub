@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
   User, Mail, Phone, Lock, Save, Key, ShieldCheck, 
@@ -9,7 +10,7 @@ import {
 import { ROLE_LABELS } from '@/lib/auth';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   
   // Profile State
@@ -27,55 +28,28 @@ export default function Profile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { name: string; phone?: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/me/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update profile');
-      }
-      return response.json();
+      return await usersAPI.updateProfile(data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Profile updated successfully');
-      // Force refresh auth state if needed - usually done via query invalidation or manual update
-      // For now, since AuthContext doesn't expose a refresh method, we can tell user to reload
-      // But queryClient invalidation might trigger a reload of relevant data elsewhere
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      // In a real app, we'd update the AuthContext user state here
     },
     onError: (error: any) => {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to update profile');
     },
   });
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/me/change-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to change password');
-      }
-      return response.json();
+      return await usersAPI.changePassword(data);
     },
     onSuccess: () => {
       toast.success('Password changed successfully');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     },
     onError: (error: any) => {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to change password');
     },
   });
 

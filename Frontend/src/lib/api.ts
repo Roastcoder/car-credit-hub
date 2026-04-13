@@ -129,6 +129,8 @@ export const usersAPI = {
   create: (data: any) => api.post('/users', data),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),
   delete: (id: number) => api.delete(`/users/${id}`),
+  updateProfile: (data: { name?: string; phone?: string }) => api.put('/users/me/profile', data),
+  changePassword: (data: any) => api.put('/users/me/change-password', data),
 };
 
 // Leads API
