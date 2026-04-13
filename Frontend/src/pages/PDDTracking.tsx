@@ -51,7 +51,7 @@ export default function PDDTracking() {
   };
   const [editingLoan, setEditingLoan] = useState<any>(null);
   const { data: loans = [], isLoading, refetch } = useQuery({
-    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id],
+    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids],
     queryFn: async () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
@@ -64,7 +64,11 @@ export default function PDDTracking() {
         return data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
       }
       if (user?.role === 'manager') {
-        return data.filter((loan: any) => Number(loan.branch_id) === Number(user.branch_id));
+        const allowedBranchIds = Array.from(new Set([
+          ...(((user as any)?.managed_branch_ids || []) as number[]),
+          Number(user.branch_id || 0)
+        ].filter((branchId) => Number(branchId) > 0)));
+        return data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
       }
       return data;
     },

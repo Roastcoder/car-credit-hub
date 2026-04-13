@@ -10,6 +10,7 @@ export interface AppUser {
   phone?: string;
   status?: string;
   branch_id?: number | string;
+  managed_branch_ids?: number[];
   referred_by_name?: string;
   channel_code?: string;
   profile_image?: string;

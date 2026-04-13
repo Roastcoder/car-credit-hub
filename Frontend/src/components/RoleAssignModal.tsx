@@ -16,6 +16,7 @@ interface RoleAssignModalProps {
 export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignModalProps) {
   const [role, setRole] = useState(user?.role || 'employee');
   const [branchId, setBranchId] = useState(user?.branch_id || '');
+  const [managedBranchIds, setManagedBranchIds] = useState<number[]>([]);
   const [isBranchManager, setIsBranchManager] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +37,11 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     if (user) {
       setRole(user.role || 'employee');
       setBranchId(user.branch_id || '');
+      setManagedBranchIds(
+        Array.isArray(user.managed_branch_ids)
+          ? user.managed_branch_ids.map((value: number | string) => Number(value)).filter((value: number) => Number.isInteger(value) && value > 0)
+          : (user.branch_id ? [Number(user.branch_id)] : [])
+      );
       setNewPassword('');
       setShowPassword(false);
       
@@ -58,6 +64,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         body: JSON.stringify({ 
           role, 
           branch_id: branchId || null,
+          managed_branch_ids: managedBranchIds,
           is_branch_manager: isBranchManager 
         }),
       }).then(async (res) => {
@@ -100,13 +107,54 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Select Branch</label>
-            <select className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={branchId} onChange={e => setBranchId(e.target.value)}>
+            <label className="block text-sm font-medium mb-1.5">Primary Branch</label>
+            <select
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+              value={branchId}
+              onChange={e => {
+                const value = e.target.value;
+                setBranchId(value);
+                const branchNumber = Number(value);
+                if (branchNumber > 0) {
+                  setManagedBranchIds((prev) => Array.from(new Set([...prev, branchNumber])));
+                }
+              }}
+            >
               <option value="">All Branches (Global Access)</option>
               {branches.map((branch: any) => (
                 <option key={branch.id} value={branch.id}>{branch.name} ({branch.code})</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Manager Branch Access</label>
+            <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-border p-3">
+              {branches.map((branch: any) => {
+                const branchNumber = Number(branch.id);
+                const checked = managedBranchIds.includes(branchNumber);
+                return (
+                  <label key={branch.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        setManagedBranchIds((prev) => {
+                          if (e.target.checked) {
+                            return Array.from(new Set([...prev, branchNumber]));
+                          }
+                          return prev.filter((id) => id !== branchNumber);
+                        });
+                      }}
+                      className="w-4 h-4 rounded border-border"
+                    />
+                    <span className="text-sm text-foreground">{branch.name} ({branch.code})</span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Managers can be assigned one or more branches here.
+            </p>
           </div>
           {branchId && (
             <div className="bg-accent/5 p-3 rounded-lg border border-accent/10">

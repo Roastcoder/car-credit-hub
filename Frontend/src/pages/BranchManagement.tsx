@@ -124,7 +124,7 @@ export default function BranchManagement() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Branch Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">{branches.length} branches</p>
+          <p className="text-sm text-muted-foreground mt-1">{branches.length} branches and manager branch assignments</p>
         </div>
         {isAdmin && (
           <button
@@ -253,7 +253,7 @@ export default function BranchManagement() {
                     </div>
                   </div>
                   <p className="text-[10px] text-accent font-medium mt-2 flex items-center gap-1">
-                    <MapPin size={10} /> This user will be the main contact for this branch.
+                    <MapPin size={10} /> This user will be the main contact and will get access to this branch.
                   </p>
                 </div>
 

@@ -517,8 +517,8 @@ export default function PaymentDetail() {
               <Field label="Today Release Amount" value={formatCurrency(Number(payment.today_release_amount || 0))} />
               <Field label="Total Release Amount" value={formatCurrency(Number(payment.total_release_amount || 0))} />
               <Field label="Total Release (%)" value={`${payment.total_release_percentage || 0}%`} />
-              <Field label="Hold Amount" value={formatCurrency(Number(payment.hold_amount || 0))} />
-              <Field label="Hold Percentage (%)" value={`${payment.hold_percentage || 0}%`} />
+              <Field label="Mehar Deduction" value={formatCurrency(Number(payment.hold_amount || 0))} />
+              <Field label="Mehar Deduction (%)" value={`${payment.hold_percentage || 0}%`} />
               <Field label="Challan Amount" value={formatCurrency(Number(payment.challan_amount || 0))} />
               <Field label="Payment In Favour" value={payment.payment_in_favour_name} />
             </div>

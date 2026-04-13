@@ -663,9 +663,9 @@ export default function PaymentApplicationForm() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField label="Hold Amount" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Mehar Deduction" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
-              <label className="text-xs font-semibold text-yellow-600 uppercase mb-1 block text-left">Hold Amount (%)</label>
+              <label className="text-xs font-semibold text-yellow-600 uppercase mb-1 block text-left">Mehar Deduction (%)</label>
               <p className="text-xl font-bold text-yellow-900 dark:text-yellow-100 text-left">{formData.hold_percentage}%</p>
             </div>
             <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
