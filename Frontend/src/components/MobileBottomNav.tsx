@@ -108,7 +108,7 @@ export default function MobileBottomNav() {
   return (
     <>
       {/* Bottom Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-border z-40 safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-40 safe-area-bottom shadow-lg transition-all duration-200">
         <div className="flex items-center justify-around px-2 py-2">
           {primaryNavItems.map(item => {
             const active = isNavActive(item);
@@ -119,9 +119,9 @@ export default function MobileBottomNav() {
                 <button
                   key={item.label}
                   onClick={() => setActiveSubMenu(activeSubMenu === item.label ? null : item.label)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 min-w-0 flex-1 relative ${
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${
                     active || activeSubMenu === item.label
-                      ? 'text-accent scale-105'
+                      ? 'text-accent'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -138,9 +138,9 @@ export default function MobileBottomNav() {
               <Link
                 key={item.label}
                 to={item.path!}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 min-w-0 flex-1 relative ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${
                   active
-                    ? 'text-accent scale-105'
+                    ? 'text-accent'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -174,8 +174,8 @@ export default function MobileBottomNav() {
             className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden animate-in fade-in duration-200" 
             onClick={() => setActiveSubMenu(null)} 
           />
-          <div className="fixed bottom-20 left-4 right-4 z-50 lg:hidden animate-in slide-in-from-bottom-4 duration-300">
-            <div className="glass-panel rounded-[2rem] border border-white/20 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-xl">
+          <div className="fixed bottom-20 left-4 right-4 z-50 lg:hidden animate-in slide-in-from-bottom-4 duration-200">
+            <div className="bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden">
               <div className="p-2 space-y-1">
                 <div className="px-5 py-3 flex items-center justify-between border-b border-border/50">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -224,9 +224,9 @@ export default function MobileBottomNav() {
       {showMore && (
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden" onClick={() => setShowMore(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
-            <div className="glass-panel rounded-t-[2.5rem] border-t border-white/20 dark:border-white/10 shadow-2xl max-h-[75vh] overflow-y-auto backdrop-blur-lg">
-              <div className="sticky top-0 glass-panel border-b border-border/50 px-6 py-5 flex items-center justify-between">
+          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-in slide-in-from-bottom duration-200">
+            <div className="bg-card rounded-t-[2.5rem] border-t border-border shadow-2xl max-h-[75vh] overflow-y-auto">
+              <div className="sticky top-0 bg-card border-b border-border px-6 py-5 flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-foreground">More Options</h3>
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Navigation</p>

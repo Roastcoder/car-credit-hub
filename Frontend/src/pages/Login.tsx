@@ -87,14 +87,14 @@ export default function Login() {
 
         <div className="w-full max-w-[420px] z-10">
           <div className="flex flex-col items-center mb-10 text-center">
-            <div className="glass-card rounded-[2.5rem] p-5 shadow-2xl mb-6 border border-white/40 dark:border-white/10">
-              <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain drop-shadow-md" />
+            <div className="bg-card rounded-[2.5rem] p-5 shadow-2xl mb-6 border border-border">
+              <img src={logo} alt="Mehar Finance" className="h-14 w-auto object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-blue-950 dark:text-white tracking-tight drop-shadow-sm">Mehar Finance</h1>
             <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium italic">Premium Car Loan Portal</p>
           </div>
 
-          <div className="glass-card p-8 rounded-[2.5rem] shadow-2xl">
+          <div className="bg-card p-8 rounded-[2.5rem] shadow-2xl border border-border">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight">Welcome Back</h2>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">Quick sign in with biometrics</p>
@@ -114,7 +114,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(''); }}
                   placeholder="Email Address"
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                 />
               </div>
 
@@ -125,7 +125,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Password"
-                  className="w-full pl-12 pr-12 py-4 rounded-2xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                  className="w-full pl-12 pr-12 py-4 rounded-2xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 dark:text-blue-400 hover:text-blue-900 transition-colors">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -136,7 +136,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 font-bold py-4 px-6 rounded-2xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl hover:shadow-2xl transition-all active:scale-95 border border-white/20"
+                  className="w-full flex items-center justify-center gap-2 font-bold py-4 px-6 rounded-2xl text-white bg-accent shadow-xl hover:shadow-2xl transition-all active:scale-95 border border-transparent"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function Login() {
           </div>
 
           {/* Card */}
-          <div className="glass-card p-7 sm:p-8 shadow-xl">
+          <div className="bg-card p-7 sm:p-8 shadow-xl rounded-2xl border border-border">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight drop-shadow-sm">Sign In</h2>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">Enter your credentials to continue</p>
@@ -244,7 +244,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     placeholder="Enter your email"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     placeholder="Enter your password"
-                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-blue-950 dark:text-white text-sm placeholder:text-blue-500 dark:placeholder:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm backdrop-blur-md font-medium"
+                    className="w-full pl-10 pr-11 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                   />
                   <button
                     type="button"

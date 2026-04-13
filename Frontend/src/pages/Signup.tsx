@@ -134,7 +134,7 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center p-5 sm:p-8 bg-transparent">
         <div className="w-full max-w-[420px]">
           {/* Card */}
-          <div className="glass-card p-7 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="bg-card p-7 sm:p-8 shadow-xl relative overflow-hidden rounded-2xl border border-border">
             {/* Step Progress */}
             <div className="flex gap-1 mb-6">
               <div className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
@@ -162,7 +162,7 @@ export default function Signup() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Enter your full name"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm backdrop-blur-md"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export default function Signup() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm backdrop-blur-md"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -193,7 +193,7 @@ export default function Signup() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="Enter 10 digit mobile"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm backdrop-blur-md"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function Signup() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Create password"
-                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm backdrop-blur-md"
+                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-500">
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -225,7 +225,7 @@ export default function Signup() {
                       value={branchId}
                       onChange={(e) => setBranchId(e.target.value)}
                       disabled={!!refBranch}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm backdrop-blur-md disabled:opacity-75 disabled:cursor-not-allowed"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                       <option value="">Select branch</option>
                       {branches.map((b: any) => (
@@ -238,7 +238,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 flex items-center justify-center gap-2 font-bold rounded-xl text-white transition-all bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg hover:shadow-blue-500/25 active:scale-95 disabled:opacity-60"
+                  className="w-full h-12 flex items-center justify-center gap-2 font-bold rounded-xl text-white transition-all bg-accent shadow-lg hover:shadow-accent/25 active:scale-95 disabled:opacity-60 duration-200"
                 >
                   {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Continue <ArrowRight size={18} /></>}
                 </button>

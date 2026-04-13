@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <ProfileCompletionModal />
       
       {/* Sidebar - Desktop Only */}
-      <aside className={`hidden lg:flex static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} glass-panel border-r border-white/50 dark:border-white/10 flex-col transition-all duration-300 shadow-2xl m-3 mr-1.5 rounded-[1.5rem] h-[calc(100vh-1.5rem)] will-change-transform`}>
+      <aside className={`hidden lg:flex static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} bg-card border-r border-border flex-col transition-all duration-200 shadow-xl m-3 mr-1.5 rounded-[1.5rem] h-[calc(100vh-1.5rem)]`}>
         {/* Logo */}
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-4 px-6'} h-24 border-b border-white/20 dark:border-white/5`}>
           <div className="glass-card rounded-2xl p-2 shadow-sm">
@@ -161,9 +161,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   title={collapsed ? item.title : undefined}
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${collapsed ? 'justify-center px-3' : ''} ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 border border-white/20'
-                    : 'text-blue-700 dark:text-blue-400 hover:text-blue-950 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5 border border-transparent'
+                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${collapsed ? 'justify-center px-3' : ''} ${isActive
+                    ? 'bg-accent text-accent-foreground shadow-md'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                     }`}
                 >
                   <span className={`${isActive ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
@@ -269,7 +269,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 lg:h-14 lg:mt-3 lg:mx-3 glass-panel border-b border-white/20 dark:border-white/5 lg:border lg:rounded-2xl sm:lg:rounded-[1.5rem] flex items-center px-4 lg:px-5 gap-3 lg:gap-4 shrink-0 shadow-sm z-40 lg:mb-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md will-change-transform">
+        <header className="h-14 lg:h-14 lg:mt-3 lg:mx-3 bg-card border border-border lg:rounded-2xl sm:lg:rounded-[1.5rem] flex items-center px-4 lg:px-5 gap-3 lg:gap-4 shrink-0 shadow-sm z-40 lg:mb-1.5 transition-all duration-200">
           {/* Logo - Mobile always, Desktop only for accountants */}
           <div className={`${user.role === 'accountant' ? 'flex' : 'lg:hidden'} items-center gap-2`}>
             <img src={logo} alt="Mehar Finance" className="h-8 w-auto object-contain" />
@@ -289,7 +289,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex-1 lg:hidden"></div>
 
 
-          {user.channel_code && (
             <button
               onClick={() => {
                 navigator.clipboard.writeText(user.channel_code!);
@@ -298,14 +297,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   duration: 2000
                 });
               }}
-              className="flex flex-col items-center justify-center px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 rounded-2xl shadow-lg shadow-blue-600/20 border border-white/20 transition-all active:scale-95 group relative overflow-hidden"
+              className="flex flex-col items-center justify-center px-4 py-1.5 bg-accent hover:opacity-90 rounded-2xl shadow-sm border border-border transition-all active:scale-95 group relative overflow-hidden"
               title="Click to copy Unique ID"
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="text-[9px] font-bold text-blue-100/90 uppercase tracking-[0.2em] leading-none mb-0.5">Unique ID</span>
-              <span className="text-sm font-black text-white leading-none drop-shadow-sm">{user.channel_code}</span>
+              <span className="text-[9px] font-bold text-accent-foreground/90 uppercase tracking-[0.2em] leading-none mb-0.5">Unique ID</span>
+              <span className="text-sm font-black text-accent-foreground leading-none">{user.channel_code}</span>
             </button>
-          )}
 
           {/* Notification Bell */}
           <div className="relative z-50">
