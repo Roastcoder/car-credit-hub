@@ -30,29 +30,6 @@ const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
   );
 };
 
-const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
-  const [error, setError] = useState(false);
-  const initials = (user.full_name || user.email || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  
-  const imageUrl = user.profile_image 
-    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`
-    : null;
-
-  return (
-    <div className={`rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold overflow-hidden shrink-0 ${className}`}>
-      {(imageUrl && !error) ? (
-        <img 
-          src={imageUrl} 
-          alt="" 
-          className="w-full h-full object-cover"
-          onError={() => setError(true)}
-        />
-      ) : (
-        initials
-      )}
-    </div>
-  );
-};
 
 export default function UserManagement() {
   const { user } = useAuth();
