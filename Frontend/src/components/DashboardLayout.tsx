@@ -271,7 +271,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 top-14 w-60 glass-panel border border-white/20 dark:border-white/5 rounded-2xl shadow-xl z-50 overflow-hidden transform origin-top-right transition-all backdrop-blur-2xl bg-white/10 dark:bg-black/20">
+                <div className="absolute right-0 top-14 w-60 bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-800/50 rounded-2xl shadow-2xl z-50 overflow-hidden transform origin-top-right transition-all">
                   <div className="p-4 border-b border-white/10">
                     <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
                     <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">{user.role ? ROLE_LABELS[user.role] : 'No role'}</p>
