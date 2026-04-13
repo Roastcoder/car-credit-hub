@@ -8,7 +8,10 @@ import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
 import { loansAPI, branchesAPI, smsAPI } from '@/lib/api';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3, MessagesSquare } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, AreaChart, Area, Legend 
+} from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -121,6 +124,56 @@ export default function Dashboard() {
     loans: loansWithBank.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).length,
     amount: loansWithBank.filter((l: any) => (l.bank_name || l.assigned_bank_name || l.banks?.name) === bank).reduce((s: number, l: any) => s + Number(l.loan_amount), 0) / 100000,
   }));
+
+  // New Data Aggregations for Expanded Charts
+  const verticalData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    displayLoans.forEach((l: any) => {
+      const v = l.vertical || 'Other';
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [displayLoans]);
+
+  const branchData = useMemo(() => {
+    const data: Record<string, number> = {};
+    displayLoans.forEach((l: any) => {
+      const b = l.branch_name || 'Main Branch';
+      data[b] = (data[b] || 0) + (Number(l.loan_amount) / 100000); // In Lakhs
+    });
+    return Object.entries(data).map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10); // Top 10 branches
+  }, [displayLoans]);
+
+  const trendData = useMemo(() => {
+    const monthly: Record<string, { name: string, amount: number, count: number }> = {};
+    // Use the full loans array for trends if in "all" mode, otherwise just the filtered set
+    const trendBase = adminFilterMode === 'all' ? loans : displayLoans;
+    
+    trendBase.forEach((l: any) => {
+      if (!l.created_at) return;
+      const date = new Date(l.created_at);
+      const monthYear = date.toISOString().slice(0, 7); // YYYY-MM
+      if (!monthly[monthYear]) {
+        monthly[monthYear] = { name: monthYear, amount: 0, count: 0 };
+      }
+      monthly[monthYear].amount += Number(l.loan_amount) / 100000;
+      monthly[monthYear].count += 1;
+    });
+    
+    return Object.values(monthly).sort((a, b) => a.name.localeCompare(b.name));
+  }, [loans, displayLoans, adminFilterMode]);
+
+  const loanTypeData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    displayLoans.forEach((l: any) => {
+      const t = l.loan_type_vehicle || 'Unknown';
+      counts[t] = (counts[t] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [displayLoans]);
 
   const buildLoansFilterUrl = (status?: string) => {
     const params = new URLSearchParams();
@@ -248,6 +301,108 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="stat-card">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <Activity size={18} className="text-blue-500" />
+                    Monthly Volume Trend (₹ Lakhs)
+                  </h2>
+                </div>
+                <div className="h-[300px] w-full">
+                  {trendData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData}>
+                        <defs>
+                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                        <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No trend data yet</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Branch Leaderboard (₹ Lakhs)</h2>
+                  <BarChart3 size={18} className="text-blue-500" />
+                </div>
+                <div className="h-[300px] w-full">
+                  {branchData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={branchData} layout="vertical" margin={{ left: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" horizontal={false} />
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: 'var(--text-muted-light)', fontWeight: 600 }} axisLine={false} tickLine={false} width={100} />
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} />
+                        <Bar dataKey="amount" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={20}>
+                          {branchData.map((_, i) => (
+                            <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No branch data available</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card lg:col-span-1">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Vertical Distribution</h2>
+                </div>
+                <div className="flex-1 flex min-h-[250px] w-full h-[250px]">
+                  {verticalData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={verticalData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
+                          {verticalData.map((_, i) => (
+                            <Cell key={i} fill={STATUS_CHART_COLORS[(i + 2) % STATUS_CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No distribution data</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card lg:col-span-1">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Loan Type (New vs Used)</h2>
+                </div>
+                <div className="flex-1 flex min-h-[250px] w-full h-[250px]">
+                  {loanTypeData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={loanTypeData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value" stroke="none">
+                          {loanTypeData.map((_, i) => (
+                            <Cell key={i} fill={i === 0 ? '#2563eb' : '#fbbf24'} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No type data</div>
+                  )}
+                </div>
+              </div>
+
               <div className="stat-card">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">File Status Distribution</h2>
