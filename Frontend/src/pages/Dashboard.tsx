@@ -173,10 +173,6 @@ export default function Dashboard() {
                 <span className="text-[10px] font-bold uppercase text-blue-500">Trans</span>
                 <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.transactional || 0}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
-                <span className="text-[10px] font-bold uppercase text-blue-500">Promo</span>
-                <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.promotional || 0}</span>
-              </div>
             </div>
           </div>
         )}
