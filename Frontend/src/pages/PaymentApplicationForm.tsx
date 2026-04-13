@@ -222,6 +222,7 @@ export default function PaymentApplicationForm() {
 
     const totalPerc = disbursementAmt > 0 ? (totalAmt / disbursementAmt) * 100 : 0;
     const holdPerc = disbursementAmt > 0 ? (holdAmt / disbursementAmt) * 100 : 0;
+    const paymentAmt = todayAmt; // Sync payment_amount with today_release_amount
 
     setFormData(prev => {
       const totalReleasePerc = parseFloat(totalPerc.toFixed(2));
@@ -230,7 +231,8 @@ export default function PaymentApplicationForm() {
       // Only update if values actually changed to prevent unnecessary re-renders
       if (prev.total_release_amount === totalAmt &&
         prev.total_release_percentage === totalReleasePerc &&
-        prev.hold_percentage === hPerc) {
+        prev.hold_percentage === hPerc &&
+        prev.payment_amount === paymentAmt) {
         return prev;
       }
 
@@ -238,7 +240,8 @@ export default function PaymentApplicationForm() {
         ...prev,
         total_release_amount: totalAmt,
         total_release_percentage: totalReleasePerc,
-        hold_percentage: hPerc
+        hold_percentage: hPerc,
+        payment_amount: paymentAmt
       };
     });
   }, [formData.old_release_amount, formData.today_release_amount, formData.disbursement_amount, formData.hold_amount]);
@@ -260,7 +263,7 @@ export default function PaymentApplicationForm() {
         applicant_phone: prev.applicant_phone || d.mobile || d.customer_phone || d.customerPhone || '',
         applicant_email: prev.applicant_email || d.customer_email || '',
         loan_number: d.loan_number || '',
-        financier_name: prev.financier_name || d.bank_name || d.financier_executive_name || '',
+        financier_name: prev.financier_name || d.assigned_bank_name || d.bank_name || '',
         loan_amount: prev.loan_amount || Number(d.loan_amount) || 0,
         disbursement_amount: prev.disbursement_amount || Number(d.net_disbursement_amount || d.disbursement_amount) || 0,
         disbursement_date: prev.disbursement_date || (d.disbursement_date ? new Date(d.disbursement_date).toISOString().split('T')[0] : ''),

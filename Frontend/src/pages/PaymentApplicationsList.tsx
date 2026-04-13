@@ -16,6 +16,7 @@ interface PaymentApplication {
   loan_number: string;
   applicant_name: string;
   applicant_phone: string;
+  loan_amount?: number;
   payment_amount: number;
   payment_purpose: string;
   status: 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
@@ -26,6 +27,7 @@ interface PaymentApplication {
   processed_by?: number;
   utr_number?: string;
   payment_proof_path?: string;
+  bank_name?: string;
   vehicle_name?: string;
   vehicle_model?: string;
   vehicle_number?: string;
@@ -249,14 +251,14 @@ export default function PaymentApplicationsList() {
                      </div>
                      <div>
                         <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Financier</p>
-                        <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{app.financier_name || 'N/A'}</p>
-                        <p className="text-[10px] text-gray-500 truncate">{app.disbursement_branch || 'N/A'}</p>
+                        <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{app.bank_name || app.financier_name || 'N/A'}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{app.financier_name || app.disbursement_branch || 'N/A'}</p>
                      </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount)}</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.loan_amount || app.payment_amount)}</p>
                       {app.emi_amount && <p className="text-[10px] font-medium text-gray-500">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium italic">
@@ -386,13 +388,13 @@ export default function PaymentApplicationsList() {
                         <div className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
-                        {app.financier_name || 'N/A'}
+                        {app.bank_name || app.financier_name || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
-                        {app.disbursement_branch || 'N/A'}
+                        {app.financier_name || app.disbursement_branch || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs font-extrabold text-blue-700 dark:text-blue-400">
-                        {formatCurrency(app.payment_amount)}
+                        {formatCurrency(app.loan_amount || app.payment_amount)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                         {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
