@@ -129,7 +129,11 @@ export const usersAPI = {
   create: (data: any) => api.post('/users', data),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),
   delete: (id: number) => api.delete(`/users/${id}`),
-  updateProfile: (data: { name?: string; phone?: string }) => api.put('/users/me/profile', data),
+  updateProfile: (data: FormData | { name?: string; phone?: string }) => 
+    api.request('/users/me/profile', { 
+      method: 'PUT', 
+      body: data instanceof FormData ? data : JSON.stringify(data) 
+    }),
   changePassword: (data: any) => api.put('/users/me/change-password', data),
 };
 
@@ -184,7 +188,17 @@ export const financersAPI = {
 // External APIs (Proxied via backend)
 export const externalAPI = {
   fetchRCData: (rcNumber: string) => api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true }),
-  fetchRCFullData: (rcNumber: string) => api.post('/external/surepass/rc-full', { id_number: rcNumber }),
+  fetchRCFullData: async (rcNumber: string) => {
+    try {
+      return await api.post('/external/surepass/rc-full', { id_number: rcNumber });
+    } catch (error: any) {
+      // Some deployed backends may still expose only the older RC proxy route.
+      if (error?.message === 'Route not found') {
+        return api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true });
+      }
+      throw error;
+    }
+  },
   fetchChallanData: (params: { rc_number: string, chassis_number: string, engine_number: string }) => 
     api.post('/external/surepass/challan', params),
 };

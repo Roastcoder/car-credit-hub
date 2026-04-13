@@ -12,6 +12,7 @@ export interface AppUser {
   branch_id?: number | string;
   referred_by_name?: string;
   channel_code?: string;
+  profile_image?: string;
   permissions?: UserPermissions;
 }
 

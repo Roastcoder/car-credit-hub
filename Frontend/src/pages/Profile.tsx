@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
   User, Mail, Phone, Lock, Save, Key, ShieldCheck, 
-  MapPin, BadgeCheck, AlertCircle
+  MapPin, BadgeCheck, AlertCircle, Camera
 } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/auth';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Profile State
   const [profileForm, setProfileForm] = useState({
@@ -27,7 +28,7 @@ export default function Profile() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { name: string; phone?: string }) => {
+    mutationFn: async (data: any) => {
       return await usersAPI.updateProfile(data);
     },
     onSuccess: async () => {
@@ -58,6 +59,22 @@ export default function Profile() {
     updateProfileMutation.mutate(profileForm);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profile_image', file);
+    
+    // We can just mutate with FormData. It sends to updateProfile.
+    updateProfileMutation.mutate(formData);
+  };
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -82,11 +99,19 @@ export default function Profile() {
         <div className="absolute bottom-0 left-0 -bl-1/4 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl -z-10" />
         
         <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
-          <div className="relative group">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-xl border-4 border-white dark:border-slate-800 transition-transform group-hover:scale-105 duration-300">
-              {user.name?.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || 'U'}
+          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-xl border-4 border-white dark:border-slate-800 transition-transform group-hover:scale-105 duration-300 overflow-hidden relative">
+              {user.profile_image ? (
+                <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                user.name?.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || 'U'
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera size={24} className="text-white drop-shadow-md" />
+              </div>
             </div>
-            <div className="absolute -bottom-1 -right-1 p-1.5 bg-green-500 rounded-xl border-2 border-white dark:border-slate-800 shadow-lg">
+            <div className="absolute -bottom-1 -right-1 p-1.5 bg-green-500 rounded-xl border-2 border-white dark:border-slate-800 shadow-lg z-10 pointer-events-none">
               <ShieldCheck size={16} className="text-white" />
             </div>
           </div>

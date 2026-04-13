@@ -234,8 +234,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className={`lg:hidden px-4 pb-6 pt-6 border-t border-white/20 dark:border-white/5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {!collapsed && (
             <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20">
-                {initials}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20 overflow-hidden">
+                {user.profile_image ? (
+                  <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
@@ -306,9 +310,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="block relative">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all overflow-hidden"
             >
-              {initials}
+              {user.profile_image ? (
+                <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.profile_image}`} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </button>
             {profileOpen && (
               <>
