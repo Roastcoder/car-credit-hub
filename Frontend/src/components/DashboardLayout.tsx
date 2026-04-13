@@ -320,7 +320,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </button>
             {profileOpen && (
               <>
-                <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm" onClick={() => setProfileOpen(false)} />
+                <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setProfileOpen(false)} />
                 <div className="absolute right-0 top-14 w-60 bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-800/50 rounded-2xl shadow-2xl z-50 overflow-hidden transform origin-top-right transition-all">
                   <div className="p-4 border-b border-white/10">
                     <p className="text-sm font-bold text-blue-950 dark:text-white truncate">{user.name || 'User'}</p>
