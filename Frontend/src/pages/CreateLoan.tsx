@@ -1322,21 +1322,32 @@ export default function CreateLoan() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
                     <label className={labelClass}>Vehicle Reg. No</label>
-                    <input
-                      className={inputClass}
-                      value={form.vehicleNumber}
-                      onChange={e => {
-                        const value = e.target.value.toUpperCase();
-                        update('vehicleNumber', value);
-                        if (value.length >= 8) fetchVehicleDetails(value);
-                      }}
-                      placeholder="e.g., RJ60SW9525"
-                    />
-                    {fetchingVehicleData && (
-                      <div className="absolute right-3 top-8">
-                        <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          className={inputClass}
+                          value={form.vehicleNumber}
+                          onChange={e => {
+                            const value = e.target.value.toUpperCase();
+                            update('vehicleNumber', value);
+                          }}
+                          placeholder="e.g., RJ60SW9525"
+                        />
+                        {fetchingVehicleData && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => fetchVehicleDetails(form.vehicleNumber)}
+                        disabled={fetchingVehicleData || form.vehicleNumber.length < 5}
+                        className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition-colors disabled:opacity-50"
+                      >
+                        Fetch RC
+                      </button>
+                    </div>
                   </div>
                   <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
                   <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
