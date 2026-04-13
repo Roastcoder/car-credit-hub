@@ -56,11 +56,13 @@ export default function AccountDashboard() {
     <div className="h-full">
       {isOverviewPage ? (
         <div className="p-3 md:p-4 pb-24 md:pb-6">
-            <div className="mb-4 md:mb-6">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">Account Dashboard</h1>
-              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                Welcome back, {user?.name || 'User'}. Monitor your financial operations and key metrics.
-              </p>
+            <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-end justify-end gap-4">
+              {user?.channel_code && (
+                <div className="flex flex-col items-start md:items-end px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50 shadow-sm self-start md:self-auto">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-0.5">Unique ID</span>
+                  <span className="text-lg font-black text-blue-900 dark:text-blue-100">{user.channel_code}</span>
+                </div>
+              )}
             </div>
 
             {/* Stats Grid */}

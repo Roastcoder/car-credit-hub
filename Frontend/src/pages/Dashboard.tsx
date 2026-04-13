@@ -50,7 +50,7 @@ export default function Dashboard() {
     },
     enabled: !!user?.branch_id,
   });
-  
+
   const { data: smsBalance } = useQuery({
     queryKey: ['sms-balance'],
     queryFn: async () => {
@@ -136,6 +136,14 @@ export default function Dashboard() {
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-3 pb-20 lg:p-4 sm:lg:p-6">
+        {user?.channel_code && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col items-start sm:items-end px-5 py-3 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-xl shadow-blue-600/20 border border-white/20">
+              <span className="text-[10px] font-bold text-blue-100 uppercase tracking-[0.3em] mb-1">Unique ID</span>
+              <span className="text-2xl font-black text-white drop-shadow-md">{user.channel_code}</span>
+            </div>
+          </div>
+        )}
         {user?.role === 'employee' && (
           <div className="stat-card mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
             <div>
@@ -143,13 +151,13 @@ export default function Dashboard() {
               <p className="text-sm text-blue-700 dark:text-blue-300">Share this link to invite brokers. They will automatically report to you.</p>
             </div>
             <div className="flex bg-white/50 dark:bg-black/20 rounded-lg p-1 border border-blue-200 dark:border-blue-800 w-full sm:w-auto">
-              <input 
-                type="text" 
-                readOnly 
-                value={`${window.location.origin}/signup?ref=${user.id}&name=${encodeURIComponent(user.name || '')}&branch=${user.branch_id || ''}`} 
+              <input
+                type="text"
+                readOnly
+                value={`${window.location.origin}/signup?ref=${user.id}&name=${encodeURIComponent(user.name || '')}&branch=${user.branch_id || ''}`}
                 className="bg-transparent text-sm w-full sm:w-64 px-3 outline-none text-blue-900 dark:text-blue-100"
               />
-              <button 
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${user.id}&name=${encodeURIComponent(user.name || '')}&branch=${user.branch_id || ''}`);
                   toast.success('Referral link copied to clipboard!');
@@ -200,11 +208,10 @@ export default function Dashboard() {
                         key={option.value}
                         type="button"
                         onClick={() => setAdminFilterMode(option.value as 'all' | 'month' | 'day')}
-                        className={`px-4 py-2 text-sm font-medium transition-colors ${
-                          adminFilterMode === option.value
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-background text-foreground hover:bg-muted'
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${adminFilterMode === option.value
+                          ? 'bg-accent text-accent-foreground'
+                          : 'bg-background text-foreground hover:bg-muted'
+                          }`}
                       >
                         {option.label}
                       </button>

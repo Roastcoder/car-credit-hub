@@ -236,6 +236,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex-1 lg:hidden"></div>
 
 
+          {user.channel_code && (
+            <div className="hidden sm:flex flex-col items-end mr-3 px-3 py-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50 shadow-sm backdrop-blur-md">
+              <span className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest leading-none mb-0.5">Unique ID</span>
+              <span className="text-sm font-black text-blue-900 dark:text-blue-100 leading-none">{user.channel_code}</span>
+            </div>
+          )}
+
           {/* Notification Bell */}
           <div className="relative z-50">
             <NotificationBell />
