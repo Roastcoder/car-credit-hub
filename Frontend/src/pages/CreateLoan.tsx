@@ -416,7 +416,6 @@ export default function CreateLoan() {
 
   const [fetchingVehicleData, setFetchingVehicleData] = useState(false);
   const [challanData, setChallanData] = useState<any>(null);
-  const [showChallanModal, setShowChallanModal] = useState(false);
   const [fetchingChallans, setFetchingChallans] = useState(false);
 
   const checkChallans = async () => {
@@ -432,7 +431,6 @@ export default function CreateLoan() {
         engine_number: form.engineNumber,
       });
       setChallanData(data.data?.challan_details || data.challan_details || data);
-      setShowChallanModal(true);
       const challans = data.data?.challan_details?.challans || [];
       const pending = challans.filter((c: any) => c.challan_status === 'Pending');
       if (pending.length > 0) {
@@ -1351,27 +1349,129 @@ export default function CreateLoan() {
 
                 {/* Check Challans Button */}
                 {(form.chassisNumber && form.engineNumber && form.vehicleNumber) && (
-                  <div className="flex items-center gap-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={checkChallans}
-                      disabled={fetchingChallans}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 shadow-sm"
-                    >
-                      {fetchingChallans ? (
-                        <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Checking...</>
-                      ) : (
-                        <><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg> Check Challans</>
-                      )}
-                    </button>
-                    {challanData && (
+                  <div className="flex flex-col gap-3 pt-2 md:col-span-3">
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={() => setShowChallanModal(true)}
-                        className="text-sm text-orange-600 underline hover:text-orange-700"
+                        onClick={checkChallans}
+                        disabled={fetchingChallans}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60 shadow-sm"
                       >
-                        View Last Results
+                        {fetchingChallans ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Checking...</>
+                        ) : (
+                          <><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg> Check Challans</>
+                        )}
                       </button>
+                      {challanData && (
+                        <button
+                          type="button"
+                          onClick={() => setChallanData(null)}
+                          className="text-sm text-muted-foreground hover:text-foreground underline transition-colors"
+                        >
+                          Clear Results
+                        </button>
+                      )}
+                    </div>
+
+                    {challanData && (
+                      <div className="border border-red-100 dark:border-red-900/30 rounded-xl bg-card overflow-hidden shadow-sm mt-1 animate-in fade-in slide-in-from-top-2">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+                          <div>
+                            <h3 className="text-sm font-bold text-foreground">Challan Details</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">RC: {form.vehicleNumber}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {(() => {
+                              const challans = challanData.challans || [];
+                              const pending = challans.filter((c: any) => c.challan_status === 'Pending');
+                              const pendingTotal = pending.reduce((s: number, c: any) => s + (c.amount || 0), 0);
+                              return challans.length > 0 ? (
+                                <div className="text-right">
+                                  <span className={`text-sm font-bold ${pending.length > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                    {pending.length > 0 ? `₹${pendingTotal.toLocaleString()} Pending` : 'All Cleared'}
+                                  </span>
+                                  <p className="text-xs text-muted-foreground">{challans.length} total challan(s)</p>
+                                </div>
+                              ) : null;
+                            })()}
+                            <button
+                              type="button"
+                              onClick={() => setChallanData(null)}
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                              title="Dismiss"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Table */}
+                        <div className="overflow-x-auto w-full">
+                          {(challanData.challans || []).length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                              <p className="text-sm font-medium">No challans found</p>
+                              <p className="text-xs mt-1">This vehicle has a clean record across checked portals.</p>
+                            </div>
+                          ) : (
+                            <table className="w-full text-sm border-collapse">
+                              <thead>
+                                <tr className="bg-muted/50">
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">#</th>
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Challan No.</th>
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Date</th>
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">State</th>
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Offense</th>
+                                  <th className="text-left p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Accused</th>
+                                  <th className="text-right p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Amount</th>
+                                  <th className="text-center p-3 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider border-b border-border">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(challanData.challans || []).map((c: any, idx: number) => (
+                                  <tr key={idx} className={`border-b border-border/50 transition-colors ${
+                                    c.challan_status === 'Pending' ? 'bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/70' : 'hover:bg-muted/30'
+                                  }`}>
+                                    <td className="p-3 text-muted-foreground">{idx + 1}</td>
+                                    <td className="p-3 font-mono text-xs text-foreground">{c.challan_number}</td>
+                                    <td className="p-3 text-foreground whitespace-nowrap text-xs">{c.challan_date || '—'}</td>
+                                    <td className="p-3">
+                                      <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-semibold">{c.state}</span>
+                                    </td>
+                                    <td className="p-3 text-foreground text-xs max-w-[180px] truncate" title={c.offense_details}>{c.offense_details}</td>
+                                    <td className="p-3 text-foreground text-xs">{c.accused_name || '—'}</td>
+                                    <td className="p-3 text-right font-bold text-foreground">₹{(c.amount || 0).toLocaleString()}</td>
+                                    <td className="p-3 text-center">
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        c.challan_status === 'Pending'
+                                          ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                          : c.challan_status
+                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                          : 'bg-muted text-muted-foreground'
+                                      }`}>
+                                        {c.challan_status || 'Unknown'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              {(challanData.challans || []).some((c: any) => c.challan_status === 'Pending') && (
+                                <tfoot>
+                                  <tr className="bg-red-50/60 dark:bg-red-950/20">
+                                    <td colSpan={6} className="p-3 font-bold text-red-600 text-sm">Total Pending Amount</td>
+                                    <td className="p-3 text-right font-bold text-red-600 text-sm">
+                                      ₹{(challanData.challans || []).filter((c: any) => c.challan_status === 'Pending').reduce((s: number, c: any) => s + (c.amount || 0), 0).toLocaleString()}
+                                    </td>
+                                    <td />
+                                  </tr>
+                                </tfoot>
+                              )}
+                            </table>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
@@ -2108,120 +2208,7 @@ export default function CreateLoan() {
           </div>
         </div>
       )}
-      {/* Challan Details Modal */}
-      {showChallanModal && challanData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Challan Details</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">RC: {form.vehicleNumber}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const challans = challanData.challans || [];
-                  const pending = challans.filter((c: any) => c.challan_status === 'Pending');
-                  const pendingTotal = pending.reduce((s: number, c: any) => s + (c.amount || 0), 0);
-                  return challans.length > 0 ? (
-                    <div className="text-right">
-                      <span className={`text-sm font-bold ${pending.length > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                        {pending.length > 0 ? `₹${pendingTotal.toLocaleString()} Pending` : 'All Cleared'}
-                      </span>
-                      <p className="text-xs text-muted-foreground">{challans.length} total challan(s)</p>
-                    </div>
-                  ) : null;
-                })()}
-                <button
-                  onClick={() => setShowChallanModal(false)}
-                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-            </div>
 
-            {/* Table */}
-            <div className="overflow-auto flex-1 p-5">
-              {(challanData.challans || []).length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                  <p className="font-medium">No challans found</p>
-                  <p className="text-xs mt-1">This vehicle has a clean record across checked portals.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">#</th>
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Challan No.</th>
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Date</th>
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">State</th>
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Offense</th>
-                        <th className="text-left p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Accused</th>
-                        <th className="text-right p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Amount</th>
-                        <th className="text-center p-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider border-b border-border">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(challanData.challans || []).map((c: any, idx: number) => (
-                        <tr key={idx} className={`border-b border-border/50 transition-colors ${
-                          c.challan_status === 'Pending' ? 'bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/70' : 'hover:bg-muted/30'
-                        }`}>
-                          <td className="p-3 text-muted-foreground">{idx + 1}</td>
-                          <td className="p-3 font-mono text-xs text-foreground">{c.challan_number}</td>
-                          <td className="p-3 text-foreground whitespace-nowrap">{c.challan_date || '—'}</td>
-                          <td className="p-3">
-                            <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold">{c.state}</span>
-                          </td>
-                          <td className="p-3 text-foreground max-w-[200px] truncate" title={c.offense_details}>{c.offense_details}</td>
-                          <td className="p-3 text-foreground">{c.accused_name || '—'}</td>
-                          <td className="p-3 text-right font-bold text-foreground">₹{(c.amount || 0).toLocaleString()}</td>
-                          <td className="p-3 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                              c.challan_status === 'Pending'
-                                ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                                : c.challan_status
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                : 'bg-muted text-muted-foreground'
-                            }`}>
-                              {c.challan_status || 'Unknown'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    {/* Totals row */}
-                    {(challanData.challans || []).some((c: any) => c.challan_status === 'Pending') && (
-                      <tfoot>
-                        <tr className="bg-red-50/60 dark:bg-red-950/20">
-                          <td colSpan={6} className="p-3 font-bold text-red-600 text-sm">Total Pending Amount</td>
-                          <td className="p-3 text-right font-bold text-red-600 text-sm">
-                            ₹{(challanData.challans || []).filter((c: any) => c.challan_status === 'Pending').reduce((s: number, c: any) => s + (c.amount || 0), 0).toLocaleString()}
-                          </td>
-                          <td />
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
-              <span>Portals checked: DL, TS, KA, GJ</span>
-              <button
-                onClick={() => setShowChallanModal(false)}
-                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
