@@ -496,7 +496,7 @@ export default function CreateLoan() {
 
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
-        setRcCacheStatus(rc.is_cached ? 'db' : 'live');
+        setRcCacheStatus(rcData.is_cached ? 'db' : 'live');
 
         setForm(f => ({
           ...f,

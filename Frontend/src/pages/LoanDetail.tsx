@@ -870,7 +870,7 @@ export default function LoanDetail() {
                     <CheckCircle2 size={18} className="text-green-500" />
                     <h2 className="text-lg font-bold text-foreground">Verified API Data</h2>
                   </div>
-                  <VerifiedDataBadge isCached={vehicleCache.rc_full?.data?.is_cached || vehicleCache.rc_lite?.data?.is_cached || true} />
+                  <VerifiedDataBadge isCached={true} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
