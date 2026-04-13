@@ -892,17 +892,34 @@ export default function LoanDetail() {
                     </div>
                   )}
 
-                  {vehicleCache.challan?.data && (
+                  {((loan as any).total_challans !== undefined || vehicleCache.challan?.data) && (
                     <div className="stat-card border-orange-500/20 bg-orange-500/5">
                       <h3 className="text-xs font-bold text-orange-700 uppercase mb-3 flex items-center gap-2">
                         <FileText size={14} /> Challan Summary
+                        {((loan as any).total_challans !== undefined && (loan as any).total_challans !== null) && (
+                          <div className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 border border-orange-500/20 text-[8px] font-bold uppercase tracking-wider">
+                            Saved with Application
+                          </div>
+                        )}
                       </h3>
                       <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-                        <Field label="Total Challans" value={vehicleCache.challan?.data?.total_challans} />
-                        <Field label="Total Amount" value={vehicleCache.challan?.data?.total_amount ? `₹${vehicleCache.challan.data.total_amount}` : '0'} />
+                        <Field 
+                          label="Total Challans" 
+                          value={((loan as any).total_challans !== undefined && (loan as any).total_challans !== null) 
+                            ? String((loan as any).total_challans) 
+                            : String(vehicleCache.challan?.data?.total_challans || '0')} 
+                        />
+                        <Field 
+                          label="Total Amount" 
+                          value={((loan as any).challan_amount !== undefined && (loan as any).challan_amount !== null)
+                            ? `₹${Number((loan as any).challan_amount).toLocaleString()}`
+                            : (vehicleCache.challan?.data?.total_amount ? `₹${Number(vehicleCache.challan.data.total_amount).toLocaleString()}` : '₹0')} 
+                        />
                         <div className="col-span-2">
                           <p className="text-[10px] text-orange-600/70 italic mt-2">
-                            * Last checked: {new Date(vehicleCache.challan.updated_at).toLocaleString()}
+                            {((loan as any).total_challans !== undefined && (loan as any).total_challans !== null)
+                              ? `* Stored during application process`
+                              : `* Last checked: ${vehicleCache.challan?.updated_at ? new Date(vehicleCache.challan.updated_at).toLocaleString() : 'Never'}`}
                           </p>
                         </div>
                       </div>

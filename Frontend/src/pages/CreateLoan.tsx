@@ -179,6 +179,7 @@ export default function CreateLoan() {
       processingFee: '', netDisbursementAmount: '', paymentReceivedDate: '', meharDeduction: '', holdAmount: '', netSeedAmount: '', paymentInFavour: '',
       // Others
       loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
+      totalChallans: 0, challanAmount: 0,
       // Documents
       aadharFront: null, aadharBack: null, panCard: null,
       bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
@@ -444,11 +445,19 @@ export default function CreateLoan() {
         engine_number: form.engineNumber,
       });
       setChallanData(data.data?.challan_details || data.challan_details || data);
-      const challans = data.data?.challan_details?.challans || [];
+      const challans = (data.data?.challan_details?.challans || data.challan_details?.challans || data.challans || []);
       const pending = challans.filter((c: any) => c.challan_status === 'Pending');
+      const totalAmount = pending.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+      
+      setForm(prev => ({
+        ...prev,
+        totalChallans: pending.length,
+        challanAmount: totalAmount,
+        challan: pending.length > 0 ? 'Yes' : (challans.length > 0 ? 'No (Cleared)' : 'No')
+      }));
+
       if (pending.length > 0) {
-        const total = pending.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
-        toast.warning(`${pending.length} pending challan(s) found. Total: ₹${total.toLocaleString()}`);
+        toast.warning(`${pending.length} pending challan(s) found. Total: ₹${totalAmount.toLocaleString()}`);
       } else if (challans.length === 0) {
         toast.success('No challans found for this vehicle');
       } else {
@@ -1161,6 +1170,8 @@ export default function CreateLoan() {
           rc_mfg_date: form.rcMfgDate || null,
           rc_expiry_date: form.rcExpiryDate || null,
           challan_status: form.challan,
+          total_challans: form.totalChallans,
+          challan_amount: form.challanAmount,
           rto_papers: form.rtoPapers,
           fc_amount: Number(form.fcAmount) || null,
           fc_date: form.fcDate || null,
