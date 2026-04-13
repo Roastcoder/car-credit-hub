@@ -47,6 +47,7 @@ const PermissionManagement = lazy(() => import("@/pages/PermissionManagement"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
 const Profile = lazy(() => import("@/pages/Profile"));
+const ExternalApiLogs = lazy(() => import("@/pages/ExternalApiLogs"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -138,6 +139,13 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/api-logs" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>
+            <ExternalApiLogs />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

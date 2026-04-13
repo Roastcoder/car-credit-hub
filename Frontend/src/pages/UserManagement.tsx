@@ -141,6 +141,9 @@ export default function UserManagement() {
                 ) : (
                   <span className="text-xs text-muted-foreground px-2 py-1 rounded-md bg-muted">No role</span>
                 )}
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-500/10 text-blue-600 text-[10px] font-bold">
+                  ID: {u.channel_code || '---'}
+                </span>
                 {u.branch_name && (
                   <span className="text-xs text-muted-foreground">{u.branch_name}</span>
                 )}
@@ -166,6 +169,7 @@ export default function UserManagement() {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Contact</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Unique ID</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
@@ -186,6 +190,9 @@ export default function UserManagement() {
                         <span className="text-foreground text-xs">{u.email}</span>
                         {u.phone && <span className="text-accent text-[10px] font-medium mono">{u.phone}</span>}
                       </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-xs font-bold text-blue-600 mono">{u.channel_code || '---'}</span>
                     </td>
                     <td className="py-3 px-3">
                       {u.role ? (

@@ -201,6 +201,8 @@ export const externalAPI = {
   },
   fetchChallanData: (params: { rc_number: string, chassis_number: string, engine_number: string }) => 
     api.post('/external/surepass/challan', params),
+  getLogs: () => api.get('/external/logs'),
+  getVehicleCache: (vehicleNumber: string) => api.get(`/external/vehicle/${vehicleNumber}`),
 };
 
 // Account Department API

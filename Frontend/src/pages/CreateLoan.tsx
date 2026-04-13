@@ -427,6 +427,7 @@ export default function CreateLoan() {
   });
 
   const [fetchingVehicleData, setFetchingVehicleData] = useState(false);
+  const [rcCacheStatus, setRcCacheStatus] = useState<'live' | 'db' | null>(null);
   const [challanData, setChallanData] = useState<any>(null);
   const [fetchingChallans, setFetchingChallans] = useState(false);
 
@@ -495,6 +496,7 @@ export default function CreateLoan() {
 
       if (rcData.success && rcData.data) {
         const rc = rcData.data;
+        setRcCacheStatus(rc.is_cached ? 'db' : 'live');
 
         setForm(f => ({
           ...f,
@@ -1376,7 +1378,7 @@ export default function CreateLoan() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
                     <label className={labelClass}>Vehicle Reg. No</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 relative">
                       <div className="relative flex-1">
                         <input
                           className={inputClass}
@@ -1399,8 +1401,21 @@ export default function CreateLoan() {
                         disabled={fetchingVehicleData || form.vehicleNumber.length < 5}
                         className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition-colors disabled:opacity-50"
                       >
-                        Fetch RC
+                        {fetchingVehicleData ? '...' : 'Verify'}
                       </button>
+
+                      {rcCacheStatus && (
+                        <div className="absolute -bottom-6 left-0">
+                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
+                            rcCacheStatus === 'db' 
+                              ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
+                              : 'bg-green-500/10 text-green-600 border-green-500/20'
+                          }`}>
+                            <div className={`w-1 h-1 rounded-full ${rcCacheStatus === 'db' ? 'bg-blue-500' : 'bg-green-500 animate-pulse'}`} />
+                            {rcCacheStatus === 'db' ? 'from db' : 'Live API Response'}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>

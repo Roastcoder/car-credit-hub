@@ -298,7 +298,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   duration: 2000
                 });
               }}
-              className="hidden sm:flex flex-col items-center justify-center px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 rounded-2xl shadow-lg shadow-blue-600/20 border border-white/20 transition-all active:scale-95 group relative overflow-hidden"
+              className="flex flex-col items-center justify-center px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 rounded-2xl shadow-lg shadow-blue-600/20 border border-white/20 transition-all active:scale-95 group relative overflow-hidden"
               title="Click to copy Unique ID"
             >
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { loansAPI } from '@/lib/api';
+import { loansAPI, externalAPI } from '@/lib/api';
 import { LOAN_STATUSES, WORKFLOW_STEPS } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { WorkflowService } from '@/lib/workflow';
@@ -190,6 +190,7 @@ export default function LoanDetail() {
     },
     enabled: !!loan?.id,
   });
+
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['loan-audit-logs', id],
     queryFn: async () => {
@@ -197,6 +198,16 @@ export default function LoanDetail() {
       return response.data || [];
     },
     enabled: !!id,
+  });
+  
+  const { data: vehicleCache } = useQuery({
+    queryKey: ['vehicle-cache', loan?.vehicle_number],
+    queryFn: async () => {
+      if (!loan?.vehicle_number) return null;
+      const res = await externalAPI.getVehicleCache(loan.vehicle_number);
+      return res.data || res;
+    },
+    enabled: !!loan?.vehicle_number,
   });
 
   const computedCommission = useMemo(() => {
@@ -408,6 +419,17 @@ export default function LoanDetail() {
     <div>
       <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
       <p className="text-sm font-medium text-foreground">{value || '—'}</p>
+    </div>
+  );
+
+  const VerifiedDataBadge = ({ isCached }: { isCached?: boolean }) => (
+    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+      isCached 
+        ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
+        : 'bg-green-500/10 text-green-600 border-green-500/20'
+    }`}>
+      <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isCached ? 'bg-blue-500' : 'bg-green-500'}`} />
+      {isCached ? 'from db' : 'Live API Response'}
     </div>
   );
 
@@ -839,6 +861,56 @@ export default function LoanDetail() {
                 </div>
               </Section>
             </div>
+
+            {/* Verified External API Data Section */}
+            {vehicleCache && (Object.keys(vehicleCache).length > 0) && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-green-500" />
+                    <h2 className="text-lg font-bold text-foreground">Verified API Data</h2>
+                  </div>
+                  <VerifiedDataBadge isCached={vehicleCache.rc_full?.data?.is_cached || vehicleCache.rc_lite?.data?.is_cached || true} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(vehicleCache.rc_full?.data || vehicleCache.rc_lite?.data) && (
+                    <div className="stat-card border-green-500/20 bg-green-500/5">
+                      <h3 className="text-xs font-bold text-green-700 uppercase mb-3 flex items-center gap-2">
+                        <Car size={14} /> RC Verification Response
+                      </h3>
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                        <Field label="Owner Name" value={vehicleCache.rc_full?.data?.owner_name || vehicleCache.rc_lite?.data?.owner_name} />
+                        <Field label="Father Name" value={vehicleCache.rc_full?.data?.father_name} />
+                        <Field label="Reg. Date" value={vehicleCache.rc_full?.data?.registration_date} />
+                        <Field label="Fuel Type" value={vehicleCache.rc_full?.data?.fuel_type} />
+                        <Field label="Financier" value={vehicleCache.rc_full?.data?.financier || vehicleCache.rc_lite?.data?.financier} />
+                        <Field label="Insurance Co." value={vehicleCache.rc_full?.data?.insurance_company} />
+                        <Field label="Insurance Expiry" value={vehicleCache.rc_full?.data?.insurance_upto} />
+                        <Field label="Fitness Upto" value={vehicleCache.rc_full?.data?.fitness_upto} />
+                      </div>
+                    </div>
+                  )}
+
+                  {vehicleCache.challan?.data && (
+                    <div className="stat-card border-orange-500/20 bg-orange-500/5">
+                      <h3 className="text-xs font-bold text-orange-700 uppercase mb-3 flex items-center gap-2">
+                        <FileText size={14} /> Challan Summary
+                      </h3>
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                        <Field label="Total Challans" value={vehicleCache.challan?.data?.total_challans} />
+                        <Field label="Total Amount" value={vehicleCache.challan?.data?.total_amount ? `₹${vehicleCache.challan.data.total_amount}` : '0'} />
+                        <div className="col-span-2">
+                          <p className="text-[10px] text-orange-600/70 italic mt-2">
+                            * Last checked: {new Date(vehicleCache.challan.updated_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Documents Section */}
             <Section title="Documents" icon={<FileText size={16} />}>
