@@ -21,6 +21,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string, branchId?: string, referredBy?: string) => Promise<{ error: string | null }>;
+  requestOTP: (phone: string, purpose: 'login' | 'signup') => Promise<{ error: string | null }>;
+  verifyOTP: (data: any) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,8 +86,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const requestOTP = async (phone: string, purpose: 'login' | 'signup' = 'login'): Promise<{ error: string | null }> => {
+    try {
+      await authAPI.requestOTP(phone, purpose);
+      return { error: null };
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
+  const verifyOTP = async (data: any): Promise<{ error: string | null }> => {
+    try {
+      const response = await authAPI.verifyOTP(data);
+      if (response.token) {
+        api.setToken(response.token);
+        setUser(response.user);
+        setSession({ user: response.user });
+      }
+      return { error: null };
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, login, logout, signUp }}>
+    <AuthContext.Provider value={{ user, session, isLoading, login, logout, signUp, requestOTP, verifyOTP }}>
       {children}
     </AuthContext.Provider>
   );

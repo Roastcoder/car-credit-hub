@@ -77,6 +77,17 @@ export const authAPI = {
   login: (email: string, password: string) => api.post('/auth/login', { email, password }),
   signup: (name: string, email: string, password: string, role?: string, branchId?: string, referredBy?: string) =>
     api.post('/auth/signup', { name, email, password, role, branch_id: branchId, referred_by: referredBy }),
+  requestOTP: (phone: string, purpose: 'login' | 'signup' = 'login') => api.post('/auth/request-otp', { phone, purpose }),
+  verifyOTP: (data: { 
+    phone: string; 
+    otp: string; 
+    purpose: 'login' | 'signup';
+    name?: string;
+    email?: string;
+    password?: string;
+    branch_id?: string | number;
+    referred_by?: string;
+  }) => api.post('/auth/verify-otp', data),
   getProfile: () => api.get('/auth/profile'),
 };
 
