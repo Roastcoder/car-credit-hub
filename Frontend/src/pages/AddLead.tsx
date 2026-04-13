@@ -55,7 +55,7 @@ export default function AddLead() {
     tehsil: '',
     district: '',
     pin_code: '',
-    phone_no: '',
+    phone: '',
     pan_number: '',
     aadhar_number: '',
     vehicle_no: '',
@@ -222,7 +222,7 @@ export default function AddLead() {
 
           <div>
             <label className={labelClass}>Phone No *</label>
-            <input required type="tel" maxLength={10} className={inputClass} value={form.phone_no} onChange={e => setForm({...form, phone_no: e.target.value})} placeholder="Enter Phone Number" />
+            <input required type="tel" maxLength={10} className={inputClass} value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Enter Phone Number" />
           </div>
 
           <div className="md:col-span-2">

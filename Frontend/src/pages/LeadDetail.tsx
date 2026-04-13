@@ -23,7 +23,9 @@ export default function LeadDetail() {
   const queryClient = useQueryClient();
   const permissions = user?.role ? getRolePermissions(user.role) : null;
   const role = user?.role;
-  const canViewLeadDocuments = role && ['broker', 'manager', 'admin', 'super_admin', 'employee', 'sales', 'rbm', 'pdd_manager'].includes(role);
+  const normalizedRole = role?.toLowerCase();
+  const allowedDocRoles = ['broker', 'manager', 'admin', 'super_admin', 'employee', 'sales', 'rbm', 'pdd_manager'];
+  const canViewLeadDocuments = normalizedRole && allowedDocRoles.includes(normalizedRole);
   const canUploadLeadDocuments = role === 'broker';
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
@@ -252,7 +254,7 @@ export default function LeadDetail() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Customer ID" value={lead.customer_id} />
             <Field label="Customer Name" value={lead.customer_name} />
-            <Field label="Phone Number" value={lead.phone_no} />
+            <Field label="Phone Number" value={lead.phone} />
             <Field label="PAN Number" value={lead.pan_number} />
             <Field label="Aadhaar Number" value={lead.aadhar_number} />
             <Field label="District" value={lead.district} />
@@ -352,7 +354,8 @@ export default function LeadDetail() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {documents.map((doc: any) => {
-                const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${doc.file_url}`;
+                const baseUrl = import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':5000');
+                const fileUrl = `${baseUrl}${doc.file_url.startsWith('/') ? '' : '/'}${doc.file_url}`;
                 const isImg = isImage(doc.file_url);
 
                 return (

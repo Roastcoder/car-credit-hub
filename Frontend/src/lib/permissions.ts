@@ -136,6 +136,19 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canViewAll: false,
       };
 
+    case 'sales':
+      return {
+        canCreate: true,
+        canCreateLead: true,
+        canCreateLoan: false,
+        canEdit: true,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: true,
+        canViewAll: false,
+      };
+
     case 'accountant':
       return {
         canCreate: false,

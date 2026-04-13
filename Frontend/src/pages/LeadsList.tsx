@@ -77,7 +77,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
     const matchesSearch =
       !search ||
       l.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      l.phone_no?.includes(search);
+      l.phone?.includes(search);
 
     const matchesBroker =
       selectedBroker === 'all' ||
@@ -142,7 +142,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">{lead.customer_name}</p>
-                  <p className="text-xs text-muted-foreground mono mt-0.5">{lead.phone_no}</p>
+                  <p className="text-xs text-muted-foreground mono mt-0.5">{lead.phone}</p>
                 </div>
                 {lead.converted_to_loan ? (
                   <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">Converted</span>
@@ -258,7 +258,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                         <p className="font-medium text-foreground">{lead.customer_name}</p>
                         <p className="text-xs text-muted-foreground">{lead.district}</p>
                       </td>
-                      <td className="py-3 px-3 text-foreground">{lead.phone_no}</td>
+                      <td className="py-3 px-3 text-foreground">{lead.phone}</td>
                       <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">{lead.vehicle_no || '—'}</td>
                       <td className="py-3 px-3 text-right font-medium text-foreground">₹{Number(lead.loan_amount_required || 0).toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 text-muted-foreground hidden sm:table-cell">{lead.our_branch || '—'}</td>
