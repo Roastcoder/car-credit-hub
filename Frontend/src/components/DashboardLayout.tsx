@@ -31,7 +31,7 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee']
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee']
   },
   {
     title: 'Leads',
@@ -44,11 +44,11 @@ const NAV_ITEMS: NavItem[] = [
       { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck },
     ],
   },
-  { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'] },
+  { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
   { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { title: 'Payments', path: '/payments', icon: Wallet, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Payments', path: '/payments', icon: Wallet, roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'] },
+  { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager', 'rbm'] },
   { title: 'Commission', path: '/commission', icon: CreditCard, roles: ['super_admin', 'admin', 'broker'] },
   { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Permission Control', path: '/permissions', icon: Shield, roles: ['super_admin'] },

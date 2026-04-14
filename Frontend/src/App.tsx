@@ -76,7 +76,7 @@ function AppRoutes() {
       <Route path="/signup" element={user ? <DashboardRedirect /> : <Signup />} />
       <Route path="/dashboard" element={
         <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee']}>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee']}>
             <Dashboard />
           </RoleProtectedRoute>
         </ProtectedRoute>
