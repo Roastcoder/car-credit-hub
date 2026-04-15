@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
+import logo from '../assets/logo.png';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -408,10 +409,14 @@ export default function PaymentDetail() {
     };
 
     // --- Header ---
+    try {
+      doc.addImage(logo, 'PNG', margin, y - 6, 12, 12);
+    } catch (e) {}
+
     doc.setFontSize(22);
     doc.setTextColor(15, 23, 42); // slate-900
     doc.setFont('helvetica', 'bold');
-    doc.text('MEHAR Finance ', margin, y);
+    doc.text('MEHAR FINANCE', margin + 15, y + 2);
 
     y += 8;
     doc.setFontSize(10);
