@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { biometricAuth } from '@/lib/biometric';
-import { ArrowRight, Mail, Lock, Download, Eye, EyeOff, Fingerprint, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Download, Eye, EyeOff, Fingerprint, ArrowLeft, Shield, Zap, Globe, Smartphone, Monitor, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 
@@ -18,6 +18,7 @@ export default function Login() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [isNative, setIsNative] = useState(false);
+  const [isElectron, setIsElectron] = useState(false);
 
   // Forgot password states
   const [view, setView] = useState<'login' | 'forgot'>('login');
@@ -32,11 +33,16 @@ export default function Login() {
     const checkEnvironment = async () => {
       const native = Capacitor.isNativePlatform();
       setIsNative(native);
+      
+      const electron = navigator.userAgent.toLowerCase().includes('electron');
+      setIsElectron(electron);
+
       const standalone = window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone ||
         document.referrer.includes('android-app://') ||
-        native;
+        native || electron;
       setIsStandalone(standalone);
+      
       if (native) {
         const result = await biometricAuth.checkAvailability();
         setIsBiometricAvailable(result.isAvailable);
@@ -384,28 +390,83 @@ export default function Login() {
   }
 
   // ──── RENDER: STANDARD WEB UI ────
-  return (
-    <div className="min-h-screen flex bg-transparent font-sans">
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
-        <div className="text-center max-w-md">
-          <img src={logo} alt="Mehar Finance" className="h-20 w-auto object-contain mx-auto mb-6 drop-shadow-lg" />
-          <h1 className="text-3xl font-bold text-blue-950 dark:text-white mb-4">Mehar Finance</h1>
-          <p className="text-lg text-blue-700 dark:text-blue-300 mb-6 font-medium">Car Loan Portal</p>
-          <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed text-center">
-            Your professional gateway to digital financing.
-            Access your dashboard and manage applications with ease.
-          </p>
-        </div>
-      </div>
+  const showFeaturePanel = !isNative && !isElectron;
 
-      <div className="flex-1 flex items-center justify-center p-5 sm:p-8 bg-transparent">
+  return (
+    <div className="min-h-screen flex bg-white dark:bg-slate-950 font-sans">
+      {showFeaturePanel && (
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white relative overflow-hidden border-r border-slate-200 dark:border-slate-800">
+          {/* Decorative elements */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -ml-44 -mt-44" />
+          <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[80px] -mr-32 -mb-32" />
+          
+          <div className="relative z-10 max-w-lg">
+            <div className="p-1 mb-10 inline-block">
+              <img src={logo} alt="Mehar Finance" className="h-16 w-auto object-contain" />
+            </div>
+            
+            <h1 className="text-4xl font-black mb-4 tracking-tight text-slate-900 dark:text-white">Mehar Finance</h1>
+            <p className="text-xl text-blue-600 dark:text-blue-400 mb-12 font-medium opacity-90 italic">Digital Intelligence Suite</p>
+            
+            <div className="space-y-8 mb-16">
+              <div className="flex gap-5 group">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl h-fit group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
+                  <Monitor className="text-blue-600 dark:text-blue-400" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg text-slate-900 dark:text-white">Desktop Performance</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Native applications for Windows & macOS with high-speed processing and offline stability.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-5 group">
+                <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl h-fit group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800/40 transition-colors">
+                  <Smartphone className="text-indigo-600 dark:text-indigo-400" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg text-slate-900 dark:text-white">Mobile Accessibility</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Android application optimized for field staff and real-time application tracking.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-5 group">
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-2xl h-fit group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
+                  <Shield className="text-green-600 dark:text-green-400" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg text-slate-900 dark:text-white">Enterprise Security</h4>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">End-to-end data encryption with biometric authentication for all native platforms.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 bg-blue-600 rounded-[2.5rem] border border-blue-500 shadow-xl text-white">
+               <div className="flex items-center justify-between gap-4">
+                  <div className="flex -space-x-3">
+                     <div className="w-10 h-10 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center shadow-lg"><Monitor size={16} /></div>
+                     <div className="w-10 h-10 rounded-full bg-indigo-500 border-2 border-white flex items-center justify-center shadow-lg"><Smartphone size={16} /></div>
+                     <div className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white flex items-center justify-center shadow-lg font-bold text-[10px]">WEB</div>
+                  </div>
+                  <div className="flex-1">
+                     <p className="text-xs font-bold text-blue-100 uppercase tracking-widest mb-1">Get the native App</p>
+                     <Link to="/download" className="text-sm font-black text-white hover:text-blue-100 flex items-center gap-1 transition-colors">
+                        Explore Download Center <ArrowRight size={14} />
+                     </Link>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex-1 flex items-center justify-center p-5 sm:p-8 ${showFeaturePanel ? 'bg-slate-50 dark:bg-slate-900' : 'bg-[#f8fafc] dark:bg-slate-950'}`}>
         <div className="w-full max-w-[420px]">
-          <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="glass-card rounded-2xl p-3 shadow-lg mb-3">
+          <div className={`${showFeaturePanel ? 'lg:hidden' : ''} flex flex-col items-center mb-8`}>
+            <div className="glass-card rounded-2xl p-3 shadow-lg mb-3 bg-white border border-slate-100">
               <img src={logo} alt="Mehar Finance" className="h-11 w-auto object-contain" />
             </div>
             <h2 className="text-lg font-bold text-blue-950 dark:text-white">Mehar Finance</h2>
-            <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">Car Loan Portal</p>
+            <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">Digital Intelligence Suite</p>
           </div>
 
           <div className="bg-card p-7 sm:p-8 shadow-xl rounded-2xl border border-border">

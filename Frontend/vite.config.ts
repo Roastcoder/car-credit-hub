@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "/", // Explicitly set base path to prevent MIME type issues on nested routes
+  base: "./", // Use relative paths for Electron support
   server: {
     host: "::",
     port: 3000,

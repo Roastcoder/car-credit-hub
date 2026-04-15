@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-electron/
+.DS_Store
+*.log
+.env
+.env.*.local
+! .env.production
+! .env.development
+
+# Native Binaries (Too large for Git)
+*.exe
+*.dmg
+*.apk
