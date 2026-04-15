@@ -236,6 +236,8 @@ export const paymentApplicationAPI = {
     api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
   addUTR: (id: number, utr_number: string) => 
     api.post(`/payments/applications/${id}/utr`, { utr_number }),
+  saveLedger: (id: number, ledger_entries: any[]) =>
+    api.post(`/payments/applications/${id}/ledger`, { ledger_entries }),
   initiateAadhaarVerification: (id: number, aadhaar_number: string) => 
     api.post(`/payments/applications/${id}/aadhaar-verify/initiate`, { aadhaar_number }),
   verifyAadhaarOTP: (id: number, otp: string) => 

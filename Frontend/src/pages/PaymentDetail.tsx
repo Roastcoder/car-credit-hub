@@ -87,6 +87,10 @@ export default function PaymentDetail() {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
 
+  // Ledger state
+  const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; narration: string }[]>([]);
+  const [ledgerSaved, setLedgerSaved] = useState(false);
+
   // Aadhaar Verification State
   const [verificationStep, setVerificationStep] = useState<'aadhaar' | 'otp' | 'utr'>('aadhaar');
   const [aadhaarNumber, setAadhaarNumber] = useState('');
@@ -98,7 +102,10 @@ export default function PaymentDetail() {
     queryKey: ['payment', id],
     queryFn: async () => paymentApplicationAPI.getById(parseInt(id!)),
     enabled: !!id,
-  });
+    onSuccess: (data: any) => {
+      if (data?.ledger_entries?.length) setLedgerEntries(data.ledger_entries);
+    }
+  } as any);
 
   // Fetch banking documents attached to the application
   const { data: bankingDocuments = [] } = useQuery({
@@ -177,6 +184,19 @@ export default function PaymentDetail() {
       toast.error(error.message || 'Failed to add UTR number');
     }
   });
+
+  const saveLedger = useMutation({
+    mutationFn: async (entries: any[]) => paymentApplicationAPI.saveLedger(parseInt(id!), entries),
+    onSuccess: () => { setLedgerSaved(true); toast.success('Ledger saved'); },
+    onError: (error: any) => toast.error(error.message || 'Failed to save ledger')
+  });
+
+  const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', narration: '' }]);
+  const removeLedgerRow = (i: number) => setLedgerEntries(prev => prev.filter((_, idx) => idx !== i));
+  const updateLedgerRow = (i: number, field: string, value: string) => {
+    setLedgerSaved(false);
+    setLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+  };
 
   // Upload Proof
   const uploadProof = useMutation({
@@ -281,6 +301,7 @@ export default function PaymentDetail() {
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
   const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'voucher_created';
+  const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && ['voucher_created', 'manager_approved'].includes(payment.status);
   const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'payment_released';
 
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
@@ -561,6 +582,77 @@ export default function PaymentDetail() {
               )}
             </div>
 
+            {/* Ledger */}
+            {(canEditLedger || (payment.ledger_entries?.length > 0)) && (
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText size={16} className="text-blue-500" /> Payment Ledger
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-1.5 pr-2 text-muted-foreground font-semibold">Date</th>
+                        <th className="text-left py-1.5 pr-2 text-muted-foreground font-semibold">Debit (₹)</th>
+                        <th className="text-left py-1.5 text-muted-foreground font-semibold">Narration</th>
+                        {canEditLedger && <th className="w-6" />}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledgerEntries.map((row, i) => (
+                        <tr key={i} className="border-b border-border/50">
+                          <td className="py-1 pr-2">
+                            {canEditLedger
+                              ? <input type="date" value={row.date} onChange={e => updateLedgerRow(i, 'date', e.target.value)}
+                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+                              : <span>{row.date}</span>}
+                          </td>
+                          <td className="py-1 pr-2">
+                            {canEditLedger
+                              ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value)}
+                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
+                              : <span className="font-mono">{Number(row.debit).toLocaleString()}</span>}
+                          </td>
+                          <td className="py-1">
+                            {canEditLedger
+                              ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(i, 'narration', e.target.value)}
+                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
+                              : <span>{row.narration}</span>}
+                          </td>
+                          {canEditLedger && (
+                            <td className="py-1 pl-1">
+                              <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600">
+                                <XCircle size={14} />
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                      {ledgerEntries.length > 0 && (
+                        <tr className="font-bold">
+                          <td className="pt-2 text-muted-foreground">Total</td>
+                          <td className="pt-2 font-mono text-foreground">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                          <td />{canEditLedger && <td />}
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {canEditLedger && (
+                  <div className="flex gap-2 mt-3">
+                    <button type="button" onClick={addLedgerRow}
+                      className="flex-1 px-3 py-1.5 border border-dashed border-border rounded-lg text-xs text-muted-foreground hover:border-accent hover:text-accent transition-colors">
+                      + Add Row
+                    </button>
+                    <button type="button" onClick={() => saveLedger.mutate(ledgerEntries)} disabled={saveLedger.isPending}
+                      className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                      {saveLedger.isPending ? 'Saving...' : ledgerSaved ? '✓ Saved' : 'Save Ledger'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {canAddUTR && (
               <div className="bg-card border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -589,14 +681,7 @@ export default function PaymentDetail() {
             {canUploadProof && (
               <div className="bg-card border border-purple-200 dark:border-purple-800 rounded-lg p-4">
                 <p className="text-sm font-semibold text-foreground mb-3">Upload Payment Proof</p>
-                <input type="file" id="proof-sidebar" className="hidden" accept="image/*,.pdf"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadProof.mutate(f); }}
-                />
-                <label htmlFor="proof-sidebar"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/10 text-sm text-purple-600 font-medium transition-colors">
-                  <Download size={16} />
-                  {uploadProof.isPending ? 'Uploading...' : 'Choose File'}
-                </label>
+                <ProofUploader onFile={(f) => uploadProof.mutate(f)} isPending={uploadProof.isPending} />
               </div>
             )}
 
@@ -664,5 +749,75 @@ export default function PaymentDetail() {
         </div>
       )}
     </>
+  );
+}
+
+function ProofUploader({ onFile, isPending }: { onFile: (f: File) => void; isPending: boolean }) {
+  const [preview, setPreview] = useState<{ name: string; url: string; type: string } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const handle = (file: File | null | undefined) => {
+    if (!file) return;
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)|application\/pdf/)) return;
+    setPreview({ name: file.name, url: URL.createObjectURL(file), type: file.type });
+  };
+
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items || []).find(i => i.type.startsWith('image/'));
+      if (item) handle(item.getAsFile());
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, []);
+
+  return (
+    <div className="space-y-3">
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files[0]); }}
+        className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+          dragging ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-purple-300 dark:border-purple-700 hover:border-purple-500'
+        }`}
+      >
+        <input type="file" id="proof-sidebar" className="hidden"
+          accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+          onChange={(e) => handle(e.target.files?.[0])} />
+        <label htmlFor="proof-sidebar" className="cursor-pointer block">
+          <Download size={20} className="mx-auto mb-1 text-purple-400" />
+          <p className="text-xs text-purple-600 font-medium">Click, drag & drop, or paste</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">JPG · PNG · WEBP · PDF</p>
+        </label>
+      </div>
+
+      {preview && (
+        <div className="border border-border rounded-lg p-3 space-y-2">
+          {preview.type === 'application/pdf' ? (
+            <div className="flex items-center gap-2 text-sm">
+              <FileText size={16} className="text-red-500" />
+              <span className="truncate text-foreground text-xs">{preview.name}</span>
+            </div>
+          ) : (
+            <img src={preview.url} alt="preview" className="w-full max-h-40 object-contain rounded border border-border" />
+          )}
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setPreview(null)}
+              className="flex-1 px-3 py-1.5 border border-border rounded text-xs text-muted-foreground hover:bg-muted transition-colors">
+              Remove
+            </button>
+            <button type="button" disabled={isPending}
+              onClick={() => {
+                fetch(preview.url).then(r => r.blob()).then(blob => {
+                  onFile(new File([blob], preview.name || 'proof', { type: blob.type }));
+                });
+              }}
+              className="flex-1 px-3 py-1.5 bg-purple-600 text-white rounded text-xs font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors">
+              {isPending ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
