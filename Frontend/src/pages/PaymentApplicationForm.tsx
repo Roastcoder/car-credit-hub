@@ -95,6 +95,13 @@ export default function PaymentApplicationForm() {
   const [searching, setSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
+  // Aadhaar Verification States
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [aadhaarVerificationStatus, setAadhaarVerificationStatus] = useState<'idle' | 'verifying' | 'otp_sent' | 'verified' | 'error'>('idle');
+  const [aadhaarMessage, setAadhaarMessage] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpVerifying, setOtpVerifying] = useState(false);
+
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
     applicant_name: '',
@@ -421,8 +428,117 @@ export default function PaymentApplicationForm() {
     return uploadedPaths;
   };
 
+  // Aadhaar Verification Functions
+  const initiateAadhaarVerification = async () => {
+    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
+      toast.error('Please enter a valid 12-digit Aadhaar number');
+      return;
+    }
+
+    if (!formData.applicant_phone || formData.applicant_phone.length !== 10) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    setAadhaarVerificationStatus('verifying');
+    setAadhaarMessage('Verifying Aadhaar...');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/verify-mobile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          aadhar_number: aadhaarNumber,
+          mobile: formData.applicant_phone
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.match) {
+        // Send OTP
+        const otpResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/send-otp`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify({
+            phone: formData.applicant_phone,
+            applicant_name: formData.applicant_name,
+            payment_amount: formData.payment_amount
+          })
+        });
+
+        const otpData = await otpResponse.json();
+
+        if (otpResponse.ok) {
+          setAadhaarVerificationStatus('otp_sent');
+          setAadhaarMessage(`OTP sent to ******${formData.applicant_phone.slice(-3)}`);
+          toast.success('OTP sent successfully!');
+        } else {
+          throw new Error(otpData.error || 'Failed to send OTP');
+        }
+      } else {
+        setAadhaarVerificationStatus('error');
+        setAadhaarMessage(data.message || 'Aadhaar verification failed');
+        toast.error('Last 3 digits of Aadhaar do not match mobile number');
+      }
+    } catch (error: any) {
+      setAadhaarVerificationStatus('error');
+      setAadhaarMessage(error.message || 'Verification failed');
+      toast.error(error.message || 'Verification failed');
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setOtpVerifying(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          phone: formData.applicant_phone,
+          otp: otp
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAadhaarVerificationStatus('verified');
+        setAadhaarMessage('Aadhaar and OTP verified successfully!');
+        toast.success('Verification successful!');
+      } else {
+        throw new Error(data.error || 'Invalid OTP');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'OTP verification failed');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
+      // Check Aadhaar verification for submitted status
+      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified') {
+        toast.error('Please complete Aadhaar verification before submitting');
+        return;
+      }
+
       setLoading(true);
 
       // Upload banking documents first
@@ -431,7 +547,9 @@ export default function PaymentApplicationForm() {
       const applicationData = {
         ...formData,
         banking_documents: [...(formData.banking_documents || []), ...bankingDocPaths],
-        status
+        status,
+        aadhaar_number: aadhaarNumber,
+        aadhaar_verified: aadhaarVerificationStatus === 'verified'
       };
 
       if (id) {
@@ -764,6 +882,124 @@ export default function PaymentApplicationForm() {
             />
           </div>
         </section>
+
+        {/* 11. Aadhaar Verification */}
+        {!isReadOnly && (
+          <section className="glass-card p-6 rounded-xl border border-purple-200 dark:border-purple-800/50 shadow-sm bg-purple-50/30 dark:bg-purple-900/5">
+            <div className="flex items-center gap-3 mb-6 border-b border-purple-100 dark:border-purple-800 pb-4">
+              <CheckCircle className="h-5 w-5 text-purple-600" />
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">11. Aadhaar Verification</h2>
+              <span className="ml-auto text-xs font-semibold text-purple-600 bg-purple-100 dark:bg-purple-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Required</span>
+            </div>
+
+            {aadhaarVerificationStatus === 'idle' && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Please verify the applicant's Aadhaar number before submitting the application.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Aadhaar Number *</label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={aadhaarNumber}
+                      onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter 12-digit Aadhaar number"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={initiateAadhaarVerification}
+                      disabled={aadhaarNumber.length !== 12 || !formData.applicant_phone}
+                      className="w-full px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Verify Aadhaar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {aadhaarVerificationStatus === 'verifying' && (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{aadhaarMessage}</p>
+                </div>
+              </div>
+            )}
+
+            {aadhaarVerificationStatus === 'otp_sent' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">{aadhaarMessage}</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Enter OTP *</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter 6-digit OTP"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <button
+                      type="button"
+                      onClick={verifyOtp}
+                      disabled={otp.length !== 6 || otpVerifying}
+                      className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {otpVerifying ? 'Verifying...' : 'Verify OTP'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={initiateAadhaarVerification}
+                      className="px-4 py-3 border border-purple-600 text-purple-600 rounded-xl hover:bg-purple-50 transition-all font-semibold"
+                    >
+                      Resend
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {aadhaarVerificationStatus === 'verified' && (
+              <div className="p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="text-lg font-bold text-green-800 dark:text-green-200">Verification Successful!</p>
+                    <p className="text-sm text-green-600 dark:text-green-300">{aadhaarMessage}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {aadhaarVerificationStatus === 'error' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200 font-medium">{aadhaarMessage}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAadhaarVerificationStatus('idle');
+                    setAadhaarNumber('');
+                    setOtp('');
+                  }}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-semibold"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">

@@ -73,6 +73,11 @@ export default function AddLead() {
   const [aadharBack, setAadharBack] = useState<File | null>(null);
   const [panCard, setPanCard] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [aadhaarVerification, setAadhaarVerification] = useState<{
+    verified: boolean;
+    message: string;
+    status: 'idle' | 'checking' | 'success' | 'error';
+  }>({ verified: false, message: '', status: 'idle' });
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
@@ -150,6 +155,39 @@ export default function AddLead() {
       }
     }
   }, [user, branches, managers]);
+
+  // Verify Aadhaar when both Aadhaar and Phone are complete
+  useEffect(() => {
+    const verifyAadhaar = async () => {
+      if (form.aadhar_number.length === 12 && form.phone.length === 10) {
+        setAadhaarVerification({ verified: false, message: '', status: 'checking' });
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/verify-mobile`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({
+              aadhar_number: form.aadhar_number,
+              mobile: form.phone
+            })
+          });
+          const data = await response.json();
+          if (data.match) {
+            setAadhaarVerification({ verified: true, message: data.message, status: 'success' });
+          } else {
+            setAadhaarVerification({ verified: false, message: data.message, status: 'error' });
+          }
+        } catch (error) {
+          setAadhaarVerification({ verified: false, message: 'Verification failed', status: 'error' });
+        }
+      } else {
+        setAadhaarVerification({ verified: false, message: '', status: 'idle' });
+      }
+    };
+    verifyAadhaar();
+  }, [form.aadhar_number, form.phone]);
 
   const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -253,6 +291,22 @@ export default function AddLead() {
           <div>
             <label className={labelClass}>Aadhar Number</label>
             <input className={inputClass} maxLength={12} value={form.aadhar_number} onChange={e => setForm({...form, aadhar_number: e.target.value})} placeholder="Enter Aadhar Number" />
+            {aadhaarVerification.status === 'checking' && (
+              <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                <span className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                Verifying...
+              </p>
+            )}
+            {aadhaarVerification.status === 'success' && (
+              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <span>✓</span> {aadhaarVerification.message}
+              </p>
+            )}
+            {aadhaarVerification.status === 'error' && (
+              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <span>✗</span> {aadhaarVerification.message}
+              </p>
+            )}
           </div>
 
           <div>
