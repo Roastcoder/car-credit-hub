@@ -181,6 +181,7 @@ export default function AddLead() {
         const data = await response.json();
         if (data.success && data.match) {
           setAadhaarVerification({ verified: true, message: 'Mobile last 3 digits matched ✓', status: 'success' });
+          toast.success('✓ Aadhaar mobile matched!', { duration: 3000 });
         } else if (data.success && !data.match) {
           setAadhaarVerification({ verified: false, message: data.message || 'Last 3 digits do not match', status: 'error' });
         } else {
