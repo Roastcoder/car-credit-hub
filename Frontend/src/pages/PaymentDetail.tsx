@@ -383,9 +383,7 @@ export default function PaymentDetail() {
             {canAddUTR && (
               <button
                 onClick={() => {
-                  setVerificationStep('aadhaar');
-                  setAadhaarNumber('');
-                  setOtpCode('');
+                  setVerificationStep('utr');
                   setShowUTRModal(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -628,9 +626,7 @@ export default function PaymentDetail() {
           <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-foreground">
-                {verificationStep === 'aadhaar' && 'Identity Verification (Step 1/3)'}
-                {verificationStep === 'otp' && 'OTP Verification (Step 2/3)'}
-                {verificationStep === 'utr' && 'Add UTR / Transaction ID (Step 3/3)'}
+                Add UTR / Transaction ID
               </h3>
               <button onClick={() => setShowUTRModal(false)} className="text-muted-foreground hover:text-foreground">
                 <XCircle size={20} />
