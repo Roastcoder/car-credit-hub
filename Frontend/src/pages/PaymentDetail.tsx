@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,7 +63,83 @@ const DocumentPreviewCard = ({
 
 type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
 
-const PAYMENT_STATUSES = [
+interface PaymentApplication {
+  id: number;
+  payment_id?: string;
+  loan_id?: number | string;
+  loan_number: string;
+  applicant_name: string;
+  applicant_phone?: string;
+  applicant_email?: string;
+  amount: number | string;
+  payment_amount?: number | string;
+  status: PaymentStatus;
+  payment_purpose?: string;
+  description?: string;
+  created_at: string;
+  released_at?: string;
+  utr_number?: string;
+  payment_proof_path?: string;
+  kyc_documents?: string;
+  created_by_name?: string;
+  bank_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  branch_name?: string;
+  payment_in_favour_name?: string;
+  dm_approval?: boolean;
+  vehicle_name?: string;
+  vehicle_model?: string;
+  vehicle_number?: string;
+  vehicle_type?: string;
+  rto_agent_name?: string;
+  rto_mobile?: string;
+  dto_location?: string;
+  rto_work_type?: string;
+  rc_status?: string;
+  noc_status?: string;
+  financier_name?: string;
+  loan_amount?: number | string;
+  disbursement_amount?: number | string;
+  disbursement_date?: string;
+  tenure_months?: number;
+  emi_amount?: number | string;
+  emi_mode?: string;
+  irr_percentage?: number | string;
+  loan_type?: string;
+  file_booked_code?: string;
+  foreclosure_amount?: number | string;
+  foreclosure_name?: string;
+  old_release_amount?: number | string;
+  today_release_amount?: number | string;
+  total_release_amount?: number | string;
+  total_release_percentage?: number | string;
+  hold_amount?: number | string;
+  hold_percentage?: number | string;
+  challan_amount?: number | string;
+  disbursement_branch?: string;
+  creator_role?: string;
+  referred_by_name?: string;
+  branch_manager_name?: string;
+  noc_checked_by?: string;
+  insurance_available?: boolean;
+  third_party_stamp?: boolean;
+  noc_stamp?: boolean;
+  is_third_party?: boolean;
+  voucher_number?: string;
+  voucher_date?: string;
+  payment_method?: string;
+  reference_number?: string;
+  prepared_by?: string;
+  approved_by?: string;
+  narration?: string;
+  manager_remarks?: string;
+  remarks?: string;
+  banking_documents?: string | any[];
+  ledger_entries?: any[];
+}
+
+const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
   { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: FileText },
   { value: 'submitted', label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: Calendar },
   { value: 'manager_approved', label: 'RBM Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
@@ -98,14 +174,17 @@ export default function PaymentDetail() {
   const [maskedPhone, setMaskedPhone] = useState('');
 
   // Fetch payment details
-  const { data: payment, isLoading } = useQuery({
+  const { data: payment, isLoading } = useQuery<PaymentApplication>({
     queryKey: ['payment', id],
     queryFn: async () => paymentApplicationAPI.getById(parseInt(id!)),
     enabled: !!id,
-    onSuccess: (data: any) => {
-      if (data?.ledger_entries?.length) setLedgerEntries(data.ledger_entries);
+  });
+
+  useEffect(() => {
+    if (payment?.ledger_entries?.length) {
+      setLedgerEntries(payment.ledger_entries);
     }
-  } as any);
+  }, [payment]);
 
   // Fetch banking documents attached to the application
   const { data: bankingDocuments = [] } = useQuery({
@@ -470,8 +549,8 @@ export default function PaymentDetail() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="Our Branch" value={payment.branch_name} />
               <Field label="Disbursement Branch" value={payment.disbursement_branch} />
-              { (payment.creator_role === 'broker' || (payment as any).referred_by_name) ? (
-                <Field label="Referred By" value={(payment as any).referred_by_name} />
+              { (payment.creator_role === 'broker' || payment.referred_by_name) ? (
+                <Field label="Referred By" value={payment.referred_by_name} />
               ) : (
                 <Field label="Branch Manager" value={payment.branch_manager_name} />
               )}
@@ -564,7 +643,7 @@ export default function PaymentDetail() {
         </div>
 
         {/* Right: Sticky Action Panel */}
-        <div className="w-full lg:w-80 shrink-0">
+        <div className="w-full lg:w-[450px] shrink-0">
           <div className="sticky top-4 space-y-4">
 
             <div className="bg-card border border-border rounded-lg p-4">
