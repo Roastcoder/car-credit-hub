@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -167,7 +168,7 @@ export default function PaymentDetail() {
   const [releaseNarration, setReleaseNarration] = useState('');
 
   // Ledger state
-  const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; narration: string }[]>([]);
+  const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; credit: string; narration: string }[]>([]);
   const [ledgerSaved, setLedgerSaved] = useState(false);
 
   // Aadhaar Verification State
@@ -278,7 +279,7 @@ export default function PaymentDetail() {
     onError: (error: any) => toast.error(error.message || 'Failed to save ledger')
   });
 
-  const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', narration: '' }]);
+  const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', credit: '', narration: '' }]);
   const removeLedgerRow = (i: number) => setLedgerEntries(prev => prev.filter((_, idx) => idx !== i));
   const updateLedgerRow = (i: number, field: string, value: string) => {
     setLedgerSaved(false);
@@ -391,6 +392,85 @@ export default function PaymentDetail() {
 
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
+  };
+
+  const downloadLedgerPDF = () => {
+    if (!payment) return;
+    
+    const doc = new jsPDF();
+    const margin = 20;
+    let y = 30;
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(30, 41, 59);
+    doc.text('MEHAR CAR CREDIT HUB', margin, y);
+    y += 10;
+    doc.setFontSize(12);
+    doc.text('Loan Account Ledger Report', margin, y);
+    y += 15;
+
+    // Application Details
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Applicant: ${payment.applicant_name}`, margin, y);
+    doc.text(`Loan/App ID: ${payment.loan_number} / #${payment.id}`, 110, y);
+    y += 7;
+    doc.text(`Vehicle: ${payment.vehicle_name} ${payment.vehicle_model}`, margin, y);
+    doc.text(`Dated: ${new Date().toLocaleDateString()}`, 110, y);
+    y += 15;
+
+    // Table Headers
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(51, 65, 85);
+    doc.rect(margin, y - 5, 170, 10, 'F');
+    doc.text('Date', margin + 5, y + 1);
+    doc.text('Credit (INR)', margin + 35, y + 1);
+    doc.text('Debit (INR)', margin + 75, y + 1);
+    doc.text('Narration', margin + 115, y + 1);
+    y += 10;
+
+    // Fixed Sanction Row
+    doc.setTextColor(30, 41, 59);
+    doc.text(new Date(payment.disbursement_date || payment.created_at).toLocaleDateString(), margin + 5, y);
+    doc.text(Number(payment.disbursement_amount).toLocaleString(), margin + 35, y);
+    doc.text('-', margin + 75, y);
+    doc.text('Initial Loan Sanction (Net Disbursement)', margin + 115, y);
+    y += 10;
+
+    // Ledger Entries
+    ledgerEntries.forEach((entry) => {
+      doc.text(entry.date || '-', margin + 5, y);
+      doc.text(Number(entry.credit || 0).toLocaleString(), margin + 35, y);
+      doc.text(Number(entry.debit || 0).toLocaleString(), margin + 75, y);
+      doc.text(entry.narration || '-', margin + 115, y);
+      y += 8;
+      
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    // Summary
+    y += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, y, margin + 170, y);
+    y += 10;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Account Balance Summary', margin, y);
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(`Total Credit: INR ${Number(payment.disbursement_amount).toLocaleString()}`, margin, y);
+    y += 7;
+    doc.text(`Total Released: INR ${totalReleased.toLocaleString()}`, margin, y);
+    y += 10;
+    doc.setTextColor(79, 70, 229); // Indigo
+    doc.text(`Final Remaining Balance: INR ${remainingLoanBalance.toLocaleString()}`, margin, y);
+
+    doc.save(`Ledger_Report_${payment.loan_number}.pdf`);
   };
 
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
@@ -755,12 +835,21 @@ export default function PaymentDetail() {
                   </div>
                 )}
 
-                <div className="p-3 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Overall Loan Balance</p>
-                  <p className="text-sm font-bold text-purple-700 dark:text-purple-400">₹{remainingLoanBalance.toLocaleString()}</p>
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Overall Loan Balance</p>
+                    <p className="text-sm font-bold text-purple-700 dark:text-purple-400">₹{remainingLoanBalance.toLocaleString()}</p>
+                  </div>
                 </div>
+
+                {payment.status === 'completed' && (
+                  <button 
+                    onClick={downloadLedgerPDF}
+                    className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-bold shadow-md shadow-indigo-500/20"
+                  >
+                    <Download size={16} /> Download Ledger Report
+                  </button>
+                )}
               </div>
-            </div>
 
             {/* Ledger */}
             {(canEditLedger || (payment.ledger_entries?.length > 0)) && (
@@ -773,12 +862,22 @@ export default function PaymentDetail() {
                     <thead>
                       <tr className="border-b border-border">
                         <th className="text-left py-1.5 pr-2 text-muted-foreground font-semibold">Date</th>
+                        <th className="text-left py-1.5 pr-2 text-muted-foreground font-semibold">Credit (₹)</th>
                         <th className="text-left py-1.5 pr-2 text-muted-foreground font-semibold">Debit (₹)</th>
                         <th className="text-left py-1.5 text-muted-foreground font-semibold">Narration</th>
                         {canEditLedger && <th className="w-6" />}
                       </tr>
                     </thead>
                     <tbody>
+                      {/* Fixed Sanction Credit Row */}
+                      <tr className="bg-muted/30 border-b border-border font-medium">
+                        <td className="py-2 pr-2">{formatDisplayDate(payment.disbursement_date || payment.created_at)}</td>
+                        <td className="py-2 pr-2 text-green-600">₹{Number(payment.disbursement_amount || 0).toLocaleString()}</td>
+                        <td className="py-2 pr-2 text-muted-foreground">-</td>
+                        <td className="py-2 text-muted-foreground italic">Initial Sanction (Credit)</td>
+                        {canEditLedger && <td />}
+                      </tr>
+
                       {ledgerEntries.map((row, i) => (
                         <tr key={i} className="border-b border-border/50">
                           <td className="py-1 pr-2">
@@ -789,9 +888,15 @@ export default function PaymentDetail() {
                           </td>
                           <td className="py-1 pr-2">
                             {canEditLedger
+                              ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(i, 'credit', e.target.value)}
+                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
+                              : <span className="font-mono">{Number(row.credit || 0).toLocaleString()}</span>}
+                          </td>
+                          <td className="py-1 pr-2">
+                            {canEditLedger
                               ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
-                              : <span className="font-mono">{Number(row.debit).toLocaleString()}</span>}
+                              : <span className="font-mono">{Number(row.debit || 0).toLocaleString()}</span>}
                           </td>
                           <td className="py-1">
                             {canEditLedger
@@ -811,18 +916,19 @@ export default function PaymentDetail() {
                       {ledgerEntries.length > 0 && (
                         <>
                           <tr className="font-bold border-t border-border">
-                            <td className="pt-2 text-muted-foreground">Ledger Total</td>
-                            <td className="pt-2 font-mono text-foreground">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                            <td className="pt-2 text-muted-foreground">Ledger Sum</td>
+                            <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0).toLocaleString()}</td>
+                            <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
                             <td />{canEditLedger && <td />}
                           </tr>
                           <tr className="font-bold text-accent">
-                            <td className="pt-1 text-muted-foreground">Total Released</td>
-                            <td className="pt-1 font-mono">₹{totalReleased.toLocaleString()}</td>
+                            <td className="pt-1 text-muted-foreground" colSpan={2}>Total Released Vouchers</td>
+                            <td className="pt-1 font-mono text-right pr-2">₹{totalReleased.toLocaleString()}</td>
                             <td />{canEditLedger && <td />}
                           </tr>
                           <tr className="font-bold text-purple-600">
-                            <td className="pt-1 text-muted-foreground">Remaining Loan Balance</td>
-                            <td className="pt-1 font-mono">₹{remainingLoanBalance.toLocaleString()}</td>
+                            <td className="pt-1 text-muted-foreground" colSpan={2}>Remaining Loan Balance</td>
+                            <td className="pt-1 font-mono text-right pr-2">₹{remainingLoanBalance.toLocaleString()}</td>
                             <td />{canEditLedger && <td />}
                           </tr>
                         </>
