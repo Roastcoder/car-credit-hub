@@ -105,7 +105,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canAddRemarks: true,
         canViewAll: true,
         canManagePdd: true,
-        canManagePayments: false,
+        canManagePayments: true,
         canViewReports: true,
       };
 

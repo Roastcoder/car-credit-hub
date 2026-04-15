@@ -591,10 +591,10 @@ export default function PaymentDetail() {
         </div>
 
         {/* Supporting Documents (Banking & PDD) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <Section title="Banking Proofs" icon={<FileText size={20} />}>
             {bankingDocuments.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {bankingDocuments.map((doc, idx) => (
                   <DocumentPreviewCard 
                     key={idx}
@@ -613,7 +613,7 @@ export default function PaymentDetail() {
 
           <Section title="Loan Documents" icon={<FileText size={20} />}>
             {loanDocuments.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {loanDocuments.map((doc: any, idx: number) => (
                   <DocumentPreviewCard 
                     key={idx}
@@ -626,6 +626,26 @@ export default function PaymentDetail() {
               <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">
                 <Camera size={24} className="text-muted-foreground/30 mb-2" />
                 <p className="text-sm text-muted-foreground italic">No documents found for this loan</p>
+              </div>
+            )}
+          </Section>
+
+          <Section title="Payment Proof" icon={<CreditCard size={20} />}>
+            {payment.payment_proof_path ? (
+              <DocumentPreviewCard 
+                doc={{
+                  url: payment.payment_proof_path.startsWith('http') 
+                    ? payment.payment_proof_path 
+                    : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')}${payment.payment_proof_path}`,
+                  name: payment.payment_proof_path.split('/').pop() || 'Payment Proof',
+                  type: 'Payment Release Proof'
+                }}
+                onView={previewDocument}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">
+                <Camera size={24} className="text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground italic">No payment proof uploaded yet</p>
               </div>
             )}
           </Section>

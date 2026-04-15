@@ -74,8 +74,8 @@ export default function PDDTracking() {
     },
     enabled: !!user,
   });
-  const canEditPdd = user?.role === 'employee' || user?.role === 'manager';
-  const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin';
+  const canEditPdd = user?.role === 'employee' || user?.role === 'manager' || user?.role === 'pdd_manager';
+  const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'pdd_manager';
 
   const approvePdd = useMutation({
     mutationFn: async (loanId: number) => {

@@ -57,17 +57,17 @@ export default function Dashboard() {
   const { data: smsBalance } = useQuery({
     queryKey: ['sms-balance'],
     queryFn: async () => {
-      if (user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager') {
+      if (user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager' || user?.role === 'pdd_manager') {
         return await smsAPI.getBalance();
       }
       return null;
     },
-    enabled: user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager'
+    enabled: user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'manager' || user?.role === 'pdd_manager'
   });
 
   if (!user) return null;
 
-  const isAdminDashboard = user.role === 'admin' || user.role === 'super_admin';
+  const isAdminDashboard = user.role === 'admin' || user.role === 'super_admin' || user.role === 'pdd_manager';
   const isBroker = user.role === 'broker';
   const isAccountant = user.role === 'accountant';
 

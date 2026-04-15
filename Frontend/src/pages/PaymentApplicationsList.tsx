@@ -127,7 +127,7 @@ export default function PaymentApplicationsList() {
     }).format(amount);
   };
 
-  const canAccountProcess = ['accountant', 'admin', 'super_admin'].includes(user?.role || '');
+  const canAccountProcess = ['accountant', 'admin', 'super_admin', 'pdd_manager'].includes(user?.role || '');
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6">
@@ -279,7 +279,7 @@ export default function PaymentApplicationsList() {
                     View
                   </Button>
                   
-                  {user?.role === 'manager' && app.status === 'submitted' && (
+                  {(user?.role === 'manager' || user?.role === 'pdd_manager') && app.status === 'submitted' && (
                     <>
                       <Button 
                         size="sm" 
@@ -415,7 +415,7 @@ export default function PaymentApplicationsList() {
                             <Eye size={14} />
                           </Button>
                           
-                          {user?.role === 'manager' && app.status === 'submitted' && (
+                          {(user?.role === 'manager' || user?.role === 'pdd_manager') && app.status === 'submitted' && (
                             <div className="flex items-center gap-0.5">
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => handleManagerAction(app.id, 'approve')}>
                                 <CheckCircle size={14} />
