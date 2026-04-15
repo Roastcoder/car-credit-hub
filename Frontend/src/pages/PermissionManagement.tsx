@@ -6,16 +6,30 @@ import { ROLE_LABELS, UserRole, UserPermissions } from '@/lib/auth';
 import { Shield, Search, Check, X, Loader2, Save, Undo } from 'lucide-react';
 import { toast } from 'sonner';
 
-const PERMISSION_KEYS: { key: keyof UserPermissions; label: string; description: string }[] = [
-  { key: 'can_view_leads', label: 'View Leads', description: 'Access to Leads List' },
-  { key: 'can_edit_leads', label: 'Edit Leads', description: 'Modify lead details' },
-  { key: 'can_create_lead', label: 'Create Lead', description: 'Add new leads' },
-  { key: 'can_view_loans', label: 'View Loans', description: 'Access to Loans List' },
-  { key: 'can_edit_loans', label: 'Edit Loans', description: 'Modify loan details' },
-  { key: 'can_manage_pdd', label: 'Manage PDD', description: 'PDD Tracking & Verification' },
-  { key: 'can_manage_payments', label: 'Manage Payments', description: 'Payment Applications & Vouchers' },
-  { key: 'can_view_reports', label: 'View Reports', description: 'Access to financial & sales reports' },
+const PERMISSION_KEYS: { key: keyof UserPermissions; label: string; description: string; group: string }[] = [
+  // Leads
+  { key: 'can_view_leads',      label: 'View Leads',          description: 'Access leads list',                group: 'Leads' },
+  { key: 'can_create_lead',     label: 'Create Lead',         description: 'Add new leads',                    group: 'Leads' },
+  { key: 'can_edit_leads',      label: 'Edit Leads',          description: 'Modify lead details',              group: 'Leads' },
+  // Loans
+  { key: 'can_view_loans',      label: 'View Loans',          description: 'Access loans list',                group: 'Loans' },
+  { key: 'can_create_loan',     label: 'Create Loan',         description: 'Add new loan applications',        group: 'Loans' },
+  { key: 'can_edit_loans',      label: 'Edit Loans',          description: 'Modify loan details',              group: 'Loans' },
+  // PDD & Payments
+  { key: 'can_manage_pdd',      label: 'Manage PDD',          description: 'PDD tracking & verification',      group: 'Operations' },
+  { key: 'can_manage_payments', label: 'Manage Payments',     description: 'Payment applications & vouchers',  group: 'Operations' },
+  // Reports & Dashboard
+  { key: 'can_view_reports',    label: 'View Reports',        description: 'Financial & sales reports',        group: 'Reports' },
+  { key: 'can_view_dashboard',  label: 'View Dashboard',      description: 'Access dashboard & KPIs',          group: 'Reports' },
+  // Admin
+  { key: 'can_view_users',      label: 'View Users',          description: 'Access user management',           group: 'Admin' },
+  { key: 'can_view_branches',   label: 'View Branches',       description: 'Access branch management',         group: 'Admin' },
+  { key: 'can_view_banks',      label: 'View Banks',          description: 'Access bank management',           group: 'Admin' },
+  { key: 'can_view_brokers',    label: 'View Brokers',        description: 'Access broker management',         group: 'Admin' },
+  { key: 'can_view_commissions',label: 'View Commissions',    description: 'Access commission data',           group: 'Admin' },
 ];
+
+const GROUPS = ['Leads', 'Loans', 'Operations', 'Reports', 'Admin'];
 
 export default function PermissionManagement() {
   const { user: currentUser } = useAuth();
@@ -99,7 +113,7 @@ export default function PermissionManagement() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Permission Control</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Manually toggle specific capabilities for Managers and Admins.
+          Manually toggle specific capabilities for Managers, RBMs and Admins.
         </p>
       </div>
 
@@ -165,27 +179,37 @@ export default function PermissionManagement() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {PERMISSION_KEYS.map(({ key, label, description }) => {
-                      const isGranted = !!displayPerms[key];
+                  <div className="space-y-4">
+                    {GROUPS.map(group => {
+                      const groupKeys = PERMISSION_KEYS.filter(p => p.group === group);
                       return (
-                        <div
-                          key={key}
-                          onClick={() => handleToggle(user.id, key, isGranted)}
-                          className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer select-none ${
-                            isGranted 
-                              ? 'bg-accent/10 border-accent/20 text-accent' 
-                              : 'bg-muted/30 border-transparent text-muted-foreground'
-                          }`}
-                        >
-                          <div className="min-w-0 pr-2">
-                            <p className="text-xs font-bold leading-tight truncate">{label}</p>
-                            <p className="text-[10px] opacity-70 leading-tight mt-0.5 truncate">{description}</p>
-                          </div>
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
-                            isGranted ? 'bg-accent text-accent-foreground' : 'bg-muted border border-border'
-                          }`}>
-                            {isGranted ? <Check size={12} strokeWidth={4} /> : <X size={12} className="opacity-30" />}
+                        <div key={group}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{group}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {groupKeys.map(({ key, label, description }) => {
+                              const isGranted = !!displayPerms[key];
+                              return (
+                                <div
+                                  key={key}
+                                  onClick={() => handleToggle(user.id, key, isGranted)}
+                                  className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                                    isGranted
+                                      ? 'bg-accent/10 border-accent/20 text-accent'
+                                      : 'bg-muted/30 border-transparent text-muted-foreground'
+                                  }`}
+                                >
+                                  <div className="min-w-0 pr-2">
+                                    <p className="text-xs font-bold leading-tight truncate">{label}</p>
+                                    <p className="text-[10px] opacity-70 leading-tight mt-0.5 truncate">{description}</p>
+                                  </div>
+                                  <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center transition-all ${
+                                    isGranted ? 'bg-accent text-accent-foreground' : 'bg-muted border border-border'
+                                  }`}>
+                                    {isGranted ? <Check size={12} strokeWidth={4} /> : <X size={12} className="opacity-30" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
