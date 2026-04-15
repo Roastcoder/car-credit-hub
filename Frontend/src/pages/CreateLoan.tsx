@@ -919,6 +919,16 @@ export default function CreateLoan() {
     }
   }, [form.purposeLoanAmount, form.netDisbursementAmount]);
 
+  // Auto-calculate Net Disbursement Amount (Repurposed from Net Received Amount)
+  useEffect(() => {
+    const seed = Number(form.netSeedAmount) || 0;
+    const deduction = Number(form.meharDeduction) || 0;
+    const netDisp = Math.max(0, seed - deduction);
+    if (netDisp !== Number(form.netDisbursementAmount)) {
+      update('netDisbursementAmount', String(netDisp));
+    }
+  }, [form.netSeedAmount, form.meharDeduction]);
+
   // Auto-fill Our Branch from logged-in user's branch
   useEffect(() => {
     if (!isEditMode && user && branches.length > 0 && !form.ourBranch) {
@@ -1808,7 +1818,15 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
                     <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
                     <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
-                    <div><label className={labelClass}>Net Disbursement Amount (₹)</label><input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>Net Disbursement Amount (₹)</label>
+                      <input 
+                        type="number" 
+                        className={`${inputClass} bg-muted font-bold text-accent`} 
+                        value={form.netDisbursementAmount} 
+                        readOnly 
+                      />
+                    </div>
                     <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
                     <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
                   </div>

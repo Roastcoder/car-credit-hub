@@ -137,6 +137,7 @@ interface PaymentApplication {
   remarks?: string;
   banking_documents?: string | any[];
   ledger_entries?: any[];
+  vouchers?: any[];
 }
 
 const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
@@ -162,6 +163,8 @@ export default function PaymentDetail() {
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [releaseAmount, setReleaseAmount] = useState('');
+  const [releaseNarration, setReleaseNarration] = useState('');
 
   // Ledger state
   const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; narration: string }[]>([]);
@@ -252,15 +255,17 @@ export default function PaymentDetail() {
 
   // Add UTR number
   const addUTRNumber = useMutation({
-    mutationFn: async (utr: string) => {
-      const result = await paymentApplicationAPI.addUTR(parseInt(id!), utr);
+    mutationFn: async ({ utr, amount, narration }: { utr: string; amount: number; narration?: string }) => {
+      const result = await paymentApplicationAPI.addUTR(parseInt(id!), utr, { amount, narration });
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] });
       setShowUTRModal(false);
       setUtrNumber('');
-      toast.success('UTR number added and payment released. Please upload proof next.');
+      setReleaseAmount('');
+      setReleaseNarration('');
+      toast.success('UTR number added and payment released.');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to add UTR number');
@@ -340,7 +345,16 @@ export default function PaymentDetail() {
       toast.error('Please enter UTR number');
       return;
     }
-    addUTRNumber.mutate(utrNumber.trim());
+    const amt = parseFloat(releaseAmount);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    addUTRNumber.mutate({ 
+      utr: utrNumber.trim(), 
+      amount: amt, 
+      narration: releaseNarration.trim() 
+    });
   };
 
   if (isLoading) {
@@ -380,11 +394,21 @@ export default function PaymentDetail() {
   };
 
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
+  
+  const totalReleased = (payment.vouchers || []).reduce((sum, v) => sum + (Number(v.amount) || 0), 0);
+  const targetAmount = Number(payment.today_release_amount || 0);
+  const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
+  const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
+  const remainingLoanBalance = Math.max(0, totalLoanDisbursement - totalReleased);
+
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
-  const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'voucher_created';
-  const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && ['voucher_created', 'manager_approved'].includes(payment.status);
-  const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'payment_released';
+  const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && 
+    (payment.status === 'voucher_created' || (payment.status === 'payment_released' && remainingAppBalance > 0));
+  const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && 
+    ['voucher_created', 'manager_approved', 'payment_released'].includes(payment.status);
+  const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && 
+    (payment.status === 'payment_released' || payment.status === 'completed');
 
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="bg-card rounded-lg border border-border p-6">
@@ -666,6 +690,39 @@ export default function PaymentDetail() {
             <p className="text-sm text-foreground whitespace-pre-wrap">{payment.remarks}</p>
           </Section>
         )}
+
+        {/* Payment History (Vouchers) */}
+        {(payment.vouchers && payment.vouchers.length > 0) && (
+          <Section title="Payment History (Vouchers)" icon={<CreditCard size={20} />}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 text-muted-foreground font-semibold">Date</th>
+                    <th className="text-left py-2 text-muted-foreground font-semibold">UTR / Reference</th>
+                    <th className="text-right py-2 text-muted-foreground font-semibold">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payment.vouchers.map((v, i) => (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className="py-2">{formatDisplayDate(v.voucher_date)}</td>
+                      <td className="py-2">
+                        <span className="font-mono font-bold text-accent">{v.reference_number}</span>
+                        <p className="text-[10px] text-muted-foreground">{v.description}</p>
+                      </td>
+                      <td className="py-2 text-right font-mono font-bold">₹{Number(v.amount).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-muted/30 font-bold">
+                    <td className="py-2 pl-2" colSpan={2}>Total Released</td>
+                    <td className="py-2 pr-2 text-right">₹{totalReleased.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
         </div>
 
         {/* Right: Sticky Action Panel */}
@@ -673,18 +730,36 @@ export default function PaymentDetail() {
           <div className="sticky top-4 space-y-4">
 
             <div className="bg-card border border-border rounded-lg p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Status</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Status & Balances</p>
               {statusConfig && (
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.color}`}>
                   {statusConfig.label}
                 </span>
               )}
-              {payment.utr_number && (
-                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">UTR Number</p>
-                  <p className="text-sm font-bold text-green-700 dark:text-green-400 font-mono">{payment.utr_number}</p>
+              
+              <div className="mt-4 space-y-3">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Target Amount</p>
+                  <p className="text-sm font-bold text-blue-700 dark:text-blue-400">₹{targetAmount.toLocaleString()}</p>
                 </div>
-              )}
+                
+                <div className="p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Total Released</p>
+                  <p className="text-sm font-bold text-green-700 dark:text-green-400">₹{totalReleased.toLocaleString()}</p>
+                </div>
+
+                {remainingAppBalance > 0 && (
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Remaining Application Balance</p>
+                    <p className="text-sm font-bold text-orange-700 dark:text-orange-400">₹{remainingAppBalance.toLocaleString()}</p>
+                  </div>
+                )}
+
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Overall Loan Balance</p>
+                  <p className="text-sm font-bold text-purple-700 dark:text-purple-400">₹{remainingLoanBalance.toLocaleString()}</p>
+                </div>
+              </div>
             </div>
 
             {/* Ledger */}
@@ -734,11 +809,23 @@ export default function PaymentDetail() {
                         </tr>
                       ))}
                       {ledgerEntries.length > 0 && (
-                        <tr className="font-bold">
-                          <td className="pt-2 text-muted-foreground">Total</td>
-                          <td className="pt-2 font-mono text-foreground">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
-                          <td />{canEditLedger && <td />}
-                        </tr>
+                        <>
+                          <tr className="font-bold border-t border-border">
+                            <td className="pt-2 text-muted-foreground">Ledger Total</td>
+                            <td className="pt-2 font-mono text-foreground">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                            <td />{canEditLedger && <td />}
+                          </tr>
+                          <tr className="font-bold text-accent">
+                            <td className="pt-1 text-muted-foreground">Total Released</td>
+                            <td className="pt-1 font-mono">₹{totalReleased.toLocaleString()}</td>
+                            <td />{canEditLedger && <td />}
+                          </tr>
+                          <tr className="font-bold text-purple-600">
+                            <td className="pt-1 text-muted-foreground">Remaining Loan Balance</td>
+                            <td className="pt-1 font-mono">₹{remainingLoanBalance.toLocaleString()}</td>
+                            <td />{canEditLedger && <td />}
+                          </tr>
+                        </>
                       )}
                     </tbody>
                   </table>
@@ -764,17 +851,41 @@ export default function PaymentDetail() {
                   <DollarSign size={16} className="text-green-600" /> Enter UTR Number
                 </p>
                 <form onSubmit={handleUTRSubmit} className="space-y-3">
-                  <input
-                    type="text"
-                    value={utrNumber}
-                    onChange={(e) => setUtrNumber(e.target.value)}
-                    placeholder="Enter UTR / Transaction ID"
-                    required
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                  />
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">UTR / Transaction ID</label>
+                    <input
+                      type="text"
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value)}
+                      placeholder="Enter UTR Number"
+                      required
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Release Amount (₹)</label>
+                    <input
+                      type="number"
+                      value={releaseAmount}
+                      onChange={(e) => setReleaseAmount(e.target.value)}
+                      placeholder={`Max ₹${remainingAppBalance}`}
+                      required
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm font-bold text-green-600 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Narration (Optional)</label>
+                    <input
+                      type="text"
+                      value={releaseNarration}
+                      onChange={(e) => setReleaseNarration(e.target.value)}
+                      placeholder="e.g. Partial release for PDD"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                    />
+                  </div>
                   <button
                     type="submit"
-                    disabled={addUTRNumber.isPending || !utrNumber.trim()}
+                    disabled={addUTRNumber.isPending || !utrNumber.trim() || !releaseAmount}
                     className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold disabled:opacity-50"
                   >
                     {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release Payment'}

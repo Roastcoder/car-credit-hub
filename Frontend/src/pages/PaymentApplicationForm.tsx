@@ -156,7 +156,6 @@ export default function PaymentApplicationForm() {
     hold_amount: 0,
     hold_percentage: 0,
     challan_amount: 0,
-    payment_in_favour_name: '',
     dm_approval: false,
     disbursement_date: '',
     loan_amount: 0
@@ -297,7 +296,7 @@ export default function PaymentApplicationForm() {
         kyc_documents: prev.kyc_documents || (d.rto_rc_owner_kyc ? 'Yes' : 'No'),
         insurance_available: prev.insurance_available || d.insurance_status === 'Approved' || !!d.insurance_copy,
         foreclosure_amount: prev.foreclosure_amount || Number(d.foreclosure_amount) || 0,
-        foreclosure_name: prev.foreclosure_name || d.foreclosure_bank_name || '',
+        foreclosure_name: d.foreclosure_bank_name || '',
         hold_amount: prev.hold_amount || Number(d.hold_amount) || 0,
         challan_amount: prev.challan_amount || Number(d.rto_challan_amount) || 0,
         payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || ''
@@ -771,6 +770,12 @@ export default function PaymentApplicationForm() {
               <label className="text-xs font-semibold text-green-600 uppercase mb-1 block text-left">Total Payment Release (%)</label>
               <p className="text-xl font-bold text-green-900 dark:text-green-100 text-left">{formData.total_release_percentage}%</p>
             </div>
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg">
+              <label className="text-xs font-semibold text-orange-600 uppercase mb-1 block text-left">Balance (Disbursement - Today Release)</label>
+              <p className="text-xl font-bold text-orange-900 dark:text-orange-100 text-left underline decoration-double">
+                ₹{((Number(formData.disbursement_amount) || 0) - (Number(formData.today_release_amount) || 0)).toLocaleString()}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -780,12 +785,7 @@ export default function PaymentApplicationForm() {
             <AlertCircle className="h-5 w-5 text-yellow-500" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField label="Mehar Deduction" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
-              <label className="text-xs font-semibold text-yellow-600 uppercase mb-1 block text-left">Mehar Deduction (%)</label>
-              <p className="text-xl font-bold text-yellow-900 dark:text-yellow-100 text-left">{formData.hold_percentage}%</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
