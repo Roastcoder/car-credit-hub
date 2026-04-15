@@ -197,8 +197,11 @@ export default function PaymentDetail() {
         
       if (!Array.isArray(docPaths) || docPaths.length === 0) return [];
       
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const baseUrl = apiUrl.replace(/\/api$/, '');
+
       return docPaths.map(path => ({
-        url: `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${path}`,
+        url: path.startsWith('http') ? path : `${baseUrl}${path}`,
         name: path.split('/').pop() || 'Document',
         type: 'Banking Proof'
       }));
@@ -480,7 +483,10 @@ export default function PaymentDetail() {
                 <div className="col-span-1 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/20">
                   <p className="text-xs text-muted-foreground mb-1">Payment Proof</p>
                   <a 
-                    href={`${import.meta.env.VITE_API_URL}${payment.payment_proof_path}`} 
+                    href={payment.payment_proof_path.startsWith('http') 
+                      ? payment.payment_proof_path 
+                      : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')}${payment.payment_proof_path}`
+                    } 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
