@@ -153,7 +153,7 @@ export default function Login() {
   };
 
   // ── Shared Forgot Password UI ──
-  const ForgotPasswordView = ({ rounded = 'rounded-2xl' }: { rounded?: string }) => (
+  const renderForgotPassword = (rounded = 'rounded-2xl') => (
     <div className="space-y-4">
       <button
         type="button"
@@ -317,7 +317,7 @@ export default function Login() {
                 </button>
               </>
             ) : (
-              <ForgotPasswordView rounded="rounded-2xl" />
+              renderForgotPassword('rounded-2xl')
             )}
 
             <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
@@ -433,7 +433,7 @@ export default function Login() {
                 </form>
               </>
             ) : (
-              <ForgotPasswordView rounded="rounded-xl" />
+              renderForgotPassword('rounded-xl')
             )}
 
             <div className="mt-6 pt-5 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
