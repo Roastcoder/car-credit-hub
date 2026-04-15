@@ -323,7 +323,7 @@ export default function PaymentDetail() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 pb-20 lg:pb-4">
+      <div className="w-full px-4 pb-20 lg:pb-4">
         <button 
           onClick={() => navigate('/payments')} 
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
