@@ -199,7 +199,7 @@ export default function LoanDetail() {
     },
     enabled: !!id,
   });
-  
+
   const { data: vehicleCache } = useQuery({
     queryKey: ['vehicle-cache', loan?.vehicle_number],
     queryFn: async () => {
@@ -423,11 +423,10 @@ export default function LoanDetail() {
   );
 
   const VerifiedDataBadge = ({ isCached }: { isCached?: boolean }) => (
-    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
-      isCached 
-        ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
-        : 'bg-green-500/10 text-green-600 border-green-500/20'
-    }`}>
+    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${isCached
+      ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+      : 'bg-green-500/10 text-green-600 border-green-500/20'
+      }`}>
       <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isCached ? 'bg-blue-500' : 'bg-green-500'}`} />
       {isCached ? 'from db' : 'Live API Response'}
     </div>
@@ -903,17 +902,17 @@ export default function LoanDetail() {
                         )}
                       </h3>
                       <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-                        <Field 
-                          label="Total Challans" 
-                          value={((loan as any).total_challans !== undefined && (loan as any).total_challans !== null) 
-                            ? String((loan as any).total_challans) 
-                            : String(vehicleCache.challan?.data?.total_challans || '0')} 
+                        <Field
+                          label="Total Challans"
+                          value={((loan as any).total_challans !== undefined && (loan as any).total_challans !== null)
+                            ? String((loan as any).total_challans)
+                            : String(vehicleCache.challan?.data?.total_challans || '0')}
                         />
-                        <Field 
-                          label="Total Amount" 
+                        <Field
+                          label="Total Amount"
                           value={((loan as any).challan_amount !== undefined && (loan as any).challan_amount !== null)
                             ? `₹${Number((loan as any).challan_amount).toLocaleString()}`
-                            : (vehicleCache.challan?.data?.total_amount ? `₹${Number(vehicleCache.challan.data.total_amount).toLocaleString()}` : '₹0')} 
+                            : (vehicleCache.challan?.data?.total_amount ? `₹${Number(vehicleCache.challan.data.total_amount).toLocaleString()}` : '₹0')}
                         />
                         <div className="col-span-2">
                           <p className="text-[10px] text-orange-600/70 italic mt-2">
@@ -959,7 +958,7 @@ export default function LoanDetail() {
             <div className="lg:sticky lg:top-4 h-fit space-y-6">
               {/* Remarks Section */}
               {(loan as any).remark && (
-                <Section title="Branch Manager Remarks" icon={<MessageSquare size={16} />}>
+                <Section title="Admin Remarks" icon={<MessageSquare size={16} />}>
                   <div className="p-4 bg-accent/5 rounded-xl border border-accent/10">
                     <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed italic">"{(loan as any).remark}"</p>
                   </div>
