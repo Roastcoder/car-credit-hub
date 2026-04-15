@@ -333,99 +333,13 @@ export default function PaymentDetail() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {canApprove && (
-              <>
-                <button
-                  onClick={() => managerAction.mutate({ action: 'approve' })}
-                  disabled={managerAction.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <CheckCircle size={16} />
-                  {managerAction.isPending ? 'Processing...' : 'RBM Approve'}
-                </button>
-                <button
-                  onClick={() => {
-                    const remarks = prompt('Enter send back remarks (instructions for corrections):');
-                    if (remarks) managerAction.mutate({ action: 'send_back', remarks });
-                  }}
-                  disabled={managerAction.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <ArrowLeft size={16} />
-                  Send Back
-                </button>
-                <button
-                  onClick={() => {
-                    const remarks = prompt('Enter rejection remarks:');
-                    if (remarks) managerAction.mutate({ action: 'reject', remarks });
-                  }}
-                  disabled={managerAction.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <XCircle size={16} />
-                  Reject
-                </button>
-              </>
-            )}
-            
-            {canProcess && (
-              <button
-                onClick={() => navigate(`/account/vouchers/create/${id}`)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-              >
-                <FileText size={16} />
-                Generate Voucher
-              </button>
-            )}
-            
-            {canAddUTR && (
-              <form onSubmit={handleUTRSubmit} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value)}
-                  placeholder="Enter UTR number"
-                  required
-                  className="px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-48"
-                />
-                <button
-                  type="submit"
-                  disabled={addUTRNumber.isPending || !utrNumber.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <DollarSign size={16} />
-                  {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release'}
-                </button>
-              </form>
-            )}
-
-            {canUploadProof && (
-              <button
-                onClick={() => document.getElementById('final-proof-upload')?.click()}
-                disabled={uploadProof.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                <Download size={16} />
-                {uploadProof.isPending ? 'Uploading...' : 'Upload Payment Proof'}
-              </button>
-            )}
-
-            <input 
-              type="file" 
-              id="final-proof-upload" 
-              className="hidden" 
-              accept="image/*,.pdf"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadProof.mutate(file);
-              }}
-            />
-          </div>
+          <div />
         </div>
 
-        {/* Main Details Grid */}
+        {/* Dual Layout */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+        {/* Left: Main Details */}
+        <div className="flex-1 min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Beneficiary & Bank Information - HIGHLIGHTED */}
           <div className="lg:col-span-2">
@@ -626,6 +540,94 @@ export default function PaymentDetail() {
             <p className="text-sm text-foreground whitespace-pre-wrap">{payment.remarks}</p>
           </Section>
         )}
+        </div>
+
+        {/* Right: Sticky Action Panel */}
+        <div className="w-full lg:w-80 shrink-0">
+          <div className="sticky top-4 space-y-4">
+
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Status</p>
+              {statusConfig && (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.color}`}>
+                  {statusConfig.label}
+                </span>
+              )}
+              {payment.utr_number && (
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">UTR Number</p>
+                  <p className="text-sm font-bold text-green-700 dark:text-green-400 font-mono">{payment.utr_number}</p>
+                </div>
+              )}
+            </div>
+
+            {canAddUTR && (
+              <div className="bg-card border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <DollarSign size={16} className="text-green-600" /> Enter UTR Number
+                </p>
+                <form onSubmit={handleUTRSubmit} className="space-y-3">
+                  <input
+                    type="text"
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value)}
+                    placeholder="Enter UTR / Transaction ID"
+                    required
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                  />
+                  <button
+                    type="submit"
+                    disabled={addUTRNumber.isPending || !utrNumber.trim()}
+                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold disabled:opacity-50"
+                  >
+                    {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release Payment'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {canUploadProof && (
+              <div className="bg-card border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                <p className="text-sm font-semibold text-foreground mb-3">Upload Payment Proof</p>
+                <input type="file" id="proof-sidebar" className="hidden" accept="image/*,.pdf"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadProof.mutate(f); }}
+                />
+                <label htmlFor="proof-sidebar"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/10 text-sm text-purple-600 font-medium transition-colors">
+                  <Download size={16} />
+                  {uploadProof.isPending ? 'Uploading...' : 'Choose File'}
+                </label>
+              </div>
+            )}
+
+            {canApprove && (
+              <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+                <p className="text-sm font-semibold text-foreground mb-1">Manager Actions</p>
+                <button onClick={() => managerAction.mutate({ action: 'approve' })} disabled={managerAction.isPending}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold disabled:opacity-50 transition-colors">
+                  Approve
+                </button>
+                <button onClick={() => { const r = prompt('Rejection reason?'); if (r) managerAction.mutate({ action: 'reject', remarks: r }); }} disabled={managerAction.isPending}
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold disabled:opacity-50 transition-colors">
+                  Reject
+                </button>
+                <button onClick={() => { const r = prompt('Send back reason?'); if (r) managerAction.mutate({ action: 'send_back', remarks: r }); }} disabled={managerAction.isPending}
+                  className="w-full px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm font-semibold disabled:opacity-50 transition-colors">
+                  Send Back
+                </button>
+              </div>
+            )}
+
+            {canProcess && (
+              <button onClick={() => navigate(`/account/vouchers/create/${id}`)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold transition-colors">
+                <FileText size={16} /> Generate Voucher
+              </button>
+            )}
+
+          </div>
+        </div>
+        </div>
       </div>
 
       {/* Document Preview Modal */}
