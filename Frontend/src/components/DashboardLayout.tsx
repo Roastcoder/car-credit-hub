@@ -45,10 +45,14 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    title: 'My Leads',
+    title: 'Leads',
     path: '/leads-list',
     icon: UserPlus,
     roles: ['broker'],
+    children: [
+      { title: 'Create Lead', path: '/add-lead', icon: UserPlus },
+      { title: 'My Leads', path: '/leads-list', icon: FileText },
+    ],
   },
   { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
   { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
