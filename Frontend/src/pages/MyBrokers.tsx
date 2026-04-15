@@ -11,8 +11,13 @@ export default function MyBrokers() {
   const { data: brokers = [], isLoading } = useQuery({
     queryKey: ['my-referred-brokers'],
     queryFn: async () => {
-      const data = await usersAPI.getAll();
-      return Array.isArray(data) ? data : (data.data || []);
+      const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API}/users?role=broker&referred_by_me=true`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch brokers');
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
