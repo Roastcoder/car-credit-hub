@@ -73,6 +73,7 @@ export default function AddLead() {
   const [aadharBack, setAadharBack] = useState<File | null>(null);
   const [panCard, setPanCard] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [aadhaarLastDigits, setAadhaarLastDigits] = useState<string | null>(null);
   const [aadhaarVerification, setAadhaarVerification] = useState<{
     verified: boolean;
     message: string;
@@ -156,9 +157,10 @@ export default function AddLead() {
     }
   }, [user, branches, managers]);
 
-  // Verify Aadhaar when both Aadhaar and Phone are complete (debounced)
+  // Step 1: Call fetch-digits API as soon as 12-digit Aadhaar is entered
   useEffect(() => {
-    if (form.aadhar_number.length !== 12 || form.phone.length !== 10) {
+    if (form.aadhar_number.length !== 12) {
+      setAadhaarLastDigits(null);
       setAadhaarVerification({ verified: false, message: '', status: 'idle' });
       return;
     }
@@ -167,25 +169,27 @@ export default function AddLead() {
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/verify-mobile`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/fetch-digits`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify({
-            aadhar_number: form.aadhar_number,
-            mobile: form.phone
-          })
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+          body: JSON.stringify({ aadhar_number: form.aadhar_number })
         });
         const data = await response.json();
-        if (data.success && data.match) {
-          setAadhaarVerification({ verified: true, message: 'Mobile last 3 digits matched ✓', status: 'success' });
-          toast.success('✓ Aadhaar mobile matched!', { duration: 3000 });
-        } else if (data.success && !data.match) {
-          setAadhaarVerification({ verified: false, message: data.message || 'Last 3 digits do not match', status: 'error' });
+        if (data.success && data.last_digits) {
+          setAadhaarLastDigits(data.last_digits);
+          if (form.phone.length === 10) {
+            const isMatch = form.phone.slice(-3) === data.last_digits;
+            if (isMatch) {
+              setAadhaarVerification({ verified: true, message: 'Mobile number matched with Aadhaar ✓', status: 'success' });
+              toast.success('✓ Mobile number matched with Aadhaar', { duration: 3000 });
+            } else {
+              setAadhaarVerification({ verified: false, message: `Last 3 digits do not match (Aadhaar: ${data.last_digits}, entered: ${form.phone.slice(-3)})`, status: 'error' });
+            }
+          } else {
+            setAadhaarVerification({ verified: false, message: 'Aadhaar fetched. Enter mobile to verify.', status: 'idle' });
+          }
         } else {
-          setAadhaarVerification({ verified: false, message: data.error || 'Verification failed', status: 'error' });
+          setAadhaarVerification({ verified: false, message: data.error || 'Aadhaar verification failed', status: 'error' });
         }
       } catch {
         setAadhaarVerification({ verified: false, message: 'Verification failed. Check connection.', status: 'error' });
@@ -193,7 +197,19 @@ export default function AddLead() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [form.aadhar_number, form.phone]);
+  }, [form.aadhar_number]);
+
+  // Step 2: Compare live as phone is typed (once Aadhaar last_digits are known)
+  useEffect(() => {
+    if (!aadhaarLastDigits || form.phone.length !== 10) return;
+    const isMatch = form.phone.slice(-3) === aadhaarLastDigits;
+    if (isMatch) {
+      setAadhaarVerification({ verified: true, message: 'Mobile number matched with Aadhaar ✓', status: 'success' });
+      toast.success('✓ Mobile number matched with Aadhaar', { duration: 3000 });
+    } else {
+      setAadhaarVerification({ verified: false, message: `Last 3 digits do not match (Aadhaar: ${aadhaarLastDigits}, entered: ${form.phone.slice(-3)})`, status: 'error' });
+    }
+  }, [form.phone, aadhaarLastDigits]);
 
   const createLeadMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -237,7 +253,11 @@ export default function AddLead() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createLeadMutation.mutate(form);
+    createLeadMutation.mutate({
+      ...form,
+      aadhaar_last_digits: aadhaarLastDigits || '',
+      aadhaar_mobile_matched: aadhaarVerification.verified,
+    });
   };
 
   const inputClass = "w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-accent transition-colors";
