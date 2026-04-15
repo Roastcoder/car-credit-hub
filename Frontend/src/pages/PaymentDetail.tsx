@@ -537,11 +537,11 @@ export default function PaymentDetail() {
 
     const summaryX = 140;
     doc.text('Total Credit Amount:', margin, y);
-    rightAlign(`₹${Number(payment.disbursement_amount).toLocaleString('en-IN')}`, summaryX, y);
+    rightAlign(`${Number(payment.disbursement_amount).toLocaleString('en-IN')}`, summaryX, y);
 
     y += 7;
     doc.text('Total Payment Released:', margin, y);
-    rightAlign(`₹${totalReleased.toLocaleString('en-IN')}`, summaryX, y);
+    rightAlign(`${totalReleased.toLocaleString('en-IN')}`, summaryX, y);
 
     y += 10;
     doc.setFillColor(241, 245, 249); // slate-100
@@ -549,7 +549,7 @@ export default function PaymentDetail() {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(79, 70, 229); // indigo-600
     doc.text('TOTAL REMAINING BALANCE:', margin + 5, y + 2);
-    rightAlign(`₹${remainingLoanBalance.toLocaleString('en-IN')}`, summaryX, y + 2);
+    rightAlign(`${remainingLoanBalance.toLocaleString('en-IN')}`, summaryX, y + 2);
 
     // --- Page Bottom ---
     doc.setFontSize(8);
