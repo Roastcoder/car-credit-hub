@@ -25,10 +25,11 @@ interface NavItem {
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee'] },
+  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['pdd_manager'] },
   { 
     label: 'Leads', 
     icon: <UserPlus size={20} />, 
-    roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'broker', 'employee'],
+    roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'],
     children: [
       { label: 'Leads List', path: '/leads-list', icon: <FileText size={18} /> },
       { label: 'Create Lead', path: '/add-lead', icon: <Plus size={18} /> },
@@ -38,7 +39,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Loans', 
     icon: <FileText size={20} />, 
-    roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee'],
+    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'],
     children: [
       { label: 'Loans List', path: '/loans', icon: <FileText size={18} /> },
       { label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> },
@@ -48,18 +49,18 @@ const ALL_NAV_ITEMS: NavItem[] = [
   {
     label: 'Apps',
     icon: <Activity size={20} />,
-    roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee', 'accountant'],
+    roles: ['super_admin', 'admin', 'manager', 'employee', 'accountant'],
     children: [
       { label: 'Application List', path: '/payments', icon: <FileText size={18} /> },
       { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
     ]
   },
-  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager'] },
+  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={20} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin'] },
-  { label: 'Branches', path: '/branches', icon: <MapPin size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager'] },
+  { label: 'Branches', path: '/branches', icon: <MapPin size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Send Notification', path: '/broadcast', icon: <Send size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Permissions', path: '/permissions', icon: <Shield size={20} />, roles: ['super_admin'] },
   { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
@@ -90,7 +91,7 @@ export default function MobileBottomNav() {
     } else if (user.role === 'accountant') {
       labels = ['Account Home', 'Receivables', 'Payables', 'Vouchers'];
     } else if (user.role === 'pdd_manager') {
-      labels = ['Home', 'Leads', 'Loans', 'Apps'];
+      labels = ['Home', 'PDD Tracking'];
     } else {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
     }

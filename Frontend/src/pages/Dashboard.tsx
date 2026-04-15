@@ -67,7 +67,8 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const isAdminDashboard = user.role === 'admin' || user.role === 'super_admin' || user.role === 'pdd_manager';
+  const isAdminDashboard = user.role === 'admin' || user.role === 'super_admin';
+  const isPddDashboard = user.role === 'pdd_manager';
   const isBroker = user.role === 'broker';
   const isAccountant = user.role === 'accountant';
 
@@ -177,6 +178,24 @@ export default function Dashboard() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [displayLoans]);
 
+  const pddStats = useMemo(() => {
+    if (!isPddDashboard) return null;
+    const disbursedLoans = loans.filter((l: any) => l.status === 'disbursed');
+    return {
+      total: disbursedLoans.length,
+      pendingApproval: disbursedLoans.filter((l: any) => l.pdd_status === 'pending_approval').length,
+      delayed: disbursedLoans.filter((l: any) => (l.pdd_status !== 'approved' && Number(l.delay_days) > 15)).length,
+      pending: disbursedLoans.filter((l: any) => l.pdd_status === 'pending' || !l.pdd_status).length
+    };
+  }, [loans, isPddDashboard]);
+
+  const pddLoans = useMemo(() => {
+    if (!isPddDashboard) return [];
+    return loans.filter((l: any) => l.status === 'disbursed')
+      .sort((a: any, b: any) => (Number(b.delay_days || 0) - Number(a.delay_days || 0)))
+      .slice(0, 15);
+  }, [loans, isPddDashboard]);
+
   const buildLoansFilterUrl = (status?: string) => {
     const params = new URLSearchParams();
 
@@ -227,6 +246,91 @@ export default function Dashboard() {
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-black/20 rounded border border-blue-200 dark:border-blue-800">
                 <span className="text-[10px] font-bold uppercase text-blue-500">Trans</span>
                 <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{smsBalance.transactional || 0}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPddDashboard && pddStats && (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="stat-card border-l-4 border-l-blue-500">
+              <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">PDD Management Dashboard</h2>
+              <p className="text-sm text-blue-700 dark:text-blue-300">Tracking post-disbursement documents for all files.</p>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="stat-card bg-blue-50/50 dark:bg-blue-900/10 hover:shadow-md transition-shadow">
+                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Disbursed</p>
+                <p className="text-3xl font-black text-blue-950 dark:text-white mt-2">{pddStats.total}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Files needing PDD oversight</p>
+              </div>
+              <div className="stat-card bg-amber-50/50 dark:bg-amber-900/10 hover:shadow-md transition-shadow">
+                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending PDD</p>
+                <p className="text-3xl font-black text-amber-950 dark:text-white mt-2">{pddStats.pending}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Documents yet to be submitted</p>
+              </div>
+              <div className="stat-card bg-purple-50/50 dark:bg-purple-900/10 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Awaiting Approval</p>
+                  <Activity size={14} className="text-purple-500 animate-pulse" />
+                </div>
+                <p className="text-3xl font-black text-purple-950 dark:text-white mt-2">{pddStats.pendingApproval}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Requires your immediate review</p>
+              </div>
+              <div className="stat-card bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+                <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Highly Delayed</p>
+                <p className="text-3xl font-black text-red-950 dark:text-white mt-2">{pddStats.delayed}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">&gt; 15 days since disbursement</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-blue-950 dark:text-white">Active PDD Tracking</h3>
+                  <p className="text-xs text-muted-foreground">Files sorted by delay duration</p>
+                </div>
+                <Link to="/pdd-tracking" className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                  View Full Tracking <ChevronRight size={14} />
+                </Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground border-b border-border">
+                      <th className="pb-3 font-semibold">Client / File</th>
+                      <th className="pb-3 font-semibold text-center">Delay</th>
+                      <th className="pb-3 font-semibold text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {pddLoans.map((loan: any) => (
+                      <tr key={loan.id} className="group hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}>
+                        <td className="py-4">
+                          <div className="font-bold text-blue-900 dark:text-blue-100">{loan.applicant_name}</div>
+                          <div className="text-[10px] text-muted-foreground">{loan.loan_number} • {loan.car_make}</div>
+                        </td>
+                        <td className="py-4 text-center">
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-black ${Number(loan.delay_days) > 15 ? 'bg-red-500/10 text-red-600' : 'bg-amber-500/10 text-amber-600'}`}>
+                            {loan.delay_days || 0} DAYS
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                            loan.pdd_status === 'pending_approval' ? 'bg-purple-500/10 text-purple-600' :
+                            loan.pdd_status === 'rejected' ? 'bg-red-500/10 text-red-600' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {(loan.pdd_status || 'PENDING').replace(/_/g, ' ')}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {pddLoans.length === 0 && (
+                      <tr><td colSpan={3} className="py-12 text-center text-muted-foreground font-medium">No disbursed files found needing PDD oversight.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -630,39 +734,6 @@ export default function Dashboard() {
               </div>
             )}
           </div>}
-
-          <div className={`stat-card flex flex-col ${user?.role === 'manager' ? 'lg:col-span-2' : ''}`}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                {selectedStatus ? `${LOAN_STATUSES.find(s => s.value === selectedStatus)?.label || 'Filtered'} Applications` : (user?.role === 'manager' ? 'Branch Applications' : 'Recent Applications')}
-              </h2>
-              <Link to={buildLoansFilterUrl(selectedStatus || undefined)} className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
-                View all <ChevronRight size={16} />
-              </Link>
-            </div>
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full text-sm">
-                <tbody>
-                  {displayLoans.slice(0, user?.role === 'manager' ? 15 : 5).map((loan: any) => (
-                    <tr key={loan.id} className="border-b border-blue-100 dark:border-blue-900 last:border-0 hover:bg-white/40 dark:hover:bg-blue-900/40 transition-colors cursor-pointer" onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}>
-                      <td className="py-3 px-2">
-                        <div className="font-medium text-blue-900 dark:text-blue-200">{loan.applicant_name}</div>
-                        <div className="text-xs text-blue-500">{loan.car_make} {loan.car_model}</div>
-                      </td>
-                      {user?.role === 'manager' && (
-                        <td className="py-3 px-2 text-muted-foreground">{loan.creator_name || loan.user_name || '—'}</td>
-                      )}
-                      <td className="py-3 px-2 font-medium text-blue-900 dark:text-blue-200">{formatCurrency(Number(loan.loan_amount))}</td>
-                      <td className="py-3 px-2 text-right"><LoanStatusBadge status={loan.status} /></td>
-                    </tr>
-                  ))}
-                  {displayLoans.length === 0 && (
-                    <tr><td colSpan={3} className="py-8 text-center text-blue-500">No applications found.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </div>

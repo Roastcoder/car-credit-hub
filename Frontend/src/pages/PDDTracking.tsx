@@ -2,7 +2,7 @@ import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, L
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import PDDEditModal from '@/components/PDDEditModal';
+import PDDForm from '@/components/PDDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getRolePermissions } from '@/lib/permissions';
@@ -49,7 +49,7 @@ export default function PDDTracking() {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
   };
-  const [editingLoan, setEditingLoan] = useState<any>(null);
+  const [editingLoanId, setEditingLoanId] = useState<number | null>(null);
   const { data: loans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids],
     queryFn: async () => {
@@ -179,7 +179,14 @@ export default function PDDTracking() {
                     </button>
                     {canEditPdd && (
                       <button
-                        onClick={() => setEditingLoan(loan)}
+                        onClick={() => {
+                          setEditingLoanId(loan.id);
+                          if (!expandedLoans.has(loan.id)) {
+                            const newExpanded = new Set(expandedLoans);
+                            newExpanded.add(loan.id);
+                            setExpandedLoans(newExpanded);
+                          }
+                        }}
                         className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
                       >
                         <Edit2 size={14} />
@@ -238,7 +245,19 @@ export default function PDDTracking() {
                 </div>
 
                 {expandedLoans.has(loan.id) && (
-                <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
+                  editingLoanId === loan.id ? (
+                    <div className="mt-6 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-200">
+                      <PDDForm 
+                        loan={loan} 
+                        onCancel={() => setEditingLoanId(null)} 
+                        onSuccess={() => {
+                          setEditingLoanId(null);
+                          refetch();
+                        }} 
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
                   {/* Payment & Finance Details */}
                   <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -398,21 +417,14 @@ export default function PDDTracking() {
                     </div>
                   </div>
                 </div>
-                )}
+              )
+            )}
               </div>
             );
           })
         )}
       </div>
 
-      {editingLoan && (
-        <PDDEditModal
-          loan={editingLoan}
-          isOpen={!!editingLoan}
-          onClose={() => setEditingLoan(null)}
-          onSuccess={() => refetch()}
-        />
-      )}
     </div>
   );
 }
