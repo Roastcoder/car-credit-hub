@@ -164,7 +164,8 @@ export default function Loans() {
       l,
       user?.role || 'employee',
       user?.id,
-      user?.branch_id
+      user?.branch_id,
+      user?.managed_branch_ids
     );
     
     return matchSearch && matchStatus && matchPddStatus && matchMonth && matchDay && shouldShow;

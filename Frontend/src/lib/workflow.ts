@@ -126,10 +126,22 @@ export class WorkflowService {
     return loanId ? logs.filter((log: WorkflowAuditLog) => log.loan_id === loanId) : logs;
   }
 
-  static shouldShowLoanToUser(loan: any, userRole: string, currentUserId?: number | string, currentBranchId?: number | string): boolean {
+  static shouldShowLoanToUser(loan: any, userRole: string, currentUserId?: number | string, currentBranchId?: number | string, managedBranchIds?: number[]): boolean {
     const ownerRole = this.getOwnerRole(loan.status);
     
     if (userRole === 'super_admin') return true;
+    if (userRole === 'admin') return true;
+
+    // RBM: only show loans from their assigned branches
+    if (userRole === 'rbm') {
+      const allBranchIds = Array.from(new Set([
+        ...(Array.isArray(managedBranchIds) ? managedBranchIds : []),
+        ...(currentBranchId ? [Number(currentBranchId)] : [])
+      ]));
+      if (allBranchIds.length === 0) return false;
+      return allBranchIds.includes(Number(loan.branch_id));
+    }
+
     if (userRole === ownerRole) return true;
 
     // Brokers should see their assigned loans regardless of status
@@ -160,6 +172,8 @@ export class WorkflowService {
 
   static getVisibleLoansForRole(userRole: string): string[] {
     switch (userRole) {
+      case 'rbm':
+        return ['draft', 'submitted', 'under_review', 'approved', 'disbursed', 'sent_back', 'rejected', 'cancelled'];
       case 'employee':
         return ['draft', 'submitted', 'approved', 'sent_back_employee', 'rejected', 'cancelled', 'disbursed'];
       case 'manager':
