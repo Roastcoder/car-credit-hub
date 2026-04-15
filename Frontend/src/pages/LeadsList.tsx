@@ -69,9 +69,10 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
     ).values()
   );
 
-  const modeFilteredLeads = useMemo(() => (
-    leads.filter((lead: any) => mode === 'broker' ? lead.creator_role === 'broker' : lead.creator_role !== 'broker')
-  ), [leads, mode]);
+  const modeFilteredLeads = useMemo(() => {
+    if (user?.role === 'broker') return leads; // backend already scopes to their own leads
+    return leads.filter((lead: any) => mode === 'broker' ? lead.creator_role === 'broker' : lead.creator_role !== 'broker');
+  }, [leads, mode, user?.role]);
 
   const filtered = modeFilteredLeads.filter((l: any) => {
     const matchesSearch =
@@ -90,7 +91,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
     <div className="pb-20 lg:pb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{mode === 'broker' ? 'Broker Leads' : 'Branch Leads'}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{user?.role === 'broker' ? 'My Leads' : mode === 'broker' ? 'Broker Leads' : 'Branch Leads'}</h1>
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} leads found</p>
         </div>
         {permissions.canCreateLead && mode === 'branch' && (
