@@ -399,78 +399,165 @@ export default function PaymentDetail() {
     
     const doc = new jsPDF();
     const margin = 20;
-    let y = 30;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 25;
 
-    // Header
-    doc.setFontSize(20);
-    doc.setTextColor(30, 41, 59);
+    // Helper: Right Align Text
+    const rightAlign = (text: string, x: number, y: number) => {
+      doc.text(text, x, y, { align: 'right' });
+    };
+
+    // --- Header ---
+    doc.setFontSize(22);
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.setFont('helvetica', 'bold');
     doc.text('MEHAR CAR CREDIT HUB', margin, y);
-    y += 10;
-    doc.setFontSize(12);
-    doc.text('Loan Account Ledger Report', margin, y);
-    y += 15;
-
-    // Application Details
+    
+    y += 8;
     doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Applicant: ${payment.applicant_name}`, margin, y);
-    doc.text(`Loan/App ID: ${payment.loan_number} / #${payment.id}`, 110, y);
-    y += 7;
-    doc.text(`Vehicle: ${payment.vehicle_name} ${payment.vehicle_model}`, margin, y);
-    doc.text(`Dated: ${new Date().toLocaleDateString()}`, 110, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text('Premium Automotive Financing & Credit Services', margin, y);
+    
     y += 15;
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.line(margin, y, pageWidth - margin, y);
+    
+    y += 12;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text('LOAN ACCOUNT LEDGER', margin, y);
+    
+    // --- Application Details Grid ---
+    y += 12;
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105); // slate-600
+    
+    // Left Col
+    doc.setFont('helvetica', 'bold'); doc.text('APPLICANT:', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.text(payment.applicant_name, margin + 25, y);
+    y += 6;
+    doc.setFont('helvetica', 'bold'); doc.text('VEHICLE:', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.text(`${payment.vehicle_name} ${payment.vehicle_model}`, margin + 25, y);
+    
+    // Right Col (Reset Y for right side)
+    let ry = y - 6;
+    doc.setFont('helvetica', 'bold'); doc.text('LOAN NUMBER:', 110, ry);
+    doc.setFont('helvetica', 'normal'); doc.text(payment.loan_number, 140, ry);
+    ry += 6;
+    doc.setFont('helvetica', 'bold'); doc.text('REPORT DATE:', 110, ry);
+    doc.setFont('helvetica', 'normal'); doc.text(new Date().toLocaleDateString('en-IN'), 140, ry);
 
-    // Table Headers
-    doc.setFontSize(10);
+    // --- Table Configuration ---
+    y += 15;
+    const tableTop = y;
+    const colDates = margin + 5;
+    const colCredit = margin + 55;
+    const colDebit = margin + 95;
+    const colNarr = margin + 105;
+    const tableWidth = pageWidth - (margin * 2);
+
+    // Table Header
+    doc.setFillColor(30, 41, 59); // slate-800
+    doc.rect(margin, y - 6, tableWidth, 10, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFillColor(51, 65, 85);
-    doc.rect(margin, y - 5, 170, 10, 'F');
-    doc.text('Date', margin + 5, y + 1);
-    doc.text('Credit (INR)', margin + 35, y + 1);
-    doc.text('Debit (INR)', margin + 75, y + 1);
-    doc.text('Narration', margin + 115, y + 1);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date', colDates, y);
+    rightAlign('Credit (INR)', colCredit, y);
+    rightAlign('Debit (INR)', colDebit, y);
+    doc.text('Narration', colNarr, y);
+    
     y += 10;
-
-    // Fixed Sanction Row
     doc.setTextColor(30, 41, 59);
-    doc.text(new Date(payment.disbursement_date || payment.created_at).toLocaleDateString(), margin + 5, y);
-    doc.text(Number(payment.disbursement_amount).toLocaleString(), margin + 35, y);
-    doc.text('-', margin + 75, y);
-    doc.text('Initial Loan Sanction (Net Disbursement)', margin + 115, y);
-    y += 10;
+    doc.setFont('helvetica', 'normal');
 
-    // Ledger Entries
-    ledgerEntries.forEach((entry) => {
-      doc.text(entry.date || '-', margin + 5, y);
-      doc.text(Number(entry.credit || 0).toLocaleString(), margin + 35, y);
-      doc.text(Number(entry.debit || 0).toLocaleString(), margin + 75, y);
-      doc.text(entry.narration || '-', margin + 115, y);
-      y += 8;
+    // Helper: Add Row with zebra striping
+    let rowCount = 0;
+    const addRow = (date: string, credit: string, debit: string, narr: string) => {
+      if (rowCount % 2 === 0) {
+        doc.setFillColor(248, 250, 252); // slate-50
+        doc.rect(margin, y - 5, tableWidth, 8, 'F');
+      }
+      doc.text(date, colDates, y);
+      rightAlign(credit, colCredit, y);
+      rightAlign(debit, colDebit, y);
       
+      // Handle narration wrapping if long
+      const splitNarr = doc.splitTextToSize(narr, 70);
+      doc.text(splitNarr, colNarr, y);
+      
+      const rowHeight = splitNarr.length > 1 ? 6 + (splitNarr.length - 1) * 4 : 8;
+      y += rowHeight;
+      rowCount++;
+
       if (y > 270) {
         doc.addPage();
-        y = 20;
+        y = 30;
       }
+    };
+
+    // 1. Fixed Sanction Row
+    doc.setFont('helvetica', 'bold');
+    addRow(
+      new Date(payment.disbursement_date || payment.created_at).toLocaleDateString('en-IN'),
+      Number(payment.disbursement_amount).toLocaleString('en-IN'),
+      '0',
+      'Initial Loan Sanction (Net Disbursement)'
+    );
+    doc.setFont('helvetica', 'normal');
+
+    // 2. Ledger Entries
+    ledgerEntries.forEach((entry) => {
+      addRow(
+        entry.date ? new Date(entry.date).toLocaleDateString('en-IN') : '-',
+        Number(entry.credit || 0).toLocaleString('en-IN'),
+        Number(entry.debit || 0).toLocaleString('en-IN'),
+        entry.narration || '-'
+      );
     });
 
-    // Summary
-    y += 5;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, y, margin + 170, y);
+    // --- Footer / Summary ---
     y += 10;
-    doc.setFontSize(12);
+    // Check if enough space for summary
+    if (y > 240) { doc.addPage(); y = 30; }
+
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    
+    y += 12;
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('Account Balance Summary', margin, y);
+    doc.text('SUMMARY OF ACCOUNT', margin, y);
+    
     y += 10;
     doc.setFontSize(10);
-    doc.text(`Total Credit: INR ${Number(payment.disbursement_amount).toLocaleString()}`, margin, y);
+    doc.setFont('helvetica', 'normal');
+    
+    const summaryX = 140;
+    doc.text('Total Credit Amount:', margin, y);
+    rightAlign(`₹${Number(payment.disbursement_amount).toLocaleString('en-IN')}`, summaryX, y);
+    
     y += 7;
-    doc.text(`Total Released: INR ${totalReleased.toLocaleString()}`, margin, y);
+    doc.text('Total Payment Released:', margin, y);
+    rightAlign(`₹${totalReleased.toLocaleString('en-IN')}`, summaryX, y);
+    
     y += 10;
-    doc.setTextColor(79, 70, 229); // Indigo
-    doc.text(`Final Remaining Balance: INR ${remainingLoanBalance.toLocaleString()}`, margin, y);
+    doc.setFillColor(241, 245, 249); // slate-100
+    doc.rect(margin, y - 5, 130, 10, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(79, 70, 229); // indigo-600
+    doc.text('TOTAL REMAINING BALANCE:', margin + 5, y + 2);
+    rightAlign(`₹${remainingLoanBalance.toLocaleString('en-IN')}`, summaryX, y + 2);
 
-    doc.save(`Ledger_Report_${payment.loan_number}.pdf`);
+    // --- Page Bottom ---
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.setFont('helvetica', 'italic');
+    doc.text('This is a computer generated document and does not require a physical signature.', pageWidth / 2, 285, { align: 'center' });
+
+    doc.save(`Mehar_Ledger_${payment.loan_number}.pdf`);
   };
 
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
