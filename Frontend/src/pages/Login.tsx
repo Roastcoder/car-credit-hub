@@ -21,10 +21,11 @@ export default function Login() {
 
   // Forgot password states
   const [view, setView] = useState<'login' | 'forgot'>('login');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotPhone, setForgotPhone] = useState('');
   const [forgotOTP, setForgotOTP] = useState('');
   const [forgotNewPassword, setForgotNewPassword] = useState('');
-  const [forgotStep, setForgotStep] = useState<'phone' | 'otp' | 'password'>('phone');
+  const [forgotStep, setForgotStep] = useState<'email' | 'otp' | 'password'>('email');
   const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
@@ -83,43 +84,48 @@ export default function Login() {
     }
   };
 
-  const openForgot = async () => {
-    // Try to pre-fill phone from email
-    if (email && email.includes('@')) {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/get-phone-by-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (res.ok && data.phone) setForgotPhone(data.phone);
-      } catch (_) {}
-    }
-    setForgotStep('phone');
+  const openForgot = () => {
+    setForgotEmail(email && email.includes('@') ? email : '');
+    setForgotPhone('');
+    setForgotStep('email');
     setForgotOTP('');
     setForgotNewPassword('');
     setView('forgot');
   };
 
   const handleSendOTP = async () => {
-    if (forgotPhone.length !== 10) { toast.error('Enter a valid 10-digit mobile number'); return; }
+    if (!forgotEmail.includes('@')) { toast.error('Enter a valid email address'); return; }
     setForgotLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/forgot-password/send-otp`, {
+      // Step 1: get phone from email
+      const phoneRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/get-phone-by-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: forgotPhone })
+        body: JSON.stringify({ email: forgotEmail })
       });
-      const data = await res.json();
-      if (res.ok) {
+      const phoneData = await phoneRes.json();
+      if (!phoneRes.ok) {
+        toast.error(phoneData.error || 'No account found with this email');
+        return;
+      }
+      const phone = phoneData.phone;
+      setForgotPhone(phone);
+
+      // Step 2: send OTP to that phone
+      const otpRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/forgot-password/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      const otpData = await otpRes.json();
+      if (otpRes.ok) {
         setForgotStep('otp');
-        toast.success('OTP sent successfully!');
+        toast.success('OTP sent to your registered mobile number!');
       } else {
-        toast.error(data.error || 'Failed to send OTP');
+        toast.error(otpData.error || 'Failed to send OTP');
       }
     } catch (_) {
-      toast.error('Failed to send OTP');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setForgotLoading(false);
     }
@@ -160,10 +166,11 @@ export default function Login() {
       if (res.ok) {
         toast.success('Password reset successfully! Please login.');
         setView('login');
+        setForgotEmail('');
         setForgotPhone('');
         setForgotOTP('');
         setForgotNewPassword('');
-        setForgotStep('phone');
+        setForgotStep('email');
       } else {
         toast.error(data.error || 'Failed to reset password');
       }
@@ -188,28 +195,27 @@ export default function Login() {
       <div>
         <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {forgotStep === 'phone' && 'Enter your registered mobile number'}
-          {forgotStep === 'otp' && `OTP sent to ******${forgotPhone.slice(-3)}`}
+          {forgotStep === 'email' && 'Enter your registered email address'}
+          {forgotStep === 'otp' && `OTP sent to your mobile ******${forgotPhone.slice(-3)}`}
           {forgotStep === 'password' && 'Set your new password'}
         </p>
       </div>
 
-      {forgotStep === 'phone' && (
+      {forgotStep === 'email' && (
         <>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Mobile Number</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Email Address</label>
             <input
-              type="tel"
-              maxLength={10}
-              value={forgotPhone}
-              onChange={(e) => setForgotPhone(e.target.value.replace(/\D/g, ''))}
-              placeholder="Enter 10-digit mobile number"
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="Enter your registered email"
               className={`w-full px-4 py-3 ${rounded} border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all`}
             />
           </div>
           <button
             onClick={handleSendOTP}
-            disabled={forgotLoading || forgotPhone.length !== 10}
+            disabled={forgotLoading || !forgotEmail.includes('@')}
             className={`w-full py-3 bg-accent text-accent-foreground ${rounded} font-semibold hover:opacity-90 transition-opacity disabled:opacity-50`}
           >
             {forgotLoading ? 'Sending OTP...' : 'Send OTP'}
