@@ -68,6 +68,8 @@ export default function Dashboard() {
   if (!user) return null;
 
   const isAdminDashboard = user.role === 'admin' || user.role === 'super_admin';
+  const isBroker = user.role === 'broker';
+  const isAccountant = user.role === 'accountant';
 
   const filteredAdminLoans = useMemo(() => {
     return loans.filter((loan: any) => {
@@ -464,13 +466,52 @@ export default function Dashboard() {
               </div>
             </div>
           </>
+        ) : isBroker ? (
+          // ── BROKER DASHBOARD: only their own application counts ──
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            {[
+              { label: 'My Applications', value: totalLoans, sub: 'Total submitted', icon: <FileText size={18} className="text-blue-500" /> },
+              { label: 'Disbursed', value: disbursed.length, sub: `${disbursed.length} completed`, icon: <CheckCircle2 size={18} className="text-emerald-500" />, status: 'disbursed' },
+              { label: 'Under Review', value: pendingReview, sub: 'Awaiting decision', icon: <Clock size={18} className="text-amber-500" />, status: 'under_review' },
+              { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Ready to disburse', icon: <CheckCircle2 size={18} className="text-blue-500" />, status: 'approved' },
+            ].map((kpi) => (
+              <div
+                key={kpi.label}
+                onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
+                className={`stat-card cursor-pointer transition-all ${'status' in kpi && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5' : 'hover:border-accent/40'}`}
+              >
+                <div className="flex items-center gap-2 mb-2">{kpi.icon}<p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{kpi.label}</p></div>
+                <p className="text-3xl font-bold text-blue-950 dark:text-white">{kpi.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+              </div>
+            ))}
+          </div>
+        ) : isAccountant ? (
+          // ── ACCOUNTANT DASHBOARD: payment-focused KPIs ──
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            {[
+              { label: 'Total Files', value: totalLoans, sub: formatCurrency(totalVolume) + ' volume', status: null },
+              { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Pending disbursement', status: 'approved' },
+              { label: 'Disbursed', value: disbursed.length, sub: formatCurrency(disbursedAmount), status: 'disbursed' },
+              { label: 'Under Review', value: pendingReview, sub: 'Awaiting action', status: 'under_review' },
+            ].map((kpi) => (
+              <div
+                key={kpi.label}
+                onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
+                className={`stat-card cursor-pointer transition-all ${kpi.status && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5' : 'hover:border-accent/40'}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">{kpi.label}</p>
+                <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{kpi.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{kpi.sub}</p>
+              </div>
+            ))}
+          </div>
         ) : (
+          // ── EMPLOYEE / MANAGER / RBM DASHBOARD ──
           <div className="grid grid-cols-1 flex-col-reverse lg:grid-cols-3 gap-6">
             <div className="stat-card lg:col-span-2 order-2 lg:order-1">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Bank-wise Distribution (₹ Lakhs)</h2>
-                </div>
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Bank-wise Distribution (₹ Lakhs)</h2>
                 <Link to="/loans" className="text-sm font-medium text-blue-500 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
                   View Loans <ChevronRight size={16} />
                 </Link>
@@ -509,39 +550,32 @@ export default function Dashboard() {
                 className={`stat-card col-span-2 lg:col-span-1 cursor-pointer transition-all ${!selectedStatus ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                    Total Loan Volume
-                  </h2>
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Total Loan Volume</h2>
                 </div>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 flex items-center justify-center">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path className="dark:stroke-blue-900/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#dbeafe" strokeWidth="3"></path>
-                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeDasharray="75, 100" strokeWidth="3"></path>
-                      </svg>
-                      <span className="absolute text-primary"><IndianRupee size={16} /></span>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-primary">{formatCurrency(totalVolume)}</div>
-                      <div className="text-sm text-blue-700 dark:text-blue-400">Total Processed</div>
-                      <div className="text-sm font-semibold text-blue-900 dark:text-blue-200">{totalLoans} Applications</div>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path className="dark:stroke-blue-900/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#dbeafe" strokeWidth="3"></path>
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeDasharray="75, 100" strokeWidth="3"></path>
+                    </svg>
+                    <span className="absolute text-primary"><IndianRupee size={16} /></span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-primary">{formatCurrency(totalVolume)}</div>
+                    <div className="text-sm text-blue-700 dark:text-blue-400">Total Processed</div>
+                    <div className="text-sm font-semibold text-blue-900 dark:text-blue-200">{totalLoans} Applications</div>
                   </div>
                 </div>
               </div>
-
               <div
                 onClick={() => setSelectedStatus(selectedStatus === 'disbursed' ? null : 'disbursed')}
                 className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'disbursed' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
-                <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed Amount</h2>
-                <div className="flex items-end gap-2 mb-1">
-                  <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{formatCurrency(disbursedAmount)}</span>
-                </div>
-                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed</h2>
+                <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{formatCurrency(disbursedAmount)}</span>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <CheckCircle2 size={14} className="text-emerald-500" />
-                  <span>{disbursed.length} applications completed</span>
+                  <span>{disbursed.length} completed</span>
                 </div>
               </div>
               <div
@@ -549,12 +583,10 @@ export default function Dashboard() {
                 className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'under_review' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
                 <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Under Review</h2>
-                <div className="flex items-end gap-2 mb-1">
-                  <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{pendingReview}</span>
-                </div>
-                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{pendingReview}</span>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <Clock size={14} className="text-amber-500" />
-                  <span>Applications needing attention</span>
+                  <span>Needs attention</span>
                 </div>
               </div>
             </div>
@@ -563,7 +595,7 @@ export default function Dashboard() {
 
         {/* Bottom Section */}
         <div className={`grid grid-cols-1 ${isAdminDashboard ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-6 mt-6`}>
-          {!isAdminDashboard && <div className="stat-card">
+          {!isAdminDashboard && !isBroker && <div className="stat-card">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
