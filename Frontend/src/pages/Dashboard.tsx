@@ -610,6 +610,8 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        ) : isPddDashboard ? (
+          null
         ) : (
           // ── EMPLOYEE / MANAGER / RBM DASHBOARD ──
           <div className="grid grid-cols-1 flex-col-reverse lg:grid-cols-3 gap-6">
@@ -698,43 +700,45 @@ export default function Dashboard() {
         )}
 
         {/* Bottom Section */}
-        <div className={`grid grid-cols-1 ${isAdminDashboard ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-6 mt-6`}>
-          {!isAdminDashboard && !isBroker && <div className="stat-card">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                  Status Breakdown
-                </h2>
+        {!isPddDashboard && (
+          <div className={`grid grid-cols-1 ${isAdminDashboard ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-6 mt-6`}>
+            {!isAdminDashboard && !isBroker && <div className="stat-card">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    Status Breakdown
+                  </h2>
+                </div>
               </div>
-            </div>
-            <div className="flex-1 flex min-h-[220px] w-full h-[220px]">
-              {statusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
-                      {statusData.map((_, i) => (
-                        <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} itemStyle={{ color: '#1e293b' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+              <div className="flex-1 flex min-h-[220px] w-full h-[220px]">
+                {statusData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
+                        {statusData.map((_, i) => (
+                          <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} itemStyle={{ color: '#1e293b' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
+                )}
+              </div>
+              {statusData.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-4 mt-4 text-sm">
+                  {statusData.map((entry, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_CHART_COLORS[index % STATUS_CHART_COLORS.length] }}></span>
+                      <span className="text-blue-700 dark:text-blue-300">{entry.name}</span>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
-            {statusData.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-4 mt-4 text-sm">
-                {statusData.map((entry, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_CHART_COLORS[index % STATUS_CHART_COLORS.length] }}></span>
-                    <span className="text-blue-700 dark:text-blue-300">{entry.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>}
-        </div>
+            </div>}
+          </div>
+        )}
       </div>
     </div>
   );
