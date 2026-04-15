@@ -156,37 +156,42 @@ export default function AddLead() {
     }
   }, [user, branches, managers]);
 
-  // Verify Aadhaar when both Aadhaar and Phone are complete
+  // Verify Aadhaar when both Aadhaar and Phone are complete (debounced)
   useEffect(() => {
-    const verifyAadhaar = async () => {
-      if (form.aadhar_number.length === 12 && form.phone.length === 10) {
-        setAadhaarVerification({ verified: false, message: '', status: 'checking' });
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/verify-mobile`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            },
-            body: JSON.stringify({
-              aadhar_number: form.aadhar_number,
-              mobile: form.phone
-            })
-          });
-          const data = await response.json();
-          if (data.match) {
-            setAadhaarVerification({ verified: true, message: data.message, status: 'success' });
-          } else {
-            setAadhaarVerification({ verified: false, message: data.message, status: 'error' });
-          }
-        } catch (error) {
-          setAadhaarVerification({ verified: false, message: 'Verification failed', status: 'error' });
+    if (form.aadhar_number.length !== 12 || form.phone.length !== 10) {
+      setAadhaarVerification({ verified: false, message: '', status: 'idle' });
+      return;
+    }
+
+    setAadhaarVerification({ verified: false, message: '', status: 'checking' });
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/aadhaar/verify-mobile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify({
+            aadhar_number: form.aadhar_number,
+            mobile: form.phone
+          })
+        });
+        const data = await response.json();
+        if (data.success && data.match) {
+          setAadhaarVerification({ verified: true, message: 'Mobile last 3 digits matched ✓', status: 'success' });
+        } else if (data.success && !data.match) {
+          setAadhaarVerification({ verified: false, message: data.message || 'Last 3 digits do not match', status: 'error' });
+        } else {
+          setAadhaarVerification({ verified: false, message: data.error || 'Verification failed', status: 'error' });
         }
-      } else {
-        setAadhaarVerification({ verified: false, message: '', status: 'idle' });
+      } catch {
+        setAadhaarVerification({ verified: false, message: 'Verification failed. Check connection.', status: 'error' });
       }
-    };
-    verifyAadhaar();
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, [form.aadhar_number, form.phone]);
 
   const createLeadMutation = useMutation({
