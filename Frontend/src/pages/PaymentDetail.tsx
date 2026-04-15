@@ -576,9 +576,11 @@ export default function PaymentDetail() {
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
   const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
-    (payment.status === 'voucher_created' || (payment.status === 'payment_released' && remainingAppBalance > 0));
+    (payment.status === 'voucher_created' || 
+     (payment.status === 'payment_released' && remainingAppBalance > 0) ||
+     (payment.status === 'completed' && remainingAppBalance > 0));
   const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
-    ['voucher_created', 'manager_approved', 'payment_released'].includes(payment.status);
+    ['voucher_created', 'manager_approved', 'payment_released', 'completed'].includes(payment.status);
   const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
     (payment.status === 'payment_released' || payment.status === 'completed');
 
