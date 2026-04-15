@@ -762,6 +762,12 @@ export default function PaymentApplicationForm() {
             <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Old Payment Release Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200/50 dark:border-orange-800/20 shadow-sm">
+              <label className="text-xs font-bold text-orange-600 uppercase mb-1 block text-left">Balance (Disbursement - Today Release)</label>
+              <p className="text-2xl font-black text-orange-950 dark:text-orange-100 text-left underline decoration-double decoration-orange-300">
+                ₹{((Number(formData.disbursement_amount) || 0) - (Number(formData.today_release_amount) || 0)).toLocaleString()}
+              </p>
+            </div>
             <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
               <label className="text-xs font-semibold text-blue-600 uppercase mb-1 block text-left">Total Payment Release Amount</label>
               <p className="text-xl font-bold text-blue-900 dark:text-blue-100 text-left">₹{formData.total_release_amount?.toLocaleString()}</p>
@@ -769,12 +775,6 @@ export default function PaymentApplicationForm() {
             <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
               <label className="text-xs font-semibold text-green-600 uppercase mb-1 block text-left">Total Payment Release (%)</label>
               <p className="text-xl font-bold text-green-900 dark:text-green-100 text-left">{formData.total_release_percentage}%</p>
-            </div>
-            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg">
-              <label className="text-xs font-semibold text-orange-600 uppercase mb-1 block text-left">Balance (Disbursement - Today Release)</label>
-              <p className="text-xl font-bold text-orange-900 dark:text-orange-100 text-left underline decoration-double">
-                ₹{((Number(formData.disbursement_amount) || 0) - (Number(formData.today_release_amount) || 0)).toLocaleString()}
-              </p>
             </div>
           </div>
         </section>
