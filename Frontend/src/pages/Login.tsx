@@ -24,7 +24,7 @@ export default function Login() {
   const [forgotPhone, setForgotPhone] = useState('');
   const [forgotOTP, setForgotOTP] = useState('');
   const [forgotNewPassword, setForgotNewPassword] = useState('');
-  const [forgotStep, setForgotStep] = useState<'phone' | 'otp'>('phone');
+  const [forgotStep, setForgotStep] = useState<'phone' | 'otp' | 'password'>('phone');
   const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
@@ -125,8 +125,29 @@ export default function Login() {
     }
   };
 
-  const handleResetPassword = async () => {
+  const handleVerifyOTP = async () => {
     if (forgotOTP.length !== 6) { toast.error('Enter a valid 6-digit OTP'); return; }
+    setForgotLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/forgot-password/check-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: forgotPhone, otp: forgotOTP })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setForgotStep('password');
+      } else {
+        toast.error(data.error || 'Invalid or expired OTP');
+      }
+    } catch (_) {
+      toast.error('Failed to verify OTP');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
     if (forgotNewPassword.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setForgotLoading(true);
     try {
@@ -142,6 +163,7 @@ export default function Login() {
         setForgotPhone('');
         setForgotOTP('');
         setForgotNewPassword('');
+        setForgotStep('phone');
       } else {
         toast.error(data.error || 'Failed to reset password');
       }
@@ -166,7 +188,9 @@ export default function Login() {
       <div>
         <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {forgotStep === 'phone' ? 'Enter your registered mobile number' : `OTP sent to ******${forgotPhone.slice(-3)}`}
+          {forgotStep === 'phone' && 'Enter your registered mobile number'}
+          {forgotStep === 'otp' && `OTP sent to ******${forgotPhone.slice(-3)}`}
+          {forgotStep === 'password' && 'Set your new password'}
         </p>
       </div>
 
@@ -206,6 +230,27 @@ export default function Login() {
               className={`w-full px-4 py-3 ${rounded} border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all`}
             />
           </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSendOTP}
+              disabled={forgotLoading}
+              className={`flex-1 py-3 border border-border ${rounded} font-semibold hover:bg-muted transition-colors`}
+            >
+              Resend OTP
+            </button>
+            <button
+              onClick={handleVerifyOTP}
+              disabled={forgotLoading || forgotOTP.length !== 6}
+              className={`flex-1 py-3 bg-accent text-accent-foreground ${rounded} font-semibold hover:opacity-90 transition-opacity disabled:opacity-50`}
+            >
+              {forgotLoading ? 'Verifying...' : 'Verify OTP'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {forgotStep === 'password' && (
+        <>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">New Password</label>
             <input
@@ -216,22 +261,13 @@ export default function Login() {
               className={`w-full px-4 py-3 ${rounded} border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all`}
             />
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleSendOTP}
-              disabled={forgotLoading}
-              className={`flex-1 py-3 border border-border ${rounded} font-semibold hover:bg-muted transition-colors`}
-            >
-              Resend OTP
-            </button>
-            <button
-              onClick={handleResetPassword}
-              disabled={forgotLoading || forgotOTP.length !== 6 || forgotNewPassword.length < 6}
-              className={`flex-1 py-3 bg-accent text-accent-foreground ${rounded} font-semibold hover:opacity-90 transition-opacity disabled:opacity-50`}
-            >
-              {forgotLoading ? 'Resetting...' : 'Reset Password'}
-            </button>
-          </div>
+          <button
+            onClick={handleResetPassword}
+            disabled={forgotLoading || forgotNewPassword.length < 6}
+            className={`w-full py-3 bg-accent text-accent-foreground ${rounded} font-semibold hover:opacity-90 transition-opacity disabled:opacity-50`}
+          >
+            {forgotLoading ? 'Updating...' : 'Update Password'}
+          </button>
         </>
       )}
     </div>
