@@ -86,7 +86,7 @@ function AppRoutes() {
           </RoleProtectedRoute>
         </ProtectedRoute>
       } />
-      
+
       {/* Account Department Routes */}
       <Route path="/account" element={
         <ProtectedRoute>
@@ -104,7 +104,7 @@ function AppRoutes() {
         <Route path="payments/:id" element={<PaymentDetail />} />
         <Route path="payments/edit/:id" element={<PaymentApplicationForm />} />
       </Route>
-      
+
       {/* Regular Routes */}
       <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
       <Route path="/loans/new" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
@@ -123,6 +123,14 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
+      <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
+      <Route path="/my-brokers" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['employee']}>
+            <MyBrokers />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
