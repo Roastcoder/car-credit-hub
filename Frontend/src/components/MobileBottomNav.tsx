@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FileText, Car, Users, UserPlus, 
   BarChart3, MoreHorizontal, Building2, UserCheck, 
   MapPin, CreditCard, Send, X, ClipboardCheck, 
-  TrendingUp, Receipt, Plus, ChevronRight, Activity, Shield
+  TrendingUp, Receipt, Plus, ChevronRight, Activity, Shield, ShieldCheck
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -62,6 +62,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Brokers', path: '/brokers', icon: <UserCheck size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Branches', path: '/branches', icon: <MapPin size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Send Notification', path: '/broadcast', icon: <Send size={20} />, roles: ['super_admin', 'admin'] },
+  { label: 'Credit Reports', path: '/credit-reports', icon: <ShieldCheck size={20} />, roles: ['super_admin'] },
   { label: 'Permissions', path: '/permissions', icon: <Shield size={20} />, roles: ['super_admin'] },
   { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
   { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'] },
@@ -298,4 +299,3 @@ export default function MobileBottomNav() {
     </>
   );
 }
-

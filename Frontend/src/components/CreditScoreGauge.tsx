@@ -17,73 +17,90 @@ export const CreditScoreGauge: React.FC<CreditScoreGaugeProps> = ({
   const numericScore = Number(score) || 300;
   
   // Map score 300-900 to 0-180 degrees
-  // 300 = 0% of 180 degrees (left)
-  // 900 = 100% of 180 degrees (right)
   const percentage = Math.min(Math.max((numericScore - 300) / 600, 0), 1);
-  const rotation = percentage * 180; // degrees from 0 (left) to 180 (right)
+  const rotation = percentage * 180;
 
   const dimensions = {
-    sm: { width: 140, height: 80, stroke: 12, fontSize: 'text-[10px]' },
-    md: { width: 220, height: 120, stroke: 18, fontSize: 'text-xs' },
-    lg: { width: 300, height: 160, stroke: 24, fontSize: 'text-sm' }
+    sm: { width: 140, height: 85, stroke: 10, centerFontSize: 'text-lg', labelSize: 'text-[10px]' },
+    md: { width: 200, height: 120, stroke: 14, centerFontSize: 'text-2xl', labelSize: 'text-xs' },
+    lg: { width: 280, height: 160, stroke: 20, centerFontSize: 'text-4xl', labelSize: 'text-sm' }
   };
 
   const d = dimensions[size];
 
-  // Helper for path segments
-  // Center (50, 50), Radius 40. Start angle 180, End angle 0.
-  // Poor (180-135), Avg (135-90), Good (90-45), Excellent (45-0)
-  
+  // Professional colors
+  const COLORS = {
+    poor: "#ef4444",    // Red
+    avg: "#f97316",     // Orange
+    good: "#84cc16",    // Lime (Better for 'Good')
+    excellent: "#10b981" // Emerald (Better for 'Excellent')
+  };
+
   return (
     <div className={cn("flex flex-col items-center select-none", className)}>
       <div className="relative" style={{ width: d.width, height: d.height }}>
         <svg 
-          viewBox="0 0 100 55" 
-          className="w-full h-full drop-shadow-sm"
+          viewBox="0 0 100 60" 
+          className="w-full h-full drop-shadow-md"
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Background Track (Grey) */}
+          {/* Background Track (Grey) - No rounded caps to avoid 'pill' look at bottom */}
           <path 
             d="M 10 50 A 40 40 0 0 1 90 50" 
-            stroke="#e2e8f0" 
-            strokeWidth={d.stroke / 2} 
-            strokeLinecap="round"
+            stroke="#f1f5f9" 
+            strokeWidth={d.stroke} 
           />
 
-          {/* Segments */}
-          {/* Poor: 180 to 135 */}
+          {/* Segments - No rounded caps for a sharp, clean look */}
           <path 
             d="M 10 50 A 40 40 0 0 1 21.72 21.72" 
-            stroke="#ef4444" 
+            stroke={COLORS.poor} 
             strokeWidth={d.stroke} 
           />
-          {/* Average: 135 to 90 */}
           <path 
             d="M 21.72 21.72 A 40 40 0 0 1 50 10" 
-            stroke="#f97316" 
+            stroke={COLORS.avg} 
             strokeWidth={d.stroke} 
           />
-          {/* Good: 90 to 45 */}
           <path 
             d="M 50 10 A 40 40 0 0 1 78.28 21.72" 
-            stroke="#a3e635" 
+            stroke={COLORS.good} 
             strokeWidth={d.stroke} 
           />
-          {/* Excellent: 45 to 0 */}
           <path 
             d="M 78.28 21.72 A 40 40 0 0 1 90 50" 
-            stroke="#22c55e" 
+            stroke={COLORS.excellent} 
             strokeWidth={d.stroke} 
           />
 
-          {/* Needle Base Circle */}
-          <circle cx="50" cy="50" r="3" fill="#1e293b" />
+          {/* Center Score and Text */}
+          <text 
+            x="50" 
+            y="42" 
+            textAnchor="middle" 
+            className="fill-slate-900 font-black"
+            style={{ fontSize: '16px' }}
+          >
+            {numericScore}
+          </text>
+          <text 
+            x="50" 
+            y="52" 
+            textAnchor="middle" 
+            className="fill-slate-400 font-bold uppercase tracking-widest"
+            style={{ fontSize: '4px' }}
+          >
+            CIBIL SCORE
+          </text>
+
+          {/* Needle Base Circle - Smaller and more subtle */}
+          <circle cx="50" cy="50" r="2.5" fill="#1e293b" />
           
-          {/* Needle */}
+          {/* Needle - Sleeker, thinner design */}
           <g transform={`rotate(${rotation - 90}, 50, 50)`}>
             <polygon 
-              points="48.5,50 51.5,50 50,15" 
+              points="49.2,50 50.8,50 50,12" 
               fill="#0f172a" 
               className="transition-transform duration-1000 ease-out"
             >
@@ -92,45 +109,31 @@ export const CreditScoreGauge: React.FC<CreditScoreGaugeProps> = ({
                 type="rotate"
                 from="-90"
                 to="0"
-                dur="1s"
+                dur="1.2s"
                 fill="freeze"
               />
             </polygon>
           </g>
         </svg>
-
-        {/* Center Score Display */}
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
-          <span className={cn("font-black text-slate-900 leading-none", 
-            size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-4xl'
-          )}>
-            {numericScore}
-          </span>
-          <span className={cn("font-bold uppercase tracking-tighter text-slate-500", 
-            size === 'sm' ? 'text-[8px]' : 'text-[10px]'
-          )}>
-            CIBIL Score
-          </span>
-        </div>
       </div>
 
       {showLabels && (
-        <div className="grid grid-cols-4 w-full mt-2 text-center text-[10px] font-bold text-slate-400">
+        <div className="grid grid-cols-4 w-full mt-4 text-center">
           <div className="flex flex-col gap-0.5">
-            <span className="text-red-500">POOR</span>
-            <span>300-550</span>
+            <span className="text-[10px] font-black tracking-wider text-red-500 uppercase">Poor</span>
+            <span className="text-[10px] font-bold text-slate-400">300-550</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-orange-500">AVERAGE</span>
-            <span>550-650</span>
+            <span className="text-[10px] font-black tracking-wider text-orange-500 uppercase">Average</span>
+            <span className="text-[10px] font-bold text-slate-400">550-650</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-lime-600">GOOD</span>
-            <span>650-750</span>
+            <span className="text-[10px] font-black tracking-wider text-lime-600 uppercase">Good</span>
+            <span className="text-[10px] font-bold text-slate-400">650-750</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-green-600">EXCELLENT</span>
-            <span>750-900</span>
+            <span className="text-[10px] font-black tracking-wider text-emerald-600 uppercase">Excellent</span>
+            <span className="text-[10px] font-bold text-slate-400">750-900</span>
           </div>
         </div>
       )}

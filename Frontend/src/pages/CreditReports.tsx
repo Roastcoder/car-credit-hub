@@ -362,7 +362,7 @@ export default function CreditReports() {
                             <h3 className="text-xl font-black text-slate-900 leading-tight">Latest Analysis</h3>
                             <p className="text-slate-500 text-sm font-medium">
                               {latestReport 
-                                ? `Last report for ${latestReport.loan_customer_name} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
+                                ? `Last report for ${latestReport.loan_customer_name || 'customer'} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
                                 : 'No reports available yet. Fetch a new report to see analysis.'
                               }
                             </p>
