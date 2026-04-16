@@ -14,7 +14,6 @@ import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
-import { FetchCreditModal } from '@/components/FetchCreditModal';
 import { getFileUrl } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
@@ -130,7 +129,6 @@ export default function LoanDetail() {
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; currentRemarks: string }>({ open: false, currentRemarks: '' });
-  const [isFetchModalOpen, setIsFetchModalOpen] = useState(false);
 
 
   const { data: loans = [] } = useQuery({
@@ -843,15 +841,8 @@ export default function LoanDetail() {
               {user?.role === 'super_admin' && (
                 <Section title="Credit Reports" icon={<ShieldCheck size={16} />}>
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/30">
                       <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Historical Reports</p>
-                      <button
-                        onClick={() => setIsFetchModalOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-sm transition-all active:scale-95"
-                      >
-                        <ShieldCheck size={14} />
-                        Fetch New Report
-                      </button>
                     </div>
 
                     {(creditReports as any[]).length === 0 ? (
@@ -1234,22 +1225,6 @@ export default function LoanDetail() {
         }}
       />
 
-      {isFetchModalOpen && (
-        <FetchCreditModal
-          isOpen={isFetchModalOpen}
-          onClose={() => setIsFetchModalOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['loan-credit-reports', id] });
-          }}
-          initialData={{
-            loan_id: loan.id,
-            name: loan.applicant_name,
-            mobile: loan.mobile,
-            pan: (loan as any).pan_number || '',
-            gender: (loan as any).gender || 'male'
-          }}
-        />
-      )}
     </>
   );
 }
