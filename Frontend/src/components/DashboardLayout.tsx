@@ -64,8 +64,6 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Permission Control', path: '/permissions', icon: Shield, roles: ['super_admin'] },
   { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
-  { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
-  { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, roles: ['employee'] },
   { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
   { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, roles: ['super_admin'] },

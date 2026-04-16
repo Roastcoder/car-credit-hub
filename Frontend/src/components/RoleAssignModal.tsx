@@ -23,7 +23,6 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const [loading, setLoading] = useState(false);
   const [referredBy, setReferredBy] = useState<string>(user?.referred_by || '');
   const [commissionRate, setCommissionRate] = useState(user?.commission_rate || '1.5');
-  const [area, setArea] = useState(user?.area || '');
   const [dsaCode, setDsaCode] = useState(user?.dsa_code || '');
   const [assignedUserId, setAssignedUserId] = useState(user?.assigned_user_id || '');
   const [secondaryUserId, setSecondaryUserId] = useState(user?.secondary_user_id || '');
@@ -63,7 +62,6 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
       setIsBranchManager(currentBranch?.manager_id === user.id);
       setReferredBy(user.referred_by || '');
       setCommissionRate(user.commission_rate || '1.5');
-      setArea(user.area || '');
       setDsaCode(user.dsa_code || '');
       setAssignedUserId(user.assigned_user_id || '');
       setSecondaryUserId(user.secondary_user_id || '');
@@ -81,7 +79,6 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         managed_branch_ids: managedBranchIds,
         is_branch_manager: isBranchManager,
         commission_rate: role === 'broker' ? commissionRate : null,
-        area: role === 'broker' ? area : null,
         dsa_code: role === 'broker' ? dsaCode : null,
         assigned_user_id: role === 'broker' ? (assignedUserId || null) : null,
         secondary_user_id: role === 'broker' ? (secondaryUserId || null) : null
@@ -190,22 +187,13 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
                     ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Area</label>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-1.5">Channel Code</label>
                 <input 
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
-                  value={area} 
-                  onChange={e => setArea(e.target.value)} 
-                  placeholder="e.g. JAIPUR"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">DSA Code</label>
-                <input 
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background font-bold text-blue-600 mono" 
                   value={dsaCode} 
                   onChange={e => setDsaCode(e.target.value)} 
-                  placeholder="e.g. MEHDA001"
+                  placeholder="e.g. MEHCH001"
                 />
               </div>
               <div>

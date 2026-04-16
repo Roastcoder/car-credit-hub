@@ -123,14 +123,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/banks" element={<ProtectedRoute><BankManagement /></ProtectedRoute>} />
-      <Route path="/brokers" element={<ProtectedRoute><BrokerManagement /></ProtectedRoute>} />
-      <Route path="/my-brokers" element={
-        <ProtectedRoute>
-          <RoleProtectedRoute allowedRoles={['employee']}>
-            <MyBrokers />
-          </RoleProtectedRoute>
-        </ProtectedRoute>
-      } />
       <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
       <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />

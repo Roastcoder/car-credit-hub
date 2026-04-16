@@ -166,11 +166,9 @@ export default function UserManagement() {
                 {u.branch_name && (
                   <span className="text-xs text-muted-foreground">{u.branch_name}</span>
                 )}
-                {u.referred_by_name && (
-                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
-                    Ref by: {u.referred_by_name}
-                  </span>
-                )}
+                <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
+                  Ref by: {u.referred_by_name || 'No Referrer'}
+                </span>
                 <span className="text-xs text-muted-foreground ml-auto">
                   {new Date(u.created_at).toLocaleDateString('en-IN')}
                 </span>
@@ -204,7 +202,7 @@ export default function UserManagement() {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">User</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Contact</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Unique ID</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Channel Code</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Referred By</th>
@@ -243,7 +241,7 @@ export default function UserManagement() {
                       {u.branch_name || <span className="text-muted-foreground/50">No branch</span>}
                     </td>
                     <td className="py-3 px-3 text-muted-foreground text-xs">
-                      {u.referred_by_name || <span className="text-muted-foreground/30">—</span>}
+                      {u.referred_by_name || <span className="text-muted-foreground/30">No Referrer</span>}
                     </td>
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}
