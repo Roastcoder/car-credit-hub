@@ -64,6 +64,8 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Permission Control', path: '/permissions', icon: Shield, roles: ['super_admin'] },
   { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
+  { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
+  { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, roles: ['employee'] },
   { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
   { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, roles: ['super_admin'] },
@@ -150,7 +152,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-[100dvh] overflow-hidden">
       <ProfileCompletionModal />
-      
+
       {/* Sidebar - Desktop Only */}
       <aside className={`hidden lg:flex static inset-y-0 left-0 z-50 ${collapsed ? 'w-20' : 'w-64'} bg-card border-r border-border flex-col transition-all duration-200 shadow-xl m-3 mr-1.5 rounded-[1.5rem] h-[calc(100vh-1.5rem)]`}>
         {/* Logo */}
@@ -258,9 +260,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-4 px-4 py-3 mb-4 rounded-2xl glass-card shadow-sm border border-white/40 dark:border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-inner border border-white/20 overflow-hidden">
                 {(user.profile_image && !imageError) ? (
-                  <img 
-                    src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`} 
-                    alt="" 
+                  <img
+                    src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`}
+                    alt=""
                     className="w-full h-full object-cover"
                     onError={() => setImageError(true)}
                   />
@@ -310,20 +312,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex-1 lg:hidden"></div>
 
 
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(user.channel_code!);
-                toast.success('Unique ID copied!', {
-                  icon: <ClipboardCheck size={16} className="text-blue-500" />,
-                  duration: 2000
-                });
-              }}
-              className="flex flex-col items-center justify-center px-4 py-1.5 bg-accent hover:opacity-90 rounded-2xl shadow-sm border border-border transition-all active:scale-95 group relative overflow-hidden"
-              title="Click to copy Unique ID"
-            >
-              <span className="text-[9px] font-bold text-accent-foreground/90 uppercase tracking-[0.2em] leading-none mb-0.5">Unique ID</span>
-              <span className="text-sm font-black text-accent-foreground leading-none">{user.channel_code}</span>
-            </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(user.channel_code!);
+              toast.success('Unique ID copied!', {
+                icon: <ClipboardCheck size={16} className="text-blue-500" />,
+                duration: 2000
+              });
+            }}
+            className="flex flex-col items-center justify-center px-4 py-1.5 bg-accent hover:opacity-90 rounded-2xl shadow-sm border border-border transition-all active:scale-95 group relative overflow-hidden"
+            title="Click to copy Unique ID"
+          >
+            <span className="text-[9px] font-bold text-accent-foreground/90 uppercase tracking-[0.2em] leading-none mb-0.5">Unique ID</span>
+            <span className="text-sm font-black text-accent-foreground leading-none">{user.channel_code}</span>
+          </button>
 
           {/* Notification Bell */}
           <div className="relative z-50">
@@ -337,9 +339,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md border border-white/20 hover:shadow-lg transition-all overflow-hidden"
             >
               {(user.profile_image && !imageError) ? (
-                <img 
-                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`} 
-                  alt="" 
+                <img
+                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')}${user.profile_image}`}
+                  alt=""
                   className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
                 />

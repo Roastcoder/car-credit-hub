@@ -28,6 +28,8 @@ const CreateLoan = lazy(() => import("@/pages/CreateLoan"));
 const LoanDetail = lazy(() => import("@/pages/LoanDetail"));
 const UserManagement = lazy(() => import("@/pages/UserManagement"));
 const BankManagement = lazy(() => import("@/pages/BankManagement"));
+const BrokerManagement = lazy(() => import("@/pages/BrokerManagement"));
+const MyBrokers = lazy(() => import("@/pages/MyBrokers"));
 const BranchManagement = lazy(() => import("@/pages/BranchManagement"));
 const Commission = lazy(() => import("@/pages/Commission"));
 const Reports = lazy(() => import("@/pages/Reports"));
