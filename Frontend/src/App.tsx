@@ -50,6 +50,9 @@ const Download = lazy(() => import("@/pages/Download"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const ExternalApiLogs = lazy(() => import("@/pages/ExternalApiLogs"));
 const CreditReports = lazy(() => import("./pages/CreditReports"));
+const SchemeManagement = lazy(() => import("./pages/SchemeManagement"));
+const ModelManagement = lazy(() => import("./pages/ModelManagement"));
+const SubventionGrid = lazy(() => import("./pages/SubventionGrid"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -153,6 +156,27 @@ function AppRoutes() {
         <ProtectedRoute>
           <RoleProtectedRoute allowedRoles={['super_admin']}>
             <CreditReports />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/settings/schemes" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <SchemeManagement />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/settings/vehicle-models" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <ModelManagement />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/settings/subvention" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <SubventionGrid />
           </RoleProtectedRoute>
         </ProtectedRoute>
       } />

@@ -187,6 +187,34 @@ export const financersAPI = {
   delete: (id: number) => api.delete(`/financers/${id}`),
 };
 
+// Schemes API
+export const schemesAPI = {
+  getAll: () => api.get('/schemes'),
+  create: (data: any) => api.post('/schemes', data),
+  update: (id: number | string, data: any) => api.put(`/schemes/${id}`, data),
+  delete: (id: number | string) => api.delete(`/schemes/${id}`),
+};
+
+// Vehicle Models API
+export const vehicleModelsAPI = {
+  getMakes: () => api.get('/vehicle-models/makes'),
+  createMake: (data: any) => api.post('/vehicle-models/makes', data),
+  deleteMake: (id: number | string) => api.delete(`/vehicle-models/makes/${id}`),
+  getAll: (params?: any) => api.get('/vehicle-models' + (params ? `?${new URLSearchParams(params)}` : '')),
+  create: (data: any) => api.post('/vehicle-models', data),
+  update: (id: number | string, data: any) => api.put(`/vehicle-models/${id}`, data),
+  delete: (id: number | string) => api.delete(`/vehicle-models/${id}`),
+};
+
+// Subvention Grid API
+export const subventionAPI = {
+  getAll: () => api.get('/subvention'),
+  create: (data: any) => api.post('/subvention', data),
+  update: (id: number | string, data: any) => api.put(`/subvention/${id}`, data),
+  delete: (id: number | string) => api.delete(`/subvention/${id}`),
+  calculate: (data: any) => api.post('/subvention/calculate', data),
+};
+
 // External APIs (Proxied via backend)
 export const externalAPI = {
   fetchRCData: (rcNumber: string) => api.post('/external/surepass/rc', { id_number: rcNumber, enrich: true }),
