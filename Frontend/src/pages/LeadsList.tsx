@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
-import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X, Filter } from 'lucide-react';
+import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X, Filter, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LeadsListProps {
@@ -200,6 +200,15 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                     <Trash2 size={13} />
                   </button>
                 )}
+                {user?.role === 'super_admin' && (
+                  <button
+                    onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                    className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 border border-transparent hover:border-blue-200 transition-colors"
+                    title="Fetch Credit Score"
+                  >
+                    <ShieldCheck size={13} />
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -296,6 +305,15 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                               title="Delete Lead"
                             >
                               <Trash2 size={16} />
+                            </button>
+                          )}
+                          {user?.role === 'super_admin' && (
+                            <button
+                              onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                              className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 transition-colors"
+                              title="Fetch Credit Score"
+                            >
+                              <ShieldCheck size={16} />
                             </button>
                           )}
                         </div>

@@ -215,7 +215,8 @@ export default function LoanDetail() {
   const { data: creditReports = [] } = useQuery({
     queryKey: ['loan-credit-reports', id],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/credit-reports?loan_id=${id}`, {
+      // Use the specific endpoint /api/credit-reports/loan/:loanId
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/credit-reports/loan/${id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
       });
       if (!res.ok) return [];

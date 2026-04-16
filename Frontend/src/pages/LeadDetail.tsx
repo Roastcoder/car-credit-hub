@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/api';
-import { ArrowLeft, User, Car, IndianRupee, ArrowRight, FileText, Download, ExternalLink, Upload, RefreshCw, X } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { ArrowLeft, User, Car, IndianRupee, ArrowRight, FileText, Download, ExternalLink, Upload, RefreshCw, X, ShieldCheck, Calendar, Clock } from 'lucide-react';
+import { formatCurrency, getFileUrl } from '@/lib/utils';
+import { CreditScoreGauge } from '@/components/CreditScoreGauge';
+import { format } from 'date-fns';
 import { getRolePermissions } from '@/lib/permissions';
 import { toast } from 'sonner';
 
@@ -70,6 +72,23 @@ export default function LeadDetail() {
     },
     enabled: !!id && canViewLeadDocuments,
   });
+  
+  const { data: creditReports = [], refetch: refetchCredit } = useQuery({
+    queryKey: ['lead-credit-reports', id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/credit-reports/lead/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
+    },
+    enabled: !!id && user?.role === 'super_admin',
+  });
+
+  const latestReport = creditReports[0];
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -336,6 +355,129 @@ export default function LeadDetail() {
             <Field label="Last Updated" value={new Date(lead.updated_at).toLocaleDateString('en-IN')} />
           </div>
         </div>
+
+        {/* Credit Score Section (Superadmin Only) */}
+        {user?.role === 'super_admin' && (
+          <div className="stat-card lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <span className="text-accent">
+                  <ShieldCheck size={18} />
+                </span>
+                <h3 className="text-sm font-semibold text-foreground">Credit Report Analysis</h3>
+              </div>
+              <button
+                onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-bold hover:bg-accent/20 transition-colors"
+              >
+                <RefreshCw size={14} /> Fetch New Report
+              </button>
+            </div>
+
+            {latestReport ? (
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div className="md:col-span-12">
+                   <div className="flex flex-col md:flex-row gap-8 items-center bg-white/50 p-6 rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="flex-shrink-0">
+                        <CreditScoreGauge 
+                          score={latestReport.score} 
+                          size="lg" 
+                          className="scale-90 md:scale-100"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <h3 className="text-xl font-black text-slate-900 leading-tight">Latest Analysis</h3>
+                          <p className="text-slate-500 text-sm font-medium">
+                            Last report fetched on {format(new Date(latestReport.created_at), 'dd MMM yyyy')}
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Provider</p>
+                            <p className="text-sm font-bold text-slate-900">{latestReport.provider}</p>
+                          </div>
+                          <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
+                            <p className="text-sm font-bold text-green-600">GOOD</p>
+                          </div>
+                        </div>
+
+                        {latestReport.report_link && (
+                          <a 
+                            href={getFileUrl(latestReport.report_link)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                          >
+                            <ExternalLink size={18} /> View Full Report PDF
+                          </a>
+                        )}
+                      </div>
+                   </div>
+                </div>
+
+                {/* History Table */}
+                <div className="md:col-span-12 mt-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Credit History</h4>
+                  <div className="overflow-hidden rounded-xl border border-slate-100 bg-white/50">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                          <th className="text-left py-3 px-4 font-bold text-slate-500">Date</th>
+                          <th className="text-left py-3 px-4 font-bold text-slate-500">Provider</th>
+                          <th className="text-center py-3 px-4 font-bold text-slate-500">Score</th>
+                          <th className="text-right py-3 px-4 font-bold text-slate-500">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100/50">
+                        {creditReports.map((report: any) => (
+                          <tr key={report.id} className="hover:bg-white transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2 text-slate-600">
+                                <Calendar size={14} className="text-slate-400" />
+                                {format(new Date(report.created_at), 'dd MMM yyyy')}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-bold text-slate-900">{report.provider}</span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="px-2 py-1 rounded bg-slate-900 text-white text-[10px] font-black">
+                                {report.score || '—'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {report.report_link && (
+                                <a 
+                                  href={getFileUrl(report.report_link)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-accent hover:underline font-bold text-xs flex items-center justify-end gap-1"
+                                >
+                                  View <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                <div className="p-4 rounded-full bg-white shadow-sm mb-4">
+                  <ShieldCheck size={32} className="text-slate-300" />
+                </div>
+                <p className="text-slate-500 font-medium">No credit reports found for this lead</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Initiate a fetch to see analysis</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Documents Section */}
         {canViewLeadDocuments ? (

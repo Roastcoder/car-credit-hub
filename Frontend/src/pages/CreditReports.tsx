@@ -45,6 +45,7 @@ export default function CreditReports() {
     identifier_type: 'pan',
     identifier_value: '',
     loan_id: '',
+    lead_id: '',
     gender: 'male'
   });
 
@@ -70,10 +71,13 @@ export default function CreditReports() {
     const pan = searchParams.get('pan');
     const gender = searchParams.get('gender');
 
-    if (loan_id || name || mobile || pan) {
+    const lead_id = searchParams.get('lead_id');
+
+    if (loan_id || lead_id || name || mobile || pan) {
       setFetchForm(prev => ({
         ...prev,
         loan_id: loan_id || '',
+        lead_id: lead_id || '',
         name: name || '',
         mobile: mobile || '',
         identifier_value: pan || '',
@@ -98,6 +102,7 @@ export default function CreditReports() {
         name: fetchForm.name,
         mobile: fetchForm.mobile,
         loan_id: fetchForm.loan_id || undefined,
+        lead_id: fetchForm.lead_id || undefined,
         gender: fetchForm.gender
       };
 
@@ -124,6 +129,7 @@ export default function CreditReports() {
           identifier_type: 'pan',
           identifier_value: '',
           loan_id: '',
+          lead_id: '',
           gender: 'male'
         });
       } else {
@@ -151,6 +157,7 @@ export default function CreditReports() {
   const filteredReports = reports.filter(r => {
     const matchesSearch = 
       r.loan_customer_name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.lead_customer_name?.toLowerCase().includes(search.toLowerCase()) ||
       r.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
       r.provider?.toLowerCase().includes(search.toLowerCase());
     
@@ -363,7 +370,7 @@ export default function CreditReports() {
                             <h3 className="text-xl font-black text-slate-900 leading-tight">Latest Analysis</h3>
                             <p className="text-slate-500 text-sm font-medium">
                               {latestReport 
-                                ? `Last report for ${latestReport.loan_customer_name || 'customer'} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
+                                ? `Last report for ${latestReport.loan_customer_name || latestReport.lead_customer_name || 'customer'} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
                                 : 'No reports available yet. Fetch a new report to see analysis.'
                               }
                             </p>
@@ -471,8 +478,12 @@ export default function CreditReports() {
                                 <User className="h-5 w-5" />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-slate-900 leading-tight">{report.loan_customer_name}</p>
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">#{report.loan_number}</p>
+                                <p className="text-sm font-bold text-slate-900 leading-tight">
+                                  {report.loan_customer_name || report.lead_customer_name || 'Unknown'}
+                                </p>
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
+                                  {report.loan_number ? `#${report.loan_number}` : report.lead_customer_name ? 'LEAD' : 'N/A'}
+                                </p>
                               </div>
                             </div>
                           </td>
