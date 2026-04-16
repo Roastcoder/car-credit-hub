@@ -202,8 +202,26 @@ export const externalAPI = {
   },
   fetchChallanData: (params: { rc_number: string, chassis_number: string, engine_number: string }) => 
     api.post('/external/surepass/challan', params),
+  fetchCreditReport: (params: { 
+    provider: string; 
+    loan_id?: string | number;
+    name?: string; 
+    mobile?: string; 
+    pan?: string; 
+    aadhaar?: string;
+    id_number?: string;
+    id_type?: string;
+    gender?: string;
+  }) => api.post('/external/surepass/credit-report', params),
   getLogs: () => api.get('/external/logs'),
   getVehicleCache: (vehicleNumber: string) => api.get(`/external/vehicle/${vehicleNumber}`),
+};
+
+// Credit Reports API
+export const creditReportsAPI = {
+  getAll: (params?: any) => api.get('/credit-reports' + (params ? `?${new URLSearchParams(params)}` : '')),
+  getLoanReports: (loanId: string | number) => api.get(`/credit-reports/loan/${loanId}`),
+  delete: (id: string | number) => api.delete(`/credit-reports/${id}`),
 };
 
 // Account Department API

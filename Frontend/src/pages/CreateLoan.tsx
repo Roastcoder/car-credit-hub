@@ -154,7 +154,7 @@ export default function CreateLoan() {
   const [form, setForm] = useState(() => {
     const defaultState = {
       // Customer Details
-      customerId: '', customerName: '', mobile: '', panNumber: '', aadharNumber: '', ourBranch: '',
+      customerId: '', customerName: '', mobile: '', gender: 'Male', panNumber: '', aadharNumber: '', ourBranch: '',
       currentAddress: '', currentVillage: '', currentTehsil: '', currentDistrict: '', currentState: '', currentPincode: '',
       sameAsCurrentAddress: false,
       permanentAddress: '', permanentVillage: '', permanentTehsil: '', permanentDistrict: '', permanentState: '', permanentPincode: '',
@@ -595,6 +595,7 @@ export default function CreateLoan() {
         customerId: existingLoan.customer_id || '',
         customerName: existingLoan.applicant_name || '',
         mobile: existingLoan.mobile || '',
+        gender: existingLoan.gender || 'Male',
         panNumber: existingLoan.pan_number || '',
         aadharNumber: existingLoan.aadhar_number || '',
         ourBranch: existingLoan.our_branch || '',
@@ -782,6 +783,7 @@ export default function CreateLoan() {
       customerId: lead.customer_id || '',
       customerName: lead.customer_name || '',
       mobile: lead.phone_no || lead.mobile || '',
+      gender: lead.gender || 'Male',
       panNumber: lead.pan_number || lead.pan_no || lead.pan_card || '',
       aadharNumber: lead.aadhar_number || lead.aadhar_no || lead.aadhar_card || '',
       currentAddress: lead.address || '',
@@ -1102,6 +1104,7 @@ export default function CreateLoan() {
           lead_id: leadId ? Number(leadId) : null,
           customer_id: form.customerId || null,
           applicant_name: form.customerName,
+          gender: form.gender,
           mobile: form.mobile,
           pan_number: form.panNumber?.trim() || null,
           aadhar_number: form.aadharNumber?.trim() || null,
@@ -1332,7 +1335,29 @@ export default function CreateLoan() {
                       )}
                     </div>
                     <div><label className={labelClass}>Customer Name *</label><input required className={inputClass} value={form.customerName} onChange={e => update('customerName', e.target.value)} /></div>
-                    <div><label className={labelClass}>Mobile No *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
+                    <div><label className={labelClass}>Mobile Number *</label><input required className={inputClass} value={form.mobile} onChange={e => update('mobile', e.target.value)} maxLength={10} /></div>
+                    <div>
+                      <label className={labelClass}>Gender *</label>
+                      <div className="flex gap-4 py-2">
+                        {['Male', 'Female', 'Other'].map(option => (
+                          <label key={option} className="flex items-center gap-2 cursor-pointer group">
+                            <div className="relative flex items-center justify-center">
+                              <input
+                                type="radio"
+                                name="gender"
+                                value={option}
+                                checked={form.gender === option}
+                                onChange={e => update('gender', e.target.value)}
+                                className="peer sr-only"
+                              />
+                              <div className="w-4 h-4 rounded-full border-2 border-border group-hover:border-accent peer-checked:border-accent peer-checked:bg-accent transition-all" />
+                              <div className="absolute w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground">{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                     <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                     <div>

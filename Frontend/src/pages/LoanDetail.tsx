@@ -13,7 +13,7 @@ import WorkflowStatus from '@/components/WorkflowStatus';
 import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
@@ -208,6 +208,19 @@ export default function LoanDetail() {
       return res.data || res;
     },
     enabled: !!loan?.vehicle_number,
+  });
+
+  const { data: creditReports = [] } = useQuery({
+    queryKey: ['loan-credit-reports', id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/credit-reports?loan_id=${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
+    },
+    enabled: !!id && user?.role === 'super_admin',
   });
 
   const computedCommission = useMemo(() => {
@@ -793,6 +806,72 @@ export default function LoanDetail() {
                     <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
                     <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
                     <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
+                  </div>
+                </Section>
+              )}
+
+              {/* Credit Reports Section (Superadmin Only) */}
+              {user?.role === 'super_admin' && (
+                <Section title="Credit Reports" icon={<ShieldCheck size={16} />}>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Historical Reports</p>
+                      <button
+                        onClick={() => navigate(`/credit-reports?loan_id=${loan.id}&name=${encodeURIComponent(loan.applicant_name)}&mobile=${loan.mobile}&pan=${(loan as any).pan_number || ''}&gender=${(loan as any).gender || 'male'}`)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-sm transition-all active:scale-95"
+                      >
+                        <ShieldCheck size={14} />
+                        Fetch New Report
+                      </button>
+                    </div>
+
+                    {creditReports.length === 0 ? (
+                      <div className="py-6 text-center border-2 border-dashed border-border rounded-xl">
+                        <p className="text-sm text-muted-foreground italic">No credit reports found for this application</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {creditReports.map((report: any) => (
+                          <div key={report.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card/50 hover:bg-muted/30 transition-colors group">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                <FileText size={18} className="text-blue-600" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-bold text-foreground uppercase tracking-tight">{report.provider}</p>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">
+                                    SCORE: {report.score}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {new Date(report.created_at).toLocaleString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {report.report_link && (
+                                <a
+                                  href={report.report_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 rounded-lg hover:bg-blue-600/10 text-blue-600 transition-colors"
+                                  title="View Report"
+                                >
+                                  <ExternalLink size={16} />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </Section>
               )}

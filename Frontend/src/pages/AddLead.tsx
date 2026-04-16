@@ -65,6 +65,7 @@ export default function AddLead() {
     manager_name: '',
     our_branch: '',
     financier_name: '',
+    gender: 'Male',
   });
 
   const [rcFront, setRcFront] = useState<File | null>(null);
@@ -338,6 +339,29 @@ export default function AddLead() {
           <div>
             <label className={labelClass}>Vehicle No</label>
             <input className={inputClass} value={form.vehicle_no} onChange={e => setForm({...form, vehicle_no: e.target.value.toUpperCase()})} placeholder="Enter Vehicle Number" />
+          </div>
+
+          <div>
+            <label className={labelClass}>Gender *</label>
+            <div className="flex gap-4 py-2">
+              {['Male', 'Female', 'Other'].map(option => (
+                <label key={option} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={option}
+                      checked={form.gender === option}
+                      onChange={e => setForm({...form, gender: e.target.value})}
+                      className="peer sr-only"
+                    />
+                    <div className="w-4 h-4 rounded-full border-2 border-border group-hover:border-accent peer-checked:border-accent peer-checked:bg-accent transition-all" />
+                    <div className="absolute w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{option}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>

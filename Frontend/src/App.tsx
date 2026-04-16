@@ -49,6 +49,7 @@ const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
 const Download = lazy(() => import("@/pages/Download"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const ExternalApiLogs = lazy(() => import("@/pages/ExternalApiLogs"));
+const CreditReports = lazy(() => import("./pages/CreditReports"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -145,6 +146,13 @@ function AppRoutes() {
         <ProtectedRoute>
           <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>
             <ExternalApiLogs />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/credit-reports" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <CreditReports />
           </RoleProtectedRoute>
         </ProtectedRoute>
       } />

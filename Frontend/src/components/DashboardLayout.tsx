@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
-  Activity, Receipt, Shield, User, Menu
+  Activity, Receipt, Shield, User, Menu, ShieldCheck
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -68,6 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, roles: ['employee'] },
   { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
+  { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, roles: ['super_admin'] },
 ];
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [

@@ -48,10 +48,17 @@ export const WORKFLOW_CONFIG = {
 
 export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
   draft: 'employee',
+  submitted: 'employee',
   under_review: 'admin',
+  manager_review: 'manager',
+  manager_approved: 'manager',
+  admin_approved: 'admin',
   approved: 'admin',
   disbursed: 'admin',
   sent_back: 'employee',
+  sent_back_employee: 'employee',
+  sent_back_manager: 'manager',
+  sent_back_admin: 'admin',
   rejected: 'employee',
   cancelled: 'employee',
 };
@@ -82,7 +89,7 @@ export const FINANCIER_TEAM_VERTICAL_OPTIONS = [
   { value: 'LCV', label: 'LCV (Light Commercial Vehicle)' },
   { value: 'HCV', label: 'HCV (Heavy Commercial Vehicle)' },
   { value: 'Car', label: 'Car' },
-  { value: 'Tractor', label: 'Tractor' },
+  { value: 'Tractor', label: 'Tr' },
   { value: 'CE', label: 'CE (Construction Equipment)' },
 ];
 
@@ -99,3 +106,12 @@ export const INSURANCE_MADE_BY_OPTIONS = [
 ];
 
 export const YES_NO_OPTIONS = ['Yes', 'No'];
+
+export const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+
+export const CREDIT_SCORE_TYPES = [
+  'CIBIL',
+  'CRIF',
+  'Experian',
+  'Equifax'
+];

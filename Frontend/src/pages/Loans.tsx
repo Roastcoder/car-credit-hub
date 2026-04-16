@@ -13,7 +13,7 @@ import { RemarksModal } from '@/components/RemarksModal';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck, ShieldCheck } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
 type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admin_approved' | 'disbursed' | 'rejected' | 'cancelled';
@@ -433,6 +433,15 @@ export default function Loans() {
                                 <svg className="w-3.5 h-3.5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
+                              </button>
+                            )}
+                            {user?.role === 'super_admin' && (
+                              <button
+                                onClick={() => navigate(`/credit-reports?loan_id=${loan.id}&name=${encodeURIComponent(loan.applicant_name)}&mobile=${loan.mobile}&pan=${loan.pan_number || ''}&gender=${loan.gender || 'male'}`)}
+                                className="p-1.5 rounded-md border border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
+                                title="Fetch Credit Score"
+                              >
+                                <ShieldCheck size={14} className="text-blue-600" />
                               </button>
                             )}
                             {loan.status === 'disbursed' && (

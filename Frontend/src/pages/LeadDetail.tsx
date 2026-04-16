@@ -257,6 +257,7 @@ export default function LeadDetail() {
             <Field label="Phone Number" value={lead.phone} />
             <Field label="PAN Number" value={lead.pan_number} />
             <Field label="Aadhaar Number" value={lead.aadhar_number} />
+            <Field label="Gender" value={lead.gender || '—'} />
             <Field label="District" value={lead.district} />
             {user?.role !== 'broker' && (
               <>
