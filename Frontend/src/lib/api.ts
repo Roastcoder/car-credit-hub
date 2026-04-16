@@ -124,7 +124,7 @@ export const brokersAPI = {
 
 // Users API
 export const usersAPI = {
-  getAll: () => api.get('/users'),
+  getAll: (params?: any) => api.get('/users' + (params ? `?${new URLSearchParams(params)}` : '')),
   getById: (id: number) => api.get(`/users/${id}`),
   create: (data: any) => api.post('/users', data),
   update: (id: number, data: any) => api.put(`/users/${id}`, data),
