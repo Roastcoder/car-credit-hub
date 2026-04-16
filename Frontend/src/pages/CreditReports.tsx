@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
+import { getFileUrl } from '@/lib/utils';
 
 export default function CreditReports() {
   const [searchParams] = useSearchParams();
@@ -498,7 +499,7 @@ export default function CreditReports() {
                                   variant="ghost" 
                                   size="icon" 
                                   className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg"
-                                  onClick={() => window.open(report.report_link, '_blank')}
+                                  onClick={() => window.open(getFileUrl(report.report_link), '_blank')}
                                 >
                                   <ExternalLink className="h-4 w-4" />
                                 </Button>

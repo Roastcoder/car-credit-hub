@@ -5,6 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function getFileUrl(path?: string | null): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // Use VITE_API_URL to get the base domain for local uploads
+  // If API_URL is http://localhost:5000/api, we want http://localhost:5000
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const baseUrl = apiUrl.split('/api')[0];
+  
+  // Ensure we don't have double slashes
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

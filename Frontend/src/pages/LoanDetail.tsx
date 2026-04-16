@@ -14,6 +14,7 @@ import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
+import { getFileUrl } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
@@ -837,7 +838,7 @@ export default function LoanDetail() {
                             <div className="absolute top-0 right-0 p-2">
                               {report.report_link && (
                                 <a
-                                  href={report.report_link}
+                                  href={getFileUrl(report.report_link)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-2 rounded-lg hover:bg-blue-600/10 text-blue-600 transition-colors"
