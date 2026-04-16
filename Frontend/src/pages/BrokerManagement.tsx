@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
-import { UserCheck, Search, Plus, FileText, IndianRupee, Edit, Trash2 } from 'lucide-react';
+import { UserCheck, Search, Plus, FileText, IndianRupee, Edit, Trash2, MapPin, Phone, Mail, Percent, User } from 'lucide-react';
 import { BrokerFormModal } from '@/components/BrokerFormModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -35,6 +35,8 @@ export default function BrokerManagement() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editBroker, setEditBroker] = useState<any>(null);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const isAdmin = user?.role === 'super_admin' || user?.role === 'admin';
 
   const { data: brokers = [], isLoading, refetch } = useQuery({
     queryKey: ['brokers'],
@@ -60,6 +62,21 @@ export default function BrokerManagement() {
     },
   });
 
+  const deleteBrokerMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete broker');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokers'] });
+      toast.success('Broker deleted successfully');
+    },
+    onError: () => toast.error('Failed to delete broker'),
+  });
+
   const handleAddBroker = () => {
     setEditBroker(null);
     setModalOpen(true);
@@ -70,21 +87,9 @@ export default function BrokerManagement() {
     setModalOpen(true);
   };
 
-  const handleDeleteBroker = async (broker: any) => {
-    if (!window.confirm(`Are you sure you want to delete broker "${broker.name}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/brokers/${broker.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      if (!res.ok) throw new Error('Failed to delete broker');
-      toast.success('Broker deleted successfully');
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete broker');
+  const handleDeleteBroker = (broker: any) => {
+    if (window.confirm(`Are you sure you want to delete broker "${broker.name}"? This action cannot be undone.`)) {
+      deleteBrokerMutation.mutate(broker.id);
     }
   };
 
@@ -154,40 +159,52 @@ export default function BrokerManagement() {
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-8 text-sm">No brokers found</p>
         ) : (
-          filtered.map((b: any) => {
-            const brokerLoans = (loans as any[]).filter(l => l.assigned_broker_id === b.id);
-            return (
-              <div key={b.id} className="stat-card">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <UserAvatar user={b} className="w-10 h-10 text-sm" />
-                    <div>
-                      <p className="font-semibold text-foreground">{b.name}</p>
-                      <p className="text-xs text-muted-foreground">{b.dsa_code && <span className="text-accent font-medium">{formatDSACode(b.dsa_code)} • </span>}{b.email || b.phone || '—'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                      {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
+          filtered.map((b: any) => (
+            <div key={b.id} className="stat-card">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-foreground">{b.name}</h3>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                    <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">{b.dsa_code || 'DSA-TBD'}</span>
+                    <span>•</span>
+                    <span className="font-medium text-accent truncate max-w-[120px]">
+                      {b.assigned_user_name || 'Unassigned'}
+                      {b.secondary_user_name ? ` & ${b.secondary_user_name}` : ''}
                     </span>
-                    <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-                      <Edit size={14} />
-                    </button>
-                    {user?.role === 'super_admin' && (
-                      <button onClick={() => handleDeleteBroker(b)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center border-t border-border pt-3">
-                  <div><p className="text-lg font-bold text-foreground">{brokerLoans.length}</p><p className="text-[10px] text-muted-foreground">Cases</p></div>
-                  <div><p className="text-lg font-bold text-accent">{b.commission_rate}%</p><p className="text-[10px] text-muted-foreground">Rate</p></div>
-                  <div><p className="text-sm font-medium text-muted-foreground">{b.area || '—'}</p><p className="text-[10px] text-muted-foreground">Area</p></div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Mail size={12} /> <span className="truncate">{b.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Phone size={12} /> <span>{b.phone}</span>
+                  </div>
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
+                    <Percent size={12} /> <span className="font-bold text-foreground">{b.commission_rate}% Rate</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
+                    <User size={12} className="text-blue-500" /> <span className="text-foreground">Ref: {b.referred_by_name || 'None'}</span>
+                  </div>
                 </div>
               </div>
-            );
-          })
+              <div className="flex gap-2">
+                <button onClick={() => handleEditBroker(b)} className="flex-1 py-2 rounded-lg border border-border text-xs font-bold hover:bg-muted transition-colors">Edit Details</button>
+                {isAdmin && (
+                  <button onClick={() => handleDeleteBroker(b)} className="px-3 py-2 rounded-lg border border-border text-red-500 hover:bg-red-50 transition-colors">
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
         )}
       </div>
 
@@ -200,55 +217,67 @@ export default function BrokerManagement() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Broker</th>
-                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">DSA Code</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Phone</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Cases</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Commission %</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                  <th className="py-3 px-3"></th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Broker Info</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assignment</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">DSA Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Area</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Commission</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((b: any) => {
-                  const brokerLoans = (loans as any[]).filter(l => l.assigned_broker_id === b.id);
-                  return (
-                    <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-3">
-                          <UserAvatar user={b} className="w-8 h-8 text-xs" />
-                          <div>
-                            <p className="font-medium text-foreground">{b.name}</p>
-                            <p className="text-xs text-muted-foreground">{b.email}</p>
+                {filtered.map((b: any) => (
+                  <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar user={b} className="w-8 h-8 text-xs" />
+                        <div>
+                          <p className="font-medium text-foreground">{b.name}</p>
+                          <p className="text-xs text-muted-foreground">{b.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Primary Assignment">
+                          <UserCheck size={14} className="text-accent" />
+                          <span className="font-medium text-foreground">{b.assigned_user_name || 'Unassigned'}</span>
+                        </div>
+                        {b.secondary_user_name && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Secondary Assignment">
+                            <UserCheck size={14} className="text-indigo-500" />
+                            <span className="font-medium text-foreground">{b.secondary_user_name}</span>
                           </div>
+                        )}
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5" title="Referred By">
+                          <User size={12} className="text-blue-500" />
+                          <span>Ref: {b.referred_by_name || 'None'}</span>
                         </div>
-                       </td>
-                      <td className="py-3 px-3 text-accent font-medium mono text-xs">{formatDSACode(b.dsa_code)}</td>
-                      <td className="py-3 px-3 text-muted-foreground">{b.area || '—'}</td>
-                      <td className="py-3 px-3 text-muted-foreground mono text-xs">{b.phone || '—'}</td>
-                      <td className="py-3 px-3 font-medium text-foreground">{brokerLoans.length}</td>
-                      <td className="py-3 px-3 font-medium text-accent">{b.commission_rate}%</td>
-                      <td className="py-3 px-3">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                          {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-                            <Edit size={14} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-accent font-medium mono text-xs">{formatDSACode(b.dsa_code)}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{b.area || '—'}</td>
+                    <td className="px-6 py-4 font-medium text-accent text-center">{b.commission_rate}%</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                        {(b.is_active === true || b.is_active === 'true' || b.is_active === 1) ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => handleEditBroker(b)} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                          <Edit size={14} />
+                        </button>
+                        {isAdmin && (
+                          <button onClick={() => handleDeleteBroker(b)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+                            <Trash2 size={14} />
                           </button>
-                          {user?.role === 'super_admin' && (
-                            <button onClick={() => handleDeleteBroker(b)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             {filtered.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No brokers found</p>}

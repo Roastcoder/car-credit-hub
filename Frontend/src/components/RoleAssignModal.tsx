@@ -22,6 +22,11 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [referredBy, setReferredBy] = useState<string>(user?.referred_by || '');
+  const [commissionRate, setCommissionRate] = useState(user?.commission_rate || '1.5');
+  const [area, setArea] = useState(user?.area || '');
+  const [dsaCode, setDsaCode] = useState(user?.dsa_code || '');
+  const [assignedUserId, setAssignedUserId] = useState(user?.assigned_user_id || '');
+  const [secondaryUserId, setSecondaryUserId] = useState(user?.secondary_user_id || '');
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
@@ -34,8 +39,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     },
   });
   
-  const { data: users = [] } = useQuery({
-    queryKey: ['users-list'],
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['users-list-for-modal'],
     queryFn: async () => {
       return await usersAPI.getAll();
     },
@@ -57,6 +62,11 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
       const currentBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
       setIsBranchManager(currentBranch?.manager_id === user.id);
       setReferredBy(user.referred_by || '');
+      setCommissionRate(user.commission_rate || '1.5');
+      setArea(user.area || '');
+      setDsaCode(user.dsa_code || '');
+      setAssignedUserId(user.assigned_user_id || '');
+      setSecondaryUserId(user.secondary_user_id || '');
     }
   }, [user, branches]);
 
@@ -64,25 +74,20 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     e.preventDefault();
     setLoading(true);
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/${user.id}/role`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({ 
-          role, 
-          branch_id: branchId || null,
-          referred_by: referredBy || null,
-          managed_branch_ids: managedBranchIds,
-          is_branch_manager: isBranchManager 
-        }),
-      }).then(async (res) => {
-        if (!res.ok) {
-          const error = await res.json().catch(() => ({ error: 'Failed to update user' }));
-          throw new Error(error.error || 'Failed to update user');
-        }
-      });
+      const updateData = { 
+        role, 
+        branch_id: branchId || null,
+        referred_by: referredBy || null,
+        managed_branch_ids: managedBranchIds,
+        is_branch_manager: isBranchManager,
+        commission_rate: role === 'broker' ? commissionRate : null,
+        area: role === 'broker' ? area : null,
+        dsa_code: role === 'broker' ? dsaCode : null,
+        assigned_user_id: role === 'broker' ? (assignedUserId || null) : null,
+        secondary_user_id: role === 'broker' ? (secondaryUserId || null) : null
+      };
+
+      await usersAPI.updateRole(user.id, updateData);
 
       if (newPassword.trim()) {
         await usersAPI.resetPassword(user.id, newPassword.trim());
@@ -136,52 +141,121 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Manager Branch Access</label>
-            <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-border p-3">
-              {branches.map((branch: any) => {
-                const branchNumber = Number(branch.id);
-                const checked = managedBranchIds.includes(branchNumber);
-                return (
-                  <label key={branch.id} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        setManagedBranchIds((prev) => {
-                          if (e.target.checked) {
-                            return Array.from(new Set([...prev, branchNumber]));
-                          }
-                          return prev.filter((id) => id !== branchNumber);
-                        });
-                      }}
-                      className="w-4 h-4 rounded border-border"
-                    />
-                    <span className="text-sm text-foreground">{branch.name} ({branch.code})</span>
-                  </label>
-                );
-              })}
+          {role === 'manager' && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Manager Branch Access</label>
+              <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-border p-3">
+                {branches.map((branch: any) => {
+                  const branchNumber = Number(branch.id);
+                  const checked = managedBranchIds.includes(branchNumber);
+                  return (
+                    <label key={branch.id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setManagedBranchIds((prev) => {
+                            if (e.target.checked) {
+                              return Array.from(new Set([...prev, branchNumber]));
+                            }
+                            return prev.filter((id) => id !== branchNumber);
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                      <span className="text-sm text-foreground">{branch.name} ({branch.code})</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Use this section for user branch allocation. Managers can be assigned one or more branches here.
+              </p>
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Use this section for user branch allocation. Managers can be assigned one or more branches here.
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Referred By</label>
-            <select
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background"
-              value={referredBy}
-              onChange={e => setReferredBy(e.target.value)}
-            >
-              <option value="">No Referrer</option>
-              {users
-                .filter((u: any) => u.id !== user?.id && ['super_admin', 'admin', 'manager', 'rbm', 'employee'].includes(u.role))
-                .map((u: any) => (
-                  <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>
-                ))}
-            </select>
-          </div>
-          {branchId && (
+          )}
+          {role === 'broker' && (
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-1.5">Referred By (Recruiter)</label>
+                <select
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                  value={referredBy}
+                  onChange={e => setReferredBy(e.target.value)}
+                >
+                  <option value="">No Referrer</option>
+                  {allUsers
+                    .filter((u: any) => u.id !== user?.id && ['super_admin', 'admin', 'manager', 'rbm', 'employee'].includes(u.role))
+                    .map((u: any) => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Area</label>
+                <input 
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
+                  value={area} 
+                  onChange={e => setArea(e.target.value)} 
+                  placeholder="e.g. JAIPUR"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">DSA Code</label>
+                <input 
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
+                  value={dsaCode} 
+                  onChange={e => setDsaCode(e.target.value)} 
+                  placeholder="e.g. MEHDA001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Commission (%)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
+                  value={commissionRate} 
+                  onChange={e => setCommissionRate(e.target.value)} 
+                />
+              </div>
+              <div className="col-span-2 pt-2 border-t border-border/30">
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Internal Assignments</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-medium mb-1">Primary Manager</label>
+                    <select
+                      className="w-full px-2 py-1.5 text-xs rounded-lg border border-border bg-background"
+                      value={assignedUserId}
+                      onChange={e => setAssignedUserId(e.target.value)}
+                    >
+                      <option value="">Unassigned</option>
+                      {allUsers
+                        .filter((u: any) => ['super_admin', 'admin', 'manager', 'rbm', 'employee'].includes(u.role))
+                        .map((u: any) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium mb-1">Secondary Manager</label>
+                    <select
+                      className="w-full px-2 py-1.5 text-xs rounded-lg border border-border bg-background"
+                      value={secondaryUserId}
+                      onChange={e => setSecondaryUserId(e.target.value)}
+                    >
+                      <option value="">None</option>
+                      {allUsers
+                        .filter((u: any) => ['super_admin', 'admin', 'manager', 'rbm', 'employee'].includes(u.role))
+                        .map((u: any) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {role === 'manager' && branchId && (
             <div className="bg-accent/5 p-3 rounded-lg border border-accent/10">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 

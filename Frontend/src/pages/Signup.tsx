@@ -142,11 +142,22 @@ export default function Signup() {
             </div>
 
             <div className="mb-6">
+              {refCode && (
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {refName ? refName[0].toUpperCase() : 'Ref'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400">Invited By</p>
+                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100 truncate">{refName || 'Mehar Finance Partner'}</p>
+                  </div>
+                </div>
+              )}
               <h2 className="text-2xl font-bold text-blue-950 dark:text-white tracking-tight">
-                {step === 1 ? 'Create Account' : 'Verify Mobile'}
+                {step === 1 ? (refCode ? 'Partner Signup' : 'Create Account') : 'Verify Mobile'}
               </h2>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium text-wrap">
-                {step === 1 ? 'Join Mehar Finance team' : `Enter code sent to +91 ${phone}`}
+                {step === 1 ? (refCode ? 'Join Mehar Finance as a Partner/Broker' : 'Join Mehar Finance team') : `Enter code sent to +91 ${phone}`}
               </p>
             </div>
 

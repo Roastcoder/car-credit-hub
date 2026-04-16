@@ -210,10 +210,10 @@ export default function Dashboard() {
   return (
     <div className="relative z-10 text-text-main-light dark:text-text-main-dark">
       <div className="px-2 sm:px-4 pt-3 pb-20 lg:p-4 sm:lg:p-6">
-        {user?.role === 'employee' && (
+        {!['super_admin', 'admin'].includes(user?.role || '') && (
           <div className="stat-card mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-blue-500">
             <div>
-              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">Refer a Broker</h2>
+              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">Referral Program</h2>
               <p className="text-sm text-blue-700 dark:text-blue-300">Share this link to invite brokers. They will automatically report to you.</p>
             </div>
             <div className="flex bg-white/50 dark:bg-black/20 rounded-lg p-1 border border-blue-200 dark:border-blue-800 w-full sm:w-auto">

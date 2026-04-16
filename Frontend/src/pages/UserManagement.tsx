@@ -5,6 +5,7 @@ import { ROLE_LABELS, UserRole } from '@/lib/auth';
 import { Search, Shield, Edit, KeyRound, Trash2 } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
 import { usersAPI } from '@/lib/api';
+import { toast } from 'sonner';
 
 const UserAvatar = ({ user, className }: { user: any, className?: string }) => {
   const [error, setError] = useState(false);
