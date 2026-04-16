@@ -36,7 +36,7 @@ export default function MyBrokers() {
     queryKey: ['my-brokers-list'],
     queryFn: async () => {
       try {
-        // Fetch users referred by me
+        // Fetch users referred by me (filter handled by backend)
         return await usersAPI.getAll({ referred_by_me: true });
       } catch (err) {
         console.error('Error fetching my brokers:', err);
