@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { loansAPI, externalAPI } from '@/lib/api';
 import { LOAN_STATUSES, WORKFLOW_STEPS } from '@/lib/constants';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { WorkflowService } from '@/lib/workflow';
 import { getRolePermissions } from '@/lib/permissions';
 import { RemarksModal } from '@/components/RemarksModal';
