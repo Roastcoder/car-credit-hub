@@ -13,6 +13,7 @@ import WorkflowStatus from '@/components/WorkflowStatus';
 import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
+import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
@@ -830,32 +831,10 @@ export default function LoanDetail() {
                         <p className="text-sm text-muted-foreground italic">No credit reports found for this application</p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {creditReports.map((report: any) => (
-                          <div key={report.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card/50 hover:bg-muted/30 transition-colors group">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                <FileText size={18} className="text-blue-600" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm font-bold text-foreground uppercase tracking-tight">{report.provider}</p>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">
-                                    SCORE: {report.score}
-                                  </span>
-                                </div>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  {new Date(report.created_at).toLocaleString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
+                          <div key={report.id} className="flex flex-col p-4 rounded-2xl border border-border bg-card/50 hover:bg-muted/30 transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-2">
                               {report.report_link && (
                                 <a
                                   href={report.report_link}
@@ -867,6 +846,24 @@ export default function LoanDetail() {
                                   <ExternalLink size={16} />
                                 </a>
                               )}
+                            </div>
+
+                            <div className="flex flex-col items-center text-center gap-4">
+                              <CreditScoreGauge 
+                                score={report.score} 
+                                size="sm" 
+                              />
+                              
+                              <div className="space-y-1">
+                                <p className="text-sm font-black text-foreground uppercase tracking-tight">{report.provider}</p>
+                                <p className="text-[10px] text-muted-foreground font-medium">
+                                  Fetched on {new Date(report.created_at).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         ))}

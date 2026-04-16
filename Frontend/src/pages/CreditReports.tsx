@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
+import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 
 export default function CreditReports() {
   const [searchParams] = useSearchParams();
@@ -156,6 +157,8 @@ export default function CreditReports() {
     
     return matchesSearch && matchesProvider;
   });
+
+  const latestReport = reports.length > 0 ? reports[0] : null;
 
   const getScoreColor = (score: string | number) => {
     const s = Number(score);
@@ -337,6 +340,102 @@ export default function CreditReports() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              {loading ? (
+                <div className="py-20 text-center">
+                  <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium">Loading reports...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                  <Card className="lg:col-span-2 rounded-2xl border-slate-200 shadow-sm bg-gradient-to-br from-white to-slate-50 overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row items-center gap-8">
+                        <div className="flex-shrink-0">
+                          <CreditScoreGauge 
+                            score={latestReport?.score || 300} 
+                            size="lg" 
+                            className="scale-90 md:scale-100"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-4">
+                          <div>
+                            <h3 className="text-xl font-black text-slate-900 leading-tight">Latest Analysis</h3>
+                            <p className="text-slate-500 text-sm font-medium">
+                              {latestReport 
+                                ? `Last report for ${latestReport.loan_customer_name} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
+                                : 'No reports available yet. Fetch a new report to see analysis.'
+                              }
+                            </p>
+                          </div>
+                          
+                          {latestReport && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-white/50 p-3 rounded-xl border border-slate-100 shadow-sm">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Provider</p>
+                                <p className="text-sm font-bold text-slate-900">{latestReport.provider}</p>
+                              </div>
+                              <div className="bg-white/50 p-3 rounded-xl border border-slate-100 shadow-sm text-right">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
+                                <Badge className={getScoreColor(latestReport.score)}>
+                                  {Number(latestReport.score) >= 750 ? 'EXCELLENT' : 
+                                   Number(latestReport.score) >= 650 ? 'GOOD' : 
+                                   Number(latestReport.score) >= 550 ? 'AVERAGE' : 'POOR'}
+                                </Badge>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <Button 
+                            variant="outline" 
+                            className="w-full rounded-xl border-slate-200 text-slate-700 font-bold h-10 hover:bg-white shadow-sm"
+                            onClick={() => setIsFetchModalOpen(true)}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Perform New Check
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-2xl border-slate-200 shadow-sm bg-white overflow-hidden">
+                    <CardHeader className="p-5 pb-0">
+                      <CardTitle className="text-sm font-bold text-slate-400 uppercase tracking-widest">Portfolio Health</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-5 space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-600">Avg Portfolio Score</span>
+                          <span className="text-lg font-black text-slate-900">
+                             {reports.length > 0 
+                              ? Math.round(reports.reduce((acc, r) => acc + (Number(r.score) || 0), 0) / (reports.filter(r => !!Number(r.score)).length || 1))
+                              : '0'
+                            }
+                          </span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-600 rounded-full" 
+                            style={{ width: `${(reports.length > 0 ? (reports.reduce((acc, r) => acc + (Number(r.score) || 0), 0) / (reports.length * 900)) * 100 : 0)}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="pt-4 border-t border-slate-100 space-y-3">
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                          <span className="text-slate-400">Total Checks Done</span>
+                          <span className="text-slate-900">{reports.length}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                          <span className="text-slate-400">High Risk Leads</span>
+                          <span className="text-rose-600">{reports.filter(r => Number(r.score) < 550 && r.score !== null).length}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {loading ? (
                 <div className="py-20 text-center">
                   <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-3" />
