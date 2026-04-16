@@ -10,8 +10,8 @@
     "electron:dev": "electron .",
     "electron:build": "npm run frontend:build && electron-builder",
     "dev": "concurrently \"npm run frontend:dev\" \"wait-on http://localhost:3000 && npm run electron:dev\"",
-    "build:win": "npm run frontend:build && electron-builder --win",
-    "build:mac": "npm run frontend:build && electron-builder --mac"
+    "build:win": "npm run frontend:build && electron-builder --win && cp \"dist-electron/Mehar Finance Setup 1.0.0.exe\" \"Frontend/public/MeharFinance_Setup.exe\"",
+    "build:mac": "npm run frontend:build && electron-builder --mac && cp \"dist-electron/Mehar Finance-1.0.0.dmg\" \"Frontend/public/MeharFinance_Mac.dmg\""
   },
   "build": {
     "appId": "com.mehar.finance",
@@ -21,7 +21,9 @@
     },
     "files": [
       "electron/**/*",
-      "Frontend/dist/**/*"
+      "Frontend/dist/**/*",
+      "!Frontend/dist/**/*.{exe,dmg,apk,zip}",
+      "!Frontend/public/**/*.{exe,dmg,apk,zip}"
     ],
     "icon": "electron/assets/icon.png",
     "win": {
