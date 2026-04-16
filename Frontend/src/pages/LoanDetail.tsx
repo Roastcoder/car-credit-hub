@@ -418,6 +418,17 @@ export default function LoanDetail() {
     !(loan as any).loan_number.startsWith('APP-') &&
     !(loan as any).loan_number.startsWith('TEMP-')
   );
+  const getScoreColor = (score: string | number) => {
+    const s = Number(score);
+    if (!s) return 'bg-slate-100 text-slate-600';
+    if (s >= 750) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    if (s >= 700) return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (s >= 600) return 'bg-amber-100 text-amber-700 border-amber-200';
+    return 'bg-rose-100 text-rose-700 border-rose-200';
+  };
+
+  const latestReport = (creditReports as any[]).length > 0 ? (creditReports as any[])[0] : null;
+
   const applicationIdentifier = (
     typeof (loan as any).application_id === 'string' && (loan as any).application_id
   ) ? (loan as any).application_id : (
@@ -496,9 +507,17 @@ export default function LoanDetail() {
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex flex-col">
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {hasFinalLoanNumber ? (loan as any).loan_number : `Application ID: ${applicationIdentifier}`}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black text-foreground tracking-tight">
+                    {hasFinalLoanNumber ? (loan as any).loan_number : `Application ID: ${applicationIdentifier}`}
+                  </h1>
+                  {latestReport && (
+                    <div className={cn("px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 shadow-sm", getScoreColor(latestReport.score))}>
+                      <ShieldCheck size={12} className="text-current" />
+                      {latestReport.score}
+                    </div>
+                  )}
+                </div>
                 {hasFinalLoanNumber && (
                   <p className="text-xs text-green-600 font-medium mt-1">✓ Loan Number Assigned</p>
                 )}
