@@ -304,7 +304,7 @@ export default function CreditReports() {
                                   {report.loan_customer_name || report.lead_customer_name || 'Unknown'}
                                 </p>
                                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
-                                  {report.loan_number ? `#${report.loan_number}` : report.lead_customer_name ? 'LEAD' : 'N/A'}
+                                  {report.loan_number ? `#${report.loan_number}` : report.lead_customer_id ? `CID: ${report.lead_customer_id}` : 'CUSTOMER'}
                                 </p>
                               </div>
                             </div>

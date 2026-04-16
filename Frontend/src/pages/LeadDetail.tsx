@@ -474,7 +474,7 @@ export default function LeadDetail() {
                 <div className="p-4 rounded-full bg-white shadow-sm mb-4">
                   <ShieldCheck size={32} className="text-slate-300" />
                 </div>
-                <p className="text-slate-500 font-medium">No credit reports found for this lead</p>
+                <p className="text-slate-500 font-medium">No credit reports found for Customer {lead.customer_id}</p>
                 <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Initiate a fetch to see analysis</p>
               </div>
             )}

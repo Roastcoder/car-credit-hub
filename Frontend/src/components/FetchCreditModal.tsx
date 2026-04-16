@@ -195,7 +195,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{fetchForm.loan_id ? 'Loan ID' : 'Lead ID'}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{fetchForm.loan_id ? 'Application ID' : 'Customer ID'}</label>
                 <Input 
                   placeholder="Internal ID" 
                   readOnly
