@@ -21,6 +21,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [referredBy, setReferredBy] = useState<string>(user?.referred_by || '');
 
   const { data: branches = [] } = useQuery({
     queryKey: ['branches'],
@@ -30,6 +31,13 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
       });
       if (!res.ok) throw new Error('Failed to fetch branches');
       return res.json();
+    },
+  });
+  
+  const { data: users = [] } = useQuery({
+    queryKey: ['users-list'],
+    queryFn: async () => {
+      return await usersAPI.getAll();
     },
   });
 
@@ -48,6 +56,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
       // Check if this user is already the manager of their branch
       const currentBranch = (branches as any[]).find(b => Number(b.id) === Number(user.branch_id));
       setIsBranchManager(currentBranch?.manager_id === user.id);
+      setReferredBy(user.referred_by || '');
     }
   }, [user, branches]);
 
@@ -64,6 +73,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         body: JSON.stringify({ 
           role, 
           branch_id: branchId || null,
+          referred_by: referredBy || null,
           managed_branch_ids: managedBranchIds,
           is_branch_manager: isBranchManager 
         }),
@@ -155,6 +165,21 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
             <p className="mt-1 text-[11px] text-muted-foreground">
               Use this section for user branch allocation. Managers can be assigned one or more branches here.
             </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Referred By</label>
+            <select
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+              value={referredBy}
+              onChange={e => setReferredBy(e.target.value)}
+            >
+              <option value="">No Referrer</option>
+              {users
+                .filter((u: any) => u.id !== user?.id && ['super_admin', 'admin', 'manager', 'rbm', 'employee'].includes(u.role))
+                .map((u: any) => (
+                  <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>
+                ))}
+            </select>
           </div>
           {branchId && (
             <div className="bg-accent/5 p-3 rounded-lg border border-accent/10">

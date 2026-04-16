@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { ROLE_LABELS, UserRole } from '@/lib/auth';
-import { Search, Shield, Edit, KeyRound } from 'lucide-react';
+import { Search, Shield, Edit, KeyRound, Trash2 } from 'lucide-react';
 import { RoleAssignModal } from '@/components/RoleAssignModal';
 import { usersAPI } from '@/lib/api';
 
@@ -41,6 +41,20 @@ export default function UserManagement() {
   const handleAssignRole = (u: any) => {
     setSelectedUser(u);
     setModalOpen(true);
+  };
+
+  const handleDeleteUser = async (u: any) => {
+    if (!window.confirm(`Are you sure you want to delete user "${u.full_name || u.email}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await usersAPI.delete(u.id);
+      toast.success('User deleted successfully');
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete user');
+    }
   };
 
   const { data: profiles = [], isLoading, refetch, error } = useQuery({
@@ -151,10 +165,26 @@ export default function UserManagement() {
                 {u.branch_name && (
                   <span className="text-xs text-muted-foreground">{u.branch_name}</span>
                 )}
+                {u.referred_by_name && (
+                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
+                    Ref by: {u.referred_by_name}
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground ml-auto">
                   {new Date(u.created_at).toLocaleDateString('en-IN')}
                 </span>
               </div>
+              {user?.role === 'super_admin' && (
+                <div className="mt-3 pt-3 border-t border-border/50 flex justify-end gap-2">
+                  <button
+                    onClick={() => handleDeleteUser(u)}
+                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors"
+                    title="Delete User"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -176,8 +206,9 @@ export default function UserManagement() {
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Unique ID</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Role</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
+                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Referred By</th>
                   <th className="text-left py-3 px-3 font-medium text-muted-foreground">Joined</th>
-                  {user?.role === 'super_admin' && <th className="py-3 px-3 text-left font-medium text-muted-foreground">Actions</th>}
+                  {user?.role === 'super_admin' && <th className="py-3 px-3 text-right font-medium text-muted-foreground">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -211,10 +242,13 @@ export default function UserManagement() {
                       {u.branch_name || <span className="text-muted-foreground/50">No branch</span>}
                     </td>
                     <td className="py-3 px-3 text-muted-foreground text-xs">
+                      {u.referred_by_name || <span className="text-muted-foreground/30">—</span>}
+                    </td>
+                    <td className="py-3 px-3 text-muted-foreground text-xs">
                       {new Date(u.created_at).toLocaleDateString('en-IN')}
                     </td>
                     {user?.role === 'super_admin' && (
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 text-right space-x-2">
                         <button
                           onClick={() => handleAssignRole(u)}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/15 transition-colors text-xs font-semibold"
@@ -224,10 +258,17 @@ export default function UserManagement() {
                         </button>
                         <button
                           onClick={() => handleAssignRole(u)}
-                          className="ml-2 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                          aria-label={`Edit ${u.full_name || u.email}`}
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground inline-flex items-center"
+                          title="Edit User"
                         >
                           <Edit size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors inline-flex items-center"
+                          title="Delete User"
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </td>
                     )}
