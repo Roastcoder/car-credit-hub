@@ -14,6 +14,7 @@ import RoleInfo, { WorkflowStepsInfo } from '@/components/RoleInfo';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
+import { FetchCreditModal } from '@/components/FetchCreditModal';
 import { getFileUrl } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
@@ -129,6 +130,7 @@ export default function LoanDetail() {
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; currentRemarks: string }>({ open: false, currentRemarks: '' });
+  const [isFetchModalOpen, setIsFetchModalOpen] = useState(false);
 
 
   const { data: loans = [] } = useQuery({
@@ -224,6 +226,11 @@ export default function LoanDetail() {
       return Array.isArray(data) ? data : (data.data || []);
     },
     enabled: !!id && user?.role === 'super_admin',
+  });
+
+  const { refetch: refetchCredit } = useQuery({
+    queryKey: ['loan-credit-reports', id],
+    enabled: false // just to get handle to refetch
   });
 
   const computedCommission = useMemo(() => {
@@ -820,7 +827,7 @@ export default function LoanDetail() {
                     <div className="flex justify-between items-center mb-2">
                       <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Historical Reports</p>
                       <button
-                        onClick={() => navigate(`/credit-reports?loan_id=${loan.id}&name=${encodeURIComponent(loan.applicant_name)}&mobile=${loan.mobile}&pan=${(loan as any).pan_number || ''}&gender=${(loan as any).gender || 'male'}`)}
+                        onClick={() => setIsFetchModalOpen(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-sm transition-all active:scale-95"
                       >
                         <ShieldCheck size={14} />
@@ -828,13 +835,13 @@ export default function LoanDetail() {
                       </button>
                     </div>
 
-                    {creditReports.length === 0 ? (
+                    {(creditReports as any[]).length === 0 ? (
                       <div className="py-6 text-center border-2 border-dashed border-border rounded-xl">
                         <p className="text-sm text-muted-foreground italic">No credit reports found for this application</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {creditReports.map((report: any) => (
+                        {(creditReports as any[]).map((report: any) => (
                           <div key={report.id} className="flex flex-col p-4 rounded-2xl border border-border bg-card/50 hover:bg-muted/30 transition-all group relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-2">
                               {report.report_link && (
@@ -1207,6 +1214,23 @@ export default function LoanDetail() {
           setRemarksModal({ open: false, currentRemarks: '' });
         }}
       />
+
+      {isFetchModalOpen && (
+        <FetchCreditModal
+          isOpen={isFetchModalOpen}
+          onClose={() => setIsFetchModalOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['loan-credit-reports', id] });
+          }}
+          initialData={{
+            loan_id: loan.id,
+            name: loan.applicant_name,
+            mobile: loan.mobile,
+            pan: (loan as any).pan_number || '',
+            gender: (loan as any).gender || 'male'
+          }}
+        />
+      )}
     </>
   );
 }

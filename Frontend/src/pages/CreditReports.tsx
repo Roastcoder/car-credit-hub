@@ -4,6 +4,7 @@ import { ShieldCheck, Search, Filter, Trash2, ExternalLink, RefreshCw, FileText,
 import { creditReportsAPI, externalAPI, loansAPI } from '@/lib/api';
 import { CREDIT_SCORE_TYPES } from '@/lib/constants';
 import { toast } from 'sonner';
+import { FetchCreditModal } from '@/components/FetchCreditModal';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,19 +36,7 @@ export default function CreditReports() {
   const [search, setSearch] = useState('');
   const [providerFilter, setProviderFilter] = useState('all');
   const [isFetchModalOpen, setIsFetchModalOpen] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
-  
-  // Fetch form state
-  const [fetchForm, setFetchForm] = useState({
-    provider: 'CIBIL',
-    name: '',
-    mobile: '',
-    identifier_type: 'pan',
-    identifier_value: '',
-    loan_id: '',
-    lead_id: '',
-    gender: 'male'
-  });
+  const [initialFetchData, setInitialFetchData] = useState<any>(null);
 
   const fetchReports = async () => {
     try {
@@ -74,73 +63,18 @@ export default function CreditReports() {
     const lead_id = searchParams.get('lead_id');
 
     if (loan_id || lead_id || name || mobile || pan) {
-      setFetchForm(prev => ({
-        ...prev,
+      setInitialFetchData({
         loan_id: loan_id || '',
         lead_id: lead_id || '',
         name: name || '',
         mobile: mobile || '',
-        identifier_value: pan || '',
-        identifier_type: pan ? 'pan' : 'aadhaar',
-        gender: (gender?.toLowerCase() === 'female' ? 'female' : 'male')
-      }));
+        pan: pan || '',
+        gender: gender || 'male'
+      });
       setIsFetchModalOpen(true);
     }
   }, [searchParams]);
 
-  const handleFetchReport = async () => {
-    if (!fetchForm.name || !fetchForm.mobile || !fetchForm.identifier_value) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    try {
-      setIsFetching(true);
-      
-      const payload: any = {
-        provider: fetchForm.provider,
-        name: fetchForm.name,
-        mobile: fetchForm.mobile,
-        loan_id: fetchForm.loan_id || undefined,
-        lead_id: fetchForm.lead_id || undefined,
-        gender: fetchForm.gender
-      };
-
-      if (fetchForm.identifier_type === 'pan') {
-        payload.pan = fetchForm.identifier_value;
-      } else {
-        payload.aadhaar = fetchForm.identifier_value;
-        payload.id_number = fetchForm.identifier_value;
-        payload.id_type = 'aadhaar';
-      }
-
-      const result = await externalAPI.fetchCreditReport(payload);
-      
-      if (result.success) {
-        toast.success(`Report fetched successfully! Score: ${result.data.credit_score}`);
-        setIsFetchModalOpen(false);
-        fetchReports(); // Refresh the list
-        
-        // Reset form
-        setFetchForm({
-          provider: 'CIBIL',
-          name: '',
-          mobile: '',
-          identifier_type: 'pan',
-          identifier_value: '',
-          loan_id: '',
-          lead_id: '',
-          gender: 'male'
-        });
-      } else {
-        toast.error(result.message || 'Failed to fetch report');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Error fetching credit report');
-    } finally {
-      setIsFetching(false);
-    }
-  };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this report?')) return;
@@ -155,11 +89,12 @@ export default function CreditReports() {
   };
 
   const filteredReports = reports.filter(r => {
+    const searchLower = search.toLowerCase();
     const matchesSearch = 
-      r.loan_customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.lead_customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
-      r.provider?.toLowerCase().includes(search.toLowerCase());
+      (r.loan_customer_name || '').toLowerCase().includes(searchLower) ||
+      (r.lead_customer_name || '').toLowerCase().includes(searchLower) ||
+      (r.loan_number || '').toLowerCase().includes(searchLower) ||
+      (r.provider || '').toLowerCase().includes(searchLower);
     
     const matchesProvider = providerFilter === 'all' || r.provider === providerFilter;
     
@@ -188,130 +123,17 @@ export default function CreditReports() {
           <p className="text-slate-500 mt-1">Monitor and fetch customer credit history securely.</p>
         </div>
 
-        <Dialog open={isFetchModalOpen} onOpenChange={setIsFetchModalOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95 gap-2 rounded-xl">
-              <RefreshCw className="h-4 w-4" />
-              Fetch New Report
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <CreditCard className="text-blue-600 h-5 w-5" />
-                Fetch Credit Report
-              </DialogTitle>
-              <DialogDescription>
-                Fetch a real-time report from Surepass. This will be automatically saved.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Provider</label>
-                  <Select 
-                    value={fetchForm.provider} 
-                    onValueChange={(v) => setFetchForm({...fetchForm, provider: v})}
-                  >
-                    <SelectTrigger className="rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CREDIT_SCORE_TYPES.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Gender</label>
-                  <Select 
-                    value={fetchForm.gender} 
-                    onValueChange={(v) => setFetchForm({...fetchForm, gender: v})}
-                  >
-                    <SelectTrigger className="rounded-xl border-slate-200">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Customer Full Name (as per ID)</label>
-                <Input 
-                  placeholder="e.g. Vishal Rathore" 
-                  className="rounded-xl border-slate-200"
-                  value={fetchForm.name}
-                  onChange={(e) => setFetchForm({...fetchForm, name: e.target.value})}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Mobile Number</label>
-                  <Input 
-                    placeholder="10-digit mobile" 
-                    maxLength={10}
-                    className="rounded-xl border-slate-200"
-                    value={fetchForm.mobile}
-                    onChange={(e) => setFetchForm({...fetchForm, mobile: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Loan ID (Optional)</label>
-                  <Input 
-                    placeholder="Auto-save to loan" 
-                    className="rounded-xl border-slate-200"
-                    value={fetchForm.loan_id}
-                    onChange={(e) => setFetchForm({...fetchForm, loan_id: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 border-t pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">ID Identifier</label>
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button 
-                      onClick={() => setFetchForm({...fetchForm, identifier_type: 'pan'})}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${fetchForm.identifier_type === 'pan' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
-                    >PAN</button>
-                    <button 
-                      onClick={() => setFetchForm({...fetchForm, identifier_type: 'aadhaar'})}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${fetchForm.identifier_type === 'aadhaar' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'}`}
-                    >AADHAAR</button>
-                  </div>
-                </div>
-                <Input 
-                  placeholder={fetchForm.identifier_type === 'pan' ? "e.g. ABCDE1234F" : "12-digit Aadhaar"} 
-                  className="rounded-xl border-slate-200 font-mono"
-                  value={fetchForm.identifier_value}
-                  onChange={(e) => setFetchForm({...fetchForm, identifier_value: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button 
-                className="w-full rounded-xl h-12 text-md font-bold bg-blue-600 hover:bg-blue-700" 
-                onClick={handleFetchReport}
-                disabled={isFetching}
-              >
-                {isFetching ? (
-                  <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                ) : (
-                  <Download className="h-5 w-5 mr-2" />
-                )}
-                {isFetching ? 'Fetching Data...' : 'Confirm & Fetch Report'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          size="lg" 
+          className="bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95 gap-2 rounded-xl"
+          onClick={() => {
+            setInitialFetchData(null);
+            setIsFetchModalOpen(true);
+          }}
+        >
+          <RefreshCw className="h-4 w-4" />
+          Fetch New Report
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -587,6 +409,15 @@ export default function CreditReports() {
           </Card>
         </div>
       </div>
+      
+      {isFetchModalOpen && (
+        <FetchCreditModal
+          isOpen={isFetchModalOpen}
+          onClose={() => setIsFetchModalOpen(false)}
+          onSuccess={() => fetchReports()}
+          initialData={initialFetchData}
+        />
+      )}
     </div>
   );
 }

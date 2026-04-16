@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getRolePermissions } from '@/lib/permissions';
 import { Search, Plus, ArrowRight, Copy, Check, Eye, Trash2, X, Filter, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { FetchCreditModal } from '@/components/FetchCreditModal';
 
 interface LeadsListProps {
   mode?: 'branch' | 'broker';
@@ -18,6 +19,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
   const [selectedBroker, setSelectedBroker] = useState('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [fetchModal, setFetchModal] = useState<{ open: boolean; initialData: any }>({ open: false, initialData: null });
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const queryClient = useQueryClient();
@@ -202,7 +204,17 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                 )}
                 {user?.role === 'super_admin' && (
                   <button
-                    onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                    onClick={() => setFetchModal({
+                      open: true,
+                      initialData: {
+                        lead_id: lead.id,
+                        name: lead.customer_name,
+                        mobile: lead.phone,
+                        pan: lead.pan_number || '',
+                        aadhaar: lead.aadhar_number || '',
+                        gender: lead.gender || 'male'
+                      }
+                    })}
                     className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 border border-transparent hover:border-blue-200 transition-colors"
                     title="Fetch Credit Score"
                   >
@@ -309,7 +321,17 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                           )}
                           {user?.role === 'super_admin' && (
                             <button
-                              onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                              onClick={() => setFetchModal({
+                                open: true,
+                                initialData: {
+                                  lead_id: lead.id,
+                                  name: lead.customer_name,
+                                  mobile: lead.phone,
+                                  pan: lead.pan_number || '',
+                                  aadhaar: lead.aadhar_number || '',
+                                  gender: lead.gender || 'male'
+                                }
+                              })}
                               className="p-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 transition-colors"
                               title="Fetch Credit Score"
                             >
@@ -362,6 +384,15 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
               </div>
             </div>
           </div>
+        )
+      }
+      {
+        fetchModal.open && (
+          <FetchCreditModal 
+            isOpen={fetchModal.open}
+            onClose={() => setFetchModal({ open: false, initialData: null })}
+            initialData={fetchModal.initialData}
+          />
         )
       }
     </div >

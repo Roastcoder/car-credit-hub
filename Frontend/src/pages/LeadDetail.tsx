@@ -9,6 +9,7 @@ import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { format } from 'date-fns';
 import { getRolePermissions } from '@/lib/permissions';
 import { toast } from 'sonner';
+import { FetchCreditModal } from '@/components/FetchCreditModal';
 
 const DOC_TYPES = [
   { id: 'rc_front', label: 'RC Front' },
@@ -32,6 +33,7 @@ export default function LeadDetail() {
   const [isReuploading, setIsReuploading] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isFetchModalOpen, setIsFetchModalOpen] = useState(false);
 
   const isImage = (url: string) => {
     return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(url);
@@ -367,7 +369,7 @@ export default function LeadDetail() {
                 <h3 className="text-sm font-semibold text-foreground">Credit Report Analysis</h3>
               </div>
               <button
-                onClick={() => navigate(`/credit-reports?lead_id=${lead.id}&name=${encodeURIComponent(lead.customer_name)}&mobile=${lead.phone}&pan=${lead.pan_number || ''}&aadhaar=${lead.aadhar_number || ''}&gender=${lead.gender || 'male'}`)}
+                onClick={() => setIsFetchModalOpen(true)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-bold hover:bg-accent/20 transition-colors"
               >
                 <RefreshCw size={14} /> Fetch New Report
@@ -572,6 +574,22 @@ export default function LeadDetail() {
         </div>
       )}
       </div>
+      
+      {isFetchModalOpen && (
+        <FetchCreditModal
+          isOpen={isFetchModalOpen}
+          onClose={() => setIsFetchModalOpen(false)}
+          onSuccess={() => refetchCredit()}
+          initialData={{
+            lead_id: lead.id,
+            name: lead.customer_name,
+            mobile: lead.phone,
+            pan: lead.pan_number || '',
+            aadhaar: lead.aadhar_number || '',
+            gender: lead.gender || 'male'
+          }}
+        />
+      )}
     </div>
   );
 }
