@@ -2,9 +2,19 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { schemesAPI } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Scheme {
   id: number;
@@ -16,6 +26,11 @@ export default function SchemeManagement() {
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedScheme, setSelectedScheme] = useState<Partial<Scheme> | null>(null);
 
   useEffect(() => {
     fetchSchemes();
@@ -33,7 +48,43 @@ export default function SchemeManagement() {
     }
   };
 
+  const handleOpenAdd = () => {
+    setSelectedScheme({ name: "", description: "" });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (scheme: Scheme) => {
+    setSelectedScheme(scheme);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedScheme?.name) {
+      toast.error("Scheme name is required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (selectedScheme.id) {
+        await schemesAPI.update(selectedScheme.id, selectedScheme);
+        toast.success("Scheme updated successfully");
+      } else {
+        await schemesAPI.create(selectedScheme);
+        toast.success("Scheme created successfully");
+      }
+      setIsModalOpen(false);
+      fetchSchemes();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save scheme");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this scheme?")) return;
     try {
       await schemesAPI.delete(id);
       setSchemes(prev => prev.filter(s => s.id !== id));
@@ -54,7 +105,7 @@ export default function SchemeManagement() {
           <h1 className="text-2xl font-bold tracking-tight">Scheme Management</h1>
           <p className="text-muted-foreground text-sm">Create and manage loan schemes for the subvention grid.</p>
         </div>
-        <Button className="w-full md:w-auto gap-2">
+        <Button onClick={handleOpenAdd} className="w-full md:w-auto gap-2 bg-blue-600 hover:bg-blue-700">
           <Plus size={18} />
           Add Scheme
         </Button>
@@ -104,10 +155,20 @@ export default function SchemeManagement() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            onClick={() => handleOpenEdit(scheme)}
+                          >
                             <Pencil size={16} />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDelete(scheme.id)}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                            onClick={() => handleDelete(scheme.id)}
+                          >
                             <Trash2 size={16} />
                           </Button>
                         </div>
@@ -120,6 +181,49 @@ export default function SchemeManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add/Edit Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleSave}>
+            <DialogHeader>
+              <DialogTitle>{selectedScheme?.id ? "Edit Scheme" : "Add New Scheme"}</DialogTitle>
+              <DialogDescription>
+                Enter details for the loan scheme. Schemes are used to group subvention rules.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Scheme Name</Label>
+                <Input
+                  id="name"
+                  value={selectedScheme?.name || ""}
+                  onChange={(e) => setSelectedScheme(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Standard, Scheme 5, Nil Dep"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  value={selectedScheme?.description || ""}
+                  onChange={(e) => setSelectedScheme(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Provide additional context for this scheme..."
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Scheme"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
