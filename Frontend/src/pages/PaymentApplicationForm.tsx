@@ -468,7 +468,8 @@ export default function PaymentApplicationForm() {
           body: JSON.stringify({
             phone: formData.applicant_phone,
             applicant_name: formData.applicant_name,
-            payment_amount: formData.payment_amount
+            payment_amount: formData.payment_amount,
+            disbursement_amount: formData.disbursement_amount
           })
         });
 
