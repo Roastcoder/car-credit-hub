@@ -73,6 +73,7 @@ interface PaymentApplication {
   loan_number?: string;
   disbursement_date?: string;
   loan_amount?: number;
+  vouchers?: { amount?: number | string }[];
 }
 
 export default function PaymentApplicationForm() {
@@ -101,6 +102,7 @@ export default function PaymentApplicationForm() {
   const [aadhaarMessage, setAadhaarMessage] = useState('');
   const [otp, setOtp] = useState('');
   const [otpVerifying, setOtpVerifying] = useState(false);
+  const [isRaiseRemainingMode, setIsRaiseRemainingMode] = useState(false);
 
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
@@ -181,12 +183,16 @@ export default function PaymentApplicationForm() {
   }, [loanId, id]);
 
   const editableStatuses = ['draft', 'submitted', 'manager_rejected', 'sent_back'];
-  const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status);
+  const totalReleased = (formData.vouchers || []).reduce((sum, voucher) => sum + (Number(voucher.amount) || 0), 0);
+  const remainingLoanAmount = Math.max(0, (Number(formData.disbursement_amount) || 0) - totalReleased);
+  const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
+  const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode;
 
   const fetchApplicationData = async () => {
     try {
       const data = await paymentApplicationAPI.getById(parseInt(id || '0'));
       setFormData(data);
+      setIsRaiseRemainingMode(false);
       if (data.pdd_documents) {
         setSelectedPddDocs(data.pdd_documents);
       }
@@ -547,6 +553,9 @@ export default function PaymentApplicationForm() {
       const applicationData = {
         ...formData,
         banking_documents: [...(formData.banking_documents || []), ...bankingDocPaths],
+        old_release_amount: isRaiseRemainingMode ? totalReleased : formData.old_release_amount,
+        today_release_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.today_release_amount,
+        payment_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.payment_amount,
         status,
         aadhaar_number: aadhaarNumber,
         aadhaar_verified: aadhaarVerificationStatus === 'verified'
@@ -558,6 +567,7 @@ export default function PaymentApplicationForm() {
         await paymentApplicationAPI.create(applicationData);
       }
 
+      setIsRaiseRemainingMode(false);
       toast.success(id ? 'Application updated successfully' : (status === 'draft' ? 'Application saved as draft' : 'Application submitted successfully'));
       navigate('/payments');
 
@@ -574,6 +584,19 @@ export default function PaymentApplicationForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRaiseRemainingAmount = () => {
+    setIsRaiseRemainingMode(true);
+    setFormData((prev) => ({
+      ...prev,
+      old_release_amount: totalReleased,
+      today_release_amount: remainingLoanAmount,
+      payment_amount: remainingLoanAmount,
+      total_release_amount: totalReleased + remainingLoanAmount,
+      hold_amount: Math.max(0, (Number(prev.disbursement_amount) || 0) - totalReleased - remainingLoanAmount),
+    }));
+    toast.success('Remaining amount request opened on this application');
   };
 
   const getStatusColor = (status: string) => {
@@ -653,6 +676,28 @@ export default function PaymentApplicationForm() {
         {isReadOnly && (
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-300">
             This request is closed after accounts processing. Voucher, UTR, and proof can still be viewed from the payment detail page, but the form is now read-only.
+          </div>
+        )}
+        {canRaiseRemainingAmount && !isRaiseRemainingMode && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-200">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-bold">Remaining amount can be raised on this same application.</p>
+                <p className="opacity-80">Already released: ₹{totalReleased.toLocaleString()} | Remaining: ₹{remainingLoanAmount.toLocaleString()}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRaiseRemainingAmount}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+              >
+                Raise Remaining Amount
+              </button>
+            </div>
+          </div>
+        )}
+        {isRaiseRemainingMode && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+            Raising a fresh request on this same application. Previous released amount is locked into <strong>Old Payment Release Amount</strong>, and you can submit the remaining amount from here.
           </div>
         )}
         {formData.status === 'sent_back' && formData.manager_remarks && (

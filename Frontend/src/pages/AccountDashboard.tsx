@@ -109,7 +109,7 @@ export default function AccountDashboard() {
                   <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(Number(stats.total_disbursed || 0))}
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">From {stats.total_completed} apps</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Voucher total across processed requests</p>
                 </div>
               </div>
             )}
@@ -143,7 +143,7 @@ export default function AccountDashboard() {
                   <FileText className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Closed Requests</h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Once proof is uploaded, the request becomes read-only for everyone.</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Completed requests stay visible here, and employees can raise any remaining amount from the same application.</p>
               </div>
             </div>
           </div>

@@ -34,6 +34,7 @@ interface PaymentApplication {
   financier_name?: string;
   disbursement_branch?: string;
   emi_amount?: number;
+  voucher_number?: string;
 }
 
 export default function PaymentApplicationsList() {
@@ -127,6 +128,20 @@ export default function PaymentApplicationsList() {
     }).format(amount);
   };
 
+  const getFulfilmentLabel = (app: PaymentApplication) => {
+    if (app.payment_proof_path) return 'Proof Uploaded';
+    if (app.utr_number) return 'UTR Added';
+    if (app.voucher_number) return 'Voucher Ready';
+    return 'Awaiting Voucher';
+  };
+
+  const getFulfilmentColor = (app: PaymentApplication) => {
+    if (app.payment_proof_path) return 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/10 dark:text-green-400 dark:border-green-800';
+    if (app.utr_number) return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:text-blue-400 dark:border-blue-800';
+    if (app.voucher_number) return 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/10 dark:text-purple-400 dark:border-purple-800';
+    return 'text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-900/10 dark:text-orange-400 dark:border-orange-800';
+  };
+
   const canAccountProcess = ['accountant', 'admin', 'super_admin', 'pdd_manager'].includes(user?.role || '');
 
   return (
@@ -216,7 +231,7 @@ export default function PaymentApplicationsList() {
           {/* Mobile Card View */}
           <div className="grid gap-4 md:hidden">
             {filteredApplications.map((app) => (
-              <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+              <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
                 <div className="flex items-center justify-between mb-3 relative z-10">
                   <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(app.status)}`}>
                     {app.status.replace('_', ' ')}
@@ -237,8 +252,8 @@ export default function PaymentApplicationsList() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500 italic mb-1">{new Date(app.created_at).toLocaleString()}</p>
-                      <div className="text-[10px] font-bold text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-0.5 rounded border border-orange-200/50 dark:border-orange-800/30 inline-block uppercase">
-                        PDD Pending
+                      <div className={`text-[10px] font-bold px-2 py-0.5 rounded border inline-block uppercase ${getFulfilmentColor(app)}`}>
+                        {getFulfilmentLabel(app)}
                       </div>
                     </div>
                   </div>
@@ -258,7 +273,7 @@ export default function PaymentApplicationsList() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.loan_amount || app.payment_amount)}</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount || 0)}</p>
                       {app.emi_amount && <p className="text-[10px] font-medium text-gray-500">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium italic">
@@ -268,7 +283,7 @@ export default function PaymentApplicationsList() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-2 relative z-10">
+                <div className="flex flex-wrap items-center gap-2 pt-2 relative z-10" onClick={e => e.stopPropagation()}>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -361,7 +376,7 @@ export default function PaymentApplicationsList() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {filteredApplications.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="font-bold text-gray-900 dark:text-white text-xs">{app.loan_number}</div>
                         <div className="text-[10px] text-gray-400 italic">ID: #{app.id.toString().padStart(4, '0')}</div>
@@ -394,7 +409,7 @@ export default function PaymentApplicationsList() {
                         {app.financier_name || app.disbursement_branch || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs font-extrabold text-blue-700 dark:text-blue-400">
-                        {formatCurrency(app.loan_amount || app.payment_amount)}
+                        {formatCurrency(app.payment_amount || 0)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                         {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
@@ -405,11 +420,11 @@ export default function PaymentApplicationsList() {
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                         <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-orange-50 text-orange-600 border border-orange-200 dark:bg-orange-900/10 dark:text-orange-400 dark:border-orange-800">
-                            PDD Pending
+                         <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border ${getFulfilmentColor(app)}`}>
+                            {getFulfilmentLabel(app)}
                          </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-0.5">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
                             <Eye size={14} />
