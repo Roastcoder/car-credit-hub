@@ -542,11 +542,11 @@ export default function PaymentDetail() {
 
     const summaryX = 140;
     doc.text('Total Credit Amount:', margin, y);
-    rightAlign(`${Number(payment.disbursement_amount).toLocaleString('en-IN')}`, summaryX, y);
+    rightAlign(`${ledgerCreditTotal.toLocaleString('en-IN')}`, summaryX, y);
 
     y += 7;
-    doc.text('Total Payment Released:', margin, y);
-    rightAlign(`${totalReleased.toLocaleString('en-IN')}`, summaryX, y);
+    doc.text('Total Debit Amount:', margin, y);
+    rightAlign(`${ledgerDebitTotal.toLocaleString('en-IN')}`, summaryX, y);
 
     y += 10;
     doc.setFillColor(241, 245, 249); // slate-100
@@ -571,7 +571,9 @@ export default function PaymentDetail() {
   const targetAmount = Number(payment.today_release_amount || 0);
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
-  const remainingLoanBalance = Math.max(0, totalLoanDisbursement - totalReleased);
+  const ledgerCreditTotal = totalLoanDisbursement + ledgerEntries.reduce((sum, row) => sum + (Number(row.credit) || 0), 0);
+  const ledgerDebitTotal = ledgerEntries.reduce((sum, row) => sum + (Number(row.debit) || 0), 0);
+  const remainingLoanBalance = Math.max(0, ledgerCreditTotal - ledgerDebitTotal);
 
   const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';

@@ -289,14 +289,28 @@ export const paymentApplicationAPI = {
     api.post(`/payments/applications/${id}/aadhaar-verify/initiate`, { aadhaar_number }),
   verifyAadhaarOTP: (id: number, otp: string) => 
     api.post(`/payments/applications/${id}/aadhaar-verify/otp`, { otp }),
-  uploadProof: (id: number, file: File) => {
+  uploadProof: async (id: number, file: File) => {
     const formData = new FormData();
     formData.append('document', file);
-    return api.request(`/payments/applications/${id}/payment-proof`, {
-      method: 'POST',
-      headers: {}, // fetch will set boundary for FormData
-      body: formData
-    });
+    try {
+      return await api.request(`/payments/applications/${id}/payment-proof`, {
+        method: 'POST',
+        headers: {}, // fetch will set boundary for FormData
+        body: formData
+      });
+    } catch (error: any) {
+      if (!String(error?.message || '').includes('Not Found')) {
+        throw error;
+      }
+
+      const fallbackFormData = new FormData();
+      fallbackFormData.append('document', file);
+      return api.request(`/payments/${id}/payment-proof`, {
+        method: 'POST',
+        headers: {},
+        body: fallbackFormData
+      });
+    }
   },
   getPddDocuments: (loanId: string) => api.get(`/loans/${loanId}/pdd-documents`),
   uploadDocument: (file: File) => {
@@ -310,14 +324,28 @@ export const paymentApplicationAPI = {
   },
   createVoucher: (data: any) => api.post('/payments/vouchers', data),
   getNextVoucherNumber: () => api.get('/payments/vouchers/next-number'),
-  uploadPaymentProof: (id: number, file: File) => {
+  uploadPaymentProof: async (id: number, file: File) => {
     const formData = new FormData();
     formData.append('document', file);
-    return api.request(`/payments/applications/${id}/payment-proof`, {
-      method: 'POST',
-      body: formData,
-      headers: {} // Remove Content-Type to let browser set it with boundary
-    });
+    try {
+      return await api.request(`/payments/applications/${id}/payment-proof`, {
+        method: 'POST',
+        body: formData,
+        headers: {} // Remove Content-Type to let browser set it with boundary
+      });
+    } catch (error: any) {
+      if (!String(error?.message || '').includes('Not Found')) {
+        throw error;
+      }
+
+      const fallbackFormData = new FormData();
+      fallbackFormData.append('document', file);
+      return api.request(`/payments/${id}/payment-proof`, {
+        method: 'POST',
+        body: fallbackFormData,
+        headers: {}
+      });
+    }
   },
   getAccountantStats: () => api.get('/payments/stats/accountant'),
 };
