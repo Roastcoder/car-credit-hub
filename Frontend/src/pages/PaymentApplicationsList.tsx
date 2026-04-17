@@ -279,7 +279,7 @@ export default function PaymentApplicationsList() {
                     View
                   </Button>
                   
-                  {(user?.role === 'manager' || user?.role === 'pdd_manager') && app.status === 'submitted' && (
+                  {(user?.role === 'rbm' || user?.role === 'admin' || user?.role === 'super_admin') && app.status === 'submitted' && (
                     <>
                       <Button 
                         size="sm" 
@@ -415,7 +415,7 @@ export default function PaymentApplicationsList() {
                             <Eye size={14} />
                           </Button>
                           
-                          {(user?.role === 'manager' || user?.role === 'pdd_manager') && app.status === 'submitted' && (
+                          {(user?.role === 'rbm' || user?.role === 'admin' || user?.role === 'super_admin') && app.status === 'submitted' && (
                             <div className="flex items-center gap-0.5">
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => handleManagerAction(app.id, 'approve')}>
                                 <CheckCircle size={14} />

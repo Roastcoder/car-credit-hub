@@ -573,7 +573,7 @@ export default function PaymentDetail() {
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
   const remainingLoanBalance = Math.max(0, totalLoanDisbursement - totalReleased);
 
-  const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
+  const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
   const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
     (payment.status === 'voucher_created' || 

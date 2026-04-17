@@ -85,7 +85,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canEdit: false,
         canView: true,
         canDelete: false,
-        canChangeStatus: false,
+        canChangeStatus: true,
         canAddRemarks: true,
         canViewAll: false,
         canManagePdd: false,
