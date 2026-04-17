@@ -169,8 +169,9 @@ export default function PaymentDetail() {
   const [releaseNarration, setReleaseNarration] = useState('');
 
   // Ledger state
-  const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; credit: string; narration: string }[]>([]);
+  const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; credit: string; narration: string; isNew?: boolean }[]>([]);
   const [ledgerSaved, setLedgerSaved] = useState(false);
+  const [savedLedgerCount, setSavedLedgerCount] = useState(0);
 
   // Aadhaar Verification State
   const [verificationStep, setVerificationStep] = useState<'aadhaar' | 'otp' | 'utr'>('aadhaar');
@@ -188,6 +189,7 @@ export default function PaymentDetail() {
   useEffect(() => {
     if (payment?.ledger_entries?.length) {
       setLedgerEntries(payment.ledger_entries);
+      setSavedLedgerCount(payment.ledger_entries.length);
     }
   }, [payment]);
 
@@ -280,7 +282,7 @@ export default function PaymentDetail() {
     onError: (error: any) => toast.error(error.message || 'Failed to save ledger')
   });
 
-  const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', credit: '', narration: '' }]);
+  const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', credit: '', narration: '', isNew: true }]);
   const removeLedgerRow = (i: number) => setLedgerEntries(prev => prev.filter((_, idx) => idx !== i));
   const updateLedgerRow = (i: number, field: string, value: string) => {
     setLedgerSaved(false);
@@ -977,34 +979,36 @@ export default function PaymentDetail() {
                         {ledgerEntries.map((row, i) => (
                           <tr key={i} className="border-b border-border/50">
                             <td className="py-1 pr-2">
-                              {canEditLedger
+                              {canEditLedger && row.isNew
                                 ? <input type="date" value={row.date} onChange={e => updateLedgerRow(i, 'date', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
-                                : <span>{row.date}</span>}
+                                : <span className="text-xs">{row.date}</span>}
                             </td>
                             <td className="py-1 pr-2">
-                              {canEditLedger
+                              {canEditLedger && row.isNew
                                 ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(i, 'credit', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
-                                : <span className="font-mono">{Number(row.credit || 0).toLocaleString()}</span>}
+                                : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
                             </td>
                             <td className="py-1 pr-2">
-                              {canEditLedger
+                              {canEditLedger && row.isNew
                                 ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
-                                : <span className="font-mono">{Number(row.debit || 0).toLocaleString()}</span>}
+                                : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
                             </td>
                             <td className="py-1">
-                              {canEditLedger
+                              {canEditLedger && row.isNew
                                 ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(i, 'narration', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
-                                : <span>{row.narration}</span>}
+                                : <span className="text-xs">{row.narration}</span>}
                             </td>
                             {canEditLedger && (
                               <td className="py-1 pl-1">
-                                <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600">
-                                  <XCircle size={14} />
-                                </button>
+                                {row.isNew && (
+                                  <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600">
+                                    <XCircle size={14} />
+                                  </button>
+                                )}
                               </td>
                             )}
                           </tr>
