@@ -1,5 +1,5 @@
 # Root Dockerfile targeting the Frontend subfolder
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 # Copy package files from the subfolder
 COPY Frontend/package*.json ./
