@@ -1773,13 +1773,16 @@ export default function CreateLoan() {
                       <label className={labelClass}>Broker Name</label>
                       <select className={inputClass} value={form.assignedBrokerId} onChange={e => update('assignedBrokerId', e.target.value)}>
                         <option value="">Select Broker</option>
-                        {(brokers as any[]).filter(b => b.dsa_code).sort((a, b) => {
-                          const numA = parseInt(a.dsa_code.replace(/^\D+/g, '')) || 0;
-                          const numB = parseInt(b.dsa_code.replace(/^\D+/g, '')) || 0;
+                        {(brokers as any[]).filter(b => b.channel_code || b.dsa_code).sort((a, b) => {
+                          const codeA = a.channel_code || a.dsa_code || '';
+                          const codeB = b.channel_code || b.dsa_code || '';
+                          const numA = parseInt(codeA.replace(/^\D+/g, '')) || 0;
+                          const numB = parseInt(codeB.replace(/^\D+/g, '')) || 0;
                           return numA - numB;
                         }).map((b: any) => {
-                          const number = b.dsa_code.replace(/^\D+/g, '');
-                          const prefixMatch = b.dsa_code.match(/^MEH([A-Z]+)/);
+                          const code = b.channel_code || b.dsa_code || '';
+                          const number = code.replace(/^\D+/g, '');
+                          const prefixMatch = code.match(/^MEH([A-Z]+)/);
                           const initials = prefixMatch ? prefixMatch[1] : '';
                           return (
                             <option key={b.id} value={b.id}>
@@ -1787,7 +1790,7 @@ export default function CreateLoan() {
                             </option>
                           );
                         })}
-                        {(brokers as any[]).filter(b => !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        {(brokers as any[]).filter(b => !b.channel_code && !b.dsa_code).map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                   )}
