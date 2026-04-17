@@ -96,7 +96,7 @@ export default function Commission() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-foreground truncate">{c.loans?.applicant_name || '—'}</p>
-                    <p className="text-xs text-muted-foreground mono">{c.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-xs text-muted-foreground mono">{String(c.id).slice(0, 8).toUpperCase()}</p>
                   </div>
                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${style.bg}`}>
                     {style.icon} {style.label}
@@ -149,7 +149,7 @@ export default function Commission() {
                   const style = STATUS_STYLES[c.status] || STATUS_STYLES['pending'];
                   return (
                     <tr key={c.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-3 mono text-xs text-accent font-medium">{c.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="py-3 px-3 mono text-xs text-accent font-medium">{String(c.id).slice(0, 8).toUpperCase()}</td>
                       <td className="py-3 px-3">
                         <p className="font-medium text-foreground">{c.loans?.applicant_name || '—'}</p>
                         <p className="text-xs text-muted-foreground">{c.loan_id}</p>
