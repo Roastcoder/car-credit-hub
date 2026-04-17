@@ -121,7 +121,7 @@ export default function MyBrokers() {
               <div className="space-y-2.5 mb-4">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Channel Code:</span>
-                  <span className="font-bold text-blue-600 mono">{u.channel_code || u.dsa_code || '---'}</span>
+                  <span className="font-bold text-blue-600 mono">{u.channel_code || '---'}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Status:</span>

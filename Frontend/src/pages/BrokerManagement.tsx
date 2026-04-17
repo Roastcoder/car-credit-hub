@@ -159,7 +159,7 @@ export default function BrokerManagement() {
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-500/10 text-blue-600 text-[10px] font-bold">
-                  Channel: {u.channel_code || u.dsa_code || '---'}
+                  Channel: {u.channel_code || '---'}
                 </span>
                 <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
                   Recruiter: {u.referred_by_name || 'No Referrer'}
@@ -225,7 +225,7 @@ export default function BrokerManagement() {
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      <span className="text-xs font-bold text-blue-600 mono">{u.channel_code || u.dsa_code || '---'}</span>
+                      <span className="text-xs font-bold text-blue-600 mono">{u.channel_code || '---'}</span>
                     </td>
                     <td className="py-3 px-3 text-muted-foreground text-xs">
                       {u.referred_by_name || <span className="text-muted-foreground/30">No Referrer</span>}
