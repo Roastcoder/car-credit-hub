@@ -18,11 +18,13 @@ interface NavItem {
   title: string;
   path: string;
   icon: ElementType;
+  shortLabel?: string;
   roles: UserRole[];
   children?: {
     title: string;
     path: string;
     icon: ElementType;
+    shortLabel?: string;
   }[];
 }
 
@@ -31,61 +33,65 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
+    shortLabel: 'DB',
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee']
   },
   {
     title: 'Leads',
     path: '/leads-list',
     icon: UserPlus,
+    shortLabel: 'LD',
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'],
     children: [
-      { title: 'Create Lead', path: '/add-lead', icon: UserPlus },
-      { title: 'Branch Leads', path: '/leads-list', icon: MapPin },
-      { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck },
+      { title: 'Create Lead', path: '/add-lead', icon: UserPlus, shortLabel: 'CL' },
+      { title: 'Branch Leads', path: '/leads-list', icon: MapPin, shortLabel: 'BL' },
+      { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck, shortLabel: 'BR' },
     ],
   },
   {
     title: 'Lead Map',
     path: '/leads-list',
     icon: UserPlus,
+    shortLabel: 'LM',
     roles: ['broker'],
     children: [
-      { title: 'Create Lead', path: '/add-lead', icon: UserPlus },
-      { title: 'Lead List', path: '/leads-list', icon: FileText },
-      { title: 'Broker List', path: '/broker-leads', icon: UserCheck },
+      { title: 'Create Lead', path: '/add-lead', icon: UserPlus, shortLabel: 'CL' },
+      { title: 'Lead List', path: '/leads-list', icon: FileText, shortLabel: 'LL' },
+      { title: 'Broker List', path: '/broker-leads', icon: UserCheck, shortLabel: 'BR' },
     ],
   },
-  { title: 'Loan Applications', path: '/loans', icon: FileText, roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
-  { title: 'Create Loan', path: '/loans/new', icon: Car, roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'] },
-  { title: 'Payments', path: '/payments', icon: Wallet, roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'] },
-  { title: 'Reports', path: '/reports', icon: BarChart3, roles: ['super_admin', 'admin', 'manager', 'rbm'] },
-  { title: 'Commission', path: '/commission', icon: CreditCard, roles: ['super_admin', 'admin', 'broker'] },
-  { title: 'Users', path: '/users', icon: Users, roles: ['super_admin', 'admin', 'manager'] },
-  { title: 'Permission Control', path: '/permissions', icon: Shield, roles: ['super_admin'] },
-  { title: 'Banks / NBFC', path: '/banks', icon: Building2, roles: ['super_admin', 'admin'] },
-  { title: 'Brokers', path: '/brokers', icon: UserCheck, roles: ['super_admin', 'admin'] },
-  { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, roles: ['employee'] },
-  { title: 'Branches', path: '/branches', icon: MapPin, roles: ['super_admin', 'admin', 'manager'] },
-  { title: 'Send Notification', path: '/broadcast', icon: Send, roles: ['super_admin', 'admin'] },
-  { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, roles: ['super_admin'] },
+  { title: 'Loan Applications', path: '/loans', icon: FileText, shortLabel: 'LN', roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
+  { title: 'Create Loan', path: '/loans/new', icon: Car, shortLabel: 'NL', roles: ['super_admin', 'admin', 'manager', 'employee'] },
+  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD', roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'] },
+  { title: 'Payments', path: '/payments', icon: Wallet, shortLabel: 'PY', roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'] },
+  { title: 'Reports', path: '/reports', icon: BarChart3, shortLabel: 'RP', roles: ['super_admin', 'admin', 'manager', 'rbm'] },
+  { title: 'Commission', path: '/commission', icon: CreditCard, shortLabel: 'CM', roles: ['super_admin', 'admin', 'broker'] },
+  { title: 'Users', path: '/users', icon: Users, shortLabel: 'US', roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Permission Control', path: '/permissions', icon: Shield, shortLabel: 'PC', roles: ['super_admin'] },
+  { title: 'Banks / NBFC', path: '/banks', icon: Building2, shortLabel: 'BK', roles: ['super_admin', 'admin'] },
+  { title: 'Brokers', path: '/brokers', icon: UserCheck, shortLabel: 'BR', roles: ['super_admin', 'admin'] },
+  { title: 'My Brokers', path: '/my-brokers', icon: UserCheck, shortLabel: 'MB', roles: ['employee'] },
+  { title: 'Branches', path: '/branches', icon: MapPin, shortLabel: 'BN', roles: ['super_admin', 'admin', 'manager'] },
+  { title: 'Send Notification', path: '/broadcast', icon: Send, shortLabel: 'NT', roles: ['super_admin', 'admin'] },
+  { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, shortLabel: 'CR', roles: ['super_admin'] },
   {
     title: 'Subvention Settings',
     path: '/settings/subvention',
     icon: Settings,
+    shortLabel: 'ST',
     roles: ['super_admin'],
     children: [
-      { title: 'Subvention Grid', path: '/settings/subvention', icon: Layers },
-      { title: 'Loan Schemes', path: '/settings/schemes', icon: List },
-      { title: 'Vehicle Models', path: '/settings/vehicle-models', icon: Car },
+      { title: 'Subvention Grid', path: '/settings/subvention', icon: Layers, shortLabel: 'SG' },
+      { title: 'Loan Schemes', path: '/settings/schemes', icon: List, shortLabel: 'LS' },
+      { title: 'Vehicle Models', path: '/settings/vehicle-models', icon: Car, shortLabel: 'VM' },
     ],
   },
 ];
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
-  { title: 'Overview', path: '/account', icon: Activity, roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Payment Requests', path: '/payments', icon: CreditCard, roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, roles: ['accountant', 'admin', 'super_admin'] },
+  { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV', roles: ['accountant', 'admin', 'super_admin'] },
+  { title: 'Payment Requests', path: '/payments', icon: CreditCard, shortLabel: 'PR', roles: ['accountant', 'admin', 'super_admin'] },
+  { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV', roles: ['accountant', 'admin', 'super_admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -140,6 +146,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(`${itemPath}/`);
   };
 
+  const getFallbackShortLabel = (title: string) => {
+    const compact = title.replace(/[^A-Za-z0-9 ]/g, '').trim();
+    if (!compact) return 'NA';
+
+    const words = compact.split(/\s+/).filter(Boolean);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -174,17 +189,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 relative z-10">
           {filteredNav.map(item => {
-            const hasActiveChild = !!item.children?.some((child) => location.pathname === child.path);
+            const activeChild = item.children?.find((child) => location.pathname === child.path);
+            const hasActiveChild = !!activeChild;
             const isActive = isPathActive(item.path) || hasActiveChild;
-            const IconComponent = item.icon;
+            const IconComponent = activeChild?.icon || item.icon;
+            const collapsedLabel = activeChild?.shortLabel || item.shortLabel || getFallbackShortLabel(activeChild?.title || item.title);
+            const collapsedTitle = activeChild?.title || item.title;
 
             return (
               <div key={item.path} className="space-y-1">
                 <Link
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  title={collapsed ? item.title : undefined}
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${collapsed ? 'justify-center px-3' : ''} ${isActive
+                  title={collapsed ? collapsedTitle : undefined}
+                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${collapsed ? 'justify-center px-2 py-2.5 flex-col gap-1.5' : ''} ${isActive
                     ? 'bg-accent text-accent-foreground shadow-md'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                     }`}
@@ -192,6 +210,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <span className={`${isActive ? 'text-white drop-shadow-sm' : 'text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors duration-300`}>
                     <IconComponent size={18} />
                   </span>
+                  {collapsed && (
+                    <span className={`text-[10px] leading-none font-bold tracking-[0.18em] ${isActive ? 'text-white/90' : 'text-blue-500/80 group-hover:text-blue-700 dark:group-hover:text-blue-300'}`}>
+                      {collapsedLabel}
+                    </span>
+                  )}
                   {!collapsed && <span className="truncate tracking-wide">{item.title}</span>}
                   {!collapsed && isActive && (
                     <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-sm" />

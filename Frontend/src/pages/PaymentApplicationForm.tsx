@@ -561,9 +561,16 @@ export default function PaymentApplicationForm() {
       toast.success(id ? 'Application updated successfully' : (status === 'draft' ? 'Application saved as draft' : 'Application submitted successfully'));
       navigate('/payments');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting application:', error);
-      toast.error('Failed to submit application');
+
+      if (error?.existing_application_id) {
+        toast.error('Payment application already exists for this loan. Opening the existing application.');
+        navigate(`/payments/${error.existing_application_id}`);
+        return;
+      }
+
+      toast.error(error?.message || 'Failed to submit application');
     } finally {
       setLoading(false);
     }

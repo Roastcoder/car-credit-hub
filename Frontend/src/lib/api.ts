@@ -43,7 +43,9 @@ export const api = {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(error.error || 'API Error');
+      const apiError = new Error(error.error || 'API Error') as Error & Record<string, any>;
+      Object.assign(apiError, error, { status: response.status });
+      throw apiError;
     }
 
     return response.json();
