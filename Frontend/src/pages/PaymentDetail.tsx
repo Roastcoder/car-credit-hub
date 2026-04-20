@@ -892,9 +892,13 @@ export default function PaymentDetail() {
                           <td className="py-2 text-right font-mono font-bold">₹{Number(v.amount).toLocaleString()}</td>
                         </tr>
                       ))}
-                      <tr className="bg-muted/30 font-bold">
-                        <td className="py-2 pl-2" colSpan={2}>Total Released</td>
-                        <td className="py-2 pr-2 text-right">₹{totalReleased.toLocaleString()}</td>
+                      <tr className={`font-bold ${totalReleased > totalLoanDisbursement + 1 ? 'bg-red-50 text-red-700' : 'bg-muted/30'}`}>
+                        <td className="py-2 pl-2" colSpan={2}>
+                          {totalReleased > totalLoanDisbursement + 1 ? 'Total Released (EXCEEDS SANCTION)' : 'Total Released'}
+                        </td>
+                        <td className="py-2 pr-2 text-right">
+                          ₹{totalReleased.toLocaleString()}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1015,22 +1019,51 @@ export default function PaymentDetail() {
                         ))}
                         {ledgerEntries.length > 0 && (
                           <>
-                            <tr className="font-bold border-t border-border">
+                            <tr className={`font-bold border-t border-border ${ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0) > ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0) ? 'text-red-500 bg-red-50/50' : ''}`}>
                               <td className="pt-2 text-muted-foreground">Ledger Sum</td>
                               <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0).toLocaleString()}</td>
-                              <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
+                            
+                            {Math.abs(ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0) - totalReleased) > 1 && (
+                              <tr className="text-[10px] bg-amber-50 text-amber-700">
+                                <td colSpan={canEditLedger ? 5 : 4} className="py-1 px-2 border-none">
+                                  <div className="flex items-center gap-1">
+                                    <Info size={12} />
+                                    <span>Warning: Ledger total (₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}) does not match total released vouchers (₹{totalReleased.toLocaleString()}).</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+
                             <tr className="font-bold text-accent">
                               <td className="pt-1 text-muted-foreground" colSpan={2}>Total Released Vouchers</td>
                               <td className="pt-1 font-mono text-right pr-2">₹{totalReleased.toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
-                            <tr className="font-bold text-purple-600">
-                              <td className="pt-1 text-muted-foreground" colSpan={2}>Remaining Loan Balance</td>
-                              <td className="pt-1 font-mono text-right pr-2">₹{remainingLoanBalance.toLocaleString()}</td>
+                            
+                            <tr className={`font-bold ${totalLoanDisbursement - totalReleased < -1 ? 'text-red-600 bg-red-50' : 'text-purple-600'}`}>
+                              <td className="pt-1 text-muted-foreground" colSpan={2}>
+                                {totalLoanDisbursement - totalReleased < -1 ? 'Over-Disbursement Amount' : 'Remaining Loan Balance'}
+                              </td>
+                              <td className="pt-1 font-mono text-right pr-2">
+                                {totalLoanDisbursement - totalReleased < -1 && '- '}
+                                ₹{Math.abs(totalLoanDisbursement - totalReleased).toLocaleString()}
+                              </td>
                               <td />{canEditLedger && <td />}
                             </tr>
+                            
+                            {totalReleased > totalLoanDisbursement && (
+                              <tr>
+                                <td colSpan={canEditLedger ? 5 : 4} className="pt-2">
+                                  <div className="bg-red-100 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs flex items-center gap-2">
+                                    <XCircle size={14} />
+                                    <span>Stop: Total released amount exceeds the sanctioned limit!</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
                           </>
                         )}
                       </tbody>
