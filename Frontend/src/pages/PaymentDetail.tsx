@@ -598,7 +598,7 @@ export default function PaymentDetail() {
   const ledgerCreditTotalSum = ledgerEntries.reduce((sum, r) => sum + (Number(r.credit) || 0), 0);
   
   const ledgerDebitTotal = ledgerDebitTotalSum;
-  const remainingLoanBalance = totalLoanDisbursement - ledgerDebitTotalSum;
+  const remainingLoanBalance = ledgerCreditTotalSum - ledgerDebitTotalSum;
 
   const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
