@@ -9,6 +9,14 @@ import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
 import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera } from 'lucide-react';
 
+const safeParseNumber = (val: any): number => {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  const cleaned = String(val).replace(/[₹, \s]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 const DocumentPreviewCard = ({
   doc,
   onView
@@ -594,8 +602,8 @@ export default function PaymentDetail() {
   const targetAmount = Number(payment.today_release_amount || 0);
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
-  const ledgerDebitTotalSum = ledgerEntries.reduce((sum, r) => sum + (Number(r.debit) || 0), 0);
-  const ledgerCreditTotalSum = ledgerEntries.reduce((sum, r) => sum + (Number(r.credit) || 0), 0);
+  const ledgerDebitTotalSum = ledgerEntries.reduce((sum, r) => sum + safeParseNumber(r.debit), 0);
+  const ledgerCreditTotalSum = ledgerEntries.reduce((sum, r) => sum + safeParseNumber(r.credit), 0);
   
   const ledgerDebitTotal = ledgerDebitTotalSum;
   const remainingLoanBalance = ledgerCreditTotalSum - ledgerDebitTotalSum;
@@ -1051,8 +1059,8 @@ export default function PaymentDetail() {
                           <>
                             <tr className="font-bold border-t border-border">
                               <td className="pt-2 text-muted-foreground">Ledger Sum</td>
-                              <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0).toLocaleString()}</td>
-                              <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + safeParseNumber(r.credit), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + safeParseNumber(r.debit), 0).toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
                             <tr className="font-bold text-accent">
