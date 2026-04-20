@@ -6,8 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 
@@ -27,6 +28,7 @@ const DocumentUploadCard = ({
   onClear: () => void;
 }) => {
   const [preview, setPreview] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (file) {
@@ -48,41 +50,84 @@ const DocumentUploadCard = ({
     return url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || url.startsWith('blob:');
   };
 
-  return (
-    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
-      <div className="flex flex-col gap-3">
-        <h4 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">{label}</h4>
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (preview && isImage(preview)) {
+      setIsExpanded(!isExpanded);
+    } else if (preview) {
+      window.open(preview, '_blank');
+    }
+  };
 
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
+  return (
+    <div className={cn(
+      "group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md",
+      isExpanded ? "col-span-full border-accent/40 bg-accent/5 shadow-lg" : "hover:border-accent/40"
+    )}>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest">{label}</h4>
+          {(file || existingDoc) && (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 text-[8px] font-bold text-green-600 border border-green-500/20">
+              <CheckCircle2 size={10} /> {file ? 'NEW' : 'SAVED'}
+            </span>
+          )}
+        </div>
+
+        <div 
+          onClick={toggleExpand}
+          className={cn(
+            "relative cursor-pointer rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
+            isExpanded ? "aspect-auto max-h-[80vh]" : "aspect-video"
+          )}
+        >
           {preview ? (
             isImage(preview) ? (
-              <img src={preview} alt={label} className="w-full h-full object-cover" />
+              <img 
+                src={preview} 
+                alt={label} 
+                className={cn(
+                  "transition-all",
+                  isExpanded ? "w-full h-auto p-2 object-contain" : "w-full h-full object-cover"
+                )} 
+              />
             ) : (
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 py-6">
                 <FileText size={32} className="text-accent/60" />
                 <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
               </div>
             )
           ) : (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 py-6">
               <Camera size={24} className="text-muted-foreground/40" />
-              <span className="text-[10px] font-medium text-muted-foreground/60">No Document</span>
+              <span className="text-[10px] font-medium text-muted-foreground/60 tracking-wider">NO DOCUMENT</span>
             </div>
           )}
 
-          {/* Status Badge */}
-          {(file || existingDoc) && (
-            <div className="absolute top-2 right-2">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/90 text-[9px] font-bold text-white shadow-lg backdrop-blur-sm">
-                <CheckCircle2 size={10} /> {file ? 'NEW' : 'SAVED'}
-              </span>
+          {/* Hover Action Indicator (Only when not expanded) */}
+          {!isExpanded && preview && (
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="p-2 bg-white text-black rounded-full shadow-lg">
+                {isImage(preview) ? <Eye size={16} /> : <ExternalLink size={16} />}
+              </div>
             </div>
           )}
+        </div>
 
-          {/* Hover Actions */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
-              <Upload size={16} />
+        <div className="flex items-center justify-between gap-2">
+          {preview && isImage(preview) && (
+            <button
+              type="button"
+              onClick={toggleExpand}
+              className="flex items-center gap-1 text-[10px] font-bold text-accent hover:underline uppercase tracking-tight"
+            >
+              {isExpanded ? <><ChevronUp size={12} /> Collapse</> : <><ChevronDown size={12} /> Preview Inline</>}
+            </button>
+          )}
+          
+          <div className="flex items-center gap-1.5 ml-auto">
+            <label className="p-1.5 bg-muted text-foreground rounded-lg cursor-pointer hover:bg-accent hover:text-white transition-all shadow-sm">
+              <Upload size={14} />
               <input
                 type="file"
                 className="hidden"
@@ -90,48 +135,29 @@ const DocumentUploadCard = ({
                 accept="image/*,.pdf"
               />
             </label>
-            {preview && (
-              <button
-                type="button"
-                onClick={() => window.open(preview, '_blank')}
-                className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
-              >
-                <Eye size={16} />
-              </button>
-            )}
             {(file || existingDoc) && (
               <button
                 type="button"
-                onClick={onClear}
-                className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
+                onClick={(e) => { e.stopPropagation(); onClear(); }}
+                className="p-1.5 bg-muted text-foreground rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
               >
-                <Trash2 size={16} />
+                <Trash2 size={14} />
               </button>
             )}
           </div>
         </div>
 
-        {!preview && (
-          <label className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg border border-border bg-background text-[10px] font-semibold hover:bg-muted transition-colors cursor-pointer text-muted-foreground">
-            <Plus size={12} /> CHOOSE FILE
-            <input
-              type="file"
-              className="hidden"
-              onChange={(e) => onChange(e.target.files?.[0] || null)}
-              accept="image/*,.pdf"
-            />
-          </label>
-        )}
-
         {file && (
-          <div className="flex items-center gap-1 overflow-hidden">
-            <span className="text-[10px] text-accent font-medium truncate">✓ {file.name}</span>
-          </div>
+          <p className="text-[10px] text-accent font-medium truncate italic opacity-80">
+            Selected: {file.name}
+          </p>
         )}
       </div>
     </div>
   );
 };
+
+
 
 
 export default function CreateLoan() {

@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
 import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera } from 'lucide-react';
+import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 
 const safeParseNumber = (val: any): number => {
   if (typeof val === 'number') return val;
@@ -17,58 +18,7 @@ const safeParseNumber = (val: any): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-const DocumentPreviewCard = ({
-  doc,
-  onView
-}: {
-  doc: any;
-  onView: (doc: any) => void;
-}) => {
-  const isImage = doc.url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i);
 
-  return (
-    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
-      <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-start">
-          <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest truncate flex-1">
-            {doc.type || 'DOCUMENT'}
-          </h4>
-          <span className="px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[8px] font-bold border border-green-500/20">
-            SAVED
-          </span>
-        </div>
-
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
-          {isImage ? (
-            <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <FileText size={32} className="text-accent/60" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
-            </div>
-          )}
-
-          {/* Hover Actions */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => onView(doc)}
-              className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
-            >
-              <Eye size={16} />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
-            {doc.name}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 
 type PaymentStatus = 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
@@ -171,7 +121,6 @@ export default function PaymentDetail() {
   const [showProofModal, setShowProofModal] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
-  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [releaseAmount, setReleaseAmount] = useState('');
   const [releaseNarration, setReleaseNarration] = useState('');
@@ -360,17 +309,6 @@ export default function PaymentDetail() {
       toast.error(error.message || 'Invalid or expired OTP');
     }
   });
-
-  const previewDocument = async (doc: any) => {
-    try {
-      const url = doc.url || doc.file_url;
-      const name = doc.name || doc.document_name || doc.file_name;
-
-      setPreviewDoc({ url, name });
-    } catch (error) {
-      toast.error('Failed to load document');
-    }
-  };
 
   const handleUTRSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -707,17 +645,15 @@ export default function PaymentDetail() {
                   {payment.payment_proof_path && (
                     <div className="col-span-1 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/20">
                       <p className="text-xs text-muted-foreground mb-1">Payment Proof</p>
-                      <a
-                        href={payment.payment_proof_path.startsWith('http')
-                          ? payment.payment_proof_path
-                          : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')}${payment.payment_proof_path}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        <Eye size={14} /> View Attachment
-                      </a>
+                      <DocumentPreviewCard
+                        doc={{
+                          url: payment.payment_proof_path.startsWith('http')
+                            ? payment.payment_proof_path
+                            : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')}${payment.payment_proof_path}`,
+                          name: payment.payment_proof_path.split('/').pop() || 'Payment Proof',
+                          type: 'Payment Release Proof'
+                        }}
+                      />
                     </div>
                   )}
                   <Field label="Payment Date" value={formatDisplayDate(payment.released_at)} />
@@ -824,7 +760,6 @@ export default function PaymentDetail() {
                       <DocumentPreviewCard
                         key={idx}
                         doc={doc}
-                        onView={previewDocument}
                       />
                     ))}
                   </div>
@@ -843,7 +778,6 @@ export default function PaymentDetail() {
                       <DocumentPreviewCard
                         key={idx}
                         doc={doc}
-                        onView={previewDocument}
                       />
                     ))}
                   </div>
@@ -865,7 +799,6 @@ export default function PaymentDetail() {
                       name: payment.payment_proof_path.split('/').pop() || 'Payment Proof',
                       type: 'Payment Release Proof'
                     }}
-                    onView={previewDocument}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">
@@ -1166,39 +1099,7 @@ export default function PaymentDetail() {
         </div>
       </div>
 
-      {/* Document Preview Modal */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground truncate">
-                {previewDoc.name}
-              </h3>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <XCircle size={20} className="text-muted-foreground" />
-              </button>
-            </div>
-            <div className="p-4 max-h-[calc(90vh-80px)] overflow-auto">
-              {previewDoc.url.toLowerCase().includes('.pdf') ? (
-                <iframe
-                  src={previewDoc.url}
-                  className="w-full h-[600px] border border-border rounded-lg"
-                  title={previewDoc.name}
-                />
-              ) : (
-                <img
-                  src={previewDoc.url}
-                  alt={previewDoc.name}
-                  className="max-w-full h-auto rounded-lg"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 }

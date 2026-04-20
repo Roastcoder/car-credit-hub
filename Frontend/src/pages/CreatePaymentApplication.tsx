@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ArrowLeft, Upload, FileText, X, Eye, Plus } from 'lucide-react';
+import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 
 interface PaymentFormData {
   loan_id: string;
@@ -41,7 +42,6 @@ export default function CreatePaymentApplication() {
   });
 
   const [selectedDocuments, setSelectedDocuments] = useState<any[]>([]);
-  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
 
   // Fetch loan details
   const { data: loan, isLoading: loadingLoan } = useQuery({
@@ -112,18 +112,7 @@ export default function CreatePaymentApplication() {
     }
   };
 
-  const previewDocument = async (doc: any) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const baseUrl = apiUrl.replace(/\/api$/, '');
-      const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
-      const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;
-      
-      setPreviewDoc({ url: fileUrl, name: doc.document_name || doc.file_name });
-    } catch (error) {
-      toast.error('Failed to load document');
-    }
-  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,51 +298,15 @@ export default function CreatePaymentApplication() {
               
               {pddDocuments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pddDocuments.map((doc: any) => {
-                    const isSelected = selectedDocuments.find(d => d.id === doc.id);
-                    return (
-                      <div 
-                        key={doc.id} 
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                          isSelected 
-                            ? 'border-accent bg-accent/5' 
-                            : 'border-border hover:border-accent/50 hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleDocumentSelect(doc)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {doc.document_name || doc.file_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {doc.document_type?.replace(/_/g, ' ').toUpperCase()}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center ml-2">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-3">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              previewDocument(doc);
-                            }}
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-muted text-foreground rounded hover:bg-muted/80 transition-colors"
-                          >
-                            <Eye size={12} />
-                            Preview
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {pddDocuments.map((doc: any) => (
+                    <div key={doc.id} onClick={() => handleDocumentSelect(doc)}>
+                      <DocumentPreviewCard
+                        doc={doc}
+                        selected={!!selectedDocuments.find(d => d.id === doc.id)}
+                        showDelete={false}
+                      />
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8 border border-dashed border-border rounded-lg">
@@ -432,39 +385,7 @@ export default function CreatePaymentApplication() {
         </form>
       </div>
 
-      {/* Document Preview Modal */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground truncate">
-                {previewDoc.name}
-              </h3>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <X size={20} className="text-muted-foreground" />
-              </button>
-            </div>
-            <div className="p-4 max-h-[calc(90vh-80px)] overflow-auto">
-              {previewDoc.url.toLowerCase().includes('.pdf') ? (
-                <iframe
-                  src={previewDoc.url}
-                  className="w-full h-[600px] border border-border rounded-lg"
-                  title={previewDoc.name}
-                />
-              ) : (
-                <img
-                  src={previewDoc.url}
-                  alt={previewDoc.name}
-                  className="max-w-full h-auto rounded-lg"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 }

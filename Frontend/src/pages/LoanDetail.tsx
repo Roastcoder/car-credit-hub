@@ -19,96 +19,9 @@ import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupe
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
+import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 
-const DocumentPreviewCard = ({
-  doc,
-  onView,
-  onDelete,
-  onReupload,
-  canDelete,
-  isUploading
-}: {
-  doc: any;
-  onView: (doc: any) => void;
-  onDelete: (doc: any) => void;
-  onReupload: (e: React.ChangeEvent<HTMLInputElement>, id: string, type: string) => void;
-  canDelete: boolean;
-  isUploading: boolean;
-}) => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const baseUrl = apiUrl.replace(/\/api$/, '');
-  const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
-  const fileUrl = doc.file_url.startsWith('http') ? doc.file_url : `${baseUrl}${normalizedPath}`;
 
-  const isImage = fileUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)/i);
-
-  return (
-    <div className="group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md hover:border-accent/40">
-      <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-start">
-          <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest truncate flex-1">
-            {doc.document_type?.replace(/_/g, ' ')}
-          </h4>
-          <span className="px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[8px] font-bold border border-green-500/20">
-            SAVED
-          </span>
-        </div>
-
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-colors flex items-center justify-center">
-          {isImage ? (
-            <img src={fileUrl} alt={doc.document_type} className="w-full h-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <FileText size={32} className="text-accent/60" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">PDF Document</span>
-            </div>
-          )}
-
-          {/* Hover Actions */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => onView(doc)}
-              className="p-2 bg-white text-black rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-xl"
-            >
-              <Eye size={16} />
-            </button>
-
-            {canDelete && (
-              <>
-                <label className="p-2 bg-white text-black rounded-full cursor-pointer hover:bg-accent hover:text-white transition-all shadow-xl">
-                  {isUploading ? <Clock size={16} className="animate-spin" /> : <Upload size={16} />}
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => onReupload(e, doc.id, doc.document_type)}
-                    accept="image/*,.pdf"
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => onDelete(doc)}
-                  className="p-2 bg-white text-black rounded-full hover:bg-red-600 hover:text-white transition-all shadow-xl"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
-            {doc.document_name || doc.file_name}
-          </span>
-          <span className="text-[9px] text-muted-foreground uppercase font-medium">
-            {new Date(doc.created_at).toLocaleDateString()}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 
 const DOC_TYPES = [
@@ -311,7 +224,6 @@ export default function LoanDetail() {
   });
 
 
-  const [loadingPreview, setLoadingPreview] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [docToDelete, setDocToDelete] = useState<any>(null);
@@ -360,28 +272,7 @@ export default function LoanDetail() {
     }
   };
 
-  const previewDocument = async (doc: any) => {
-    setLoadingPreview(doc.id);
-    try {
-      // Use the file_url directly from the document
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      // Remove /api from the end to get base URL
-      const baseUrl = apiUrl.replace(/\/api$/, '');
 
-      // Construct full URL
-      const normalizedPath = doc.file_url.startsWith('/uploads') ? `/api${doc.file_url}` : doc.file_url;
-      const fileUrl = doc.file_url.startsWith('http')
-        ? doc.file_url
-        : `${baseUrl}${normalizedPath}`;
-
-      window.open(fileUrl, '_blank');
-    } catch (error) {
-      console.error('View error:', error);
-      toast.error('Failed to open document');
-    } finally {
-      setLoadingPreview(null);
-    }
-  };
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">Loading…</div>;
 
@@ -1031,7 +922,6 @@ export default function LoanDetail() {
                     <DocumentPreviewCard
                       key={doc.id}
                       doc={doc}
-                      onView={previewDocument}
                       onDelete={handleDeleteDoc}
                       onReupload={handleReuploadDoc}
                       canDelete={permissions.canDelete}
