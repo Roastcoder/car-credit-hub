@@ -296,28 +296,28 @@ export default function AddLead() {
           </div>
 
           <div>
-            <label className={labelClass}>Tehsil</label>
-            <input className={inputClass} value={form.tehsil} onChange={e => setForm({...form, tehsil: e.target.value})} placeholder="Enter Tehsil" />
+            <label className={labelClass}>Tehsil *</label>
+            <input required className={inputClass} value={form.tehsil} onChange={e => setForm({...form, tehsil: e.target.value})} placeholder="Enter Tehsil" />
           </div>
 
           <div>
-            <label className={labelClass}>District</label>
-            <input className={inputClass} value={form.district} onChange={e => setForm({...form, district: e.target.value})} placeholder="Enter District" />
+            <label className={labelClass}>District *</label>
+            <input required className={inputClass} value={form.district} onChange={e => setForm({...form, district: e.target.value})} placeholder="Enter District" />
           </div>
 
           <div>
-            <label className={labelClass}>Pin Code</label>
-            <input className={inputClass} maxLength={6} value={form.pin_code} onChange={e => setForm({...form, pin_code: e.target.value})} placeholder="Enter Pin Code" />
+            <label className={labelClass}>Pin Code *</label>
+            <input required className={inputClass} maxLength={6} value={form.pin_code} onChange={e => setForm({...form, pin_code: e.target.value})} placeholder="Enter Pin Code" />
           </div>
 
           <div>
-            <label className={labelClass}>Pan Number</label>
-            <input className={inputClass} maxLength={10} value={form.pan_number} onChange={e => setForm({...form, pan_number: e.target.value.toUpperCase()})} placeholder="Enter Pan Number" />
+            <label className={labelClass}>Pan Number *</label>
+            <input required className={inputClass} maxLength={10} value={form.pan_number} onChange={e => setForm({...form, pan_number: e.target.value.toUpperCase()})} placeholder="Enter Pan Number" />
           </div>
 
           <div>
-            <label className={labelClass}>Aadhar Number</label>
-            <input className={inputClass} maxLength={12} value={form.aadhar_number} onChange={e => setForm({...form, aadhar_number: e.target.value})} placeholder="Enter Aadhar Number" />
+            <label className={labelClass}>Aadhar Number *</label>
+            <input required className={inputClass} maxLength={12} value={form.aadhar_number} onChange={e => setForm({...form, aadhar_number: e.target.value})} placeholder="Enter Aadhar Number" />
             {aadhaarVerification.status === 'checking' && (
               <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
                 <span className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
@@ -337,8 +337,8 @@ export default function AddLead() {
           </div>
 
           <div>
-            <label className={labelClass}>Vehicle No</label>
-            <input className={inputClass} value={form.vehicle_no} onChange={e => setForm({...form, vehicle_no: e.target.value.toUpperCase()})} placeholder="Enter Vehicle Number" />
+            <label className={labelClass}>Vehicle No *</label>
+            <input required className={inputClass} value={form.vehicle_no} onChange={e => setForm({...form, vehicle_no: e.target.value.toUpperCase()})} placeholder="Enter Vehicle Number" />
           </div>
 
           <div>
@@ -354,6 +354,7 @@ export default function AddLead() {
                       checked={form.gender === option}
                       onChange={e => setForm({...form, gender: e.target.value})}
                       className="peer sr-only"
+                      required
                     />
                     <div className="w-4 h-4 rounded-full border-2 border-border group-hover:border-accent peer-checked:border-accent peer-checked:bg-accent transition-all" />
                     <div className="absolute w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform" />
@@ -365,8 +366,8 @@ export default function AddLead() {
           </div>
 
           <div>
-            <label className={labelClass}>Loan Amount Required</label>
-            <input type="number" className={inputClass} value={form.loan_amount_required} onChange={e => setForm({...form, loan_amount_required: e.target.value})} placeholder="Loan Amount" />
+            <label className={labelClass}>Loan Amount Required *</label>
+            <input required type="number" className={inputClass} value={form.loan_amount_required} onChange={e => setForm({...form, loan_amount_required: e.target.value})} placeholder="Loan Amount" />
           </div>
 
           <div>
