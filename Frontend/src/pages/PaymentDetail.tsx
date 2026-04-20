@@ -573,11 +573,11 @@ export default function PaymentDetail() {
 
     const summaryX = 140;
     doc.text('Total Credit Amount:', margin, y);
-    rightAlign(`${ledgerCreditTotal.toLocaleString('en-IN')}`, summaryX, y);
+    rightAlign(`${ledgerCreditTotalSum.toLocaleString('en-IN')}`, summaryX, y);
 
     y += 7;
     doc.text('Total Debit Amount:', margin, y);
-    rightAlign(`${ledgerDebitTotal.toLocaleString('en-IN')}`, summaryX, y);
+    rightAlign(`${ledgerDebitTotalSum.toLocaleString('en-IN')}`, summaryX, y);
 
     y += 10;
     doc.setFillColor(241, 245, 249); // slate-100
