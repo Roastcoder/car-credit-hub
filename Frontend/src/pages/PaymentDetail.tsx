@@ -289,6 +289,27 @@ export default function PaymentDetail() {
     setLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
   };
 
+  const deleteVoucher = useMutation({
+    mutationFn: async (voucherId: number) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments/vouchers/${voucherId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete voucher');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment', id] });
+      toast.success('Voucher deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete voucher');
+    }
+  });
+
   // Upload Proof
   const uploadProof = useMutation({
     mutationFn: async (file: File) => {
@@ -886,19 +907,28 @@ export default function PaymentDetail() {
                         <tr key={i} className="border-b border-border/50">
                           <td className="py-2">{formatDisplayDate(v.voucher_date)}</td>
                           <td className="py-2">
-                            <span className="font-mono font-bold text-accent">{v.reference_number}</span>
-                            <p className="text-[10px] text-muted-foreground">{v.description}</p>
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <span className="font-mono font-bold text-accent">{v.reference_number}</span>
+                                <p className="text-[10px] text-muted-foreground">{v.description}</p>
+                              </div>
+                              {canEditLedger && (
+                                <button 
+                                  onClick={() => { if(confirm('Delete this UTR/Voucher?')) deleteVoucher.mutate(v.id); }}
+                                  className="text-muted-foreground hover:text-red-500 transition-colors p-1"
+                                  title="Delete Voucher"
+                                >
+                                  <XCircle size={14} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td className="py-2 text-right font-mono font-bold">₹{Number(v.amount).toLocaleString()}</td>
                         </tr>
                       ))}
-                      <tr className={`font-bold ${totalReleased > totalLoanDisbursement + 1 ? 'bg-red-50 text-red-700' : 'bg-muted/30'}`}>
-                        <td className="py-2 pl-2" colSpan={2}>
-                          {totalReleased > totalLoanDisbursement + 1 ? 'Total Released (EXCEEDS SANCTION)' : 'Total Released'}
-                        </td>
-                        <td className="py-2 pr-2 text-right">
-                          ₹{totalReleased.toLocaleString()}
-                        </td>
+                      <tr className="bg-muted/30 font-bold">
+                        <td className="py-2 pl-2" colSpan={2}>Total Released</td>
+                        <td className="py-2 pr-2 text-right">₹{totalReleased.toLocaleString()}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1008,62 +1038,31 @@ export default function PaymentDetail() {
                             </td>
                             {canEditLedger && (
                               <td className="py-1 pl-1">
-                                {row.isNew && (
-                                  <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600">
-                                    <XCircle size={14} />
-                                  </button>
-                                )}
+                                <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600" title="Remove row">
+                                  <XCircle size={14} />
+                                </button>
                               </td>
                             )}
                           </tr>
                         ))}
                         {ledgerEntries.length > 0 && (
                           <>
-                            <tr className={`font-bold border-t border-border ${ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0) > ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0) ? 'text-red-500 bg-red-50/50' : ''}`}>
+                            <tr className="font-bold border-t border-border">
                               <td className="pt-2 text-muted-foreground">Ledger Sum</td>
                               <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.credit) || 0), 0).toLocaleString()}</td>
-                              <td className="pt-2 font-mono">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
-                            
-                            {Math.abs(ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0) - totalReleased) > 1 && (
-                              <tr className="text-[10px] bg-amber-50 text-amber-700">
-                                <td colSpan={canEditLedger ? 5 : 4} className="py-1 px-2 border-none">
-                                  <div className="flex items-center gap-1">
-                                    <Info size={12} />
-                                    <span>Warning: Ledger total (₹{ledgerEntries.reduce((s, r) => s + (Number(r.debit) || 0), 0).toLocaleString()}) does not match total released vouchers (₹{totalReleased.toLocaleString()}).</span>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-
                             <tr className="font-bold text-accent">
                               <td className="pt-1 text-muted-foreground" colSpan={2}>Total Released Vouchers</td>
                               <td className="pt-1 font-mono text-right pr-2">₹{totalReleased.toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
-                            
-                            <tr className={`font-bold ${totalLoanDisbursement - totalReleased < -1 ? 'text-red-600 bg-red-50' : 'text-purple-600'}`}>
-                              <td className="pt-1 text-muted-foreground" colSpan={2}>
-                                {totalLoanDisbursement - totalReleased < -1 ? 'Over-Disbursement Amount' : 'Remaining Loan Balance'}
-                              </td>
-                              <td className="pt-1 font-mono text-right pr-2">
-                                {totalLoanDisbursement - totalReleased < -1 && '- '}
-                                ₹{Math.abs(totalLoanDisbursement - totalReleased).toLocaleString()}
-                              </td>
+                            <tr className="font-bold text-purple-600">
+                              <td className="pt-1 text-muted-foreground" colSpan={2}>Remaining Loan Balance</td>
+                              <td className="pt-1 font-mono text-right pr-2">₹{remainingLoanBalance.toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
-                            
-                            {totalReleased > totalLoanDisbursement && (
-                              <tr>
-                                <td colSpan={canEditLedger ? 5 : 4} className="pt-2">
-                                  <div className="bg-red-100 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs flex items-center gap-2">
-                                    <XCircle size={14} />
-                                    <span>Stop: Total released amount exceeds the sanctioned limit!</span>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
                           </>
                         )}
                       </tbody>
