@@ -533,15 +533,7 @@ export default function PaymentDetail() {
       }
     };
 
-    // 1. Fixed Sanction Row
-    doc.setFont('helvetica', 'bold');
-    addRow(
-      new Date(payment.disbursement_date || payment.created_at).toLocaleDateString('en-IN'),
-      Number(payment.disbursement_amount).toLocaleString('en-IN'),
-      '0',
-      'Initial Loan Sanction (Net Disbursement)'
-    );
-    doc.setFont('helvetica', 'normal');
+
 
     // 2. Ledger Entries
     ledgerEntries.forEach((entry) => {
@@ -1011,14 +1003,7 @@ export default function PaymentDetail() {
                         </tr>
                       </thead>
                       <tbody>
-                        {/* Fixed Sanction Credit Row */}
-                        <tr className="bg-muted/30 border-b border-border font-medium">
-                          <td className="py-2 pr-2">{formatDisplayDate(payment.disbursement_date || payment.created_at)}</td>
-                          <td className="py-2 pr-2 text-green-600">₹{Number(payment.disbursement_amount || 0).toLocaleString()}</td>
-                          <td className="py-2 pr-2 text-muted-foreground">-</td>
-                          <td className="py-2 text-muted-foreground italic">Initial Sanction (Credit)</td>
-                          {canEditLedger && <td />}
-                        </tr>
+
 
                         {ledgerEntries.map((row, i) => (
                           <tr key={i} className="border-b border-border/50">
@@ -1029,28 +1014,30 @@ export default function PaymentDetail() {
                                 : <span className="text-xs">{row.date}</span>}
                             </td>
                             <td className="py-1 pr-2">
-                              {canEditLedger && row.isNew
+                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
                                 ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(i, 'credit', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                 : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
                             </td>
                             <td className="py-1 pr-2">
-                              {canEditLedger && row.isNew
+                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
                                 ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                 : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
                             </td>
                             <td className="py-1">
-                              {canEditLedger && row.isNew
+                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
                                 ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(i, 'narration', e.target.value)}
                                   className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
                                 : <span className="text-xs">{row.narration}</span>}
                             </td>
                             {canEditLedger && (
                               <td className="py-1 pl-1">
-                                <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600" title="Remove row">
-                                  <XCircle size={14} />
-                                </button>
+                                {!row.narration?.includes('Initial Sanction') && (
+                                  <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600" title="Remove row">
+                                    <XCircle size={14} />
+                                  </button>
+                                )}
                               </td>
                             )}
                           </tr>
