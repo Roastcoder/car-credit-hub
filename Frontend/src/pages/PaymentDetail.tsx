@@ -594,9 +594,11 @@ export default function PaymentDetail() {
   const targetAmount = Number(payment.today_release_amount || 0);
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
-  const ledgerCreditTotal = totalLoanDisbursement;
-  const ledgerDebitTotal = totalReleased;
-  const remainingLoanBalance = Math.max(0, totalLoanDisbursement - totalReleased);
+  const ledgerDebitTotalSum = ledgerEntries.reduce((sum, r) => sum + (Number(r.debit) || 0), 0);
+  const ledgerCreditTotalSum = ledgerEntries.reduce((sum, r) => sum + (Number(r.credit) || 0), 0);
+  
+  const ledgerDebitTotal = ledgerDebitTotalSum;
+  const remainingLoanBalance = totalLoanDisbursement - ledgerDebitTotalSum;
 
   const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
   const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
