@@ -819,7 +819,7 @@ export default function PaymentDetail() {
             <div className="grid grid-cols-1 gap-6 mb-6">
               <Section title="Banking Proofs" icon={<FileText size={20} />}>
                 {bankingDocuments.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {bankingDocuments.map((doc, idx) => (
                       <DocumentPreviewCard
                         key={idx}
@@ -838,7 +838,7 @@ export default function PaymentDetail() {
 
               <Section title="Loan Documents" icon={<FileText size={20} />}>
                 {loanDocuments.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {loanDocuments.map((doc: any, idx: number) => (
                       <DocumentPreviewCard
                         key={idx}
