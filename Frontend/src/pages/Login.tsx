@@ -31,21 +31,27 @@ export default function Login() {
 
   useEffect(() => {
     const checkEnvironment = async () => {
-      const native = Capacitor.isNativePlatform();
-      setIsNative(native);
-      
-      const electron = navigator.userAgent.toLowerCase().includes('electron');
-      setIsElectron(electron);
+      try {
+        const native = Capacitor.isNativePlatform();
+        setIsNative(native);
+        
+        const electron = navigator.userAgent.toLowerCase().includes('electron');
+        setIsElectron(electron);
 
-      const standalone = window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone ||
-        document.referrer.includes('android-app://') ||
-        native || electron;
-      setIsStandalone(standalone);
-      
-      if (native) {
-        const result = await biometricAuth.checkAvailability();
-        setIsBiometricAvailable(result.isAvailable);
+        const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone ||
+          document.referrer.includes('android-app://') ||
+          native || electron;
+        setIsStandalone(standalone);
+        
+        if (native && biometricAuth) {
+          const result = await biometricAuth.checkAvailability();
+          setIsBiometricAvailable(result.isAvailable);
+        }
+      } catch (err) {
+        console.warn('Environment check failed:', err);
+        setIsNative(false);
+        setIsStandalone(false);
       }
     };
     checkEnvironment();
@@ -61,8 +67,8 @@ export default function Login() {
       const normalizedEmail = email.trim().toLowerCase();
       const result = await login(normalizedEmail, password);
       if (result.error) {
-        setError('Invalid email or password');
-        toast.error('Login failed');
+        setError(result.error);
+        toast.error(result.error || 'Login failed');
       } else {
         if (isNative && isBiometricAvailable) {
           await biometricAuth.setCredentials(email, password);
@@ -70,8 +76,10 @@ export default function Login() {
         navigate('/dashboard');
         toast.success('Welcome back!');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err: any) {
+      const msg = err.message || 'An unexpected error occurred';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
