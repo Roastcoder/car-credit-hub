@@ -948,12 +948,13 @@ export default function LoanDetail() {
                         </div>
                       </>
                     )}
-                  </div>
-                </Section>
-              </div>
+                </div>
+              </Section>
+            </div>
+          )}
 
-            {/* Verified External API Data Section */}
-            {vehicleCache && (Object.keys(vehicleCache).length > 0) && (
+            {/* Verified External API Data Section - Masked for PDD Manager */}
+            {!isPddManager && vehicleCache && (Object.keys(vehicleCache).length > 0) && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
