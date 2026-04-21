@@ -11,6 +11,7 @@ interface DocumentPreviewCardProps {
   isUploading?: boolean;
   showDelete?: boolean;
   selected?: boolean;
+  isAdmin?: boolean;
 }
 
 const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
@@ -21,7 +22,8 @@ const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
   canDelete = false,
   isUploading = false,
   showDelete = true,
-  selected = false
+  selected = false,
+  isAdmin = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
