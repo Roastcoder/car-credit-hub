@@ -109,7 +109,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
             Update this user's role, primary branch, branch access allocation, and optionally set a new password.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+          <form onSubmit={handleSubmit} className="space-y-3.5 py-1">
           <div>
             <label className="block text-sm font-medium mb-1.5">Select Role *</label>
             <select required className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={role} onChange={e => setRole(e.target.value)}>
@@ -287,6 +288,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
             <button type="submit" disabled={loading} className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold disabled:opacity-60">{loading ? 'Saving...' : 'Save Changes'}</button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

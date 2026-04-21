@@ -155,16 +155,16 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[520px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
         {/* Header Section */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white relative">
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16 blur-3xl animate-pulse" />
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black flex items-center gap-4">
-              <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/40 ring-4 ring-blue-500/20">
+            <DialogTitle className="text-2xl font-black flex items-center gap-4">
+              <div className="p-2.5 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/40 ring-4 ring-blue-500/20">
                 <ShieldCheck className="text-white h-7 w-7" />
               </div>
               Bureau Insights
             </DialogTitle>
-            <DialogDescription className="text-slate-300 font-medium text-lg mt-2">
+            <DialogDescription className="text-slate-300 font-medium text-base mt-2">
               Official credit analysis powered by <span className="text-blue-400 font-bold">{fetchForm.provider}</span>.
             </DialogDescription>
           </DialogHeader>
@@ -177,7 +177,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
         </div>
 
         {/* Form Content */}
-        <div className="p-8 space-y-8 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="p-6 space-y-6 bg-white max-h-[85vh] overflow-y-auto custom-scrollbar">
           {/* Top Row: Provider Selection */}
           <div className="space-y-3">
             <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Select Bureau Provider</label>
@@ -186,7 +186,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                 <button
                   key={type}
                   onClick={() => setFetchForm({...fetchForm, provider: type})}
-                  className={`py-3 px-1 rounded-2xl text-[10px] font-bold border-2 transition-all duration-300 ${
+                  className={`py-2 px-1 rounded-xl text-[10px] font-bold border-2 transition-all duration-300 ${
                     fetchForm.provider === type 
                     ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md transform scale-[1.02]' 
                     : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white'
@@ -208,7 +208,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                   <div className="space-y-2">
                     <Input 
                       placeholder="First Name" 
-                      className="rounded-2xl border-slate-200 h-14 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
+                      className="rounded-2xl border-slate-200 h-11 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
                       value={fetchForm.first_name}
                       onChange={(e) => setFetchForm({...fetchForm, first_name: e.target.value})}
                     />
@@ -216,7 +216,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                   <div className="space-y-2">
                     <Input 
                       placeholder="Last Name" 
-                      className="rounded-2xl border-slate-200 h-14 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
+                      className="rounded-2xl border-slate-200 h-11 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
                       value={fetchForm.last_name}
                       onChange={(e) => setFetchForm({...fetchForm, last_name: e.target.value})}
                     />
@@ -227,7 +227,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
                   <Input 
                     placeholder="Full Name (KYC Matching)" 
-                    className="rounded-2xl border-slate-200 h-14 pl-12 pr-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
+                    className="rounded-2xl border-slate-200 h-11 pl-12 pr-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
                     value={fetchForm.name}
                     onChange={(e) => setFetchForm({...fetchForm, name: e.target.value})}
                   />
@@ -238,7 +238,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                 <Input 
                   placeholder="Mobile Number" 
                   maxLength={10}
-                  className="rounded-2xl border-slate-200 h-14 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
+                  className="rounded-2xl border-slate-200 h-11 px-4 font-bold text-slate-700 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-300"
                   value={fetchForm.mobile}
                   onChange={(e) => setFetchForm({...fetchForm, mobile: e.target.value})}
                 />
@@ -246,7 +246,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
                   value={fetchForm.gender} 
                   onValueChange={(v) => setFetchForm({...fetchForm, gender: v})}
                 >
-                  <SelectTrigger className={`rounded-2xl border-slate-200 h-14 px-4 font-bold transition-all ${isCibil ? 'opacity-100 ring-2 ring-blue-500/20' : 'opacity-80'}`}>
+                  <SelectTrigger className={`rounded-2xl border-slate-200 h-11 px-4 font-bold transition-all ${isCibil ? 'opacity-100 ring-2 ring-blue-500/20' : 'opacity-80'}`}>
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-slate-200 overflow-hidden shadow-xl">
@@ -282,7 +282,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
               <div className="relative">
                 <Input 
                   placeholder={fetchForm.identifier_type === 'pan' ? "Enter 10-digit PAN (e.g. ABCDE1234F)" : "Enter 12-digit Aadhaar Number"} 
-                  className={`rounded-2xl border-slate-200 h-16 px-6 font-mono text-xl font-black text-slate-800 placeholder:text-slate-300 placeholder:text-sm placeholder:font-sans focus:ring-4 focus:ring-blue-100 transition-all ${fetchForm.identifier_type === 'pan' ? 'tracking-[0.2em]' : 'tracking-widest'}`}
+                  className={`rounded-2xl border-slate-200 h-14 px-6 font-mono text-xl font-black text-slate-800 placeholder:text-slate-300 placeholder:text-sm placeholder:font-sans focus:ring-4 focus:ring-blue-100 transition-all ${fetchForm.identifier_type === 'pan' ? 'tracking-[0.2em]' : 'tracking-widest'}`}
                   value={fetchForm.identifier_value}
                   onChange={(e) => setFetchForm({...fetchForm, identifier_value: e.target.value.toUpperCase()})}
                 />
@@ -323,9 +323,9 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-8 bg-slate-50/80 backdrop-blur-sm border-t border-slate-100 flex flex-col gap-4">
+        <div className="p-6 bg-slate-50/80 backdrop-blur-sm border-t border-slate-100 flex flex-col gap-4">
           <Button 
-            className="w-full rounded-2xl h-16 text-lg font-black bg-blue-600 hover:bg-blue-700 shadow-2xl shadow-blue-600/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale" 
+            className="w-full rounded-2xl h-14 text-lg font-black bg-blue-600 hover:bg-blue-700 shadow-2xl shadow-blue-600/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale" 
             onClick={handleFetchReport}
             disabled={isFetching || !fetchForm.consent}
           >

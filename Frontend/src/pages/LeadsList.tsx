@@ -355,7 +355,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
       {
         deleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="bg-card rounded-xl shadow-2xl max-w-md w-full p-5">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-foreground">Delete Lead</h3>
@@ -365,7 +365,7 @@ export default function LeadsList({ mode = 'branch' }: LeadsListProps) {
                   <X size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-5">
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted transition-colors font-medium"
