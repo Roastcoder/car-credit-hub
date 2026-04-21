@@ -196,7 +196,7 @@ export default function PDDTracking() {
                 key={loan.id} 
                 className={cn(
                   "stat-card relative overflow-hidden transition-all duration-500 hover:shadow-xl",
-                  isPendingApproval ? "border-l-4 border-y border-r border-red-500/80 bg-red-500/10 shadow-md shadow-red-500/10" : "",
+                  isPendingApproval ? "!bg-red-50 dark:!bg-red-950/40 border-2 !border-red-500 shadow-md shadow-red-500/20" : "",
                   !isPendingApproval && isManager && activeTab === 'pending' && "border-l-4 border-l-amber-500/50 bg-amber-500/[0.02]",
                   isCompleted && "border-l-4 border-l-emerald-500 border-emerald-500/20 bg-emerald-500/[0.02]"
                 )}
