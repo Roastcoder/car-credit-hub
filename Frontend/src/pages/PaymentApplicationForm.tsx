@@ -76,6 +76,8 @@ interface PaymentApplication {
   loan_amount?: number;
   vouchers?: { amount?: number | string }[];
   mehar_deduction?: number;
+  total_released_amount?: number;
+  remaining_balance?: number;
 }
 
 export default function PaymentApplicationForm() {
@@ -163,7 +165,9 @@ export default function PaymentApplicationForm() {
     dm_approval: false,
     disbursement_date: '',
     loan_amount: 0,
-    mehar_deduction: 0
+    mehar_deduction: 0,
+    total_released_amount: 0,
+    remaining_balance: 0
   });
 
   useEffect(() => {
