@@ -162,6 +162,7 @@ export default function PaymentApplicationsList() {
   };
 
   const canAccountProcess = ['accountant', 'admin', 'super_admin', 'pdd_manager'].includes(user?.role || '');
+  const isAccountant = user?.role === 'accountant';
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6">
@@ -430,70 +431,80 @@ export default function PaymentApplicationsList() {
               <table className="w-full">
                 <thead className="bg-slate-50/50 dark:bg-slate-900/50">
                   <tr>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Loan Number</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Date & Time</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vehicle</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Bank</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Branch</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">EMI</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">PDD</th>
-                    <th className="px-4 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Loan / ID</th>
+                    {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Date & Time</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applicant</th>
+                    {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vehicle</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Bank</th>
+                    {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Branch</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
+                    {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">EMI</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">PDD</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {filteredApplications.map((app) => (
                     <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 dark:text-white text-xs">{app.loan_number}</div>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 dark:text-white text-[11px] leading-tight">{app.loan_number}</div>
                         <div className="text-[10px] text-gray-400 italic">ID: #{app.id.toString().padStart(4, '0')}</div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                         <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                           {new Date(app.created_at).toLocaleDateString()}
-                         </div>
-                         <div className="text-[10px] text-gray-500">
-                           {new Date(app.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                         </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 dark:text-white text-xs">{app.applicant_name}</div>
-                        <div className="text-[10px] text-blue-600 font-medium">{app.applicant_phone}</div>
-                        {app.created_by_name && (
-                          <div className="text-[9px] text-gray-400">Created by: {app.created_by_name}</div>
+                        {isAccountant && (
+                          <div className="text-[10px] text-gray-500 mt-1">
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </div>
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">
-                           {app.vehicle_name} {app.vehicle_model}
-                        </div>
-                        <div className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</div>
+                      {!isAccountant && (
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            {new Date(app.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </td>
+                      )}
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 dark:text-white text-[11px]">{app.applicant_name}</div>
+                        <div className="text-[10px] text-blue-600 font-medium">{app.applicant_phone}</div>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {!isAccountant && (
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="text-[11px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[100px]">
+                            {app.vehicle_name} {app.vehicle_model}
+                          </div>
+                          <div className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</div>
+                        </td>
+                      )}
+                      <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-700 dark:text-gray-300">
                         {app.bank_name || app.financier_name || 'N/A'}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
-                        {app.financier_name || app.disbursement_branch || 'N/A'}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs font-extrabold text-blue-700 dark:text-blue-400">
+                      {!isAccountant && (
+                        <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-700 dark:text-gray-300">
+                          {app.financier_name || app.disbursement_branch || 'N/A'}
+                        </td>
+                      )}
+                      <td className="px-3 py-3 whitespace-nowrap text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
                         {formatCurrency(app.payment_amount || 0)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
-                        {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      {!isAccountant && (
+                        <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-600 dark:text-gray-400">
+                          {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
+                        </td>
+                      )}
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
                           {app.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap">
                          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border ${getFulfilmentColor(app)}`}>
                             {getFulfilmentLabel(app)}
                          </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-0.5">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
                             <Eye size={14} />

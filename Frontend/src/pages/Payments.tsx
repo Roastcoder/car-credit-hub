@@ -94,6 +94,7 @@ export default function Payments() {
   const canCreatePayment = ['employee', 'manager', 'admin', 'super_admin'].includes(user?.role || '');
   const canApprove = ['manager', 'admin', 'super_admin'].includes(user?.role || '');
   const canProcess = user?.role === 'accountant';
+  const isAccountant = user?.role === 'accountant';
 
   return (
     <div className="pb-20 lg:pb-0">
@@ -246,15 +247,14 @@ export default function Payments() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Payment ID</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Loan</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Beneficiary</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Created</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Payment ID</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Loan / Customer</th>
+                    {!isAccountant && <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Type</th>}
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Amount</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Beneficiary</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Status</th>
+                    {!isAccountant && <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Created</th>}
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground text-[11px] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,37 +264,43 @@ export default function Payments() {
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => navigate(`/payments/${payment.id}`)}
                     >
-                      <td className="py-3 px-4 font-mono text-accent font-medium">
+                      <td className="py-3 px-3 font-mono text-accent font-medium text-[11px]">
                         {payment.payment_id || `PAY-${payment.id}`}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <div>
-                          <p className="font-medium text-foreground">{payment.loan_number}</p>
-                          <p className="text-xs text-muted-foreground">Loan Amount: {formatCurrency(Number(payment.loan_amount || 0))}</p>
+                          <p className="font-medium text-foreground text-[11px] leading-tight">{payment.loan_number}</p>
+                          <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{payment.applicant_name}</p>
+                          {isAccountant && (
+                            <p className="text-[9px] text-muted-foreground mt-0.5">
+                              {new Date(payment.created_at).toLocaleDateString()} • <span className="capitalize">{payment.payment_type?.replace(/_/g, ' ')}</span>
+                            </p>
+                          )}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <p className="font-medium text-foreground">{payment.applicant_name}</p>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="capitalize">{payment.payment_type?.replace(/_/g, ' ')}</span>
-                      </td>
-                      <td className="py-3 px-4 text-right font-semibold text-foreground">
+                      {!isAccountant && (
+                        <td className="py-3 px-3 text-[11px]">
+                          <span className="capitalize">{payment.payment_type?.replace(/_/g, ' ')}</span>
+                        </td>
+                      )}
+                      <td className="py-3 px-3 text-right font-semibold text-foreground text-[11px]">
                         {formatCurrency(Number(payment.amount))}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <div>
-                          <p className="font-medium text-foreground">{payment.beneficiary_name}</p>
-                          <p className="text-xs text-muted-foreground">{payment.bank_name}</p>
+                          <p className="font-medium text-foreground text-[11px] leading-tight">{payment.beneficiary_name}</p>
+                          <p className="text-[10px] text-muted-foreground truncate max-w-[100px]">{payment.bank_name}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <PaymentStatusBadge status={payment.status} />
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground">
-                        {new Date(payment.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
+                      {!isAccountant && (
+                        <td className="py-3 px-3 text-muted-foreground text-[11px]">
+                          {new Date(payment.created_at).toLocaleDateString()}
+                        </td>
+                      )}
+                      <td className="py-3 px-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => navigate(`/payments/${payment.id}`)}
