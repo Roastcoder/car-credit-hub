@@ -237,7 +237,6 @@ export default function LoanDetail() {
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [pddReason, setPddReason] = useState('');
-  const [showInlinePDD, setShowInlinePDD] = useState(false);
 
   const isPddManager = user?.role === 'pdd_manager';
   const canEditPDD = ['employee', 'manager', 'pdd_manager', 'admin', 'super_admin'].includes(user?.role || '');
@@ -543,9 +542,8 @@ export default function LoanDetail() {
 
             <div className="flex flex-col lg:flex-row gap-6 mb-6">
               <div className="flex-1 min-w-0 space-y-6">
-                {/* PDD Section - Inline for PDD workflow roles */}
-                {(isPddManager || user?.role === 'employee' || user?.role === 'admin') &&
-                  (loan.status === 'approved' || loan.status === 'disbursed') && (
+                {/* PDD Section - Audit Panel for PDD Manager */}
+                {isPddManager && (loan.status === 'approved' || loan.status === 'disbursed') && (loan as any).pdd_status === 'pending_approval' && (
                     <div className="space-y-6">
                       <div className="bg-card border border-border/60 rounded-[1.5rem] p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
@@ -555,37 +553,14 @@ export default function LoanDetail() {
                             </div>
                             <div>
                               <h2 className="text-lg font-black tracking-tight text-foreground uppercase">PDD Verification</h2>
-                              <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70 tracking-widest">Post Disbursement Document & RTO Details</p>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70 tracking-widest">Manager Review Audit</p>
                             </div>
                           </div>
                           <PDDStatusBadge status={(loan as any).pdd_status} />
                         </div>
 
-                        {!showInlinePDD ? (
-                          <div className="flex justify-center mt-2 mb-4">
-                            <button
-                              onClick={() => setShowInlinePDD(true)}
-                              className="px-6 py-2.5 bg-blue-600/10 text-blue-600 border border-blue-600/20 hover:bg-blue-600 hover:text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
-                            >
-                              <Edit2 size={16} /> Update PDD Details
-                            </button>
-                          </div>
-                        ) : (
-                          <PDDForm
-                            loan={loan}
-                            onCancel={() => setShowInlinePDD(false)}
-                            onSuccess={() => {
-                              queryClient.invalidateQueries({ queryKey: ['loan', id] });
-                              toast.success('PDD updated');
-                              setShowInlinePDD(false);
-                            }}
-                          />
-                        )}
-
-                        {/* Audit Panel for PDD Manager */}
-                        {isPddManager && (loan as any).pdd_status === 'pending_approval' && (
-                          <div className="mt-8 pt-8 border-t border-border/80">
-                            <h3 className="text-sm font-black text-foreground mb-4 uppercase tracking-tighter">Manager Review Audit</h3>
+                        <div className="mt-4 pt-4 border-t border-border/80">
+                          <div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                               <div className="md:col-span-2">
                                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">Rejection Remarks / Approval Notes</label>
