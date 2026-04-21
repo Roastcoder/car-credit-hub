@@ -98,7 +98,7 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canCreate: false,
         canCreateLead: false,
         canCreateLoan: false,
-        canEdit: true,
+        canEdit: false,
         canView: true,
         canDelete: false,
         canChangeStatus: false,

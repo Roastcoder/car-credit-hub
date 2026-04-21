@@ -21,11 +21,11 @@ import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
 import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 import PDDForm from '@/components/PDDForm';
-import { 
-  ClipboardCheck, 
-  CheckCircle, 
-  XSquare, 
-  MessageCircleOff 
+import {
+  ClipboardCheck,
+  CheckCircle,
+  XSquare,
+  MessageCircleOff
 } from 'lucide-react';
 
 
@@ -235,9 +235,9 @@ export default function LoanDetail() {
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
-  const [showPddModal, setShowPddModal] = useState(false);
-  const [pddReasonModal, setPddReasonModal] = useState<{ open: boolean; action: 'approve' | 'reject' }>({ open: false, action: 'approve' });
   const [pddReason, setPddReason] = useState('');
+
+  const isPddManager = user?.role === 'pdd_manager';
 
   const handleDelete = () => {
     deleteLoan.mutate();
@@ -427,29 +427,33 @@ export default function LoanDetail() {
             <p className="text-sm text-muted-foreground mt-2">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => exportLoanPDF(loan)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
-            >
-              <Printer size={14} className="text-accent" />
-              Export
-            </button>
-            <button
-              onClick={() => downloadLoanPDF(loan)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
-            >
-              <Download size={14} className="text-accent" />
-              Download
-            </button>
-            <button
-              onClick={() => shareLoanPDF(loan)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-green-500/10 hover:border-green-500 transition-colors"
-            >
-              <MessageCircle size={14} className="text-green-500" />
-              WhatsApp
-            </button>
+            {!isPddManager && (
+              <>
+                <button
+                  onClick={() => exportLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                >
+                  <Printer size={14} className="text-accent" />
+                  Export
+                </button>
+                <button
+                  onClick={() => downloadLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                >
+                  <Download size={14} className="text-accent" />
+                  Download
+                </button>
+                <button
+                  onClick={() => shareLoanPDF(loan)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-green-500/10 hover:border-green-500 transition-colors"
+                >
+                  <MessageCircle size={14} className="text-green-500" />
+                  WhatsApp
+                </button>
+              </>
+            )}
 
-            {permissions.canAddRemarks && (
+            {permissions.canAddRemarks && !isPddManager && (
               <button
                 onClick={() => setRemarksModal({ open: true, currentRemarks: loan.remark || '' })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-blue-500/10 hover:border-blue-500 transition-colors"
@@ -460,451 +464,493 @@ export default function LoanDetail() {
             )}
 
             {/* Workflow Actions */}
-            <WorkflowActions
-              loanId={id!}
-              currentStatus={loan.status}
-              onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ['loan', id] });
-                queryClient.invalidateQueries({ queryKey: ['loans'] });
-                queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
-                // Return to loans list after a successful workflow move
-                setTimeout(() => navigate('/loans'), 500);
-              }}
-            />
-            {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
-              <>
-                <button
-                  onClick={() => navigate(`/loans/${id}/edit`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit
-                </button>
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 hover:border-red-500 transition-colors"
-                >
-                  <X size={14} />
-                  Delete
-                </button>
-              </>
+            {!isPddManager && (
+              <WorkflowActions
+                loanId={id!}
+                currentStatus={loan.status}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                  queryClient.invalidateQueries({ queryKey: ['loans'] });
+                  queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
+                  // Return to loans list after a successful workflow move
+                  setTimeout(() => navigate('/loans'), 500);
+                }}
+              />
             )}
-
-            {loan.status === 'approved' && (
-              <button
-                onClick={() => navigate(`/payments/loan/${loan.id}`)}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 shadow-md transition-all active:scale-95"
-              >
-                <CreditCard size={14} className="mr-1" />
-                Create Account Request
-              </button>
-            )}
-
-            {/* PDD Actions for Employee */}
-            {(user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin') && 
-             (loan.status === 'approved' || loan.status === 'disbursed') && (
-              <button
-                onClick={() => setShowPddModal(true)}
-                className={cn(
-                  "flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-white text-xs font-bold shadow-md transition-all active:scale-95",
-                  (loan as any).pdd_status === 'rejected' ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"
-                )}
-              >
-                <ClipboardCheck size={14} className="mr-1" />
-                {(loan as any).pdd_status === 'rejected' ? 'Re-Edit PDD' : ((loan as any).pdd_status ? 'View PDD' : 'Add PDD')}
-              </button>
-            )}
-
-            {/* PDD Actions for PDD Manager */}
-            {user?.role === 'pdd_manager' && (loan as any).pdd_status === 'pending_approval' && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowPddModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition-all active:scale-95"
-                >
-                  <Eye size={14} /> Review PDD
-                </button>
-                <button
-                  onClick={() => setPddReasonModal({ open: true, action: 'approve' })}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 shadow-sm transition-all active:scale-95"
-                >
-                  <CheckCircle size={14} /> Approve
-                </button>
-                <button
-                  onClick={() => setPddReasonModal({ open: true, action: 'reject' })}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 shadow-sm transition-all active:scale-95"
-                >
-                  <XSquare size={14} /> Reject
-                </button>
-              </div>
-            )}
+            {/* PDD Manager Inline Actions will be rendered in the Audit Section below */}
           </div>
         </div>
 
-        {/* Workflow Status */}
-        <div className="mb-5">
-          {/* Desktop: Horizontal trail */}
-          <div className="hidden lg:block">
-            <WorkflowStatus
-              currentStatus={loan.status}
-              pddStatus={(loan as any).pdd_status}
-              createdBy={(loan as any).created_by}
-              submittedBy={(loan as any).pdd_submitted_by}
-              approvedBy={(loan as any).pdd_approved_by}
-              variant="horizontal"
-            />
-          </div>
+        {/* Mask Workflow Status for PDD Manager */}
+        {!isPddManager && (
+          <div className="mb-5">
+            {/* Desktop: Horizontal trail */}
+            <div className="hidden lg:block">
+              <WorkflowStatus
+                currentStatus={loan.status}
+                pddStatus={(loan as any).pdd_status}
+                createdBy={(loan as any).created_by}
+                submittedBy={(loan as any).pdd_submitted_by}
+                approvedBy={(loan as any).pdd_approved_by}
+                variant="horizontal"
+              />
+            </div>
 
-          {/* Mobile: Single line */}
-          <div className="lg:hidden">
-            <WorkflowStatus
-              currentStatus={loan.status}
-              pddStatus={(loan as any).pdd_status}
-              createdBy={(loan as any).created_by}
-              submittedBy={(loan as any).pdd_submitted_by}
-              approvedBy={(loan as any).pdd_approved_by}
-              variant="single-line"
-            />
+            {/* Mobile: Single line */}
+            <div className="lg:hidden">
+              <WorkflowStatus
+                currentStatus={loan.status}
+                pddStatus={(loan as any).pdd_status}
+                createdBy={(loan as any).created_by}
+                submittedBy={(loan as any).pdd_submitted_by}
+                approvedBy={(loan as any).pdd_approved_by}
+                variant="single-line"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Loan Details Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Applicant Information */}
-              <Section title="Applicant Information" icon={<User size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Applicant Name" value={loan.applicant_name || (loan as any).customer_name} />
-                  <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="PAN Number" value={(loan as any).pan_number || '—'} />
-                      <Field label="Aadhaar Number" value={(loan as any).aadhar_number || '—'} />
-                    </>
-                  )}
-                  <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
-                  {user?.role !== 'broker' && <Field label="Branch Manager" value={(loan as any).branch_manager_name || (loan as any).manager_name || '—'} />}
-                  {user?.role !== 'broker' && <Field label="Sourcing Person" value={(loan as any).sourcing_person_name || '—'} />}
-                  <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
-                  <div className="col-span-2">
-                    <Field
-                      label="Current Address"
-                      value={user?.role === 'broker'
-                        ? (loan as any).current_district || '—'
-                        : [
-                          (loan as any).current_address,
-                          (loan as any).current_village,
-                          (loan as any).current_tehsil,
-                          (loan as any).current_district,
-                          (loan as any).current_state,
-                          (loan as any).current_pincode
-                        ].filter(Boolean).join(', ') || '—'}
+            {/* PDD Section - Inline for PDD workflow roles */}
+            {(isPddManager || user?.role === 'employee' || user?.role === 'admin') &&
+              (loan.status === 'approved' || loan.status === 'disbursed') && (
+                <div className="space-y-6">
+                  <div className="bg-card border border-border/60 rounded-[1.5rem] p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+                          <ClipboardCheck size={20} />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-black tracking-tight text-foreground uppercase">PDD Verification</h2>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70 tracking-widest">Post Disbursement Document & RTO Details</p>
+                        </div>
+                      </div>
+                      <PDDStatusBadge status={(loan as any).pdd_status} />
+                    </div>
+
+                    <PDDForm
+                      loan={loan}
+                      onCancel={() => isPddManager ? null : navigate('/loans')}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                        toast.success('PDD updated');
+                      }}
                     />
+
+                    {/* Audit Panel for PDD Manager */}
+                    {isPddManager && (loan as any).pdd_status === 'pending_approval' && (
+                      <div className="mt-8 pt-8 border-t border-border/80">
+                        <h3 className="text-sm font-black text-foreground mb-4 uppercase tracking-tighter">Manager Review Audit</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                          <div className="md:col-span-2">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">Rejection Remarks / Approval Notes</label>
+                            <textarea
+                              value={pddReason}
+                              onChange={(e) => setPddReason(e.target.value)}
+                              placeholder="Provide feedback for the employee here..."
+                              className="w-full h-32 p-4 rounded-2xl bg-muted/30 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all resize-none shadow-inner"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-3 h-full justify-end pb-1">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/pdd/approve`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                                    },
+                                    body: JSON.stringify({ reason: pddReason })
+                                  });
+                                  if (res.ok) {
+                                    toast.success('PDD Approved');
+                                    queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                                    setPddReason('');
+                                    setTimeout(() => navigate('/pdd-tracking'), 500);
+                                  } else {
+                                    const err = await res.json();
+                                    toast.error(err.error || 'Failed to approve');
+                                  }
+                                } catch (error) { toast.error('Error occurred'); }
+                              }}
+                              disabled={updateStatus.isPending}
+                              className="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                              <CheckCircle size={18} /> Approve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!pddReason.trim()) return toast.error('Remarks required for rejection');
+                                try {
+                                  const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/pdd/reject`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                                    },
+                                    body: JSON.stringify({ reason: pddReason })
+                                  });
+                                  if (res.ok) {
+                                    toast.success('PDD Rejected');
+                                    queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                                    setPddReason('');
+                                    setTimeout(() => navigate('/pdd-tracking'), 500);
+                                  } else {
+                                    const err = await res.json();
+                                    toast.error(err.error || 'Failed to reject');
+                                  }
+                                } catch (error) { toast.error('Error occurred'); }
+                              }}
+                              disabled={updateStatus.isPending}
+                              className="w-full py-4 rounded-2xl bg-rose-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-600/20 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                              <XSquare size={18} /> Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {user?.role !== 'broker' && (
+                </div>
+              )}
+
+            {/* General Loan Details Grid - Masked for PDD Manager */}
+            {!isPddManager && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Applicant Information */}
+                <Section title="Applicant Information" icon={<User size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Applicant Name" value={loan.applicant_name || (loan as any).customer_name} />
+                    <Field label="Mobile Number" value={loan.mobile || (loan as any).customer_phone} />
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="PAN Number" value={(loan as any).pan_number || '—'} />
+                        <Field label="Aadhaar Number" value={(loan as any).aadhar_number || '—'} />
+                      </>
+                    )}
+                    <Field label="Customer ID" value={(loan as any).customer_id || '—'} />
+                    {user?.role !== 'broker' && <Field label="Branch Manager" value={(loan as any).branch_manager_name || (loan as any).manager_name || '—'} />}
+                    {user?.role !== 'broker' && <Field label="Sourcing Person" value={(loan as any).sourcing_person_name || '—'} />}
+                    <Field label="Our Branch" value={(loan as any).our_branch || '—'} />
                     <div className="col-span-2">
                       <Field
-                        label="Permanent Address"
-                        value={[
-                          (loan as any).permanent_address,
-                          (loan as any).permanent_village,
-                          (loan as any).permanent_tehsil,
-                          (loan as any).permanent_district,
-                          (loan as any).permanent_state,
-                          (loan as any).permanent_pincode
-                        ].filter(Boolean).join(', ') || '—'}
+                        label="Current Address"
+                        value={user?.role === 'broker'
+                          ? (loan as any).current_district || '—'
+                          : [
+                            (loan as any).current_address,
+                            (loan as any).current_village,
+                            (loan as any).current_tehsil,
+                            (loan as any).current_district,
+                            (loan as any).current_state,
+                            (loan as any).current_pincode
+                          ].filter(Boolean).join(', ') || '—'}
                       />
                     </div>
-                  )}
-                </div>
-              </Section>
-
-              {/* Co-Applicant & Guarantor Details */}
-              {user?.role !== 'broker' && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
-                <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
-                    <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
-                    <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
-                    <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
-                  </div>
-                </Section>
-              )}
-
-              {/* Vehicle Information */}
-              <Section title="Vehicle Information" icon={<Car size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
-                  <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
-                  <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
-                  <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
-                  <Field label="Vertical" value={(loan as any).vertical || '—'} />
-                  <Field label="Scheme" value={(loan as any).scheme || '—'} />
-                  <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
-                  <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
-                      <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
-                      <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
-                      <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
-                    </>
-                  )}
-                </div>
-              </Section>
-
-              {/* Loan Information */}
-              <Section title="Loan Information" icon={<IndianRupee size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
-                  <Field label="Application ID" value={applicationIdentifier} />
-                  <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
-                  <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
-                  <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Total Released" value={formatCurrency(Number((loan as any).total_released_amount || 0))} />
-                      <Field 
-                        label="Remaining Balance" 
-                        value={formatCurrency(Number((loan as any).remaining_balance || 0))} 
-                        className={(loan as any).remaining_balance > 0 ? "text-blue-600 font-bold" : ""}
-                      />
-                    </>
-                  )}
-                  {user?.role !== 'broker' ? (
-                    <>
-                      <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
-                      <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                      <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
-                      <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
-                      <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
-                      <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
-                      <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
-                      <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
-                      <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
-                      <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
-                      <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
-                      <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
-                      <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
-                      <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
-                    </>
-                  ) : (
-                    <>
-                      <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                      <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
-                    </>
-                  )}
-                </div>
-              </Section>
-
-              {/* Bank Information */}
-              <Section title="Bank Information" icon={<Building2 size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
-                  {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
-                      <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
-                    </>
-                  )}
-                  <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
-                      <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
-                      <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
-                    </>
-                  )}
-                </div>
-              </Section>
-
-              {/* Insurance Information */}
-              <Section title="Insurance Details" icon={<FileText size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
-                      <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
-                      <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
-                      <Field label="Policy Start Date" value={formatDisplayDate((loan as any).insurance_start_date)} />
-                      <Field label="Policy End Date" value={formatDisplayDate((loan as any).insurance_date)} />
-                      <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
-                    </>
-                  )}
-                  <Field label="Insurance Status" value={(loan as any).insurance_status || 'Pending'} />
-                  <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
-                  {user?.role !== 'broker' && (
-                    <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
-                  )}
-                </div>
-              </Section>
-
-              {/* RTO details */}
-              {user?.role !== 'broker' && (
-                <Section title="RTO Details" icon={<MapPin size={16} />}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
-                    <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
-                    <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
-                    <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
-                    <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
-                    <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
-                    <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
-                    <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
-                    <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
-                    <div className="col-span-2">
-                      <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
-                    </div>
-                    <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
-                    <Field label="Challans" value={(loan as any).challan_status || 'No'} />
-                    <Field label="DM Status" value={(loan as any).rto_dm ? 'Received' : 'Pending'} />
-                    <Field label="RC Status" value={(loan as any).rto_rc ? 'Received' : 'Pending'} />
-                    <Field label="NOC Status" value={(loan as any).rto_noc ? 'Received' : 'Pending'} />
-                    <Field label="Tax Receipt" value={(loan as any).rto_tax_receipt ? 'Received' : 'Pending'} />
-                    <Field label="FC Status" value={(loan as any).rto_fitness_document ? 'Received' : 'Pending'} />
-                    <Field label="Stamp Status" value={(loan as any).rto_stamp_papers ? 'Received' : 'Pending'} />
-
-                  </div>
-                </Section>
-              )}
-
-              {/* Disbursement details */}
-              {user?.role !== 'broker' && (
-                <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
-                    <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
-                    <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
-                    <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
-                    <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
-                    <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
-                    <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
-                  </div>
-                </Section>
-              )}
-
-              {/* Credit Reports Section (Superadmin Only) */}
-              {user?.role === 'super_admin' && (
-                <Section title="Credit Reports" icon={<ShieldCheck size={16} />}>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/30">
-                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Historical Reports</p>
-                    </div>
-
-                    {(creditReports as any[]).length === 0 ? (
-                      <div className="py-6 text-center border-2 border-dashed border-border rounded-xl">
-                        <p className="text-sm text-muted-foreground italic">No credit reports found for this application</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {(creditReports as any[]).map((report: any) => (
-                          <div key={report.id} className="flex flex-col p-4 rounded-2xl border border-border bg-card/50 hover:bg-muted/30 transition-all group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-2">
-                              {report.report_link && (
-                                <a
-                                  href={getFileUrl(report.report_link)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-2 rounded-lg hover:bg-blue-600/10 text-blue-600 transition-colors"
-                                  title="View Report"
-                                >
-                                  <ExternalLink size={16} />
-                                </a>
-                              )}
-                            </div>
-
-                            <div className="flex flex-col items-center text-center gap-4">
-                              <CreditScoreGauge
-                                score={report.score}
-                                size="sm"
-                              />
-
-                              <div className="space-y-1">
-                                <p className="text-sm font-black text-foreground uppercase tracking-tight">{report.provider}</p>
-                                <p className="text-[10px] text-muted-foreground font-medium">
-                                  Fetched on {new Date(report.created_at).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                    {user?.role !== 'broker' && (
+                      <div className="col-span-2">
+                        <Field
+                          label="Permanent Address"
+                          value={[
+                            (loan as any).permanent_address,
+                            (loan as any).permanent_village,
+                            (loan as any).permanent_tehsil,
+                            (loan as any).permanent_district,
+                            (loan as any).permanent_state,
+                            (loan as any).permanent_pincode
+                          ].filter(Boolean).join(', ') || '—'}
+                        />
                       </div>
                     )}
                   </div>
                 </Section>
-              )}
 
-              {/* Broker Commission */}
-              {user?.role !== 'broker' && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
-                <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
+                {/* Co-Applicant & Guarantor Details */}
+                {user?.role !== 'broker' && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
+                  <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
+                      <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
+                      <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
+                      <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
+                    </div>
+                  </Section>
+                )}
+
+                {/* Vehicle Information */}
+                <Section title="Vehicle Information" icon={<Car size={16} />}>
                   <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="Broker Name"
-                      value={commissionRecord?.broker_name || (loan as any).assigned_broker_name || '—'}
-                    />
-                    <Field
-                      label="Commission Amount"
-                      value={formatCurrency(Number(commissionRecord?.commission_amount || commissionRecord?.amount || computedCommission.amount || 0))}
-                    />
-                    <Field
-                      label="Commission Rate"
-                      value={commissionRecord?.commission_rate ? `${commissionRecord.commission_rate}%` : (computedCommission.rate ? `${computedCommission.rate}%` : '—')}
-                    />
-                    <Field
-                      label="Status"
-                      value={commissionRecord?.status
-                        ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1)
-                        : (computedCommission.amount > 0 ? 'Calculated (Pending)' : '—')
-                      }
-                    />
+                    <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
+                    <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
+                    <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
+                    <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
+                    <Field label="Vertical" value={(loan as any).vertical || '—'} />
+                    <Field label="Scheme" value={(loan as any).scheme || '—'} />
+                    <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
+                    <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
+                        <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
+                        <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
+                        <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
+                      </>
+                    )}
                   </div>
                 </Section>
-              )}
 
-              {/* FC & NOC Details */}
-              {user?.role !== 'broker' && (
-                <Section title="FC & NOC Details" icon={<FileText size={16} />}>
+                {/* Loan Information */}
+                <Section title="Loan Information" icon={<IndianRupee size={16} />}>
                   <div className="grid grid-cols-2 gap-4">
-                    <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
-                    <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
-                    <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
-                    <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
-                    <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
-                    <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
-                    <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
-                    <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
-                    <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
+                    <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
+                    <Field label="Application ID" value={applicationIdentifier} />
+                    <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
+                    <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
+                    <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="Total Released" value={formatCurrency(Number((loan as any).total_released_amount || 0))} />
+                        <Field
+                          label="Remaining Balance"
+                          value={formatCurrency(Number((loan as any).remaining_balance || 0))}
+                          className={(loan as any).remaining_balance > 0 ? "text-blue-600 font-bold" : ""}
+                        />
+                      </>
+                    )}
+                    {user?.role !== 'broker' ? (
+                      <>
+                        <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
+                        <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+                        <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
+                        <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
+                        <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
+                        <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
+                        <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
+                        <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
+                        <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
+                        <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
+                        <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
+                        <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
+                        <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
+                        <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
+                      </>
+                    ) : (
+                      <>
+                        <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+                        <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
+                      </>
+                    )}
                   </div>
                 </Section>
-              )}
 
-              {/* PDD Tracking Detail */}
-              <Section title="PDD Tracking" icon={<FileText size={16} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="PDD Status" value={(loan as any).pdd_status || 'pending'} />
-                  {user?.role !== 'broker' && (
-                    <>
-                      <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
-                      <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
-                      <Field label="PDD Manager" value={(loan as any).pdd_approved_by_name || '—'} />
-                      <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
-                      <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
+                {/* Bank Information */}
+                <Section title="Bank Information" icon={<Building2 size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
+                    {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
+                        <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
+                      </>
+                    )}
+                    <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
+                        <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
+                        <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
+                      </>
+                    )}
+                  </div>
+                </Section>
+
+                {/* Insurance Information */}
+                <Section title="Insurance Details" icon={<FileText size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="Company Name" value={(loan as any).insurance_company_name || '—'} />
+                        <Field label="Policy Number" value={(loan as any).insurance_policy_number || '—'} />
+                        <Field label="Premium Amount" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
+                        <Field label="Policy Start Date" value={formatDisplayDate((loan as any).insurance_start_date)} />
+                        <Field label="Policy End Date" value={formatDisplayDate((loan as any).insurance_date)} />
+                        <Field label="Made By" value={(loan as any).insurance_made_by || '—'} />
+                      </>
+                    )}
+                    <Field label="Insurance Status" value={(loan as any).insurance_status || 'Pending'} />
+                    <Field label="Reminder" value={(loan as any).insurance_reminder_enabled ? 'Enabled' : 'Disabled'} />
+                    {user?.role !== 'broker' && (
+                      <Field label="Endorsement" value={(loan as any).insurance_endorsement || '—'} />
+                    )}
+                  </div>
+                </Section>
+
+                {/* RTO details */}
+                {user?.role !== 'broker' && (
+                  <Section title="RTO Details" icon={<MapPin size={16} />}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
+                      <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
+                      <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
+                      <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
+                      <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
+                      <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
+                      <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
+                      <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
+                      <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
                       <div className="col-span-2">
-                        <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+                        <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
                       </div>
-                    </>
-                  )}
-                </div>
-              </Section>
-            </div>
+                      <Field label="Police Case" value={(loan as any).police_case_status || 'No'} />
+                      <Field label="Challans" value={(loan as any).challan_status || 'No'} />
+                      <Field label="DM Status" value={(loan as any).rto_dm ? 'Received' : 'Pending'} />
+                      <Field label="RC Status" value={(loan as any).rto_rc ? 'Received' : 'Pending'} />
+                      <Field label="NOC Status" value={(loan as any).rto_noc ? 'Received' : 'Pending'} />
+                      <Field label="Tax Receipt" value={(loan as any).rto_tax_receipt ? 'Received' : 'Pending'} />
+                      <Field label="FC Status" value={(loan as any).rto_fitness_document ? 'Received' : 'Pending'} />
+                      <Field label="Stamp Status" value={(loan as any).rto_stamp_papers ? 'Received' : 'Pending'} />
+
+                    </div>
+                  </Section>
+                )}
+
+                {/* Disbursement details */}
+                {user?.role !== 'broker' && (
+                  <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
+                      <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
+                      <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
+                      <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
+                      <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
+                      <Field label="Mehar Deduction" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+                      <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
+                    </div>
+                  </Section>
+                )}
+
+                {/* Credit Reports Section (Superadmin Only) */}
+                {user?.role === 'super_admin' && (
+                  <Section title="Credit Reports" icon={<ShieldCheck size={16} />}>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/30">
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Historical Reports</p>
+                      </div>
+
+                      {(creditReports as any[]).length === 0 ? (
+                        <div className="py-6 text-center border-2 border-dashed border-border rounded-xl">
+                          <p className="text-sm text-muted-foreground italic">No credit reports found for this application</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {(creditReports as any[]).map((report: any) => (
+                            <div key={report.id} className="flex flex-col p-4 rounded-2xl border border-border bg-card/50 hover:bg-muted/30 transition-all group relative overflow-hidden">
+                              <div className="absolute top-0 right-0 p-2">
+                                {report.report_link && (
+                                  <a
+                                    href={getFileUrl(report.report_link)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg hover:bg-blue-600/10 text-blue-600 transition-colors"
+                                    title="View Report"
+                                  >
+                                    <ExternalLink size={16} />
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="flex flex-col items-center text-center gap-4">
+                                <CreditScoreGauge
+                                  score={report.score}
+                                  size="sm"
+                                />
+
+                                <div className="space-y-1">
+                                  <p className="text-sm font-black text-foreground uppercase tracking-tight">{report.provider}</p>
+                                  <p className="text-[10px] text-muted-foreground font-medium">
+                                    Fetched on {new Date(report.created_at).toLocaleDateString('en-IN', {
+                                      day: '2-digit',
+                                      month: 'short',
+                                      year: 'numeric'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Section>
+                )}
+
+                {/* Broker Commission */}
+                {user?.role !== 'broker' && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
+                  <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        label="Broker Name"
+                        value={commissionRecord?.broker_name || (loan as any).assigned_broker_name || '—'}
+                      />
+                      <Field
+                        label="Commission Amount"
+                        value={formatCurrency(Number(commissionRecord?.commission_amount || commissionRecord?.amount || computedCommission.amount || 0))}
+                      />
+                      <Field
+                        label="Commission Rate"
+                        value={commissionRecord?.commission_rate ? `${commissionRecord.commission_rate}%` : (computedCommission.rate ? `${computedCommission.rate}%` : '—')}
+                      />
+                      <Field
+                        label="Status"
+                        value={commissionRecord?.status
+                          ? commissionRecord.status.charAt(0).toUpperCase() + commissionRecord.status.slice(1)
+                          : (computedCommission.amount > 0 ? 'Calculated (Pending)' : '—')
+                        }
+                      />
+                    </div>
+                  </Section>
+                )}
+
+                {/* FC & NOC Details */}
+                {user?.role !== 'broker' && (
+                  <Section title="FC & NOC Details" icon={<FileText size={16} />}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
+                      <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
+                      <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
+                      <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
+                      <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
+                      <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
+                      <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
+                      <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
+                      <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
+                    </div>
+                  </Section>
+                )}
+
+                {/* PDD Tracking Detail */}
+                <Section title="PDD Tracking" icon={<FileText size={16} />}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="PDD Status" value={(loan as any).pdd_status || 'pending'} />
+                    {user?.role !== 'broker' && (
+                      <>
+                        <Field label="Submitted By" value={(loan as any).pdd_submitted_by_name || '—'} />
+                        <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
+                        <Field label="PDD Manager" value={(loan as any).pdd_approved_by_name || '—'} />
+                        <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
+                        <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
+                        <div className="col-span-2">
+                          <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Section>
+              </div>
 
             {/* Verified External API Data Section */}
             {vehicleCache && (Object.keys(vehicleCache).length > 0) && (
@@ -1174,101 +1220,7 @@ export default function LoanDetail() {
           setRemarksModal({ open: false, currentRemarks: '' });
         }}
       />
-
       {/* PDD Form Modal */}
-      {showPddModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-card w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-border p-1 animate-in zoom-in-95 duration-300 custom-scrollbar">
-            <PDDForm 
-              loan={loan} 
-              onCancel={() => setShowPddModal(false)}
-              onSuccess={() => {
-                setShowPddModal(false);
-                queryClient.invalidateQueries({ queryKey: ['loan', id] });
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* PDD Action Modal (Approve/Reject reason) */}
-      {pddReasonModal.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-            <h3 className={cn(
-              "text-lg font-bold mb-2 tracking-tight",
-              pddReasonModal.action === 'approve' ? "text-green-600" : "text-red-600"
-            )}>
-              {pddReasonModal.action === 'approve' ? 'Approve PDD' : 'Reject PDD'}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              {pddReasonModal.action === 'approve' 
-                ? 'Are you sure you want to approve these PDD details?' 
-                : 'Please provide a reason for rejecting these PDD details. This will be shared with the employee.'}
-            </p>
-            
-            {pddReasonModal.action === 'reject' && (
-              <textarea
-                value={pddReason}
-                onChange={(e) => setPddReason(e.target.value)}
-                placeholder="Enter rejection reason..."
-                className="w-full h-32 p-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all resize-none mb-4"
-              />
-            )}
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setPddReasonModal({ open: false, action: 'approve' });
-                  setPddReason('');
-                }}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                disabled={updateStatus.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  if (pddReasonModal.action === 'reject' && !pddReason.trim()) {
-                    toast.error('Rejection reason is required');
-                    return;
-                  }
-                  
-                  try {
-                    const endpoint = pddReasonModal.action === 'approve' ? 'approve' : 'reject';
-                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/pdd/${endpoint}`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                      },
-                      body: pddReasonModal.action === 'reject' ? JSON.stringify({ reason: pddReason }) : undefined
-                    });
-
-                    if (res.ok) {
-                      toast.success(`PDD ${pddReasonModal.action}d successfully`);
-                      queryClient.invalidateQueries({ queryKey: ['loan', id] });
-                      setPddReasonModal({ open: false, action: 'approve' });
-                      setPddReason('');
-                    } else {
-                      const err = await res.json().catch(() => ({}));
-                      toast.error(err.error || `Failed to ${pddReasonModal.action} PDD`);
-                    }
-                  } catch (error) {
-                    toast.error('An unexpected error occurred');
-                  }
-                }}
-                className={cn(
-                  "flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-all shadow-md active:scale-95",
-                  pddReasonModal.action === 'approve' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-                )}
-              >
-                Confirm {pddReasonModal.action === 'approve' ? 'Approval' : 'Rejection'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </>
   );
