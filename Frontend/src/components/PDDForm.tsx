@@ -1,12 +1,62 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { 
+  X, 
+  CreditCard, 
+  Landmark, 
+  Files, 
+  ClipboardCheck, 
+  ShieldCheck, 
+  Timer, 
+  Save, 
+  AlertCircle, 
+  Info,
+  Calendar,
+  User,
+  Phone,
+  MapPin,
+  FileText
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PDDFormProps {
   loan: any;
   onCancel: () => void;
   onSuccess: () => void;
 }
+
+const FormSection = ({ title, icon, children, colorClass }: { title: string, icon: React.ReactNode, children: React.ReactNode, colorClass: string }) => (
+  <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full transform transition-all hover:shadow-md">
+    <div className={cn("px-4 py-3 flex items-center gap-2 border-b border-border/40", colorClass)}>
+      <div className="p-1.5 rounded-lg bg-white/20 text-white shadow-sm">
+        {icon}
+      </div>
+      <h3 className="text-[11px] font-black uppercase tracking-widest text-white">{title}</h3>
+    </div>
+    <div className="p-5 space-y-4 flex-1">
+      {children}
+    </div>
+  </div>
+);
+
+const InputField = ({ label, icon, ...props }: { label: string, icon?: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+      {icon}
+      {label}
+    </label>
+    <div className="relative group">
+      <input 
+        {...props} 
+        className={cn(
+          "w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent disabled:opacity-50 disabled:grayscale group-hover:border-accent/40",
+          props.className
+        )} 
+      />
+    </div>
+  </div>
+);
 
 export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
   const { user } = useAuth();
@@ -42,6 +92,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     commitment_date: loan.commitment_date?.split('T')[0] || '',
     delay_days: loan.delay_days || '',
   });
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
   const isRejected = loan.pdd_status === 'rejected';
@@ -86,163 +137,219 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-muted/30 p-4 sm:p-6 rounded-2xl border border-accent/20 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-        <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">
-          {loan.applicant_name} - {loan.loan_number}
-        </h3>
-        <div className="flex gap-2">
-            <button type="button" onClick={onCancel} className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground bg-background border border-border rounded-lg transition-colors">
-                Cancel
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-8 pb-12">
+        {/* Modern Header Info Card */}
+        <div className="bg-card rounded-3xl border-2 border-accent/20 shadow-xl shadow-accent/5 p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-wider">PDD Submission</span>
+              {isRejected && <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-wider">Revision Required</span>}
+            </div>
+            <h2 className="text-3xl font-black text-foreground tracking-tighter">
+              {loan.applicant_name}
+            </h2>
+            <p className="text-sm text-muted-foreground font-medium flex items-center gap-2 mt-1">
+              <span className="text-accent font-bold">{loan.loan_number}</span>
+              <span className="w-1 h-1 rounded-full bg-border" />
+              <span>{loan.car_make} {loan.car_model}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 relative z-10">
+            <button 
+              type="button" 
+              onClick={onCancel} 
+              className="px-6 py-3 rounded-2xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95"
+            >
+              Cancel
             </button>
             {isEmployee && (
-              <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-xs font-bold hover:bg-accent/90 disabled:opacity-50 shadow-md">
-                  {isSubmitting ? 'Saving...' : (isRejected ? 'Re-Submit PDD' : 'Submit PDD')}
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-sm font-black hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 active:scale-95"
+              >
+                {isSubmitting ? (
+                  <>Saving...</>
+                ) : (
+                  <>
+                    <Save size={18} />
+                    {isRejected ? 'Re-Submit PDD' : 'Submit for Approval'}
+                  </>
+                )}
               </button>
             )}
+          </div>
         </div>
-      </div>
 
-      {isRejected && loan.pdd_rejection_reason && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
-          <p className="text-xs font-bold text-red-800 uppercase mb-1">Rejection Reason:</p>
-          <p className="text-sm text-red-700 italic">"{loan.pdd_rejection_reason}"</p>
-        </div>
-      )}
+        {/* Alerts Section */}
+        {(isRejected || isBT) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {isRejected && (
+              <div className="bg-red-50 border-2 border-red-100 p-5 rounded-2xl flex gap-4 items-start">
+                <div className="p-2 rounded-xl bg-red-500 text-white shadow-md">
+                  <AlertCircle size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">Rejection Remarks</p>
+                  <p className="text-sm text-red-700 font-medium italic">"{loan.pdd_rejection_reason || 'No specific reason provided'}"</p>
+                </div>
+              </div>
+            )}
+            {isBT && (
+              <div className="bg-blue-50 border-2 border-blue-100 p-5 rounded-2xl flex gap-4 items-start">
+                <div className="p-2 rounded-xl bg-blue-500 text-white shadow-md">
+                  <Info size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1">Policy Notice</p>
+                  <p className="text-sm text-blue-700 font-medium">BT Scheme requires mandatory FC and NOC details for processing.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-      {isBT && (
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6">
-          <p className="text-sm text-blue-800 font-medium">
-            🚩 <strong>Note:</strong> Since the scheme is <strong>{loan.scheme}</strong>, FC and NOC details are mandatory.
-          </p>
-        </div>
-      )}
+        {/* Form Grid with Section Outline */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <FormSection title="Finance & Payment" icon={<CreditCard size={18} />} colorClass="bg-blue-600">
+            <InputField 
+              label="Payment Received Date" icon={<Calendar size={12}/>}
+              type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Financier in M-Parivahan" icon={<Landmark size={12}/>}
+              type="text" placeholder="e.g. HDFC Bank"
+              value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Balance Status" icon={<ShieldCheck size={12}/>}
+              type="text" placeholder="Pending/Clear"
+              value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+          </FormSection>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {/* Payment & Finance */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-500">Payment & Finance</h4>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Received Date</label>
-              <input type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
+          <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
+            <InputField 
+              label={`FC Deposited By ${isBT ? '*' : ''}`} icon={<User size={12}/>}
+              type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label={`FC Deposit Date ${isBT ? '*' : ''}`} icon={<Calendar size={12}/>}
+              type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label={`Current FC Status ${isBT ? '*' : ''}`} icon={<AlertCircle size={12}/>}
+              type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+          </FormSection>
+
+          <FormSection title="RTO & Documents" icon={<Files size={18} />} colorClass="bg-emerald-600">
+            <InputField 
+              label="RTO Paper Details" icon={<FileText size={12}/>}
+              type="text" value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Work Description" icon={<Info size={12}/>}
+              type="text" value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Agent Name" icon={<User size={12}/>}
+              type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Agent Mobile" icon={<Phone size={12}/>}
+              type="text" value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
+              disabled={!isEmployee}
+            />
+          </FormSection>
+
+          <FormSection title="Vehicle Verification" icon={<ClipboardCheck size={18} />} colorClass="bg-amber-600">
+            <div className="grid grid-cols-2 gap-4">
+              <InputField 
+                label="Pollution" type="text" 
+                value={formData.pollution_status} onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="Insurance" type="text"
+                value={formData.insurance_status} onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="Vechicle Check" type="text"
+                value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="Challan" type="text"
+                value={formData.challan_status} onChange={(e) => setFormData({...formData, challan_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Financier in M-Parivahan</label>
-              <input type="text" value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} className="form-input-pdd" placeholder="Enter financier name" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Balance Status</label>
-              <input type="text" value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} className="form-input-pdd" placeholder="Enter status" disabled={!isEmployee} />
+            <InputField 
+              label="Location" icon={<MapPin size={12}/>}
+              type="text" value={formData.dto_location} onChange={(e) => setFormData({...formData, dto_location: e.target.value})} 
+              disabled={!isEmployee}
+            />
+          </FormSection>
+
+          <FormSection title="NOC & Timeline" icon={<ShieldCheck size={18} />} colorClass="bg-purple-600">
+            <InputField 
+              label={`NOC Status ${isBT ? '*' : ''}`} icon={<ShieldCheck size={12}/>}
+              type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Commitment Date" icon={<Timer size={12}/>}
+              type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Delay Days" icon={<AlertCircle size={12}/>}
+              type="number" value={formData.delay_days} onChange={(e) => setFormData({...formData, delay_days: e.target.value})} 
+              disabled={!isEmployee}
+            />
+          </FormSection>
+
+          {/* Optional: Add a summary or guide section here */}
+          <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-center h-full relative overflow-hidden">
+            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
+            <h4 className="text-xl font-black mb-2 flex items-center gap-2">
+              <ClipboardCheck className="text-accent" />
+              Submission Guide
+            </h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Ensure all mandatory fields marked with an asterisk (*) are filled correctly. Submitted data will be sent to the PDD Manager for final verification and approval.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-700 overflow-hidden flex items-center justify-center text-[10px] font-bold">{i}</div>)}
+              </div>
+              <p className="text-[10px] font-bold text-slate-400">Step-by-step verification active</p>
             </div>
           </div>
         </div>
 
-        {/* FC Details */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-500">FC Details</h4>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposited By {isBT && <span className="text-red-500">*</span>}</label>
-              <input type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposit Date {isBT && <span className="text-red-500">*</span>}</label>
-              <input type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Current FC Status {isBT && <span className="text-red-500">*</span>}</label>
-                <input type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
+        {/* Footer info for admins */}
+        {!isEmployee && (
+          <div className="p-4 rounded-xl border border-dashed border-border text-center">
+            <p className="text-xs text-muted-foreground">You are viewing this form in read-only mode. Only assigned employees can edit PDD details.</p>
           </div>
-        </div>
-
-        {/* RTO & Paper Details */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">RTO & Papers</h4>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">RTO Paper Details</label>
-              <input type="text" value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Work Description</label>
-              <input type="text" value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">RTO Agent Name</label>
-              <input type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-          </div>
-        </div>
-
-        {/* Vehicle Checks */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-500">Vehicle Checks</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Pollution</label>
-              <input type="text" value={formData.pollution_status} onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Insurance</label>
-              <input type="text" value={formData.insurance_status} onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Vehicle Check</label>
-              <input type="text" value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Challan</label>
-              <input type="text" value={formData.challan_status} onChange={(e) => setFormData({...formData, challan_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-          </div>
-        </div>
-
-        {/* NOC & Timeline */}
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-purple-500">NOC & Timeline</h4>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">NOC Status {isBT && <span className="text-red-500">*</span>}</label>
-              <input type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Commitment Date</label>
-              <input type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {isEmployee && (
-        <div className="pt-6 border-t border-border flex justify-end gap-3">
-            <button type="button" onClick={onCancel} className="px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-                Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-black hover:bg-accent/90 disabled:opacity-50 shadow-lg shadow-accent/20 transition-all">
-                {isSubmitting ? 'Saving Changes...' : (isRejected ? 'Re-Submit PDD' : 'Submit PDD for Approval')}
-            </button>
-        </div>
-      )}
-
-      <style>{`
-        .form-input-pdd {
-            width: 100%;
-            padding: 0.6rem 1rem;
-            background: var(--background);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-            color: var(--foreground);
-        }
-        .form-input-pdd:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
-        }
-      `}</style>
-    </form>
+        )}
+      </form>
+    </div>
   );
 }

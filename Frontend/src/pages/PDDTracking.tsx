@@ -66,7 +66,7 @@ export default function PDDTracking() {
   };
   const [editingLoanId, setEditingLoanId] = useState<number | null>(null);
   const { data: loans = [], isLoading, refetch } = useQuery({
-    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids],
+    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids, activeTab],
     queryFn: async () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
@@ -75,25 +75,23 @@ export default function PDDTracking() {
       const rawData = await response.json();
       const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
+      let filteredData = data;
       if (user?.role === 'employee') {
-        return data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
-      }
-      if (user?.role === 'manager') {
+        filteredData = data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
+      } else if (user?.role === 'manager') {
         const allowedBranchIds = Array.from(new Set([
           ...(((user as any)?.managed_branch_ids || []) as number[]),
           Number(user.branch_id || 0)
         ].filter((branchId) => Number(branchId) > 0)));
-        return data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
-      }
-      if (user?.role === 'pdd_manager') {
-        if (activeTab === 'pending') {
-          return data.filter((loan: any) => loan.pdd_status === 'pending_approval' || !loan.pdd_status || loan.pdd_status === 'pending');
-        } else {
-          return data.filter((loan: any) => loan.pdd_status === 'approved');
-        }
+        filteredData = data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
       }
 
-      return data;
+      // Apply PDD status filtering for everyone based on active tab
+      if (activeTab === 'pending') {
+        return filteredData.filter((loan: any) => loan.pdd_status === 'pending_approval' || !loan.pdd_status || loan.pdd_status === 'pending');
+      } else {
+        return filteredData.filter((loan: any) => loan.pdd_status === 'approved');
+      }
     },
     enabled: !!user,
   });
@@ -156,32 +154,30 @@ export default function PDDTracking() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-70">Post Disbursement Documents & RTO Workflow</p>
         </div>
 
-        {user?.role === 'pdd_manager' && (
-          <div className="flex items-center p-1 bg-muted/50 backdrop-blur-md rounded-xl border border-border shadow-sm">
-            <button
-              onClick={() => handleTabChange('pending')}
-              className={cn(
-                "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
-                activeTab === 'pending' 
-                  ? "bg-red-500 text-white shadow-lg shadow-red-500/30 scale-105" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              PENDING FILES
-            </button>
-            <button
-              onClick={() => handleTabChange('completed')}
-              className={cn(
-                "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
-                activeTab === 'completed' 
-                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              COMPLETED FILES
-            </button>
-          </div>
-        )}
+        <div className="flex items-center p-1 bg-muted/50 backdrop-blur-md rounded-xl border border-border shadow-sm">
+          <button
+            onClick={() => handleTabChange('pending')}
+            className={cn(
+              "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
+              activeTab === 'pending' 
+                ? "bg-red-500 text-white shadow-lg shadow-red-500/30 scale-105" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            PENDING FILES
+          </button>
+          <button
+            onClick={() => handleTabChange('completed')}
+            className={cn(
+              "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
+              activeTab === 'completed' 
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            COMPLETED FILES
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
