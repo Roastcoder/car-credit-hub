@@ -34,11 +34,13 @@ export const api = {
     });
 
     if (response.status === 401) {
-      this.setToken(null);
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/login';
-      throw new Error('Session expired. Please login again.');
+      if (endpoint !== '/auth/login') {
+        this.setToken(null);
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
+      }
     }
 
     if (!response.ok) {

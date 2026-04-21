@@ -58,7 +58,8 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const result = await login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const result = await login(normalizedEmail, password);
       if (result.error) {
         setError('Invalid email or password');
         toast.error('Login failed');
@@ -103,11 +104,11 @@ export default function Login() {
     if (!forgotEmail.includes('@')) { toast.error('Enter a valid email address'); return; }
     setForgotLoading(true);
     try {
-      // Step 1: get phone from email
+      const normalizedEmail = forgotEmail.trim().toLowerCase();
       const phoneRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/get-phone-by-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail })
+        body: JSON.stringify({ email: normalizedEmail })
       });
       const phoneData = await phoneRes.json();
       if (!phoneRes.ok) {

@@ -759,11 +759,11 @@ export default function LoanDetail() {
                             </div>
 
                             <div className="flex flex-col items-center text-center gap-4">
-                              <CreditScoreGauge 
-                                score={report.score} 
-                                size="sm" 
+                              <CreditScoreGauge
+                                score={report.score}
+                                size="sm"
                               />
-                              
+
                               <div className="space-y-1">
                                 <p className="text-sm font-black text-foreground uppercase tracking-tight">{report.provider}</p>
                                 <p className="text-[10px] text-muted-foreground font-medium">

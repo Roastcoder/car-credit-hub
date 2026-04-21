@@ -307,6 +307,19 @@ export default function PaymentApplicationForm() {
         challan_amount: prev.challan_amount || Number(d.rto_challan_amount) || 0,
         payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || ''
       }));
+
+      // Fetch existing payment applications for this loan to calculate old_release_amount
+      const apps = await paymentApplicationAPI.getAll();
+      const loanApps = Array.isArray(apps) ? apps.filter((app: any) => String(app.loan_id) === String(lId) && app.status === 'completed') : [];
+      const totalAlreadyReleased = loanApps.reduce((sum: number, app: any) => sum + (Number(app.payment_amount) || 0), 0);
+      
+      setFormData(prev => ({
+        ...prev,
+        old_release_amount: totalAlreadyReleased,
+        today_release_amount: Math.max(0, (Number(prev.disbursement_amount) || 0) - totalAlreadyReleased),
+        hold_amount: 0
+      }));
+
     } catch (error) {
       console.error('Error fetching loan data:', error);
       toast.error('Failed to fetch loan data');
@@ -1073,14 +1086,21 @@ export default function PaymentApplicationForm() {
               >
                 Save Draft
               </button>
-              <button
-                type="button"
-                onClick={() => handleSubmit('submitted')}
-                disabled={loading}
-                className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
-              >
-                {loading ? 'Submitting...' : 'Submit Now'}
-              </button>
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSubmit('submitted')}
+                  disabled={loading}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
+                >
+                  {loading ? 'Submitting...' : user?.role === 'employee' ? 'Send for RBM Approval' : 'Submit Now'}
+                </button>
+                {user?.role === 'employee' && (
+                  <p className="text-[10px] text-gray-500 font-medium italic">
+                    * This application will be forwarded to your Regional Business Manager (RBM) for approval.
+                  </p>
+                )}
+              </div>
             </>
           )}
         </div>

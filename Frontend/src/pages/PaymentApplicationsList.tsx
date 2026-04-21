@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
   Plus, Search, Filter, Eye, CheckCircle, X,
-  FileText, CreditCard, Download, FileCheck, Receipt, List, User
+  FileText, CreditCard, Download, FileCheck, Receipt, List, User,
+  ChevronRight, ArrowRight
 } from 'lucide-react';
-import { paymentApplicationAPI } from '@/lib/api';
+import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { Button } from "@/components/ui/button";
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+import { Badge } from "@/components/ui/badge";
 
 interface PaymentApplication {
   id: number;
@@ -46,6 +48,8 @@ export default function PaymentApplicationsList() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadingForId, setUploadingForId] = useState<number | null>(null);
+  const [eligibleLoans, setEligibleLoans] = useState<any[]>([]);
+  const [eligibleLoading, setEligibleLoading] = useState(false);
 
   const appSwitcherOptions = [
     { label: 'Application List', path: '/payments', icon: <List size={18} /> },
@@ -54,7 +58,22 @@ export default function PaymentApplicationsList() {
 
   useEffect(() => {
     fetchApplications();
-  }, []);
+    if (['employee', 'manager', 'super_admin'].includes(user?.role || '')) {
+      fetchEligibleLoans();
+    }
+  }, [user?.role]);
+
+  const fetchEligibleLoans = async () => {
+    try {
+      setEligibleLoading(true);
+      const res = await loansAPI.getAll({ forPayment: 'true' });
+      setEligibleLoans(res.data || []);
+    } catch (error) {
+      console.error('Error fetching eligible loans:', error);
+    } finally {
+      setEligibleLoading(false);
+    }
+  };
 
   const fetchApplications = async () => {
     try {
@@ -164,6 +183,56 @@ export default function PaymentApplicationsList() {
       </div>
 
       <MobilePageSwitcher options={appSwitcherOptions} activeLabel="Application List" />
+
+      {/* Eligible Loans Quick Start */}
+      {eligibleLoans.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              Loans Ready for Payment
+            </h2>
+            <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
+              {eligibleLoans.length} files available
+            </span>
+          </div>
+          
+          <div className="flex overflow-x-auto pb-4 gap-4 no-scrollbar -mx-1 px-1">
+            {eligibleLoans.map((loan) => (
+              <div 
+                key={loan.id} 
+                className="flex-shrink-0 w-72 glass-card p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 hover:border-blue-400 transition-all group cursor-pointer shadow-sm hover:shadow-md bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10"
+                onClick={() => navigate(`/payments/loan/${loan.id}`)}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <Badge variant="outline" className={`text-[9px] uppercase tracking-tighter ${loan.status === 'disbursed' ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+                    {loan.status === 'disbursed' ? 'Part Payment' : 'New Release'}
+                  </Badge>
+                  <p className="text-[10px] font-mono text-gray-400">#{loan.loan_number}</p>
+                </div>
+                
+                <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1 group-hover:text-blue-600 transition-colors">
+                  {loan.customer_name || loan.applicant_name}
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+                  <User size={12} className="text-blue-400" />
+                  {loan.mobile}
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-blue-100/50 dark:border-blue-800/30">
+                   <div className="text-[10px] text-gray-400 italic">
+                      {loan.maker_name} {loan.model_variant_name}
+                   </div>
+                   <button className="flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                      Start Request
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
