@@ -935,17 +935,6 @@ export default function CreateLoan() {
     }
   }, [form.ourBranch, branches]);
 
-  // Auto-calculate Total Deduction from Financer (Processing Fee)
-  useEffect(() => {
-    const proposed = Number(form.purposeLoanAmount) || 0;
-    const net = Number(form.netDisbursementAmount) || 0;
-    if (proposed > 0 || net > 0) {
-      const deduction = proposed - net;
-      if (deduction !== Number(form.processingFee)) {
-        update('processingFee', String(deduction));
-      }
-    }
-  }, [form.purposeLoanAmount, form.netDisbursementAmount]);
 
 
   // Auto-fill Our Branch from logged-in user's branch
