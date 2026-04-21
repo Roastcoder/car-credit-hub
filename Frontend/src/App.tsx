@@ -106,8 +106,20 @@ function AppRoutes() {
       </Route>
 
       {/* Regular Routes */}
-      <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
-      <Route path="/loans/new" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
+      <Route path="/loans" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee']}>
+            <Loans />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/loans/new" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'employee']}>
+            <CreateLoan />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/loans/:id" element={<ProtectedRoute><LoanDetail /></ProtectedRoute>} />
       <Route path="/loans/:id/edit" element={<ProtectedRoute><CreateLoan /></ProtectedRoute>} />
       <Route path="/add-lead" element={<ProtectedRoute><AddLead /></ProtectedRoute>} />
