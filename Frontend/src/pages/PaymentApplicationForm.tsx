@@ -1104,8 +1104,7 @@ export default function PaymentApplicationForm() {
                   className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
                 >
                   {loading ? 'Submitting...' : 
-                    formData.status === 'sent_back' ? 'Save & Resubmit to RBM' :
-                    user?.role === 'employee' ? 'Send for RBM Approval' : 'Submit Now'}
+                    formData.status === 'sent_back' ? 'Save & Resubmit to RBM' : 'Submit Now'}
                 </button>
                 {user?.role === 'employee' && (
                   <p className="text-[10px] text-gray-500 font-medium italic">
