@@ -443,7 +443,7 @@ export default function LoanDetail() {
                 {isEditingPDD ? 'Close PDD' : 'Update PDD'}
               </button>
             )}
-            {!isEditingPDD && !isPddManager && (
+            {!isEditingPDD && (
               <>
                 <button
                   onClick={() => exportLoanPDF(loan)}
@@ -469,7 +469,7 @@ export default function LoanDetail() {
               </>
             )}
 
-            {permissions.canAddRemarks && !isPddManager && (
+            {permissions.canAddRemarks && (
               <button
                 onClick={() => setRemarksModal({ open: true, currentRemarks: loan.remark || '' })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-blue-500/10 hover:border-blue-500 transition-colors"
@@ -511,8 +511,8 @@ export default function LoanDetail() {
           </div>
         ) : (
           <>
-            {/* Mask Workflow Status for PDD Manager */}
-            {!isPddManager && (
+            {/* Workflow Status explicitly shown to all */}
+            {true && (
               <div className="mb-5">
                 {/* Desktop: Horizontal trail */}
                 <div className="hidden lg:block">
@@ -635,8 +635,8 @@ export default function LoanDetail() {
                     </div>
                   )}
 
-                {/* General Loan Details Grid - Masked for PDD Manager */}
-                {!isPddManager && (
+                {/* General Loan Details Grid */}
+                {true && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Applicant Information */}
                     <Section title="Applicant Information" icon={<User size={16} />}>
@@ -971,8 +971,8 @@ export default function LoanDetail() {
                   </div>
                 )}
 
-                {/* Verified External API Data Section - Masked for PDD Manager */}
-                {!isPddManager && vehicleCache && (Object.keys(vehicleCache).length > 0) && (
+                {/* Verified External API Data Section */}
+                {vehicleCache && (Object.keys(vehicleCache).length > 0) && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between px-1">
                       <div className="flex items-center gap-2">
@@ -1038,8 +1038,8 @@ export default function LoanDetail() {
                   </div>
                 )}
 
-                {/* Documents Section - Masked for PDD Manager */}
-                {!isPddManager && (
+                {/* Documents Section */}
+                {true && (
                   <Section title="Documents" icon={<FileText size={16} />}>
                     {documents.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1065,8 +1065,8 @@ export default function LoanDetail() {
                 )}
               </div>
 
-              {/* Right Sidebar - Masked for PDD Manager */}
-              {!isPddManager && (
+              {/* Right Sidebar */}
+              {true && (
                 <div className="w-full lg:w-96 space-y-6">
                   <div className="lg:sticky lg:top-4 h-fit space-y-6">
                     {/* Remarks Section */}
