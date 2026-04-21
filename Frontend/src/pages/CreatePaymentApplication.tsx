@@ -181,12 +181,15 @@ export default function CreatePaymentApplication() {
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Create Payment Application</h1>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span>Loan: <span className="font-medium text-accent">{loan.loan_number || loan.id}</span></span>
             <span>•</span>
             <span>Customer: <span className="font-medium">{loan.applicant_name}</span></span>
             <span>•</span>
-            <span>Amount: <span className="font-medium">{formatCurrency(Number(loan.loan_amount))}</span></span>
+            <div className="flex gap-x-4">
+              <span>Released: <span className="font-medium text-green-600">{formatCurrency(Number(loan.total_released_amount || 0))}</span></span>
+              <span>Remaining: <span className="font-medium text-blue-600">{formatCurrency(Number(loan.remaining_balance || 0))}</span></span>
+            </div>
           </div>
         </div>
 

@@ -615,6 +615,16 @@ export default function LoanDetail() {
                   <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
                   <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
                   <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
+                  {user?.role !== 'broker' && (
+                    <>
+                      <Field label="Total Released" value={formatCurrency(Number((loan as any).total_released_amount || 0))} />
+                      <Field 
+                        label="Remaining Balance" 
+                        value={formatCurrency(Number((loan as any).remaining_balance || 0))} 
+                        className={(loan as any).remaining_balance > 0 ? "text-blue-600 font-bold" : ""}
+                      />
+                    </>
+                  )}
                   {user?.role !== 'broker' ? (
                     <>
                       <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />

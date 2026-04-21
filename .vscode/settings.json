@@ -1,3 +1,32 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.meta/**",
+        "**/.metadata/**",
+        "**/Mobile/android/**",
+        "**/Frontend/node_modules/**",
+        "**/android/**",
+        "**/ios/**"
+    ],
+    "java.project.resourceFilters": [
+        "node_modules",
+        ".metadata",
+        "Mobile/android"
+    ],
+    "java.autobuild.enabled": false,
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": false,
+    "files.exclude": {
+        "**/.settings": true,
+        "**/.project": true,
+        "**/.classpath": true,
+        "**/node_modules/@capacitor/android": true,
+        "**/node_modules/@capacitor/app/android": true,
+        "**/node_modules/@capacitor/camera/android": true,
+        "**/node_modules/@capacitor/filesystem/android": true,
+        "**/node_modules/@capacitor/push-notifications/android": true,
+        "**/node_modules/@capacitor/splash-screen/android": true,
+        "**/node_modules/@capgo/capacitor-native-biometric/android": true
+    }
 }
