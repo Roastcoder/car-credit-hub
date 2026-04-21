@@ -144,7 +144,13 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/branches" element={<ProtectedRoute><BranchManagement /></ProtectedRoute>} />
-      <Route path="/commission" element={<ProtectedRoute><Commission /></ProtectedRoute>} />
+      <Route path="/commission" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin', 'manager', 'accountant']}>
+            <Commission />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
