@@ -666,10 +666,16 @@ export default function PaymentApplicationForm() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-bold text-base text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">{loan._displayName}</p>
-                        <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex flex-wrap items-center gap-3 mt-1.5">
                           <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded uppercase tracking-wider">{loan.loan_number}</span>
                           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1">
                             <User size={12} /> {loan.mobile}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-100">
+                            Paid: {formatCurrency(Number(loan.total_released_amount || 0))}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
+                            Bal: {formatCurrency(Number(loan.remaining_balance || 0))}
                           </span>
                         </div>
                       </div>
