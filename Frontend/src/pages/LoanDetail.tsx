@@ -619,7 +619,8 @@ export default function LoanDetail() {
 
             {/* General Loan Details Grid - Masked for PDD Manager */}
             {!isPddManager && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Applicant Information */}
                 <Section title="Applicant Information" icon={<User size={16} />}>
                   <div className="grid grid-cols-2 gap-4">
@@ -1109,7 +1110,8 @@ export default function LoanDetail() {
                     ))}
                   </div>
                 </Section>
-              )}
+              </>
+            )}
             </div>
           </div>
         </div>
