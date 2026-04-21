@@ -283,6 +283,8 @@ export default function PaymentApplicationForm() {
         disbursement_date: prev.disbursement_date || (d.disbursement_date ? new Date(d.disbursement_date).toISOString().split('T')[0] : ''),
         tenure_months: prev.tenure_months || d.tenure_months || d.tenure || 0,
         emi_amount: prev.emi_amount || Number(d.emi_amount || d.emi) || 0,
+        total_released_amount: d.total_released_amount || 0,
+        remaining_balance: d.remaining_balance || 0,
         emi_mode: prev.emi_mode || d.emi_mode || '',
         irr_percentage: prev.irr_percentage || Number(d.irr || d.interestRate) || 0,
         loan_type: prev.loan_type || (d.refinance ? 'Refinance' : 'New'),
@@ -315,7 +317,7 @@ export default function PaymentApplicationForm() {
       const apps = await paymentApplicationAPI.getAll();
       const loanApps = Array.isArray(apps) ? apps.filter((app: any) => String(app.loan_id) === String(lId) && app.status === 'completed') : [];
       const totalAlreadyReleased = loanApps.reduce((sum: number, app: any) => sum + (Number(app.payment_amount) || 0), 0);
-      
+
       setFormData(prev => ({
         ...prev,
         old_release_amount: totalAlreadyReleased,
@@ -760,7 +762,7 @@ export default function PaymentApplicationForm() {
             <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
-             <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Mehar Deduction (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
             <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
@@ -1103,8 +1105,9 @@ export default function PaymentApplicationForm() {
                   disabled={loading}
                   className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50"
                 >
-                  {loading ? 'Submitting...' : 
-                    formData.status === 'sent_back' ? 'Save & Resubmit to RBM' : 'Submit Now'}
+                  {loading ? 'Submitting...' :
+                    formData.status === 'sent_back' ? 'Save & Resubmit to RBM' :
+                      user?.role === 'employee' ? 'Send for RBM Approval' : 'Submit Now'}
                 </button>
                 {user?.role === 'employee' && (
                   <p className="text-[10px] text-gray-500 font-medium italic">
