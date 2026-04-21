@@ -619,8 +619,7 @@ export default function LoanDetail() {
 
             {/* General Loan Details Grid - Masked for PDD Manager */}
             {!isPddManager && (
-              <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Applicant Information */}
                 <Section title="Applicant Information" icon={<User size={16} />}>
                   <div className="grid grid-cols-2 gap-4">
@@ -1020,34 +1019,37 @@ export default function LoanDetail() {
               </div>
             )}
 
-            {/* Documents Section */}
-            <Section title="Documents" icon={<FileText size={16} />}>
-              {documents.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {documents.map((doc: any) => (
-                    <DocumentPreviewCard
-                      key={doc.id}
-                      doc={doc}
-                      onDelete={handleDeleteDoc}
-                      onReupload={handleReuploadDoc}
-                      canDelete={permissions.canDelete}
-                      isUploading={uploadingDocId === doc.id}
-                      isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
-                  <Camera size={32} className="text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
-                </div>
-              )}
-            </Section>
+            {/* Documents Section - Masked for PDD Manager */}
+            {!isPddManager && (
+              <Section title="Documents" icon={<FileText size={16} />}>
+                {documents.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {documents.map((doc: any) => (
+                      <DocumentPreviewCard
+                        key={doc.id}
+                        doc={doc}
+                        onDelete={handleDeleteDoc}
+                        onReupload={handleReuploadDoc}
+                        canDelete={permissions.canDelete}
+                        isUploading={uploadingDocId === doc.id}
+                        isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
+                    <Camera size={32} className="text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+                  </div>
+                )}
+              </Section>
+            )}
           </div>
 
-          {/* Right Sidebar */}
-          <div className="w-full lg:w-96 space-y-6">
-            <div className="lg:sticky lg:top-4 h-fit space-y-6">
+          {/* Right Sidebar - Masked for PDD Manager */}
+          {!isPddManager && (
+            <div className="w-full lg:w-96 space-y-6">
+              <div className="lg:sticky lg:top-4 h-fit space-y-6">
               {/* Remarks Section */}
               {(loan as any).remark && (
                 <Section title="Admin Remarks" icon={<MessageSquare size={16} />}>
@@ -1110,10 +1112,10 @@ export default function LoanDetail() {
                     ))}
                   </div>
                 </Section>
-              </>
-            )}
+              )}
             </div>
           </div>
+        )}
         </div>
       </div>
 
