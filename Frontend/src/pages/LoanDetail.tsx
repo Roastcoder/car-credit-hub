@@ -691,7 +691,7 @@ export default function LoanDetail() {
                     </Section>
 
                     {/* Co-Applicant & Guarantor Details */}
-                    {user?.role !== 'broker' && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
+                    {user?.role !== 'broker' && !isPddManager && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
                       <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
                           <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
@@ -725,7 +725,8 @@ export default function LoanDetail() {
                     </Section>
 
                     {/* Loan Information */}
-                    <Section title="Loan Information" icon={<IndianRupee size={16} />}>
+                    {!isPddManager && (
+                      <Section title="Loan Information" icon={<IndianRupee size={16} />}>
                       <div className="grid grid-cols-2 gap-4">
                         <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
                         <Field label="Application ID" value={applicationIdentifier} />
@@ -767,9 +768,11 @@ export default function LoanDetail() {
                         )}
                       </div>
                     </Section>
+                    )}
 
                     {/* Bank Information */}
-                    <Section title="Bank Information" icon={<Building2 size={16} />}>
+                    {!isPddManager && (
+                      <Section title="Bank Information" icon={<Building2 size={16} />}>
                       <div className="grid grid-cols-2 gap-4">
                         <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
                         {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
@@ -789,9 +792,11 @@ export default function LoanDetail() {
                         )}
                       </div>
                     </Section>
+                    )}
 
                     {/* Insurance Information */}
-                    <Section title="Insurance Details" icon={<FileText size={16} />}>
+                    {!isPddManager && (
+                      <Section title="Insurance Details" icon={<FileText size={16} />}>
                       <div className="grid grid-cols-2 gap-4">
                         {user?.role !== 'broker' && (
                           <>
@@ -810,6 +815,7 @@ export default function LoanDetail() {
                         )}
                       </div>
                     </Section>
+                    )}
 
                     {/* RTO details */}
                     {user?.role !== 'broker' && (
@@ -841,7 +847,7 @@ export default function LoanDetail() {
                     )}
 
                     {/* Disbursement details */}
-                    {user?.role !== 'broker' && (
+                    {user?.role !== 'broker' && !isPddManager && (
                       <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
                           <Field label="Net Disbursement" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
@@ -911,7 +917,7 @@ export default function LoanDetail() {
                     )}
 
                     {/* Broker Commission */}
-                    {user?.role !== 'broker' && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
+                    {user?.role !== 'broker' && !isPddManager && (commissionRecord || (computedCommission.amount > 0 && loan?.assigned_broker_id)) && (
                       <Section title="Broker Commission" icon={<IndianRupee size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
                           <Field
