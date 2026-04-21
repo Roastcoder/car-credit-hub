@@ -653,6 +653,7 @@ export default function PaymentDetail() {
                           name: payment.payment_proof_path.split('/').pop() || 'Payment Proof',
                           type: 'Payment Release Proof'
                         }}
+                        isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                       />
                     </div>
                   )}
@@ -760,6 +761,7 @@ export default function PaymentDetail() {
                       <DocumentPreviewCard
                         key={idx}
                         doc={doc}
+                        isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                       />
                     ))}
                   </div>
@@ -778,6 +780,7 @@ export default function PaymentDetail() {
                       <DocumentPreviewCard
                         key={idx}
                         doc={doc}
+                        isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                       />
                     ))}
                   </div>
@@ -799,6 +802,7 @@ export default function PaymentDetail() {
                       name: payment.payment_proof_path.split('/').pop() || 'Payment Proof',
                       type: 'Payment Release Proof'
                     }}
+                    isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 border border-dashed border-border rounded-xl bg-muted/20">

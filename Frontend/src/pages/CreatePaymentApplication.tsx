@@ -304,6 +304,7 @@ export default function CreatePaymentApplication() {
                         doc={doc}
                         selected={!!selectedDocuments.find(d => d.id === doc.id)}
                         showDelete={false}
+                        isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                       />
                     </div>
                   ))}

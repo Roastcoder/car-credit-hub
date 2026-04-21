@@ -484,6 +484,7 @@ export default function LeadDetail() {
                     key={doc.id} 
                     doc={doc}
                     showDelete={false}
+                    isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                   />
                 ))}
               </div>

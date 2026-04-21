@@ -926,6 +926,7 @@ export default function LoanDetail() {
                       onReupload={handleReuploadDoc}
                       canDelete={permissions.canDelete}
                       isUploading={uploadingDocId === doc.id}
+                      isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
                     />
                   ))}
                 </div>

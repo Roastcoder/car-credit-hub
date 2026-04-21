@@ -24,11 +24,11 @@ const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
   selected = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // URL Normalization Logic (Consolidated from both pages)
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const baseUrl = apiUrl.replace(/\/api$/, '');
-  
+
   let fileUrl = '';
   if (doc.url) {
     fileUrl = doc.url;
@@ -83,7 +83,7 @@ const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
         </div>
 
         {/* Preview Area / Thumbnail */}
-        <div 
+        <div
           onClick={toggleExpand}
           className={cn(
             "relative cursor-pointer rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
@@ -91,13 +91,13 @@ const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
           )}
         >
           {isImage ? (
-            <img 
-              src={fileUrl} 
-              alt={docName} 
+            <img
+              src={fileUrl}
+              alt={docName}
               className={cn(
                 "object-contain transition-all",
                 isExpanded ? "w-full h-auto p-2" : "w-full h-full object-cover"
-              )} 
+              )}
             />
           ) : (
             <div className="flex flex-col items-center gap-2 py-8">
