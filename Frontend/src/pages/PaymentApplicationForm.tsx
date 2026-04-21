@@ -9,6 +9,7 @@ import {
   AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+import { formatCurrency } from '@/lib/utils';
 
 interface PaymentApplication {
   id?: number;

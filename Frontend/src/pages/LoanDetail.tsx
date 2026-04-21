@@ -338,10 +338,10 @@ export default function LoanDetail() {
     </div>
   );
 
-  const Field = ({ label, value }: { label: string; value: string }) => (
+  const Field = ({ label, value, className }: { label: string; value: string; className?: string }) => (
     <div>
       <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-foreground">{value || '—'}</p>
+      <p className={cn("text-sm font-medium text-foreground", className)}>{value || '—'}</p>
     </div>
   );
 
