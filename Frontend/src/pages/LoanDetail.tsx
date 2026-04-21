@@ -630,7 +630,7 @@ export default function LoanDetail() {
                               </div>
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   )}

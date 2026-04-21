@@ -188,7 +188,7 @@ export default function PDDTracking() {
         ) : (
           loans.map((loan: any) => {
             const isManager = user?.role === 'pdd_manager';
-            const isPending = activeTab === 'pending' && isManager;
+            const isPendingApproval = isManager && loan.pdd_status === 'pending_approval';
             const isCompleted = activeTab === 'completed' && isManager;
 
             return (
@@ -196,7 +196,8 @@ export default function PDDTracking() {
                 key={loan.id} 
                 className={cn(
                   "stat-card relative overflow-hidden transition-all duration-500 hover:shadow-xl",
-                  isPending && "border-l-4 border-l-red-500 border-red-500/20 bg-red-500/[0.02]",
+                  isPendingApproval ? "border-l-4 border-y border-r border-red-500/80 bg-red-500/10 shadow-md shadow-red-500/10" : "",
+                  !isPendingApproval && isManager && activeTab === 'pending' && "border-l-4 border-l-amber-500/50 bg-amber-500/[0.02]",
                   isCompleted && "border-l-4 border-l-emerald-500 border-emerald-500/20 bg-emerald-500/[0.02]"
                 )}
               >
@@ -204,7 +205,7 @@ export default function PDDTracking() {
                 {isManager && (
                   <div className={cn(
                     "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-20",
-                    activeTab === 'pending' ? "bg-red-500" : "bg-emerald-500"
+                    activeTab === 'pending' ? (isPendingApproval ? "bg-red-600" : "bg-amber-400") : "bg-emerald-500"
                   )} />
                 )}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
