@@ -241,7 +241,7 @@ export default function LoanDetail() {
   const isPddManager = user?.role === 'pdd_manager';
   
   const baseCanEditPDD = ['employee', 'manager', 'pdd_manager', 'admin', 'super_admin'].includes(user?.role || '');
-  const isPDDSubmitted = (loan as any).pdd_status === 'pending_approval' || (loan as any).pdd_status === 'approved';
+  const isPDDSubmitted = (loan as any)?.pdd_status === 'pending_approval' || (loan as any)?.pdd_status === 'approved';
   // Don't allow submission again if already submitted and pending or approved
   const canEditPDD = baseCanEditPDD && !isPDDSubmitted;
 
