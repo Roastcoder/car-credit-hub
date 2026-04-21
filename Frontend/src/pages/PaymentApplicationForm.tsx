@@ -643,6 +643,16 @@ export default function PaymentApplicationForm() {
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             {id ? `Application ID: #${id}` : 'Search for a customer to auto-fill loan details'}
           </p>
+          {(formData.loan_id || loanId) && (
+            <div className="flex flex-wrap gap-x-6 gap-y-1 mt-3 text-sm">
+              <span className="flex items-center gap-1.5 text-gray-500 font-medium">
+                Already Paid: <span className="text-green-600 font-bold">{formatCurrency(Number(formData.total_released_amount || 0))}</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-gray-500 font-medium">
+                Balance Remaining: <span className="text-blue-600 font-bold">{formatCurrency(Number(formData.remaining_balance || 0))}</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Global Search Tool */}
