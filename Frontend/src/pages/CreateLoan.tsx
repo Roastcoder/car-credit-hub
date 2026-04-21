@@ -947,15 +947,6 @@ export default function CreateLoan() {
     }
   }, [form.purposeLoanAmount, form.netDisbursementAmount]);
 
-  // Auto-calculate Net Disbursement Amount (Repurposed from Net Received Amount)
-  useEffect(() => {
-    const seed = Number(form.netSeedAmount) || 0;
-    const deduction = Number(form.meharDeduction) || 0;
-    const netDisp = Math.max(0, seed - deduction);
-    if (netDisp !== Number(form.netDisbursementAmount)) {
-      update('netDisbursementAmount', String(netDisp));
-    }
-  }, [form.netSeedAmount, form.meharDeduction]);
 
   // Auto-fill Our Branch from logged-in user's branch
   useEffect(() => {
@@ -1876,9 +1867,9 @@ export default function CreateLoan() {
                       <label className={labelClass}>Net Disbursement Amount (₹)</label>
                       <input 
                         type="number" 
-                        className={`${inputClass} bg-muted font-bold text-accent`} 
+                        className={inputClass} 
                         value={form.netDisbursementAmount} 
-                        readOnly 
+                        onChange={e => update('netDisbursementAmount', e.target.value)}
                       />
                     </div>
                     <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>

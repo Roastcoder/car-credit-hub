@@ -74,6 +74,7 @@ interface PaymentApplication {
   disbursement_date?: string;
   loan_amount?: number;
   vouchers?: { amount?: number | string }[];
+  mehar_deduction?: number;
 }
 
 export default function PaymentApplicationForm() {
@@ -160,7 +161,8 @@ export default function PaymentApplicationForm() {
     challan_amount: 0,
     dm_approval: false,
     disbursement_date: '',
-    loan_amount: 0
+    loan_amount: 0,
+    mehar_deduction: 0
   });
 
   useEffect(() => {
@@ -305,7 +307,8 @@ export default function PaymentApplicationForm() {
         foreclosure_name: d.foreclosure_bank_name || '',
         hold_amount: prev.hold_amount || Number(d.hold_amount) || 0,
         challan_amount: prev.challan_amount || Number(d.rto_challan_amount) || 0,
-        payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || ''
+        payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || '',
+        mehar_deduction: prev.mehar_deduction || Number(d.mehar_deduction) || 0
       }));
 
       // Fetch existing payment applications for this loan to calculate old_release_amount
@@ -751,8 +754,9 @@ export default function PaymentApplicationForm() {
             <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
+             <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Mehar Deduction (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
             <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
             <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
