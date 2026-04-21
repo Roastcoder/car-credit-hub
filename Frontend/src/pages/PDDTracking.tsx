@@ -68,7 +68,7 @@ export default function PDDTracking() {
   const { data: loans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids, activeTab],
     queryFn: async () => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=disbursed`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=approved,disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
