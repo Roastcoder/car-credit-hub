@@ -43,10 +43,23 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     delay_days: loan.delay_days || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEmployee = user?.role === 'employee';
+  const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
+  const isRejected = loan.pdd_status === 'rejected';
+  const isBT = loan.scheme === 'BT' || loan.scheme === 'Purchase & BT';
+
+  const validateForm = () => {
+    if (isBT) {
+      if (!formData.fc_deposited_by) { toast.error('FC Deposited By is required for BT scheme'); return false; }
+      if (!formData.fc_deposit_date) { toast.error('FC Deposit Date is required for BT scheme'); return false; }
+      if (!formData.current_fc_status) { toast.error('Current FC Status is required for BT scheme'); return false; }
+      if (!formData.noc_status) { toast.error('NOC Status is required for BT scheme'); return false; }
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setIsSubmitting(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.id}/pdd`, {
@@ -76,17 +89,34 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6 bg-muted/30 p-4 sm:p-6 rounded-2xl border border-accent/20 animate-in fade-in duration-300">
       <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
         <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">
-          {isEmployee ? 'Submit PDD Details' : 'Edit PDD Details'}
+          {loan.applicant_name} - {loan.loan_number}
         </h3>
         <div className="flex gap-2">
             <button type="button" onClick={onCancel} className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground bg-background border border-border rounded-lg transition-colors">
                 Cancel
             </button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-xs font-bold hover:bg-accent/90 disabled:opacity-50 shadow-md">
-                {isSubmitting ? 'Saving...' : (isEmployee ? 'Submit Details' : 'Save Changes')}
-            </button>
+            {isEmployee && (
+              <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-xs font-bold hover:bg-accent/90 disabled:opacity-50 shadow-md">
+                  {isSubmitting ? 'Saving...' : (isRejected ? 'Re-Submit PDD' : 'Submit PDD')}
+              </button>
+            )}
         </div>
       </div>
+
+      {isRejected && loan.pdd_rejection_reason && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
+          <p className="text-xs font-bold text-red-800 uppercase mb-1">Rejection Reason:</p>
+          <p className="text-sm text-red-700 italic">"{loan.pdd_rejection_reason}"</p>
+        </div>
+      )}
+
+      {isBT && (
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6">
+          <p className="text-sm text-blue-800 font-medium">
+            🚩 <strong>Note:</strong> Since the scheme is <strong>{loan.scheme}</strong>, FC and NOC details are mandatory.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Payment & Finance */}
@@ -95,15 +125,15 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
           <div className="space-y-3">
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Received Date</label>
-              <input type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} className="form-input-pdd" />
+              <input type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Financier in M-Parivahan</label>
-              <input type="text" value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} className="form-input-pdd" placeholder="Enter financier name" />
+              <input type="text" value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} className="form-input-pdd" placeholder="Enter financier name" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Balance Status</label>
-              <input type="text" value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} className="form-input-pdd" placeholder="Enter status" />
+              <input type="text" value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} className="form-input-pdd" placeholder="Enter status" disabled={!isEmployee} />
             </div>
           </div>
         </div>
@@ -113,16 +143,16 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
           <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-500">FC Details</h4>
           <div className="space-y-3">
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposited By</label>
-              <input type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} className="form-input-pdd" />
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposited By {isBT && <span className="text-red-500">*</span>}</label>
+              <input type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposit Date</label>
-              <input type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} className="form-input-pdd" />
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">FC Deposit Date {isBT && <span className="text-red-500">*</span>}</label>
+              <input type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Current FC Status</label>
-                <input type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} className="form-input-pdd" />
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Current FC Status {isBT && <span className="text-red-500">*</span>}</label>
+                <input type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
           </div>
         </div>
@@ -133,15 +163,15 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
           <div className="space-y-3">
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">RTO Paper Details</label>
-              <input type="text" value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Work Description</label>
-              <input type="text" value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">RTO Agent Name</label>
-              <input type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
           </div>
         </div>
@@ -152,19 +182,19 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Pollution</label>
-              <input type="text" value={formData.pollution_status} onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.pollution_status} onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Insurance</label>
-              <input type="text" value={formData.insurance_status} onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.insurance_status} onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Vehicle Check</label>
-              <input type="text" value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Challan</label>
-              <input type="text" value={formData.challan_status} onChange={(e) => setFormData({...formData, challan_status: e.target.value})} className="form-input-pdd" />
+              <input type="text" value={formData.challan_status} onChange={(e) => setFormData({...formData, challan_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
           </div>
         </div>
@@ -174,25 +204,27 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
           <h4 className="text-[10px] font-black uppercase tracking-widest text-purple-500">NOC & Timeline</h4>
           <div className="space-y-3">
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">NOC Status</label>
-              <input type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} className="form-input-pdd" />
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">NOC Status {isBT && <span className="text-red-500">*</span>}</label>
+              <input type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Commitment Date</label>
-              <input type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} className="form-input-pdd" />
+              <input type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} className="form-input-pdd" disabled={!isEmployee} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="pt-6 border-t border-border flex justify-end gap-3">
-          <button type="button" onClick={onCancel} className="px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Cancel
-          </button>
-          <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-black hover:bg-accent/90 disabled:opacity-50 shadow-lg shadow-accent/20 transition-all">
-              {isSubmitting ? 'Saving Changes...' : (isEmployee ? 'Submit PDD for Approval' : 'Save Changes')}
-          </button>
-      </div>
+      {isEmployee && (
+        <div className="pt-6 border-t border-border flex justify-end gap-3">
+            <button type="button" onClick={onCancel} className="px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                Cancel
+            </button>
+            <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-black hover:bg-accent/90 disabled:opacity-50 shadow-lg shadow-accent/20 transition-all">
+                {isSubmitting ? 'Saving Changes...' : (isRejected ? 'Re-Submit PDD' : 'Submit PDD for Approval')}
+            </button>
+        </div>
+      )}
 
       <style>{`
         .form-input-pdd {

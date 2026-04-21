@@ -20,6 +20,13 @@ import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
 import DocumentPreviewCard from '@/components/DocumentPreviewCard';
+import PDDForm from '@/components/PDDForm';
+import { 
+  ClipboardCheck, 
+  CheckCircle, 
+  XSquare, 
+  MessageCircleOff 
+} from 'lucide-react';
 
 
 
@@ -228,6 +235,9 @@ export default function LoanDetail() {
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [showPddModal, setShowPddModal] = useState(false);
+  const [pddReasonModal, setPddReasonModal] = useState<{ open: boolean; action: 'approve' | 'reject' }>({ open: false, action: 'approve' });
+  const [pddReason, setPddReason] = useState('');
 
   const handleDelete = () => {
     deleteLoan.mutate();
@@ -490,6 +500,45 @@ export default function LoanDetail() {
                 <CreditCard size={14} className="mr-1" />
                 Create Account Request
               </button>
+            )}
+
+            {/* PDD Actions for Employee */}
+            {(user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin') && 
+             (loan.status === 'approved' || loan.status === 'disbursed') && (
+              <button
+                onClick={() => setShowPddModal(true)}
+                className={cn(
+                  "flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-white text-xs font-bold shadow-md transition-all active:scale-95",
+                  (loan as any).pdd_status === 'rejected' ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"
+                )}
+              >
+                <ClipboardCheck size={14} className="mr-1" />
+                {(loan as any).pdd_status === 'rejected' ? 'Re-Edit PDD' : ((loan as any).pdd_status ? 'View PDD' : 'Add PDD')}
+              </button>
+            )}
+
+            {/* PDD Actions for PDD Manager */}
+            {user?.role === 'pdd_manager' && (loan as any).pdd_status === 'pending_approval' && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowPddModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition-all active:scale-95"
+                >
+                  <Eye size={14} /> Review PDD
+                </button>
+                <button
+                  onClick={() => setPddReasonModal({ open: true, action: 'approve' })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 shadow-sm transition-all active:scale-95"
+                >
+                  <CheckCircle size={14} /> Approve
+                </button>
+                <button
+                  onClick={() => setPddReasonModal({ open: true, action: 'reject' })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 shadow-sm transition-all active:scale-95"
+                >
+                  <XSquare size={14} /> Reject
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1125,6 +1174,101 @@ export default function LoanDetail() {
           setRemarksModal({ open: false, currentRemarks: '' });
         }}
       />
+
+      {/* PDD Form Modal */}
+      {showPddModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-border p-1 animate-in zoom-in-95 duration-300 custom-scrollbar">
+            <PDDForm 
+              loan={loan} 
+              onCancel={() => setShowPddModal(false)}
+              onSuccess={() => {
+                setShowPddModal(false);
+                queryClient.invalidateQueries({ queryKey: ['loan', id] });
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* PDD Action Modal (Approve/Reject reason) */}
+      {pddReasonModal.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+            <h3 className={cn(
+              "text-lg font-bold mb-2 tracking-tight",
+              pddReasonModal.action === 'approve' ? "text-green-600" : "text-red-600"
+            )}>
+              {pddReasonModal.action === 'approve' ? 'Approve PDD' : 'Reject PDD'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+              {pddReasonModal.action === 'approve' 
+                ? 'Are you sure you want to approve these PDD details?' 
+                : 'Please provide a reason for rejecting these PDD details. This will be shared with the employee.'}
+            </p>
+            
+            {pddReasonModal.action === 'reject' && (
+              <textarea
+                value={pddReason}
+                onChange={(e) => setPddReason(e.target.value)}
+                placeholder="Enter rejection reason..."
+                className="w-full h-32 p-3 rounded-lg border border-border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all resize-none mb-4"
+              />
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setPddReasonModal({ open: false, action: 'approve' });
+                  setPddReason('');
+                }}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                disabled={updateStatus.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (pddReasonModal.action === 'reject' && !pddReason.trim()) {
+                    toast.error('Rejection reason is required');
+                    return;
+                  }
+                  
+                  try {
+                    const endpoint = pddReasonModal.action === 'approve' ? 'approve' : 'reject';
+                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/pdd/${endpoint}`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                      },
+                      body: pddReasonModal.action === 'reject' ? JSON.stringify({ reason: pddReason }) : undefined
+                    });
+
+                    if (res.ok) {
+                      toast.success(`PDD ${pddReasonModal.action}d successfully`);
+                      queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                      setPddReasonModal({ open: false, action: 'approve' });
+                      setPddReason('');
+                    } else {
+                      const err = await res.json().catch(() => ({}));
+                      toast.error(err.error || `Failed to ${pddReasonModal.action} PDD`);
+                    }
+                  } catch (error) {
+                    toast.error('An unexpected error occurred');
+                  }
+                }}
+                className={cn(
+                  "flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-all shadow-md active:scale-95",
+                  pddReasonModal.action === 'approve' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                )}
+              >
+                Confirm {pddReasonModal.action === 'approve' ? 'Approval' : 'Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

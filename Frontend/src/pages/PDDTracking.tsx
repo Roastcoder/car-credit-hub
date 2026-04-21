@@ -1,12 +1,13 @@
-import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck, Eye } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import PDDForm from '@/components/PDDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getRolePermissions } from '@/lib/permissions';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+import { cn } from '@/lib/utils';
 
 const getPddStatusStyles = (status?: string) => {
   if (status === 'approved') {
@@ -23,9 +24,23 @@ const getPddStatusStyles = (status?: string) => {
 
 export default function PDDTracking() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>((searchParams.get('tab') as 'pending' | 'completed') || 'pending');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'pending' || tab === 'completed') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'pending' | 'completed') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const loanSwitcherOptions = [
@@ -70,6 +85,14 @@ export default function PDDTracking() {
         ].filter((branchId) => Number(branchId) > 0)));
         return data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
       }
+      if (user?.role === 'pdd_manager') {
+        if (activeTab === 'pending') {
+          return data.filter((loan: any) => loan.pdd_status === 'pending_approval' || !loan.pdd_status || loan.pdd_status === 'pending');
+        } else {
+          return data.filter((loan: any) => loan.pdd_status === 'approved');
+        }
+      }
+
       return data;
     },
     enabled: !!user,
@@ -127,9 +150,38 @@ export default function PDDTracking() {
     <div className="pb-20 lg:pb-0">
       <MobilePageSwitcher options={loanSwitcherOptions} activeLabel="PDD Tracking" />
 
-      <div className="hidden lg:block mb-1">
-        <h1 className="text-2xl font-bold text-foreground">PDD Tracking</h1>
-        <p className="text-sm text-muted-foreground">Post Disbursement Documents & RTO Status</p>
+      <div className="flex flex-col sm:flex-row items-baseline justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground">PDD Tracking</h1>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-70">Post Disbursement Documents & RTO Workflow</p>
+        </div>
+
+        {user?.role === 'pdd_manager' && (
+          <div className="flex items-center p-1 bg-muted/50 backdrop-blur-md rounded-xl border border-border shadow-sm">
+            <button
+              onClick={() => handleTabChange('pending')}
+              className={cn(
+                "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
+                activeTab === 'pending' 
+                  ? "bg-red-500 text-white shadow-lg shadow-red-500/30 scale-105" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              PENDING FILES
+            </button>
+            <button
+              onClick={() => handleTabChange('completed')}
+              className={cn(
+                "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
+                activeTab === 'completed' 
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              COMPLETED FILES
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -139,8 +191,26 @@ export default function PDDTracking() {
           </div>
         ) : (
           loans.map((loan: any) => {
+            const isManager = user?.role === 'pdd_manager';
+            const isPending = activeTab === 'pending' && isManager;
+            const isCompleted = activeTab === 'completed' && isManager;
+
             return (
-              <div key={loan.id} className="stat-card">
+              <div 
+                key={loan.id} 
+                className={cn(
+                  "stat-card relative overflow-hidden transition-all duration-500 hover:shadow-xl",
+                  isPending && "border-l-4 border-l-red-500 border-red-500/20 bg-red-500/[0.02]",
+                  isCompleted && "border-l-4 border-l-emerald-500 border-emerald-500/20 bg-emerald-500/[0.02]"
+                )}
+              >
+                {/* Visual Status Highlight for PDD Manager */}
+                {isManager && (
+                  <div className={cn(
+                    "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-20",
+                    activeTab === 'pending' ? "bg-red-500" : "bg-emerald-500"
+                  )} />
+                )}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -169,6 +239,29 @@ export default function PDDTracking() {
                       </div>
                     )}
                   </div>
+
+                  {/* Quick Summary Section for Manager Dash */}
+                  {isManager && !expandedLoans.has(loan.id) && (
+                    <div className="flex-1 lg:flex-none lg:w-[400px] grid grid-cols-2 gap-x-6 gap-y-2 py-3 px-4 rounded-xl bg-background/40 border border-border/40">
+                       <div className="flex flex-col gap-0.5">
+                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">Payment Status</span>
+                         <span className="text-[11px] font-bold text-foreground truncate">{loan.balance_payment_status || '—'}</span>
+                       </div>
+                       <div className="flex flex-col gap-0.5">
+                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">RTO Papers</span>
+                         <span className="text-[11px] font-bold text-foreground truncate">{loan.rto_paper_details || '—'}</span>
+                       </div>
+                       <div className="flex flex-col gap-0.5">
+                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">NOC Status</span>
+                         <span className="text-[11px] font-bold text-foreground truncate">{loan.noc_status || '—'}</span>
+                       </div>
+                       <div className="flex flex-col gap-0.5">
+                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">FC Status</span>
+                         <span className="text-[11px] font-bold text-foreground truncate">{loan.current_fc_status || '—'}</span>
+                       </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
                     <button
                       onClick={() => navigate(`/loans/${loan.id}`)}

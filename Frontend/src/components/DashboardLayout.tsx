@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
-  Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List
+  Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List,
+  AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -88,6 +89,28 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
+  {
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard,
+    shortLabel: 'DB',
+    roles: ['pdd_manager']
+  },
+  {
+    title: 'PDD Management',
+    path: '/pdd-tracking',
+    icon: ClipboardCheck,
+    shortLabel: 'PM',
+    roles: ['pdd_manager'],
+    children: [
+      { title: 'PDD Pending', path: '/pdd-tracking?tab=pending', icon: AlertTriangle, shortLabel: 'PP' },
+      { title: 'PDD Completed', path: '/pdd-tracking?tab=completed', icon: CheckCircle2, shortLabel: 'PC' },
+    ],
+  },
+  { title: 'Reports', path: '/reports', icon: BarChart3, shortLabel: 'RP', roles: ['pdd_manager'] },
+];
+
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
   { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV', roles: ['accountant', 'admin', 'super_admin'] },
   { title: 'Payment Requests', path: '/payments', icon: CreditCard, shortLabel: 'PR', roles: ['accountant', 'admin', 'super_admin'] },
@@ -134,15 +157,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const getNavItems = () => {
     if (user.role === 'accountant') return ACCOUNT_NAV_ITEMS;
+    if (user.role === 'pdd_manager') return PDD_MANAGER_NAV_ITEMS;
     return NAV_ITEMS;
   };
 
   const filteredNav = getNavItems().filter(item => !user.role || item.roles.includes(user.role));
 
   const isPathActive = (itemPath: string) => {
-    if (location.pathname === itemPath) return true;
+    // Exact match
+    if (location.pathname + location.search === itemPath) return true;
+    if (location.pathname === itemPath && !itemPath.includes('?')) return true;
+    
     if (itemPath === '/account') return location.pathname === '/account';
     if (itemPath === '/loans' && location.pathname === '/loans/new') return false;
+    
+    // Handle parameterized paths (like /pdd-tracking?tab=pending)
+    if (itemPath.includes('?')) {
+      const [basePath, search] = itemPath.split('?');
+      return location.pathname === basePath && location.search === `?${search}`;
+    }
+
     return location.pathname.startsWith(`${itemPath}/`);
   };
 
