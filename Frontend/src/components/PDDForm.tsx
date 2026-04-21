@@ -122,7 +122,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
         body: JSON.stringify(formData)
       });
       if (response.ok) {
-        toast.success('PDD details updated successfully');
+        toast.success('🎉 PDD Application Submitted Successfully for Manager Review!');
         onSuccess();
       } else {
         const error = await response.json().catch(() => ({}));
