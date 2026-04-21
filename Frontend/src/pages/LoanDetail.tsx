@@ -237,6 +237,7 @@ export default function LoanDetail() {
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [pddReason, setPddReason] = useState('');
+  const [showInlinePDD, setShowInlinePDD] = useState(false);
 
   const isPddManager = user?.role === 'pdd_manager';
   const canEditPDD = ['employee', 'manager', 'pdd_manager', 'admin', 'super_admin'].includes(user?.role || '');
@@ -560,14 +561,26 @@ export default function LoanDetail() {
                           <PDDStatusBadge status={(loan as any).pdd_status} />
                         </div>
 
-                        <PDDForm
-                          loan={loan}
-                          onCancel={() => isPddManager ? null : navigate('/loans')}
-                          onSuccess={() => {
-                            queryClient.invalidateQueries({ queryKey: ['loan', id] });
-                            toast.success('PDD updated');
-                          }}
-                        />
+                        {!showInlinePDD ? (
+                          <div className="flex justify-center mt-2 mb-4">
+                            <button
+                              onClick={() => setShowInlinePDD(true)}
+                              className="px-6 py-2.5 bg-blue-600/10 text-blue-600 border border-blue-600/20 hover:bg-blue-600 hover:text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
+                            >
+                              <Edit2 size={16} /> Update PDD Details
+                            </button>
+                          </div>
+                        ) : (
+                          <PDDForm
+                            loan={loan}
+                            onCancel={() => setShowInlinePDD(false)}
+                            onSuccess={() => {
+                              queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                              toast.success('PDD updated');
+                              setShowInlinePDD(false);
+                            }}
+                          />
+                        )}
 
                         {/* Audit Panel for PDD Manager */}
                         {isPddManager && (loan as any).pdd_status === 'pending_approval' && (
