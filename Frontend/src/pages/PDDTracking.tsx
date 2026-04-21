@@ -101,8 +101,8 @@ export default function PDDTracking() {
   const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'pdd_manager';
 
   const approvePdd = useMutation({
-    mutationFn: async (loanId: number) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/approve`, {
+    mutationFn: async (loanIdOrNumber: string | number) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanIdOrNumber}/pdd/approve`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
@@ -120,8 +120,8 @@ export default function PDDTracking() {
   });
 
   const rejectPdd = useMutation({
-    mutationFn: async ({ loanId, reason }: { loanId: number; reason: string }) => {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/pdd/reject`, {
+    mutationFn: async ({ loanIdOrNumber, reason }: { loanIdOrNumber: string | number; reason: string }) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanIdOrNumber}/pdd/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +264,7 @@ export default function PDDTracking() {
 
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
                     <button
-                      onClick={() => navigate(`/loans/${loan.id}`)}
+                      onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}
                       className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
                     >
                       <FileText size={14} />
@@ -289,7 +289,7 @@ export default function PDDTracking() {
                     {canApprovePdd && loan.pdd_status === 'pending_approval' && (
                       <>
                         <button
-                          onClick={() => approvePdd.mutate(loan.id)}
+                          onClick={() => approvePdd.mutate(loan.loan_number || loan.id)}
                           disabled={approvePdd.isPending || rejectPdd.isPending}
                           className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-green-500/40 bg-green-500/10 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors shadow-sm disabled:opacity-50"
                         >
@@ -300,7 +300,7 @@ export default function PDDTracking() {
                           onClick={() => {
                             const reason = window.prompt('Enter rejection reason for this PDD');
                             if (!reason) return;
-                            rejectPdd.mutate({ loanId: loan.id, reason });
+                            rejectPdd.mutate({ loanIdOrNumber: loan.loan_number || loan.id, reason });
                           }}
                           disabled={approvePdd.isPending || rejectPdd.isPending}
                           className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-red-500/40 bg-red-500/10 text-xs font-medium text-red-600 hover:bg-red-500/20 transition-colors shadow-sm disabled:opacity-50"

@@ -62,7 +62,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.id}/pdd`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/pdd`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
