@@ -21,7 +21,7 @@ interface PaymentApplication {
   loan_amount?: number;
   payment_amount: number;
   payment_purpose: string;
-  status: 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
+  status: 'draft' | 'submitted' | 'manager_approved' | 'manager_rejected' | 'sent_back' | 'account_processing' | 'voucher_created' | 'payment_released' | 'completed';
   created_at: string;
   created_by: number;
   created_by_name?: string;
