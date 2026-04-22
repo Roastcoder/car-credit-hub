@@ -237,11 +237,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} 
               disabled={!isEmployee}
             />
-            <InputField 
-              label="Finance Co. Update (PDD)" icon={<CreditCard size={12}/>}
-              type="text" value={formData.pdd_update_finance_company} onChange={(e) => setFormData({...formData, pdd_update_finance_company: e.target.value})} 
-              disabled={!isEmployee}
-            />
+
           </FormSection>
 
           <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
@@ -271,7 +267,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               disabled={!isEmployee}
             />
             <InputField 
-              label="Prev Financier Status" icon={<Landmark size={12}/>}
+              label="Prev Financier Name" icon={<Landmark size={12}/>}
               type="text" value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
               disabled={!isEmployee}
             />

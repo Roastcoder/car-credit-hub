@@ -960,7 +960,7 @@ export default function LoanDetail() {
                           <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
                           <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
                           <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
-                          <Field label="Prev Financier Status" value={(loan as any).prev_financier_account_status || '—'} />
+                          <Field label="Prev Financier Name" value={(loan as any).prev_financier_account_status || '—'} />
                           <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
                           <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
                           <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
@@ -979,7 +979,6 @@ export default function LoanDetail() {
                             <Field label="Submitted At" value={(loan as any).pdd_submitted_at ? new Date((loan as any).pdd_submitted_at).toLocaleString() : '—'} />
                             <Field label="PDD Manager" value={(loan as any).pdd_approved_by_name || '—'} />
                             <Field label="Approved At" value={(loan as any).pdd_approved_at ? new Date((loan as any).pdd_approved_at).toLocaleString() : '—'} />
-                            <Field label="Finance Co. Update" value={(loan as any).pdd_update_finance_company || '—'} />
                             <div className="col-span-2">
                               <Field label="Rejection Reason" value={(loan as any).pdd_rejection_reason || '—'} />
                             </div>

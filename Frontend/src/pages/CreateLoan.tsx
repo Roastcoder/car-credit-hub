@@ -1770,11 +1770,11 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>FC Receipt</label><input className={inputClass} value={form.fcReceipt} onChange={e => update('fcReceipt', e.target.value)} /></div>
                     <div><label className={labelClass}>Zero Statement</label><input className={inputClass} value={form.zeroStatement} onChange={e => update('zeroStatement', e.target.value)} /></div>
                     <div><label className={labelClass}>Current FC Status</label><input className={inputClass} value={form.currentFcStatus} onChange={e => update('currentFcStatus', e.target.value)} /></div>
-                    <div><label className={labelClass}>Prev Financier Status</label><input className={inputClass} value={form.prevFinancierAccountStatus} onChange={e => update('prevFinancierAccountStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>Prev Financier Name</label><input className={inputClass} value={form.prevFinancierAccountStatus} onChange={e => update('prevFinancierAccountStatus', e.target.value)} /></div>
                     <div><label className={labelClass}>NOC Status</label><input className={inputClass} value={form.nocStatus} onChange={e => update('nocStatus', e.target.value)} /></div>
                     <div><label className={labelClass}>NOC Checked By</label><input className={inputClass} value={form.nocCheckedBy} onChange={e => update('nocCheckedBy', e.target.value)} /></div>
                     <div><label className={labelClass}>DTO NOC</label><input className={inputClass} value={form.previousDtoNoc} onChange={e => update('previousDtoNoc', e.target.value)} /></div>
-                    <div><label className={labelClass}>Finance Co. Update (PDD)</label><input className={inputClass} value={form.pddUpdateFinanceCompany} onChange={e => update('pddUpdateFinanceCompany', e.target.value)} /></div>
+
                   </div>
                 </div>
 
