@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
-  Plus, Search, Filter, Eye, CheckCircle, X,
+  Plus, Search, Filter, Eye, CheckCircle, X, Edit,
   FileText, CreditCard, Download, FileCheck, Receipt, List, User,
   ChevronRight, ArrowRight
 } from 'lucide-react';
@@ -364,6 +364,18 @@ export default function PaymentApplicationsList() {
                     View
                   </Button>
                   
+                  {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 min-w-[80px]"
+                      onClick={() => navigate(`/payments/edit/${app.id}`)}
+                    >
+                      <Edit size={14} />
+                      Edit
+                    </Button>
+                  )}
+                  
                   {(user?.role === 'rbm' || user?.role === 'admin' || user?.role === 'super_admin') && app.status === 'submitted' && (
                     <>
                       <Button 
@@ -509,6 +521,12 @@ export default function PaymentApplicationsList() {
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
                             <Eye size={14} />
                           </Button>
+                          
+                          {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600" onClick={() => navigate(`/payments/edit/${app.id}`)}>
+                              <Edit size={14} />
+                            </Button>
+                          )}
                           
                           {(user?.role === 'rbm' || user?.role === 'admin' || user?.role === 'super_admin') && app.status === 'submitted' && (
                             <div className="flex items-center gap-0.5">

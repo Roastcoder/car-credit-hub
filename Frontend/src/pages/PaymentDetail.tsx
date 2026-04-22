@@ -1090,6 +1090,17 @@ export default function PaymentDetail() {
                 </div>
               )}
 
+              {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && 
+                (payment.status === 'draft' || payment.status === 'sent_back') && (
+                <div className="bg-card border border-amber-200 dark:border-amber-900 rounded-lg p-4 space-y-2">
+                  <p className="text-sm font-semibold text-foreground mb-1">Application Actions</p>
+                  <button onClick={() => navigate(`/payments/edit/${id}`)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-semibold transition-colors">
+                    <Edit size={16} /> Edit & Submit
+                  </button>
+                </div>
+              )}
+
               {canProcess && (
                 <button onClick={() => navigate(`/account/vouchers/create/${id}`)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold transition-colors">
