@@ -206,6 +206,16 @@ export default function CreateLoan() {
       // Others
       loginDate: '', approvalDate: '', disbursementDate: '', sourcingPersonName: '', remark: '', fileStatus: 'submitted',
       totalChallans: 0, challanAmount: 0,
+      // Foreclosure & NOC Details
+      fcDepositedBy: '', fcDepositDate: '', fcReceipt: '', zeroStatement: '',
+      currentFcStatus: '', prevFinancierAccountStatus: '', nocStatus: '',
+      nocCheckedBy: '', previousDtoNoc: '',
+      // Additional RTO Details
+      rtoAgentMobile: '', rtoMail: '', rtoDocsLocation: '', rtoWorkStatus: '',
+      rtoPaperDetails: '', pendingRtoDocuments: '',
+      pollutionStatus: '', vehicleCheckStatus: '', insuranceEndorsement: '',
+      balancePaymentStatus: '', netReceivedAmount: '',
+      pddUpdateFinanceCompany: '',
       // Documents
       aadharFront: null, aadharBack: null, panCard: null,
       bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
@@ -706,6 +716,27 @@ export default function CreateLoan() {
         fileStatus: existingLoan.status || 'submitted',
         fcAmount: String(existingLoan.fc_amount || ''),
         fcDate: formatDate(existingLoan.fc_date),
+        fcDepositedBy: existingLoan.fc_deposited_by || '',
+        fcDepositDate: formatDate(existingLoan.fc_deposit_date),
+        fcReceipt: existingLoan.fc_receipt || '',
+        zeroStatement: existingLoan.zero_statement || '',
+        currentFcStatus: existingLoan.current_fc_status || '',
+        prevFinancierAccountStatus: existingLoan.prev_financier_account_status || '',
+        nocStatus: existingLoan.noc_status || '',
+        nocCheckedBy: existingLoan.noc_checked_by || '',
+        previousDtoNoc: existingLoan.previous_dto_noc || '',
+        rtoAgentMobile: existingLoan.rto_agent_mobile || '',
+        rtoMail: existingLoan.rto_mail || '',
+        rtoDocsLocation: existingLoan.rto_docs_location || '',
+        rtoWorkStatus: existingLoan.rto_work_status || '',
+        rtoPaperDetails: existingLoan.rto_paper_details || '',
+        pendingRtoDocuments: existingLoan.pending_rto_documents || '',
+        pollutionStatus: existingLoan.pollution_status || '',
+        vehicleCheckStatus: existingLoan.vehicle_check_status || '',
+        insuranceEndorsement: existingLoan.insurance_endorsement || '',
+        balancePaymentStatus: existingLoan.balance_payment_status || '',
+        netReceivedAmount: String(existingLoan.net_received_amount || ''),
+        pddUpdateFinanceCompany: existingLoan.pdd_update_finance_company || '',
         aadharFront: null, aadharBack: null, panCard: null,
         bankStatement: null, cheque: null, rcFront: null, rcBack: null, incomeProof: null,
         customerPhoto: null, insurance: null, customerLedger: null,
@@ -1198,6 +1229,27 @@ export default function CreateLoan() {
           manager_name: form.branchManagerName || null,
           insurance_status: form.insuranceStatus || null,
           insurance_start_date: form.insuranceStartDate || null,
+          fc_deposited_by: form.fcDepositedBy || null,
+          fc_deposit_date: form.fcDepositDate || null,
+          fc_receipt: form.fcReceipt || null,
+          zero_statement: form.zeroStatement || null,
+          current_fc_status: form.currentFcStatus || null,
+          prev_financier_account_status: form.prevFinancierAccountStatus || null,
+          noc_status: form.nocStatus || null,
+          noc_checked_by: form.nocCheckedBy || null,
+          previous_dto_noc: form.previousDtoNoc || null,
+          rto_agent_mobile: form.rtoAgentMobile || null,
+          rto_mail: form.rtoMail || null,
+          rto_docs_location: form.rtoDocsLocation || null,
+          rto_work_status: form.rtoWorkStatus || null,
+          rto_paper_details: form.rtoPaperDetails || null,
+          pending_rto_documents: form.pendingRtoDocuments || null,
+          pollution_status: form.pollutionStatus || null,
+          vehicle_check_status: form.vehicleCheckStatus || null,
+          insurance_endorsement: form.insuranceEndorsement || null,
+          balance_payment_status: form.balancePaymentStatus || null,
+          net_received_amount: Number(form.netReceivedAmount) || null,
+          pdd_update_finance_company: form.pddUpdateFinanceCompany || null,
         }),
       });
       if (!res.ok) throw new Error('Failed to create loan');
@@ -1663,6 +1715,7 @@ export default function CreateLoan() {
                         <span className="text-xs font-medium text-foreground">Send Expiry Reminder</span>
                       </label>
                     </div>
+                    <div><label className={labelClass}>Insurance Endorsement</label><input className={inputClass} value={form.insuranceEndorsement} onChange={e => update('insuranceEndorsement', e.target.value)} placeholder="e.g. Done" /></div>
                   </div>
                 </div>
 
@@ -1672,15 +1725,22 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
                     <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
                     <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
-                    <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
                     <div className="md:col-span-2"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
+                    <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
+
+                    {/* Additional RTO Fields */}
+                    <div><label className={labelClass}>Agent Mobile (RTO)</label><input className={inputClass} value={form.rtoAgentMobile} onChange={e => update('rtoAgentMobile', e.target.value)} /></div>
+                    <div><label className={labelClass}>Agent Email (RTO)</label><input className={inputClass} value={form.rtoMail} onChange={e => update('rtoMail', e.target.value)} /></div>
+                    <div><label className={labelClass}>Docs Location</label><input className={inputClass} value={form.rtoDocsLocation} onChange={e => update('rtoDocsLocation', e.target.value)} /></div>
+                    <div><label className={labelClass}>Work Status</label><input className={inputClass} value={form.rtoWorkStatus} onChange={e => update('rtoWorkStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>Paper Details</label><input className={inputClass} value={form.rtoPaperDetails} onChange={e => update('rtoPaperDetails', e.target.value)} /></div>
+                    <div><label className={labelClass}>Pending Documents</label><input className={inputClass} value={form.pendingRtoDocuments} onChange={e => update('pendingRtoDocuments', e.target.value)} /></div>
+                    <div><label className={labelClass}>Pollution Status</label><input className={inputClass} value={form.pollutionStatus} onChange={e => update('pollutionStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>Vehicle Check Status</label><input className={inputClass} value={form.vehicleCheckStatus} onChange={e => update('vehicleCheckStatus', e.target.value)} /></div>
 
                     {/* Dropdowns/Special fields moved here */}
                     <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
-
-
-
                   </div>
                 </div>
               </div>
@@ -1699,6 +1759,23 @@ export default function CreateLoan() {
                   <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
                   <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
                   <div><label className={labelClass}>FC Date (Foreclosure Date)</label><input type="date" className={inputClass} value={form.fcDate} onChange={e => update('fcDate', e.target.value)} /></div>
+                </div>
+
+                {/* Foreclosure & NOC Details Sub-section */}
+                <div className="pt-4 border-t border-border/50">
+                  <h3 className="text-sm font-bold text-foreground/80 uppercase tracking-wider mb-4">Foreclosure & NOC Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className={labelClass}>FC Deposited By</label><input className={inputClass} value={form.fcDepositedBy} onChange={e => update('fcDepositedBy', e.target.value)} /></div>
+                    <div><label className={labelClass}>FC Deposit Date</label><input type="date" className={inputClass} value={form.fcDepositDate} onChange={e => update('fcDepositDate', e.target.value)} /></div>
+                    <div><label className={labelClass}>FC Receipt</label><input className={inputClass} value={form.fcReceipt} onChange={e => update('fcReceipt', e.target.value)} /></div>
+                    <div><label className={labelClass}>Zero Statement</label><input className={inputClass} value={form.zeroStatement} onChange={e => update('zeroStatement', e.target.value)} /></div>
+                    <div><label className={labelClass}>Current FC Status</label><input className={inputClass} value={form.currentFcStatus} onChange={e => update('currentFcStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>Prev Financier Status</label><input className={inputClass} value={form.prevFinancierAccountStatus} onChange={e => update('prevFinancierAccountStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>NOC Status</label><input className={inputClass} value={form.nocStatus} onChange={e => update('nocStatus', e.target.value)} /></div>
+                    <div><label className={labelClass}>NOC Checked By</label><input className={inputClass} value={form.nocCheckedBy} onChange={e => update('nocCheckedBy', e.target.value)} /></div>
+                    <div><label className={labelClass}>DTO NOC</label><input className={inputClass} value={form.previousDtoNoc} onChange={e => update('previousDtoNoc', e.target.value)} /></div>
+                    <div><label className={labelClass}>Finance Co. Update (PDD)</label><input className={inputClass} value={form.pddUpdateFinanceCompany} onChange={e => update('pddUpdateFinanceCompany', e.target.value)} /></div>
+                  </div>
                 </div>
 
                 {/* EMI Details */}

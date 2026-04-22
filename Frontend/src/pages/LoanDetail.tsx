@@ -834,6 +834,10 @@ export default function LoanDetail() {
                           <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
                           <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
                           <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
+                          <Field label="Paper Details" value={(loan as any).rto_paper_details || '—'} />
+                          <Field label="Pending Docs" value={(loan as any).pending_rto_documents || '—'} />
+                          <Field label="Pollution Status" value={(loan as any).pollution_status || '—'} />
+                          <Field label="Vehicle Check" value={(loan as any).vehicle_check_status || '—'} />
                           <div className="col-span-2">
                             <Field label="Work Description" value={(loan as any).rto_work_description || '—'} />
                           </div>
@@ -952,7 +956,7 @@ export default function LoanDetail() {
                       <Section title="FC & NOC Details" icon={<FileText size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
                           <Field label="FC Deposited By" value={(loan as any).fc_deposited_by || '—'} />
-                          <Field label="FC Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
+                          <Field label="FC Deposit Date" value={formatDisplayDate((loan as any).fc_deposit_date)} />
                           <Field label="FC Receipt" value={(loan as any).fc_receipt || '—'} />
                           <Field label="Zero Statement" value={(loan as any).zero_statement || '—'} />
                           <Field label="FC Status" value={(loan as any).current_fc_status || '—'} />
@@ -960,6 +964,7 @@ export default function LoanDetail() {
                           <Field label="NOC Status" value={(loan as any).noc_status || '—'} />
                           <Field label="NOC Checked By" value={(loan as any).noc_checked_by || '—'} />
                           <Field label="DTO NOC" value={(loan as any).previous_dto_noc || '—'} />
+                          <Field label="Net Received" value={formatCurrency(Number((loan as any).net_received_amount || 0))} />
                         </div>
                       </Section>
                     )}
