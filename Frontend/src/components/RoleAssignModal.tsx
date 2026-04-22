@@ -139,9 +139,9 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
               ))}
             </select>
           </div>
-          {role === 'manager' && (
+          {role === 'rbm' && (
             <div>
-              <label className="block text-sm font-medium mb-1.5">Manager Branch Access</label>
+              <label className="block text-sm font-medium mb-1.5">RBM Branch Access</label>
               <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-border p-3">
                 {branches.map((branch: any) => {
                   const branchNumber = Number(branch.id);
@@ -167,7 +167,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
                 })}
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Use this section for user branch allocation. Managers can be assigned one or more branches here.
+                Use this section for RBM branch allocation. Regional Branch Managers can be assigned one or more branches here.
               </p>
             </div>
           )}
