@@ -691,7 +691,7 @@ export default function PaymentDetail() {
                   <Field label="EMI Mode" value={payment.emi_mode || '—'} />
                   <Field label="IRR (%)" value={`${payment.irr_percentage || 0}%`} />
                   <Field label="Loan Type" value={payment.loan_type} />
-                  <Field label="Mehar Deduction" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
+                  <Field label="Mehar PF" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
                   <div className="col-span-2">
                     <Field label="Purpose/Description" value={payment.payment_purpose || payment.description} />
                   </div>

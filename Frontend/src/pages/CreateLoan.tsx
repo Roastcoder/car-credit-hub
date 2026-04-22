@@ -1929,7 +1929,7 @@ export default function CreateLoan() {
                     <IndianRupee size={14} /> Deduction Details
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className={labelClass}>Mehar Deduction (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+                    <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
                   </div>
                 </div>
 
@@ -1943,7 +1943,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
                     <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
                     <div>
-                      <label className={labelClass}>Net Amount After Mehar PF (₹)</label>
+                      <label className={labelClass}>Net Amount after Mehar PF (₹)</label>
                       <input 
                         type="number" 
                         className={inputClass} 

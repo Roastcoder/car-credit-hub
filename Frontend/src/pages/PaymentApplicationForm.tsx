@@ -779,7 +779,7 @@ export default function PaymentApplicationForm() {
             <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Mehar Deduction (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Mehar PF (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
             <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
             <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
