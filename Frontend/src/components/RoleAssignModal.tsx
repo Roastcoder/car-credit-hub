@@ -79,7 +79,7 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         managed_branch_ids: managedBranchIds,
         is_branch_manager: isBranchManager,
         commission_rate: role === 'broker' ? commissionRate : null,
-        channel_code: role === 'broker' ? channelCode : null,
+        channel_code: channelCode || null,
         assigned_user_id: role === 'broker' ? (assignedUserId || null) : null,
         secondary_user_id: role === 'broker' ? (secondaryUserId || null) : null
       };
