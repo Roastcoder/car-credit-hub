@@ -563,7 +563,7 @@ export default function PaymentApplicationForm() {
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
       // Check Aadhaar verification for submitted status
-      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified') {
+      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified' && formData.status !== 'sent_back') {
         toast.error('Please complete Aadhaar verification before submitting');
         return;
       }
@@ -580,8 +580,10 @@ export default function PaymentApplicationForm() {
         today_release_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.today_release_amount,
         payment_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.payment_amount,
         status,
-        aadhaar_number: aadhaarNumber,
-        aadhaar_verified: aadhaarVerificationStatus === 'verified'
+        ...(formData.status !== 'sent_back' ? {
+          aadhaar_number: aadhaarNumber,
+          aadhaar_verified: aadhaarVerificationStatus === 'verified'
+        } : {})
       };
 
       if (id) {
@@ -990,7 +992,7 @@ export default function PaymentApplicationForm() {
         </section>
 
         {/* 11. Aadhaar Verification */}
-        {!isReadOnly && (
+        {!isReadOnly && formData.status !== 'sent_back' && (
           <section className="glass-card p-6 rounded-xl border border-purple-200 dark:border-purple-800/50 shadow-sm bg-purple-50/30 dark:bg-purple-900/5">
             <div className="flex items-center gap-3 mb-6 border-b border-purple-100 dark:border-purple-800 pb-4">
               <CheckCircle className="h-5 w-5 text-purple-600" />
