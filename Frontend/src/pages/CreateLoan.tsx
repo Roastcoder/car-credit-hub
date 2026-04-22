@@ -979,46 +979,32 @@ export default function CreateLoan() {
     }
   }, [user, branches, isEditMode]);
 
-  const getPeriods = (t: number, mode: string) => {
-    if (mode === 'Quarterly') return t / 3;
-    if (mode === 'Half Yearly') return t / 6;
-    if (mode === 'Yearly') return t / 12;
-    return t;
-  };
-
   const emi = useMemo(() => {
-    const p = Number(form.loanAmount);
+    const p = Number(form.sanctionAmount) || Number(form.loanAmount);
     const r = Number(form.irr);
     const t = calculatedTenure;
     const mode = form.emiMode || 'Monthly';
     if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t, mode);
     return 0;
-  }, [form.loanAmount, form.irr, calculatedTenure, form.emiMode]);
-
-  const sanctionEmi = useMemo(() => {
-    const p = Number(form.sanctionAmount);
-    const r = Number(form.irr);
-    const t = calculatedTenure;
-    const mode = form.emiMode || 'Monthly';
-    if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t, mode);
-    return 0;
-  }, [form.sanctionAmount, form.irr, calculatedTenure, form.emiMode]);
+  }, [form.loanAmount, form.sanctionAmount, form.irr, calculatedTenure, form.emiMode]);
 
   const totalPayable = useMemo(() => {
-    return emi * getPeriods(calculatedTenure, form.emiMode || 'Monthly');
-  }, [emi, calculatedTenure, form.emiMode]);
+    const t = calculatedTenure;
+    const mode = form.emiMode || 'Monthly';
+    let periods = t;
+    if (mode === 'Quarterly') periods = t / 3;
+    else if (mode === 'Half Yearly') periods = t / 6;
+    else if (mode === 'Yearly') periods = t / 12;
 
-  const sanctionTotalPayable = useMemo(() => {
-    return sanctionEmi * getPeriods(calculatedTenure, form.emiMode || 'Monthly');
-  }, [sanctionEmi, calculatedTenure, form.emiMode]);
+    return emi * periods;
+  }, [emi, calculatedTenure, form.emiMode]);
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
     return calculateAdvancedCommission(financierName, form.vertical, Number(form.loanAmount) || 0, calculatedTenure);
   }, [form.assignedBankId, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
-  const totalInterest = Math.max(0, totalPayable - Number(form.loanAmount));
-  const sanctionTotalInterest = Math.max(0, sanctionTotalPayable - Number(form.sanctionAmount));
+  const totalInterest = totalPayable - (Number(form.sanctionAmount) || Number(form.loanAmount));
   const effectiveVertical = normalizeLoanNumberVertical(form.financierTeamVertical || form.vertical) || '';
 
   const uploadDocuments = async (loanId: string) => {
@@ -1822,41 +1808,15 @@ export default function CreateLoan() {
                   <div><label className={labelClass}>EMI End Date</label><input type="date" className={inputClass} value={form.emiEndDate} onChange={e => update('emiEndDate', e.target.value)} /></div>
                 </div>
 
-                {(emi > 0 || sanctionEmi > 0) && (
-                  <div className="mt-4 space-y-4">
-                    {emi > 0 && (
-                      <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Calculator size={14} className="text-blue-600" />
-                            <span className="text-blue-700 font-semibold text-xs uppercase tracking-wider">Actual Loan EMI Preview</span>
-                          </div>
-                          <button type="button" onClick={() => update('emiAmount', String(emi.toFixed(0)))} className="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-[10px] hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-1"><Calculator size={12} /> Apply This EMI</button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Calculated EMI</p><p className="text-lg font-bold text-blue-700">{formatCurrency(emi)}</p></div>
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest)}</p></div>
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
-                        </div>
-                      </div>
-                    )}
-
-                    {sanctionEmi > 0 && Number(form.sanctionAmount) !== Number(form.loanAmount) && (
-                      <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Calculator size={14} className="text-accent" />
-                            <span className="text-accent font-semibold text-xs uppercase tracking-wider">Sanction Loan EMI Preview</span>
-                          </div>
-                          <button type="button" onClick={() => update('emiAmount', String(sanctionEmi.toFixed(0)))} className="px-3 py-1 rounded-lg bg-accent text-accent-foreground font-bold text-[10px] hover:opacity-90 transition-all active:scale-95 flex items-center gap-1"><Calculator size={12} /> Apply This EMI</button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Calculated EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(sanctionEmi)}</p></div>
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(sanctionTotalInterest)}</p></div>
-                          <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1 uppercase">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(sanctionTotalPayable)}</p></div>
-                        </div>
-                      </div>
-                    )}
+                {emi > 0 && (
+                  <div className="mt-4 p-4 rounded-xl bg-accent/5 border border-accent/10">
+                    <div className="flex items-center gap-2 mb-3"><Calculator size={14} className="text-accent" /><span className="text-accent font-semibold text-xs uppercase tracking-wider">EMI Calculator Preview</span></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Calculated EMI</p><p className="text-lg font-bold text-accent">{formatCurrency(emi)}</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Interest</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalInterest > 0 ? totalInterest : 0)}</p></div>
+                      <div className="text-center p-2 rounded-lg bg-background/50"><p className="text-[10px] text-muted-foreground mb-1">Total Payable</p><p className="text-lg font-bold text-foreground">{formatCurrency(totalPayable)}</p></div>
+                      <button type="button" onClick={() => update('emiAmount', String(emi))} className="h-full px-4 rounded-lg bg-accent text-accent-foreground font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95"><Calculator size={16} /> Apply EMI</button>
+                    </div>
                   </div>
                 )}
 
