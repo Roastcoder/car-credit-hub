@@ -216,12 +216,12 @@ export default function PaymentDetail() {
 
   // Add UTR number
   const addUTRNumber = useMutation({
-    mutationFn: async ({ utr, amount, narration }: { utr: string; amount: number; narration?: string }) => {
-      const result = await paymentApplicationAPI.addUTR(parseInt(id!), utr, { amount, narration });
+    mutationFn: async ({ utr, amount, narration, voucher_date }: { utr: string; amount: number; narration?: string; voucher_date?: string }) => {
+      const result = await paymentApplicationAPI.addUTR(parseInt(id!), utr, { amount, narration, voucher_date });
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payment', id] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['payment-application', id] });
       setShowUTRModal(false);
       setUtrNumber('');
       setReleaseAmount('');
@@ -324,7 +324,8 @@ export default function PaymentDetail() {
     addUTRNumber.mutate({
       utr: utrNumber.trim(),
       amount: amt,
-      narration: releaseNarration.trim()
+      narration: releaseNarration.trim(),
+      voucher_date: paymentDate
     });
   };
 
@@ -1023,16 +1024,28 @@ export default function PaymentDetail() {
                     <DollarSign size={16} className="text-green-600" /> Enter UTR Number
                   </p>
                   <form onSubmit={handleUTRSubmit} className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">UTR / Transaction ID</label>
-                      <input
-                        type="text"
-                        value={utrNumber}
-                        onChange={(e) => setUtrNumber(e.target.value)}
-                        placeholder="Enter UTR Number"
-                        required
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">UTR / Transaction ID</label>
+                        <input
+                          type="text"
+                          value={utrNumber}
+                          onChange={(e) => setUtrNumber(e.target.value)}
+                          placeholder="Enter UTR Number"
+                          required
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Payment Date</label>
+                        <input
+                          type="date"
+                          value={paymentDate}
+                          onChange={(e) => setPaymentDate(e.target.value)}
+                          required
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Release Amount (₹) (Optional)</label>
