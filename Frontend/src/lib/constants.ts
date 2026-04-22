@@ -8,7 +8,9 @@ export const LOAN_STATUSES: { value: LoanStatus; label: string; color: string }[
   { value: 'sent_back', label: 'Sent Back', color: 'status-sent-back' },
   { value: 'rejected', label: 'Rejected', color: 'status-rejected' },
   { value: 'cancelled', label: 'Cancelled', color: 'status-cancelled' },
+  { value: 'pending_approval', label: 'Pending Approval', color: 'status-review' },
 ];
+
 
 export const WORKFLOW_STEPS = [
   { status: 'submitted', label: 'Submitted', description: 'Application created by employee', role: 'Employee' },
@@ -61,7 +63,9 @@ export const STATUS_OWNER_MAP: Record<LoanStatus, string> = {
   sent_back_admin: 'admin',
   rejected: 'employee',
   cancelled: 'employee',
+  pending_approval: 'pdd_manager',
 };
+
 
 export const BANKS = [
   'HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak Mahindra Bank',

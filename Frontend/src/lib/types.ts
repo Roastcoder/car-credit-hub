@@ -12,7 +12,9 @@ export type LoanStatus =
   | 'sent_back_manager'
   | 'sent_back_admin'
   | 'rejected'
-  | 'cancelled';
+  | 'cancelled'
+  | 'pending_approval';
+
 
 export type LoanStatusFilter = 'all' | LoanStatus;
 

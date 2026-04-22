@@ -16,8 +16,10 @@ import {
   User,
   Phone,
   MapPin,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 interface PDDFormProps {
@@ -91,7 +93,9 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     police_case_status: loan.police_case_status || '',
     commitment_date: loan.commitment_date?.split('T')[0] || '',
     delay_days: loan.delay_days || '',
+    pdd_remarks: '',
   });
+
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
@@ -322,7 +326,21 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="number" value={formData.delay_days} onChange={(e) => setFormData({...formData, delay_days: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="col-span-1 space-y-1.5">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <MessageSquare size={12} />
+                Submission Remarks
+              </label>
+              <textarea 
+                value={formData.pdd_remarks} 
+                onChange={(e) => setFormData({...formData, pdd_remarks: e.target.value})}
+                placeholder="Optional submission notes..."
+                className="w-full h-20 p-3 bg-background border border-border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent disabled:opacity-50 resize-none"
+                disabled={!isEmployee}
+              />
+            </div>
           </FormSection>
+
 
           {/* Optional: Add a summary or guide section here */}
           <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-center h-full relative overflow-hidden">
