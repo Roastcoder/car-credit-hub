@@ -1943,7 +1943,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
                     <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
                     <div>
-                      <label className={labelClass}>Net Disbursement Amount (₹)</label>
+                      <label className={labelClass}>Net Amount After Mehar PF (₹)</label>
                       <input 
                         type="number" 
                         className={inputClass} 
