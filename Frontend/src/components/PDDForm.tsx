@@ -237,6 +237,11 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} 
               disabled={!isEmployee}
             />
+            <InputField 
+              label="Finance Co. Update (PDD)" icon={<CreditCard size={12}/>}
+              type="text" value={formData.pdd_update_finance_company} onChange={(e) => setFormData({...formData, pdd_update_finance_company: e.target.value})} 
+              disabled={!isEmployee}
+            />
           </FormSection>
 
           <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
@@ -253,6 +258,21 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
             <InputField 
               label={`Current FC Status ${isBT ? '*' : ''}`} icon={<AlertCircle size={12}/>}
               type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="FC Receipt" icon={<FileText size={12}/>}
+              type="text" value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Zero Statement" icon={<FileText size={12}/>}
+              type="text" value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Prev Financier Status" icon={<Landmark size={12}/>}
+              type="text" value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
               disabled={!isEmployee}
             />
           </FormSection>
@@ -273,9 +293,31 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <InputField 
+                label="Agent Mobile" icon={<Phone size={12}/>}
+                type="text" value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="Agent Email" icon={<MessageSquare size={12}/>}
+                type="text" value={formData.rto_mail} onChange={(e) => setFormData({...formData, rto_mail: e.target.value})} 
+                disabled={!isEmployee}
+              />
+            </div>
             <InputField 
-              label="Agent Mobile" icon={<Phone size={12}/>}
-              type="text" value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
+              label="Docs Location" icon={<MapPin size={12}/>}
+              type="text" value={formData.rto_docs_location} onChange={(e) => setFormData({...formData, rto_docs_location: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="RTO Work Status" icon={<AlertCircle size={12}/>}
+              type="text" value={formData.rto_work_status} onChange={(e) => setFormData({...formData, rto_work_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Pending Documents" icon={<Files size={12}/>}
+              type="text" value={formData.pending_rto_documents} onChange={(e) => setFormData({...formData, pending_rto_documents: e.target.value})} 
               disabled={!isEmployee}
             />
           </FormSection>
@@ -293,7 +335,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
                 disabled={!isEmployee}
               />
               <InputField 
-                label="Vechicle Check" type="text"
+                label="Vehicle Check" type="text"
                 value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} 
                 disabled={!isEmployee}
               />
@@ -303,6 +345,16 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
                 disabled={!isEmployee}
               />
             </div>
+            <InputField 
+              label="Insurance Endorsement" icon={<FileText size={12}/>}
+              type="text" value={formData.insurance_endorsement} onChange={(e) => setFormData({...formData, insurance_endorsement: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Police Case Status" icon={<ShieldCheck size={12}/>}
+              type="text" value={formData.police_case_status} onChange={(e) => setFormData({...formData, police_case_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
             <InputField 
               label="Location" icon={<MapPin size={12}/>}
               type="text" value={formData.dto_location} onChange={(e) => setFormData({...formData, dto_location: e.target.value})} 
@@ -314,6 +366,16 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
             <InputField 
               label={`NOC Status ${isBT ? '*' : ''}`} icon={<ShieldCheck size={12}/>}
               type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="NOC Checked By" icon={<User size={12}/>}
+              type="text" value={formData.noc_checked_by} onChange={(e) => setFormData({...formData, noc_checked_by: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Previous DTO NOC" icon={<Files size={12}/>}
+              type="text" value={formData.previous_dto_noc} onChange={(e) => setFormData({...formData, previous_dto_noc: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
