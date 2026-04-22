@@ -316,8 +316,8 @@ export default function PaymentDetail() {
       toast.error('Please enter UTR number');
       return;
     }
-    const amt = parseFloat(releaseAmount);
-    if (isNaN(amt) || amt <= 0) {
+    const amt = releaseAmount ? parseFloat(releaseAmount) : 0;
+    if (isNaN(amt) || amt < 0) {
       toast.error('Please enter a valid amount');
       return;
     }
@@ -1035,13 +1035,12 @@ export default function PaymentDetail() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Release Amount (₹)</label>
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Release Amount (₹) (Optional)</label>
                       <input
                         type="number"
                         value={releaseAmount}
                         onChange={(e) => setReleaseAmount(e.target.value)}
-                        placeholder={`Max ₹${remainingAppBalance}`}
-                        required
+                        placeholder={`e.g. ${remainingAppBalance} or leave empty`}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm font-bold text-green-600 focus:outline-none focus:ring-2 focus:ring-green-500/20"
                       />
                     </div>
@@ -1057,7 +1056,7 @@ export default function PaymentDetail() {
                     </div>
                     <button
                       type="submit"
-                      disabled={addUTRNumber.isPending || !utrNumber.trim() || !releaseAmount}
+                      disabled={addUTRNumber.isPending || !utrNumber.trim()}
                       className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold disabled:opacity-50"
                     >
                       {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release Payment'}
