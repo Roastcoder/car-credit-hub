@@ -998,6 +998,19 @@ export default function CreateLoan() {
 
     return emi * periods;
   }, [emi, calculatedTenure, form.emiMode]);
+  
+  useEffect(() => {
+    const received = Number(form.netSeedAmount) || 0;
+    const deduction = Number(form.meharDeduction) || 0;
+    const netDisbursement = Math.max(0, received - deduction);
+    
+    if (netDisbursement !== Number(form.netDisbursementAmount)) {
+      setForm(prev => ({
+        ...prev,
+        netDisbursementAmount: String(netDisbursement)
+      }));
+    }
+  }, [form.netSeedAmount, form.meharDeduction]);
 
   const computedCommission = useMemo(() => {
     const financierName = (banks as any[]).find((b: any) => String(b.id) === String(form.assignedBankId))?.name || '';
