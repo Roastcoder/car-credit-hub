@@ -782,7 +782,7 @@ export default function LoanDetail() {
                           {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
                           {user?.role !== 'broker' && (
                             <>
-                              <Field label="Sanction Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
+                              <Field label="Total Loan Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
                               <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
                             </>
                           )}
