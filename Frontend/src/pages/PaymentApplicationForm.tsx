@@ -878,8 +878,9 @@ export default function PaymentApplicationForm() {
             <AlertCircle className="h-5 w-5 text-yellow-500" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Hold Amount (Balance)" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 

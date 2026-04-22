@@ -67,6 +67,7 @@ interface PaymentApplication {
   emi_mode?: string;
   irr_percentage?: number | string;
   loan_type?: string;
+  mehar_deduction?: number | string;
   file_booked_code?: string;
   foreclosure_amount?: number | string;
   foreclosure_name?: string;
@@ -690,6 +691,7 @@ export default function PaymentDetail() {
                   <Field label="EMI Mode" value={payment.emi_mode || '—'} />
                   <Field label="IRR (%)" value={`${payment.irr_percentage || 0}%`} />
                   <Field label="Loan Type" value={payment.loan_type} />
+                  <Field label="Mehar Deduction" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
                   <div className="col-span-2">
                     <Field label="Purpose/Description" value={payment.payment_purpose || payment.description} />
                   </div>
@@ -706,8 +708,8 @@ export default function PaymentDetail() {
                   <Field label="Today Release Amount" value={formatCurrency(Number(payment.today_release_amount || 0))} />
                   <Field label="Total Release Amount" value={formatCurrency(Number(payment.total_release_amount || 0))} />
                   <Field label="Total Release (%)" value={`${payment.total_release_percentage || 0}%`} />
-                  <Field label="Mehar Deduction" value={formatCurrency(Number(payment.hold_amount || 0))} />
-                  <Field label="Mehar Deduction (%)" value={`${payment.hold_percentage || 0}%`} />
+                   <Field label="Hold Amount" value={formatCurrency(Number(payment.hold_amount || 0))} />
+                   <Field label="Hold Percentage" value={`${payment.hold_percentage || 0}%`} />
                   <Field label="Challan Amount" value={formatCurrency(Number(payment.challan_amount || 0))} />
                   <Field label="Payment In Favour" value={payment.payment_in_favour_name} />
                 </div>
