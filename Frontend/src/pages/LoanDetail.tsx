@@ -507,10 +507,12 @@ export default function LoanDetail() {
             <PDDForm
               loan={loan}
               onCancel={() => setIsEditingPDD(false)}
-              onSuccess={() => {
-                setIsEditingPDD(false);
-                queryClient.invalidateQueries({ queryKey: ['loan', id] });
-              }}
+                onSuccess={() => {
+                  setIsEditingPDD(false);
+                  queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                  queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
+                }}
+
             />
           </div>
         ) : (
@@ -587,12 +589,13 @@ export default function LoanDetail() {
                                         },
                                         body: JSON.stringify({ reason: pddReason })
                                       });
-                                      if (res.ok) {
-                                        toast.success('PDD Approved');
-                                        queryClient.invalidateQueries({ queryKey: ['loan', id] });
-                                        setPddReason('');
-                                        setTimeout(() => navigate('/pdd-tracking'), 500);
-                                      } else {
+                                        if (res.ok) {
+                                          toast.success('PDD Approved');
+                                          queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                                          queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
+                                          setPddReason('');
+                                          setTimeout(() => navigate('/pdd-tracking'), 500);
+                                        } else {
                                         const err = await res.json();
                                         toast.error(err.error || 'Failed to approve');
                                       }
@@ -618,6 +621,7 @@ export default function LoanDetail() {
                                       if (res.ok) {
                                         toast.success('PDD Rejected');
                                         queryClient.invalidateQueries({ queryKey: ['loan', id] });
+                                        queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
                                         setPddReason('');
                                         setTimeout(() => navigate('/pdd-tracking'), 500);
                                       } else {
