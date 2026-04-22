@@ -3,9 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
-  Plus, Search, Filter, Eye, CheckCircle, X, Edit,
-  FileText, CreditCard, Download, FileCheck, Receipt, List, User,
-  ChevronRight, ArrowRight
+  Plus, 
+  Search, 
+  Filter, 
+  Eye, 
+  Edit, 
+  CheckCircle, 
+  X, 
+  FileText, 
+  CreditCard, 
+  Download, 
+  User, 
+  ArrowRight, 
+  List, 
+  Receipt,
+  Layers,
+  CircleDashed,
+  PieChart,
+  CheckCircle2,
+  ChevronRight,
+  FileCheck
 } from 'lucide-react';
 import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import { Button } from "@/components/ui/button";
@@ -38,6 +55,8 @@ interface PaymentApplication {
   disbursement_amount?: number;
   old_release_amount?: number;
   mehar_deduction?: number;
+  emi_amount?: number;
+  voucher_number?: string;
 }
 
 export default function PaymentApplicationsList() {
@@ -275,9 +294,8 @@ export default function PaymentApplicationsList() {
           <option value="payment_released">Payment Released</option>
           <option value="completed">Completed</option>
         </select>
-        <Button variant="outline" size="icon" className="rounded-xl border-gray-300 dark:border-gray-600 hidden sm:inline-flex">
-          <Filter size={16} />
-        </Button>
+      </div>
+
       {/* Release Percentage Tabs */}
       <div className="flex items-center gap-1 mb-6 bg-slate-100/50 dark:bg-slate-900/30 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
         {[
