@@ -284,7 +284,7 @@ export default function PaymentApplicationForm() {
         loan_number: d.loan_number || '',
         financier_name: prev.financier_name || d.assigned_bank_name || d.bank_name || '',
         loan_amount: prev.loan_amount || Number(d.loan_amount) || 0,
-        disbursement_amount: prev.disbursement_amount || Number(d.net_disbursement_amount || d.disbursement_amount) || 0,
+        disbursement_amount: Number(d.net_disbursement_amount || d.disbursement_amount) || 0,
         disbursement_date: prev.disbursement_date || (d.disbursement_date ? new Date(d.disbursement_date).toISOString().split('T')[0] : ''),
         tenure_months: prev.tenure_months || d.tenure_months || d.tenure || 0,
         emi_amount: prev.emi_amount || Number(d.emi_amount || d.emi) || 0,
@@ -736,7 +736,7 @@ export default function PaymentApplicationForm() {
         )}
         {isRaiseRemainingMode && (
           <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
-            Raising a fresh request on this same application. Previous released amount is locked into <strong>Old Payment Release Amount</strong>, and you can submit the remaining amount from here.
+            Raising a fresh request on this same application. Previous released amount is locked into <strong>Previously Released Amount</strong>, and you can submit the remaining amount from here.
           </div>
         )}
         {formData.status === 'sent_back' && formData.manager_remarks && (
@@ -773,7 +773,7 @@ export default function PaymentApplicationForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Net Amount after Mehar PF" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
@@ -853,7 +853,7 @@ export default function PaymentApplicationForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Old Payment Release Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Previously Released Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200/50 dark:border-orange-800/20 shadow-sm">
               <label className="text-xs font-bold text-orange-600 uppercase mb-1 block text-left">Balance (Disbursement - Today Release)</label>
