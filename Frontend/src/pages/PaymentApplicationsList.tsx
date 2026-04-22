@@ -35,8 +35,9 @@ interface PaymentApplication {
   vehicle_number?: string;
   financier_name?: string;
   disbursement_branch?: string;
-  emi_amount?: number;
-  voucher_number?: string;
+  disbursement_amount?: number;
+  old_release_amount?: number;
+  mehar_deduction?: number;
 }
 
 export default function PaymentApplicationsList() {
@@ -46,6 +47,7 @@ export default function PaymentApplicationsList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [releasePercentageFilter, setReleasePercentageFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadingForId, setUploadingForId] = useState<number | null>(null);
   const [eligibleLoans, setEligibleLoans] = useState<any[]>([]);
@@ -136,7 +138,18 @@ export default function PaymentApplicationsList() {
                          app.loan_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.id.toString().includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    // Release Percentage Calculation
+    const total = Number(app.disbursement_amount) || 0;
+    const released = Number(app.old_release_amount) || 0;
+    const pct = total > 0 ? (released / total) * 100 : 0;
+    
+    let matchesRelease = true;
+    if (releasePercentageFilter === 'zero') matchesRelease = pct === 0;
+    else if (releasePercentageFilter === 'partial') matchesRelease = pct > 0 && pct < 100;
+    else if (releasePercentageFilter === 'full') matchesRelease = pct >= 99.9; // Handling float precision
+
+    return matchesSearch && matchesStatus && matchesRelease;
   });
 
   const formatCurrency = (amount: number) => {
@@ -265,6 +278,27 @@ export default function PaymentApplicationsList() {
         <Button variant="outline" size="icon" className="rounded-xl border-gray-300 dark:border-gray-600 hidden sm:inline-flex">
           <Filter size={16} />
         </Button>
+      {/* Release Percentage Tabs */}
+      <div className="flex items-center gap-1 mb-6 bg-slate-100/50 dark:bg-slate-900/30 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
+        {[
+          { id: 'all', label: 'All', icon: <Layers size={14} /> },
+          { id: 'zero', label: '0% Released', icon: <CircleDashed size={14} /> },
+          { id: 'partial', label: '1-99%', icon: <PieChart size={14} /> },
+          { id: 'full', label: '100% Full', icon: <CheckCircle2 size={14} /> },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setReleasePercentageFilter(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${
+              releasePercentageFilter === tab.id
+                ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm border border-blue-100 dark:border-blue-900/40'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <input
@@ -451,6 +485,7 @@ export default function PaymentApplicationsList() {
                     {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Branch</th>}
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
                     {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">EMI</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Release %</th>
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">PDD</th>
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
@@ -506,6 +541,26 @@ export default function PaymentApplicationsList() {
                           {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
                         </td>
                       )}
+                      <td className="px-3 py-3 whitespace-nowrap text-center">
+                        {(() => {
+                          const total = Number(app.disbursement_amount) || 0;
+                          const released = Number(app.old_release_amount) || 0;
+                          const pct = total > 0 ? Math.round((released / total) * 100) : 0;
+                          return (
+                            <div className="flex flex-col items-center">
+                              <span className={`text-[10px] font-extrabold ${pct >= 100 ? 'text-green-600' : pct > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                                {pct}%
+                              </span>
+                              <div className="w-12 h-1 bg-gray-200 dark:bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all ${pct >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                         <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
                           {app.status.replace('_', ' ')}
