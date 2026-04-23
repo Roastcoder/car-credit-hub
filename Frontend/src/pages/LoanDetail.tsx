@@ -506,13 +506,14 @@ export default function LoanDetail() {
           <div className="max-w-7xl mx-auto py-4">
             <PDDForm
               loan={loan}
+              existingDocuments={documents}
               onCancel={() => setIsEditingPDD(false)}
               onSuccess={() => {
                 setIsEditingPDD(false);
                 queryClient.invalidateQueries({ queryKey: ['loan', id] });
                 queryClient.invalidateQueries({ queryKey: ['loan-audit-logs', id] });
+                queryClient.invalidateQueries({ queryKey: ['loan-documents', id] });
               }}
-
             />
           </div>
         ) : (

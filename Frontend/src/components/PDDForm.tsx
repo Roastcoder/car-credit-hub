@@ -16,6 +16,7 @@ import {
   User,
   Phone,
   MapPin,
+  Eye,
   FileText,
   MessageSquare
 } from 'lucide-react';
@@ -26,7 +27,30 @@ interface PDDFormProps {
   loan: any;
   onCancel: () => void;
   onSuccess: () => void;
+  existingDocuments?: any[];
 }
+
+const ExistingDocLink = ({ types, docs }: { types: string[], docs: any[] }) => {
+  const matches = docs.filter(d => types.includes(d.document_type));
+  if (matches.length === 0) return null;
+  
+  return (
+    <div className="flex flex-wrap gap-1 mt-1 ml-1">
+      {matches.map((doc) => (
+        <a 
+          key={doc.id} 
+          href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-[9px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-md flex items-center gap-1 hover:bg-accent/20 transition-all shadow-sm border border-accent/20"
+        >
+          <Eye size={10} />
+          {doc.document_type.replace(/_/g, ' ').toUpperCase()}
+        </a>
+      ))}
+    </div>
+  );
+};
 
 const FormSection = ({ title, icon, children, colorClass }: { title: string, icon: React.ReactNode, children: React.ReactNode, colorClass: string }) => (
   <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full transform transition-all hover:shadow-md">
@@ -60,7 +84,7 @@ const InputField = ({ label, icon, ...props }: { label: string, icon?: React.Rea
   </div>
 );
 
-export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
+export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments = [] }: PDDFormProps) {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     payment_received_date: loan.payment_received_date?.split('T')[0] || '',
@@ -128,7 +152,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
         if (nocFile) docFormData.append('noc', nocFile);
         if (rcFile) docFormData.append('rc_document', rcFile);
         if (dmFile) docFormData.append('dm_document', dmFile);
-        if (insuranceFile) docFormData.append('insurance_document', insuranceFile);
+        if (insuranceFile) docFormData.append('insurance', insuranceFile);
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
           method: 'POST',
@@ -288,6 +312,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                   <FileText size={12}/>
                   Upload Foreclose Document
+                  <ExistingDocLink types={['foreclose_document', 'fitness_document']} docs={existingDocuments} />
                 </label>
                 <input 
                   type="file" 
@@ -356,6 +381,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                 <FileText size={12}/>
                 Upload RC Document
+                <ExistingDocLink types={['rc_front', 'rc_back', 'rc_document']} docs={existingDocuments} />
               </label>
               <input 
                 type="file" 
@@ -368,6 +394,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                 <FileText size={12}/>
                 Upload DM Document
+                <ExistingDocLink types={['dm_document']} docs={existingDocuments} />
               </label>
               <input 
                 type="file" 
@@ -410,6 +437,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                 <ShieldCheck size={12}/>
                 Upload Insurance Document
+                <ExistingDocLink types={['insurance', 'insurance_document']} docs={existingDocuments} />
               </label>
               <input 
                 type="file" 
@@ -450,6 +478,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                 <FileText size={12}/>
                 Upload NOC Document
+                <ExistingDocLink types={['noc']} docs={existingDocuments} />
               </label>
               <input 
                 type="file" 
