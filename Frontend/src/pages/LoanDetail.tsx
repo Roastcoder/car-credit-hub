@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +15,7 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { getFileUrl } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
@@ -40,6 +40,100 @@ const DOC_TYPES = [
   { value: 'nach', label: 'NACH' },
   { value: 'other', label: 'Other' },
 ];
+
+const CarAIVisualizer = ({ model }: { model: string }) => {
+  const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchAI = async () => {
+      try {
+        const apiKey = 'AIzaSyCQseonRPdNHdNcF2qNuqjhRFK89mFFSJ8';
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `I need technical information about the car model: "${model}". 
+                Please provide:
+                1. A reliable public image URL of this car (from Wikipedia or a manufacturer site).
+                2. A 20-word elegant description.
+                3. 3 short technical key specs (Engine, Transmission, Segment).
+                
+                Return ONLY a JSON object:
+                {
+                  "imageUrl": "string",
+                  "description": "string",
+                  "facts": ["string", "string", "string"]
+                }`
+              }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        });
+        
+        if (!res.ok) throw new Error('API Error');
+        const json = await res.json();
+        const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (content) {
+          const parsed = JSON.parse(content);
+          setData(parsed);
+        }
+      } catch (e) {
+        console.error('Gemini Error:', e);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (model) fetchAI();
+  }, [model]);
+
+  if (loading) return (
+    <div className="h-48 flex flex-col items-center justify-center bg-muted/20 rounded-2xl border border-dashed border-border animate-pulse">
+      <Timer className="w-6 h-6 text-accent mb-2 animate-spin" />
+      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">AI Generating Car Visuals...</span>
+    </div>
+  );
+
+  if (error || !data) return null;
+
+  return (
+    <div className="group relative overflow-hidden bg-card border border-border rounded-2xl shadow-sm transition-all hover:shadow-md">
+      <div className="aspect-video w-full overflow-hidden bg-muted/30 relative">
+        <img 
+          src={data.imageUrl} 
+          alt={model} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop';
+          }}
+        />
+        <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10">
+          <CheckCircle2 size={10} className="text-emerald-400" />
+          <span className="text-[9px] font-black text-white uppercase tracking-widest">AI Verified Visual</span>
+        </div>
+      </div>
+      <div className="p-4 space-y-3">
+        <div>
+          <h4 className="text-[11px] font-black text-accent uppercase tracking-widest mb-1">Expert Overview</h4>
+          <p className="text-xs text-muted-foreground leading-relaxed italic">"{data.description}"</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {data.facts.map((fact, i) => (
+            <div key={i} className="px-2 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-center">
+              <p className="text-[9px] font-bold text-foreground truncate">{fact}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function LoanDetail() {
   const { id } = useParams();
@@ -1149,6 +1243,9 @@ export default function LoanDetail() {
               {true && (
                 <div className="w-full lg:w-96 space-y-6">
                   <div className="lg:sticky lg:top-4 h-fit space-y-6">
+                    {/* AI Visualizer Section */}
+                    <CarAIVisualizer model={`${(loan as any).maker_name || loan.car_make} ${(loan as any).model_variant_name || loan.car_model}`} />
+
                     {/* Remarks Section */}
                     {(loan as any).remark && (
                       <Section title="Admin Remarks" icon={<MessageSquare size={16} />}>
