@@ -41,7 +41,7 @@ const DOC_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-const CarAIVisualizer = ({ loanId }: { loanId: string | number }) => {
+const CarAIVisualizer = ({ loanId, modelName }: { loanId: string | number; modelName: string }) => {
   const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -77,7 +77,7 @@ const CarAIVisualizer = ({ loanId }: { loanId: string | number }) => {
       <div className="aspect-video w-full overflow-hidden bg-muted/30 relative">
         <img 
           src={data.imageUrl} 
-          alt={model} 
+          alt={modelName} 
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop';
@@ -1214,7 +1214,10 @@ export default function LoanDetail() {
                 <div className="w-full lg:w-96 space-y-6">
                   <div className="lg:sticky lg:top-4 h-fit space-y-6">
                     {/* AI Visualizer Section */}
-                    <CarAIVisualizer loanId={loan.id} />
+                    <CarAIVisualizer 
+                      loanId={loan.id} 
+                      modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
+                    />
 
                     {/* Remarks Section */}
                     {(loan as any).remark && (
