@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,7 +41,7 @@ const DOC_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-const CarAIVisualizer = ({ model }: { model: string }) => {
+const CarAIVisualizer = ({ loanId }: { loanId: string | number }) => {
   const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -49,49 +49,19 @@ const CarAIVisualizer = ({ model }: { model: string }) => {
   useEffect(() => {
     const fetchAI = async () => {
       try {
-        const apiKey = 'AIzaSyCQseonRPdNHdNcF2qNuqjhRFK89mFFSJ8';
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `I need technical information about the car model: "${model}". 
-                Please provide:
-                1. A reliable public image URL of this car (from Wikipedia or a manufacturer site).
-                2. A 20-word elegant description.
-                3. 3 short technical key specs (Engine, Transmission, Segment).
-                
-                Return ONLY a JSON object:
-                {
-                  "imageUrl": "string",
-                  "description": "string",
-                  "facts": ["string", "string", "string"]
-                }`
-              }]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-        
-        if (!res.ok) throw new Error('API Error');
-        const json = await res.json();
-        const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (content) {
-          const parsed = JSON.parse(content);
-          setData(parsed);
+        const response = await loansAPI.getAiVisuals(loanId);
+        if (response.data) {
+          setData(response.data);
         }
       } catch (e) {
-        console.error('Gemini Error:', e);
+        console.error('AI Visuals Error:', e);
         setError(true);
       } finally {
         setLoading(false);
       }
     };
-    if (model) fetchAI();
-  }, [model]);
+    if (loanId) fetchAI();
+  }, [loanId]);
 
   if (loading) return (
     <div className="h-48 flex flex-col items-center justify-center bg-muted/20 rounded-2xl border border-dashed border-border animate-pulse">
@@ -1244,7 +1214,7 @@ export default function LoanDetail() {
                 <div className="w-full lg:w-96 space-y-6">
                   <div className="lg:sticky lg:top-4 h-fit space-y-6">
                     {/* AI Visualizer Section */}
-                    <CarAIVisualizer model={`${(loan as any).maker_name || loan.car_make} ${(loan as any).model_variant_name || loan.car_model}`} />
+                    <CarAIVisualizer loanId={loan.id} />
 
                     {/* Remarks Section */}
                     {(loan as any).remark && (

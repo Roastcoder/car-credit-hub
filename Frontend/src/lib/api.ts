@@ -105,6 +105,7 @@ export const loansAPI = {
   performWorkflowAction: (id: string | number, action: string, remarks?: string) =>
     api.post(`/loans/${id}/workflow`, { action, remarks }),
   getAuditLogs: (id: string | number) => api.get(`/loans/${id}/audit-logs`),
+  getAiVisuals: (id: string | number) => api.get(`/loans/${id}/ai-visuals`),
   getLastLoanNumber: () => api.get('/loans/last-number'),
 };
 
