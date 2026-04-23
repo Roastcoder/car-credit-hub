@@ -91,8 +91,7 @@ export default function CreditReports() {
   const filteredReports = reports.filter(r => {
     const searchLower = search.toLowerCase();
     const matchesSearch = 
-      (r.loan_customer_name || '').toLowerCase().includes(searchLower) ||
-      (r.lead_customer_name || '').toLowerCase().includes(searchLower) ||
+      (r.display_customer_name || '').toLowerCase().includes(searchLower) ||
       (r.loan_number || '').toLowerCase().includes(searchLower) ||
       (r.provider || '').toLowerCase().includes(searchLower);
     
@@ -192,7 +191,7 @@ export default function CreditReports() {
                             <h3 className="text-xl font-black text-slate-900 leading-tight">Latest Analysis</h3>
                             <p className="text-slate-500 text-sm font-medium">
                               {latestReport 
-                                ? `Last report for ${latestReport.loan_customer_name || latestReport.lead_customer_name || 'customer'} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
+                                ? `Last report for ${latestReport.display_customer_name || 'customer'} fetched on ${format(new Date(latestReport.created_at), 'dd MMM yyyy')}`
                                 : 'No reports available yet. Fetch a new report to see analysis.'
                               }
                             </p>
@@ -301,7 +300,7 @@ export default function CreditReports() {
                               </div>
                               <div>
                                 <p className="text-sm font-bold text-slate-900 leading-tight">
-                                  {report.loan_customer_name || report.lead_customer_name || 'Unknown'}
+                                  {report.display_customer_name || 'Unknown'}
                                 </p>
                                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">
                                   {report.loan_number ? `#${report.loan_number}` : report.lead_customer_id ? `CID: ${report.lead_customer_id}` : 'CUSTOMER'}
