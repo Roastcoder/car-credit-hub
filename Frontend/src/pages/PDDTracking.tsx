@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck, Eye } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck, Eye, Search, Filter, ArrowRight, IndianRupee, Car, User, MapPin, Clock, Calendar, Landmark, ShieldCheck, Timer } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -11,15 +11,15 @@ import { cn } from '@/lib/utils';
 
 const getPddStatusStyles = (status?: string) => {
   if (status === 'approved') {
-    return 'bg-green-500/10 text-green-600';
+    return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
   }
   if (status === 'rejected') {
-    return 'bg-red-500/10 text-red-600';
+    return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
   }
   if (status === 'pending_approval') {
-    return 'bg-amber-500/10 text-amber-600';
+    return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
   }
-  return 'bg-muted text-muted-foreground';
+  return 'bg-muted text-muted-foreground border-border';
 };
 
 const LoanDocumentsList = ({ loanId }: { loanId: string | number }) => {
@@ -35,21 +35,21 @@ const LoanDocumentsList = ({ loanId }: { loanId: string | number }) => {
     enabled: !!loanId,
   });
 
-  if (isLoading) return <div className="text-[10px] animate-pulse text-muted-foreground">Loading documents...</div>;
-  if (documents.length === 0) return <div className="text-[10px] text-muted-foreground italic">No documents found</div>;
+  if (isLoading) return <div className="text-[10px] animate-pulse text-muted-foreground">Loading...</div>;
+  if (documents.length === 0) return <div className="text-[10px] text-muted-foreground italic">No documents attached</div>;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {documents.map((doc: any) => (
         <a
           key={doc.id}
           href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-2 py-1 rounded bg-accent/5 border border-accent/10 text-[10px] font-bold text-accent hover:bg-accent/10 transition-all shadow-sm"
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-accent/5 border border-accent/10 text-[9px] font-black text-accent hover:bg-accent/10 transition-all shadow-sm uppercase tracking-tighter"
         >
-          <FileText size={10} />
-          {doc.document_type.replace(/_/g, ' ').toUpperCase()}
+          <FileText size={8} />
+          {doc.document_type.replace(/_/g, ' ')}
         </a>
       ))}
     </div>
@@ -63,6 +63,7 @@ export default function PDDTracking() {
   const { user } = useAuth();
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>((searchParams.get('tab') as 'pending' | 'completed') || 'pending');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -75,8 +76,8 @@ export default function PDDTracking() {
     setActiveTab(tab);
     setSearchParams({ tab });
   };
-  const permissions = getRolePermissions(user?.role || 'employee');
 
+  const permissions = getRolePermissions(user?.role || 'employee');
   const loanSwitcherOptions = [
     { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
     { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
@@ -85,50 +86,55 @@ export default function PDDTracking() {
 
   const formatDisplayDate = (value: unknown) => {
     if (!value) return '—';
-    if (typeof value !== 'string') {
-      const date = new Date(value as string | number | Date);
-      return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
-    }
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const [year, month, day] = value.split('-');
-      return `${day}/${month}/${year}`;
-    }
-
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN');
+    const date = new Date(value as any);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
+
   const [editingLoanId, setEditingLoanId] = useState<number | null>(null);
-  const { data: loans = [], isLoading, refetch } = useQuery({
-    queryKey: ['pdd-loans', user?.id, user?.role, user?.branch_id, (user as any)?.managed_branch_ids, activeTab],
+
+  const { data: allLoans = [], isLoading, refetch } = useQuery({
+    queryKey: ['pdd-loans-raw', user?.id, user?.role, user?.branch_id, activeTab],
     queryFn: async () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans?status=approved,disbursed`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!response.ok) return [];
       const rawData = await response.json();
-      const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
-
-      let filteredData = data;
-      if (user?.role === 'employee') {
-        filteredData = data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
-      } else if (user?.role === 'manager') {
-        const allowedBranchIds = Array.from(new Set([
-          ...(((user as any)?.managed_branch_ids || []) as number[]),
-          Number(user.branch_id || 0)
-        ].filter((branchId) => Number(branchId) > 0)));
-        filteredData = data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
-      }
-
-      // Apply PDD status filtering for everyone based on active tab
-      if (activeTab === 'pending') {
-        return filteredData.filter((loan: any) => loan.pdd_status === 'pending_approval' || !loan.pdd_status || loan.pdd_status === 'pending');
-      } else {
-        return filteredData.filter((loan: any) => loan.pdd_status === 'approved');
-      }
+      return Array.isArray(rawData) ? rawData : (rawData.data || []);
     },
     enabled: !!user,
   });
+
+  const processedLoans = useMemo(() => {
+    let data = allLoans;
+    if (user?.role === 'employee') {
+      data = data.filter((loan: any) => Number(loan.created_by) === Number(user.id));
+    } else if (user?.role === 'manager') {
+      const allowedBranchIds = Array.from(new Set([
+        ...(((user as any)?.managed_branch_ids || []) as number[]),
+        Number(user.branch_id || 0)
+      ].filter((branchId) => Number(branchId) > 0)));
+      data = data.filter((loan: any) => allowedBranchIds.includes(Number(loan.branch_id)));
+    }
+
+    if (activeTab === 'pending') {
+      data = data.filter((loan: any) => loan.pdd_status === 'pending_approval' || !loan.pdd_status || loan.pdd_status === 'pending');
+    } else {
+      data = data.filter((loan: any) => loan.pdd_status === 'approved');
+    }
+
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      data = data.filter((loan: any) => 
+        loan.applicant_name?.toLowerCase().includes(q) || 
+        loan.loan_number?.toLowerCase().includes(q) ||
+        loan.vehicle_number?.toLowerCase().includes(q)
+      );
+    }
+
+    return data;
+  }, [allLoans, user, activeTab, searchTerm]);
+
   const canEditPdd = user?.role === 'employee' || user?.role === 'manager' || user?.role === 'pdd_manager';
   const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'pdd_manager';
 
@@ -138,17 +144,14 @@ export default function PDDTracking() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || 'Failed to approve PDD');
-      }
+      if (!response.ok) throw new Error('Failed to approve PDD');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pdd-loans'] });
-      toast.success('PDD approved');
+      queryClient.invalidateQueries({ queryKey: ['pdd-loans-raw'] });
+      toast.success('PDD Approved Successfully');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
   const rejectPdd = useMutation({
@@ -161,416 +164,384 @@ export default function PDDTracking() {
         },
         body: JSON.stringify({ reason })
       });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || 'Failed to reject PDD');
-      }
+      if (!response.ok) throw new Error('Failed to reject PDD');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pdd-loans'] });
-      toast.success('PDD rejected');
+      queryClient.invalidateQueries({ queryKey: ['pdd-loans-raw'] });
+      toast.success('PDD Sent Back for Correction');
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
-  if (isLoading) {
-    return <div className="text-center py-8">Loading...</div>;
-  }
+  const toggleLoan = (id: number) => {
+    setExpandedLoans(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+      <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Loading PDD Dashboard...</p>
+    </div>
+  );
 
   return (
-    <div className="pb-20 lg:pb-0">
+    <div className="pb-20 lg:pb-12 max-w-[1600px] mx-auto px-4 sm:px-6 animate-in fade-in duration-500">
       <MobilePageSwitcher options={loanSwitcherOptions} activeLabel="PDD Tracking" />
 
-      <div className="flex flex-col sm:flex-row items-baseline justify-between gap-4 mb-6">
+      {/* Modern Dashboard Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">PDD Tracking</h1>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-70">Post Disbursement Documents & RTO Workflow</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-xl bg-accent text-white shadow-lg shadow-accent/20">
+              <ClipboardCheck size={20} />
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">PDD Workflow</h1>
+          </div>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-70">Post Disbursement Verification & Tracking</p>
         </div>
 
-        <div className="flex items-center p-1 bg-muted/50 backdrop-blur-md rounded-xl border border-border shadow-sm">
-          <button
-            onClick={() => handleTabChange('pending')}
-            className={cn(
-              "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
-              activeTab === 'pending' 
-                ? "bg-red-500 text-white shadow-lg shadow-red-500/30 scale-105" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            PENDING FILES
-          </button>
-          <button
-            onClick={() => handleTabChange('completed')}
-            className={cn(
-              "px-6 py-2 rounded-lg text-xs font-black transition-all duration-300",
-              activeTab === 'completed' 
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            COMPLETED FILES
-          </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative group flex-1 min-w-[280px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search applicant, loan #, or vehicle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-card border border-border/60 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+          </div>
+          <div className="flex items-center p-1 bg-muted/40 backdrop-blur-md rounded-2xl border border-border/60 shadow-inner">
+            <button
+              onClick={() => handleTabChange('pending')}
+              className={cn(
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500",
+                activeTab === 'pending' 
+                  ? "bg-rose-500 text-white shadow-xl shadow-rose-500/30 scale-105" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Pending ({allLoans.filter(l => l.pdd_status !== 'approved').length})
+            </button>
+            <button
+              onClick={() => handleTabChange('completed')}
+              className={cn(
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500",
+                activeTab === 'completed' 
+                  ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/30 scale-105" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Completed ({allLoans.filter(l => l.pdd_status === 'approved').length})
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {loans.length === 0 ? (
-          <div className="stat-card text-center py-8 text-muted-foreground">
-            No disbursed loans found
+      {/* Loans Grid/List */}
+      <div className="space-y-6">
+        {processedLoans.length === 0 ? (
+          <div className="bg-card border-2 border-dashed border-border/60 rounded-[2.5rem] py-20 flex flex-col items-center justify-center text-center gap-4">
+            <div className="p-4 rounded-3xl bg-muted/30 text-muted-foreground/40">
+              <Search size={48} />
+            </div>
+            <div>
+              <p className="text-lg font-black text-foreground">No applications found</p>
+              <p className="text-sm text-muted-foreground font-medium">Try adjusting your filters or search term</p>
+            </div>
           </div>
         ) : (
-          loans.map((loan: any) => {
+          processedLoans.map((loan: any) => {
             const isManager = user?.role === 'pdd_manager';
             const isPendingApproval = isManager && loan.pdd_status === 'pending_approval';
-            const isCompleted = activeTab === 'completed' && isManager;
+            const isExpanded = expandedLoans.has(loan.id);
+            const isBT = loan.scheme === 'BT' || loan.scheme === 'Purchase & BT';
 
             return (
               <div 
                 key={loan.id} 
                 className={cn(
-                  "stat-card relative overflow-hidden transition-all duration-500 hover:shadow-xl",
-                  isPendingApproval ? "!bg-red-50 dark:!bg-red-950/40 border-2 !border-red-500 shadow-md shadow-red-500/20" : "",
-                  !isPendingApproval && isManager && activeTab === 'pending' && "border-l-4 border-l-amber-500/50 bg-amber-500/[0.02]",
-                  isCompleted && "border-l-4 border-l-emerald-500 border-emerald-500/20 bg-emerald-500/[0.02]"
+                  "group relative bg-card border border-border/60 rounded-[2rem] transition-all duration-500 hover:shadow-2xl hover:shadow-accent/5",
+                  isExpanded ? "ring-2 ring-accent/20 shadow-2xl" : "",
+                  isPendingApproval ? "bg-rose-50/30 dark:bg-rose-950/10 border-rose-500/20 shadow-lg shadow-rose-500/5" : ""
                 )}
               >
-                {/* Visual Status Highlight for PDD Manager */}
-                {isManager && (
-                  <div className={cn(
-                    "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-20",
-                    activeTab === 'pending' ? (isPendingApproval ? "bg-red-600" : "bg-amber-400") : "bg-emerald-500"
-                  )} />
+                {isPendingApproval && (
+                  <div className="absolute top-0 right-10 -translate-y-1/2 flex items-center gap-2 px-3 py-1 bg-rose-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg z-20">
+                    <AlertTriangle size={10} />
+                    Needs Review
+                  </div>
                 )}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className="mono text-xs text-accent font-medium bg-accent/10 px-2 py-0.5 rounded-md">{loan.loan_number}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${Number(loan.delay_days) > 0 ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                        {loan.delay_days || '0'} days delayed
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getPddStatusStyles(loan.pdd_status)}`}>
-                        {(loan.pdd_status || 'pending').replace(/_/g, ' ')}
-                      </span>
+
+                <div className="p-6 sm:p-8">
+                  <div className="flex flex-col xl:flex-row gap-8 items-start xl:items-center">
+                    {/* Primary Info */}
+                    <div className="flex-1 flex gap-5 items-center">
+                      <div className={cn(
+                        "w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 border shadow-inner transition-transform duration-500 group-hover:scale-110",
+                        isBT ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                      )}>
+                        <Car size={32} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="text-xl font-black text-foreground tracking-tight">{loan.applicant_name}</h3>
+                          <span className={cn(
+                            "px-2.5 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-widest",
+                            getPddStatusStyles(loan.pdd_status)
+                          )}>
+                            {loan.pdd_status?.replace(/_/g, ' ') || 'Pending'}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-muted-foreground/80">
+                          <span className="text-accent">{loan.loan_number}</span>
+                          <div className="w-1 h-1 rounded-full bg-border" />
+                          <span>{loan.car_make} {loan.car_model}</span>
+                          <div className="w-1 h-1 rounded-full bg-border" />
+                          <span className="flex items-center gap-1.5 uppercase">
+                            <MapPin size={12} className="text-rose-500" />
+                            {loan.branch_name || 'Branch'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="font-semibold text-foreground text-base truncate">{loan.applicant_name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{loan.vehicle_number || '—'} • {loan.maker_name} {loan.model_variant_name}</p>
-                    {(loan.pdd_submitted_by_name || loan.pdd_rejection_reason) && (
-                      <div className="mt-2 space-y-1">
-                        {loan.pdd_submitted_by_name && (
-                          <p className="text-xs text-muted-foreground">
-                            Submitted by {loan.pdd_submitted_by_name}
-                          </p>
-                        )}
-                        {loan.pdd_rejection_reason && (
-                          <p className="text-xs text-red-600">
-                            Rejection reason: {loan.pdd_rejection_reason}
-                          </p>
-                        )}
+
+                    {/* Quick Summary Grid */}
+                    {!isExpanded && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 py-4 px-6 rounded-3xl bg-muted/20 border border-border/40 w-full xl:w-auto xl:min-w-[500px]">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Payment</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{loan.balance_payment_status || '—'}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">RTO Status</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{loan.rto_work_status || '—'}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Insurance</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{loan.insurance_status || '—'}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">{isBT ? 'FC Status' : 'Police Case'}</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{isBT ? (loan.current_fc_status || '—') : (loan.police_case_status || '—')}</p>
+                        </div>
                       </div>
                     )}
-                  </div>
 
-                  {/* Quick Summary Section for Manager Dash */}
-                  {isManager && !expandedLoans.has(loan.id) && (
-                    <div className="flex-1 lg:flex-none lg:w-[400px] grid grid-cols-2 gap-x-6 gap-y-2 py-3 px-4 rounded-xl bg-background/40 border border-border/40">
-                       <div className="flex flex-col gap-0.5">
-                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">Payment Status</span>
-                         <span className="text-[11px] font-bold text-foreground truncate">{loan.balance_payment_status || '—'}</span>
-                       </div>
-                       <div className="flex flex-col gap-0.5">
-                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">RTO Papers</span>
-                         <span className="text-[11px] font-bold text-foreground truncate">{loan.rto_paper_details || '—'}</span>
-                       </div>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">Insurance</span>
-                          <span className="text-[11px] font-bold text-foreground truncate">{loan.insurance_status || '—'}</span>
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">{loan.scheme?.includes('BT') ? 'FC Status' : 'Work Status'}</span>
-                          <span className="text-[11px] font-bold text-foreground truncate">{loan.scheme?.includes('BT') ? (loan.current_fc_status || '—') : (loan.rto_work_status || '—')}</span>
-                        </div>
-                     </div>
-                  )}
-
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}
-                      className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
-                    >
-                      <FileText size={14} />
-                      View
-                    </button>
-                    {canEditPdd && (
+                    {/* Actions Row */}
+                    <div className="flex items-center gap-3 w-full xl:w-auto justify-end">
                       <button
-                        onClick={() => {
-                          setEditingLoanId(loan.id);
-                          if (!expandedLoans.has(loan.id)) {
-                            const newExpanded = new Set(expandedLoans);
-                            newExpanded.add(loan.id);
-                            setExpandedLoans(newExpanded);
-                          }
-                        }}
-                        className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent hover:text-accent transition-colors shadow-sm"
+                        onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}
+                        className="px-5 py-2.5 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all active:scale-95"
                       >
-                        <Edit2 size={14} />
-                        {user?.role === 'employee' ? 'Submit' : 'Edit'}
+                        Details
                       </button>
-                    )}
-                    {canApprovePdd && loan.pdd_status === 'pending_approval' && (
-                      <>
+                      
+                      {canEditPdd && (
                         <button
-                          onClick={() => approvePdd.mutate(loan.loan_number || loan.id)}
-                          disabled={approvePdd.isPending || rejectPdd.isPending}
-                          className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-green-500/40 bg-green-500/10 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors shadow-sm disabled:opacity-50"
+                          onClick={() => setEditingLoanId(editingLoanId === loan.id ? null : loan.id)}
+                          className={cn(
+                            "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-accent/20",
+                            editingLoanId === loan.id ? "bg-slate-700 text-white" : "bg-accent text-white"
+                          )}
                         >
-                          <CheckCircle2 size={14} />
-                          Approve
+                          <Edit2 size={14} />
+                          {editingLoanId === loan.id ? 'Close Edit' : 'Edit PDD'}
                         </button>
-                        <button
-                          onClick={() => {
-                            const reason = window.prompt('Enter rejection reason for this PDD');
-                            if (!reason) return;
-                            rejectPdd.mutate({ loanIdOrNumber: loan.loan_number || loan.id, reason });
-                          }}
-                          disabled={approvePdd.isPending || rejectPdd.isPending}
-                          className="justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-red-500/40 bg-red-500/10 text-xs font-medium text-red-600 hover:bg-red-500/20 transition-colors shadow-sm disabled:opacity-50"
-                        >
-                          <AlertTriangle size={14} />
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => {
-                        const newExpanded = new Set(expandedLoans);
-                        if (newExpanded.has(loan.id)) {
-                          newExpanded.delete(loan.id);
-                        } else {
-                          newExpanded.add(loan.id);
-                        }
-                        setExpandedLoans(newExpanded);
-                      }}
-                      className="col-span-2 sm:w-auto justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-card text-xs font-medium transition-colors shadow-sm"
-                    >
-                      {expandedLoans.has(loan.id) ? (
-                        <>
-                          <ChevronUp size={14} className="text-muted-foreground" />
-                          <span className="text-muted-foreground">Collapse</span>
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown size={14} className="text-accent" />
-                          <span className="text-accent">Expand</span>
-                        </>
                       )}
-                    </button>
-                  </div>
-                </div>
 
-                {expandedLoans.has(loan.id) && (
-                  editingLoanId === loan.id ? (
-                    <div className="mt-6 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-200">
-                      <PDDForm 
-                        loan={loan} 
-                        onCancel={() => setEditingLoanId(null)} 
-                        onSuccess={() => {
-                          setEditingLoanId(null);
-                          refetch();
-                        }} 
-                      />
-                    </div>
-                  ) : (
-                    <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
-                  {/* Payment & Finance Details */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
-                      Payment & Finance
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Payment Received</p>
-                        <p className="font-semibold text-foreground">{formatDisplayDate(loan.payment_received_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">M-Parivahan Financier</p>
-                        <p className="font-semibold text-foreground">{loan.financier_m_parivahan || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Balance Status</p>
-                        <p className="font-semibold text-foreground">{loan.balance_payment_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">PDD at Fin. Co.</p>
-                        <p className="font-semibold text-foreground">{loan.pdd_update_finance_company || '—'}</p>
-                      </div>
+                      <button
+                        onClick={() => toggleLoan(loan.id)}
+                        className="p-2.5 rounded-xl border border-border/60 hover:bg-accent/5 transition-all text-muted-foreground hover:text-accent active:scale-90"
+                      >
+                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                      </button>
                     </div>
                   </div>
 
-                      {/* FC Details - Only for BT */}
-                  {(loan.scheme === 'BT' || loan.scheme === 'Purchase & BT') && (
-                    <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
-                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
-                        FC (Form C) Details
-                      </h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                        <div>
-                          <p className="text-muted-foreground mb-1">Deposited By</p>
-                          <p className="font-semibold text-foreground">{loan.fc_deposited_by || '—'}</p>
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className="mt-8 pt-8 border-t border-border/60 animate-in slide-in-from-top-4 duration-500">
+                      {editingLoanId === loan.id ? (
+                        <PDDForm 
+                          loan={loan} 
+                          existingDocuments={[]}
+                          onCancel={() => setEditingLoanId(null)} 
+                          onSuccess={() => {
+                            setEditingLoanId(null);
+                            refetch();
+                          }} 
+                        />
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                          {/* Financial Panel */}
+                          <div className="space-y-5 bg-blue-500/[0.03] p-6 rounded-3xl border border-blue-500/10">
+                            <h4 className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                              <Landmark size={14} /> Financial Tracking
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-xs">
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Received Date</p>
+                                <p className="font-bold text-foreground">{formatDisplayDate(loan.payment_received_date)}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">M-Parivahan Fin.</p>
+                                <p className="font-bold text-foreground truncate">{loan.financier_m_parivahan || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Balance Status</p>
+                                <p className="font-bold text-foreground">{loan.balance_payment_status || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Fin. Co. PDD</p>
+                                <p className="font-bold text-foreground">{loan.pdd_update_finance_company || '—'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* RTO Panel */}
+                          <div className="space-y-5 bg-emerald-500/[0.03] p-6 rounded-3xl border border-emerald-500/10">
+                            <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                              <Files size={14} /> RTO & Documents
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-xs">
+                              <div className="col-span-2">
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Paper Details</p>
+                                <p className="font-bold text-foreground">{loan.rto_paper_details || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Work Status</p>
+                                <p className="font-bold text-foreground">{loan.rto_work_status || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Location</p>
+                                <p className="font-bold text-foreground">{loan.dto_location || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Agent</p>
+                                <p className="font-bold text-foreground">{loan.rto_agent_name || '—'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Verification Panel */}
+                          <div className="space-y-5 bg-amber-500/[0.03] p-6 rounded-3xl border border-amber-500/10">
+                            <h4 className="text-[11px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-2">
+                              <ShieldCheck size={14} /> Checks & Verification
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-xs">
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Insurance</p>
+                                <p className="font-bold text-foreground">{loan.insurance_status || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Pollution</p>
+                                <p className="font-bold text-foreground">{loan.pollution_status || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Police Case</p>
+                                <p className="font-bold text-foreground">{loan.police_case_status || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Challan</p>
+                                <p className="font-bold text-foreground">{loan.challan_status || '—'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Conditional FC Section */}
+                          {isBT && (
+                            <div className="space-y-5 bg-indigo-500/[0.03] p-6 rounded-3xl border border-indigo-500/10 xl:col-span-2">
+                              <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                                <Landmark size={14} /> Foreclosure (FC) Details
+                              </h4>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4 text-xs">
+                                <div>
+                                  <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">FC Deposited By</p>
+                                  <p className="font-bold text-foreground">{loan.fc_deposited_by || '—'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Deposit Date</p>
+                                  <p className="font-bold text-foreground">{formatDisplayDate(loan.fc_deposit_date)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">FC Status</p>
+                                  <p className="font-bold text-foreground">{loan.current_fc_status || '—'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Receipt</p>
+                                  <p className="font-bold text-foreground">{loan.fc_receipt || '—'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Zero Statement</p>
+                                  <p className="font-bold text-foreground">{loan.zero_statement || '—'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Attached Documents Quick Access */}
+                          <div className={cn(
+                            "space-y-5 bg-slate-500/[0.03] p-6 rounded-3xl border border-slate-500/10",
+                            !isBT ? "xl:col-span-3" : "xl:col-span-1"
+                          )}>
+                            <h4 className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                              <Eye size={14} /> Verification Files
+                            </h4>
+                            <LoanDocumentsList loanId={loan.loan_number || loan.id} />
+                          </div>
+
+                          {/* Manager Approval Actions */}
+                          {isPendingApproval && (
+                            <div className="md:col-span-2 xl:col-span-3 p-6 rounded-3xl bg-amber-500/[0.03] border-2 border-dashed border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 mt-4">
+                              <div className="flex gap-4 items-center">
+                                <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+                                  <ShieldCheck size={24} />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-black text-foreground">Pending PDD Approval</p>
+                                  <p className="text-xs text-muted-foreground font-medium">Verify all documents and data before approving this application.</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <button
+                                  onClick={() => {
+                                    const reason = prompt('Reason for rejection:');
+                                    if (reason) rejectPdd.mutate({ loanIdOrNumber: loan.loan_number || loan.id, reason });
+                                  }}
+                                  disabled={rejectPdd.isPending}
+                                  className="flex-1 sm:flex-none px-8 py-3 rounded-2xl border-2 border-rose-500/20 text-rose-600 text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                                >
+                                  Sent Back
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm('Approve this PDD application?')) approvePdd.mutate(loan.loan_number || loan.id);
+                                  }}
+                                  disabled={approvePdd.isPending}
+                                  className="flex-1 sm:flex-none px-10 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
+                                >
+                                  Approve PDD
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Deposit Date</p>
-                          <p className="font-semibold text-foreground">{formatDisplayDate(loan.fc_deposit_date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">FC Receipt</p>
-                          <p className="font-semibold text-foreground">{loan.fc_receipt || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Zero Statement</p>
-                          <p className="font-semibold text-foreground">{loan.zero_statement || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Current FC Status</p>
-                          <p className="font-semibold text-foreground">{loan.current_fc_status || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Prev. Financier Acc.</p>
-                          <p className="font-semibold text-foreground">{loan.prev_financier_account_status || '—'}</p>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   )}
-
-
-                  {/* RTO Details */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
-                      RTO & Document Details
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Paper Details</p>
-                        <p className="font-semibold text-foreground">{loan.rto_paper_details || '—'}</p>
-                      </div>
-                      <div className="col-span-2 sm:col-span-1">
-                        <p className="text-muted-foreground mb-1">Pending Documents</p>
-                        <p className="font-semibold text-foreground truncate">{loan.pending_rto_documents || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Doc Location</p>
-                        <p className="font-semibold text-foreground">{loan.rto_docs_location || '—'}</p>
-                      </div>
-                      <div className="col-span-2 sm:col-span-1">
-                        <p className="text-muted-foreground mb-1">Work Description</p>
-                        <p className="font-semibold text-foreground truncate">{loan.rto_work_description || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Work Status</p>
-                        <p className="font-semibold text-foreground">{loan.rto_work_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Location</p>
-                        <p className="font-semibold text-foreground">{loan.dto_location || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Agent Name</p>
-                        <p className="font-semibold text-foreground">{loan.rto_agent_name || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Agent Contact</p>
-                        <div className="flex flex-col gap-0.5">
-                          <p className="font-semibold text-foreground">{loan.rto_agent_mobile || '—'}</p>
-                          {loan.rto_mail && <p className="text-muted-foreground truncate">{loan.rto_mail}</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Vehicle Checks & Timeline */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-amber-500 rounded-full" />
-                      Checks & Timeline
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Pollution</p>
-                        <p className="font-semibold text-foreground">{loan.pollution_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Insurance</p>
-                        <p className="font-semibold text-foreground">{loan.insurance_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Challan</p>
-                        <p className="font-semibold text-foreground">{loan.challan_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Vehicle Check</p>
-                        <p className="font-semibold text-foreground">{loan.vehicle_check_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Police Case</p>
-                        <p className="font-semibold text-foreground">{loan.police_case_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Ins. Endorsement</p>
-                        <p className="font-semibold text-foreground">{loan.insurance_endorsement || '—'}</p>
-                      </div>
-                      <div className="border-t border-border/50 pt-3 col-span-2 mt-1">
-                        <div>
-                          <p className="text-muted-foreground mb-1">Commitment Date</p>
-                          <p className="font-semibold text-foreground">{formatDisplayDate(loan.commitment_date)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* NOC Details */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 md:col-span-2 lg:col-span-3">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-purple-500 rounded-full" />
-                      NOC Details
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-1">NOC Status</p>
-                        <p className="font-semibold text-foreground">{loan.noc_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Checked By</p>
-                        <p className="font-semibold text-foreground">{loan.noc_checked_by || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Previous DTO NOC</p>
-                        <p className="font-semibold text-foreground">{loan.previous_dto_noc || '—'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Document History */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 md:col-span-2 lg:col-span-3">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-rose-500 rounded-full" />
-                      Loan Documents History
-                    </h3>
-                    <div className="p-1">
-                      <LoanDocumentsList loanId={loan.loan_number || loan.id} />
-                    </div>
-                  </div>
                 </div>
-              )
-            )}
               </div>
             );
           })
         )}
       </div>
-
     </div>
   );
 }
