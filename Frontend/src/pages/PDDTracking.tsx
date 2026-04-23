@@ -1,7 +1,7 @@
-import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck, Eye, Search, Filter, ArrowRight, IndianRupee, Car, User, MapPin, Clock, Calendar, Landmark, ShieldCheck, Timer } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Edit2, FileText, ChevronDown, ChevronUp, List, Plus, ClipboardCheck, Eye, Search, Filter, ArrowRight, IndianRupee, Car, User, MapPin, Clock, Calendar, Landmark, ShieldCheck, Timer, Files, Send, X as CloseIcon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import PDDForm from '@/components/PDDForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -35,23 +35,64 @@ const LoanDocumentsList = ({ loanId }: { loanId: string | number }) => {
     enabled: !!loanId,
   });
 
-  if (isLoading) return <div className="text-[10px] animate-pulse text-muted-foreground">Loading...</div>;
+  if (isLoading) return <div className="text-[10px] animate-pulse text-muted-foreground">Loading documents...</div>;
   if (documents.length === 0) return <div className="text-[10px] text-muted-foreground italic">No documents attached</div>;
 
+  // Categorize documents: Latest of each type vs Historical versions
+  const latestByType: Record<string, any> = {};
+  const history: any[] = [];
+  const sortedDocs = [...documents].sort((a, b) => b.id - a.id);
+  
+  sortedDocs.forEach(doc => {
+    if (!latestByType[doc.document_type]) {
+      latestByType[doc.document_type] = doc;
+    } else {
+      history.push(doc);
+    }
+  });
+
+  const latest = Object.values(latestByType);
+
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {documents.map((doc: any) => (
-        <a
-          key={doc.id}
-          href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-accent/5 border border-accent/10 text-[9px] font-black text-accent hover:bg-accent/10 transition-all shadow-sm uppercase tracking-tighter"
-        >
-          <FileText size={8} />
-          {doc.document_type.replace(/_/g, ' ')}
-        </a>
-      ))}
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest ml-1">Current Latest Versions</p>
+        <div className="flex flex-wrap gap-2">
+          {latest.map((doc: any) => (
+            <a
+              key={doc.id}
+              href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-700 hover:bg-emerald-500/20 transition-all shadow-sm uppercase tracking-tighter"
+            >
+              <CheckCircle2 size={10} />
+              {doc.document_type.replace(/_/g, ' ')}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {history.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1">Previous History (Replaced Files)</p>
+          <div className="flex flex-wrap gap-2">
+            {history.map((doc: any) => (
+              <a
+                key={doc.id}
+                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60 text-[9px] font-bold text-muted-foreground/70 hover:bg-muted/60 transition-all shadow-sm uppercase tracking-tighter"
+              >
+                <Clock size={8} />
+                {doc.document_type.replace(/_/g, ' ')}
+                <span className="text-[7px] font-medium opacity-50 px-1 bg-white/50 rounded ml-1">v{doc.id}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -91,6 +132,9 @@ export default function PDDTracking() {
   };
 
   const [editingLoanId, setEditingLoanId] = useState<number | null>(null);
+
+  const [rejectionModal, setRejectionModal] = useState<{ isOpen: boolean; loanId: string | number | null }>({ isOpen: false, loanId: null });
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const { data: allLoans = [], isLoading, refetch } = useQuery({
     queryKey: ['pdd-loans-raw', user?.id, user?.role, user?.branch_id, activeTab],
@@ -512,8 +556,8 @@ export default function PDDTracking() {
                               <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <button
                                   onClick={() => {
-                                    const reason = prompt('Reason for rejection:');
-                                    if (reason) rejectPdd.mutate({ loanIdOrNumber: loan.loan_number || loan.id, reason });
+                                    setRejectionModal({ isOpen: true, loanId: loan.loan_number || loan.id });
+                                    setRejectionReason('');
                                   }}
                                   disabled={rejectPdd.isPending}
                                   className="flex-1 sm:flex-none px-8 py-3 rounded-2xl border-2 border-rose-500/20 text-rose-600 text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
@@ -542,6 +586,67 @@ export default function PDDTracking() {
           })
         )}
       </div>
+
+      {/* Custom Rejection Modal */}
+      {rejectionModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card w-full max-w-md rounded-[2.5rem] border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-foreground">Reject PDD</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Correction Required</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setRejectionModal({ isOpen: false, loanId: null })}
+                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+                >
+                  <CloseIcon size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-foreground/80 leading-relaxed">
+                  Please provide a clear reason for sending this application back. The employee will see this as revision remarks.
+                </p>
+                <textarea
+                  autoFocus
+                  placeholder="e.g. RC Document is blurry, please re-upload..."
+                  className="w-full px-5 py-4 bg-muted/30 border border-border rounded-2xl text-sm min-h-[140px] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => setRejectionModal({ isOpen: false, loanId: null })}
+                  className="flex-1 px-6 py-4 rounded-2xl text-xs font-black text-muted-foreground hover:bg-muted transition-all uppercase tracking-widest"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!rejectionReason.trim()) return toast.error('Please enter a reason');
+                    rejectPdd.mutate({ loanIdOrNumber: rejectionModal.loanId!, reason: rejectionReason });
+                    setRejectionModal({ isOpen: false, loanId: null });
+                  }}
+                  disabled={rejectPdd.isPending}
+                  className="flex-[2] px-8 py-4 bg-rose-600 text-white rounded-2xl text-xs font-black hover:bg-rose-700 shadow-xl shadow-rose-600/30 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                >
+                  <Send size={16} />
+                  Confirm Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
