@@ -15,7 +15,7 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { getFileUrl } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer, RefreshCw, Sparkles } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
@@ -329,6 +329,7 @@ export default function LoanDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [isEditingPDD, setIsEditingPDD] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [pddReason, setPddReason] = useState('');
@@ -578,6 +579,14 @@ export default function LoanDetail() {
               </button>
             )}
 
+            <button
+              onClick={() => setShowAIModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors shadow-sm animate-pulse-subtle"
+            >
+              <Sparkles size={14} className="text-accent" />
+              Vehicle AI
+            </button>
+
             {/* Workflow Actions */}
             {!isPddManager && (
               <WorkflowActions
@@ -644,12 +653,6 @@ export default function LoanDetail() {
 
             <div className="flex flex-col lg:flex-row gap-6 mb-6">
               <div className="flex-1 min-w-0 space-y-6">
-                {/* AI Visualizer Section */}
-                <CarAIVisualizer 
-                  loanId={loan.id} 
-                  modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
-                  canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
-                />
                 {/* PDD Section - Audit Panel for PDD Manager */}
                 {isPddManager && (loan.status === 'approved' || loan.status === 'disbursed') && (loan as any).pdd_status === 'pending_approval' && (
                   <div className="space-y-6">
@@ -1427,6 +1430,38 @@ export default function LoanDetail() {
         }}
       />
       {/* PDD Form Modal */}
+
+      {/* AI Visualizer Modal */}
+      {showAIModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-accent/10 rounded-xl">
+                  <Sparkles size={18} className="text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Vehicle AI Insights</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70 tracking-widest">Powered by Gemini 2.5 Flash</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAIModal(false)}
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <X size={20} className="text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CarAIVisualizer 
+                loanId={loan.id} 
+                modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
+                canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );
