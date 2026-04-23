@@ -41,7 +41,7 @@ const DOC_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-const CarAIVisualizer = ({ loanId, modelName }: { loanId: string | number; modelName: string }) => {
+const CarAIVisualizer = ({ loanId, modelName, canRefresh }: { loanId: string | number; modelName: string; canRefresh: boolean }) => {
   const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -95,14 +95,16 @@ const CarAIVisualizer = ({ loanId, modelName }: { loanId: string | number; model
           <CheckCircle2 size={10} className="text-emerald-400" />
           <span className="text-[9px] font-black text-white uppercase tracking-widest">AI Verified Visual</span>
         </div>
-        <button 
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
-          title="Regenerate AI Visuals"
-        >
-          <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
-        </button>
+        {canRefresh && (
+          <button 
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
+            title="Regenerate AI Visuals"
+          >
+            <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
+          </button>
+        )}
       </div>
       <div className="p-4 space-y-3">
         <div>
@@ -1233,6 +1235,7 @@ export default function LoanDetail() {
                     <CarAIVisualizer 
                       loanId={loan.id} 
                       modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
+                      canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
                     />
 
                     {/* Remarks Section */}
