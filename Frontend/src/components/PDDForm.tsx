@@ -121,8 +121,8 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     try {
       if (fcFile || nocFile) {
         const docFormData = new FormData();
-        if (fcFile) docFormData.append('fc_document', fcFile);
-        if (nocFile) docFormData.append('noc_document', nocFile);
+        if (fcFile) docFormData.append('fitness_document', fcFile);
+        if (nocFile) docFormData.append('noc', nocFile);
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
           method: 'POST',
