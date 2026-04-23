@@ -98,6 +98,9 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
 
   const [fcFile, setFcFile] = useState<File | null>(null);
   const [nocFile, setNocFile] = useState<File | null>(null);
+  const [rcFile, setRcFile] = useState<File | null>(null);
+  const [dmFile, setDmFile] = useState<File | null>(null);
+  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
@@ -119,10 +122,13 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      if (fcFile || nocFile) {
+      if (fcFile || nocFile || rcFile || dmFile || insuranceFile) {
         const docFormData = new FormData();
         if (fcFile) docFormData.append('foreclose_document', fcFile);
         if (nocFile) docFormData.append('noc', nocFile);
+        if (rcFile) docFormData.append('rc_document', rcFile);
+        if (dmFile) docFormData.append('dm_document', dmFile);
+        if (insuranceFile) docFormData.append('insurance_document', insuranceFile);
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
           method: 'POST',
@@ -256,50 +262,52 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
 
           </FormSection>
 
-          <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
-            <InputField 
-              label={`FC Deposited By ${isBT ? '*' : ''}`} icon={<User size={12}/>}
-              type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label={`FC Deposit Date ${isBT ? '*' : ''}`} icon={<Calendar size={12}/>}
-              type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label={`Current FC Status ${isBT ? '*' : ''}`} icon={<AlertCircle size={12}/>}
-              type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="FC Receipt" icon={<FileText size={12}/>}
-              type="text" value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <div className="space-y-1.5 mt-2">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <FileText size={12}/>
-                Upload Foreclose Document
-              </label>
-              <input 
-                type="file" 
-                onChange={(e) => setFcFile(e.target.files?.[0] || null)}
+          {isBT && (
+            <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
+              <InputField 
+                label={`FC Deposited By *`} icon={<User size={12}/>}
+                type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
                 disabled={!isEmployee}
-                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
               />
-            </div>
-            <InputField 
-              label="Zero Statement" icon={<FileText size={12}/>}
-              type="text" value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="Prev Financier Name" icon={<Landmark size={12}/>}
-              type="text" value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
-              disabled={!isEmployee}
-            />
-          </FormSection>
+              <InputField 
+                label={`FC Deposit Date *`} icon={<Calendar size={12}/>}
+                type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label={`Current FC Status *`} icon={<AlertCircle size={12}/>}
+                type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="FC Receipt" icon={<FileText size={12}/>}
+                type="text" value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <div className="space-y-1.5 mt-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                  <FileText size={12}/>
+                  Upload Foreclose Document
+                </label>
+                <input 
+                  type="file" 
+                  onChange={(e) => setFcFile(e.target.files?.[0] || null)}
+                  disabled={!isEmployee}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+              </div>
+              <InputField 
+                label="Zero Statement" icon={<FileText size={12}/>}
+                type="text" value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <InputField 
+                label="Prev Financier Name" icon={<Landmark size={12}/>}
+                type="text" value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
+                disabled={!isEmployee}
+              />
+            </FormSection>
+          )}
 
           <FormSection title="RTO & Documents" icon={<Files size={18} />} colorClass="bg-emerald-600">
             <InputField 
@@ -344,6 +352,30 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="text" value={formData.pending_rto_documents} onChange={(e) => setFormData({...formData, pending_rto_documents: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="space-y-1.5 mt-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <FileText size={12}/>
+                Upload RC Document
+              </label>
+              <input 
+                type="file" 
+                onChange={(e) => setRcFile(e.target.files?.[0] || null)}
+                disabled={!isEmployee}
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+            </div>
+            <div className="space-y-1.5 mt-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <FileText size={12}/>
+                Upload DM Document
+              </label>
+              <input 
+                type="file" 
+                onChange={(e) => setDmFile(e.target.files?.[0] || null)}
+                disabled={!isEmployee}
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+            </div>
           </FormSection>
 
           <FormSection title="Vehicle Verification" icon={<ClipboardCheck size={18} />} colorClass="bg-amber-600">
@@ -374,6 +406,18 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="text" value={formData.insurance_endorsement} onChange={(e) => setFormData({...formData, insurance_endorsement: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="space-y-1.5 mt-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <ShieldCheck size={12}/>
+                Upload Insurance Document
+              </label>
+              <input 
+                type="file" 
+                onChange={(e) => setInsuranceFile(e.target.files?.[0] || null)}
+                disabled={!isEmployee}
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+              />
+            </div>
             <InputField 
               label="Police Case Status" icon={<ShieldCheck size={12}/>}
               type="text" value={formData.police_case_status} onChange={(e) => setFormData({...formData, police_case_status: e.target.value})} 
