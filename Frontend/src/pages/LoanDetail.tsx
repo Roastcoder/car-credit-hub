@@ -741,20 +741,6 @@ export default function LoanDetail() {
                   </div>
                 )}
 
-                {/* Manual Reference Search */}
-                <div className="bg-card rounded-xl border border-border p-4 mb-6 overflow-hidden">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                    <h3 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Manual Reference Search</h3>
-                  </div>
-                  <div className="min-h-[50px]">
-                    <div dangerouslySetInnerHTML={{ __html: `
-                      <script async src="https://cse.google.com/cse.js?cx=5576540ad1eb442ec"></script>
-                      <div class="gcse-search"></div>
-                    ` }} />
-                  </div>
-                </div>
-
                 {/* AI Visualizer Section */}
                 <CarAIVisualizer 
                   loanId={loan.id} 
