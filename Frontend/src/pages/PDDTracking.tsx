@@ -22,6 +22,40 @@ const getPddStatusStyles = (status?: string) => {
   return 'bg-muted text-muted-foreground';
 };
 
+const LoanDocumentsList = ({ loanId }: { loanId: string | number }) => {
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ['loan-documents-mini', loanId],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loanId}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!loanId,
+  });
+
+  if (isLoading) return <div className="text-[10px] animate-pulse text-muted-foreground">Loading documents...</div>;
+  if (documents.length === 0) return <div className="text-[10px] text-muted-foreground italic">No documents found</div>;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {documents.map((doc: any) => (
+        <a
+          key={doc.id}
+          href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-2 py-1 rounded bg-accent/5 border border-accent/10 text-[10px] font-bold text-accent hover:bg-accent/10 transition-all shadow-sm"
+        >
+          <FileText size={10} />
+          {doc.document_type.replace(/_/g, ' ').toUpperCase()}
+        </a>
+      ))}
+    </div>
+  );
+};
+
 export default function PDDTracking() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -515,6 +549,17 @@ export default function PDDTracking() {
                         <p className="text-muted-foreground mb-1">Previous DTO NOC</p>
                         <p className="font-semibold text-foreground">{loan.previous_dto_noc || '—'}</p>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Document History */}
+                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 md:col-span-2 lg:col-span-3">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <div className="w-1.5 h-4 bg-rose-500 rounded-full" />
+                      Loan Documents History
+                    </h3>
+                    <div className="p-1">
+                      <LoanDocumentsList loanId={loan.loan_number || loan.id} />
                     </div>
                   </div>
                 </div>
