@@ -96,6 +96,8 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     pdd_remarks: '',
   });
 
+  const [fcFile, setFcFile] = useState<File | null>(null);
+  const [nocFile, setNocFile] = useState<File | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
@@ -117,6 +119,20 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
+      if (fcFile || nocFile) {
+        const docFormData = new FormData();
+        if (fcFile) docFormData.append('fc_document', fcFile);
+        if (nocFile) docFormData.append('noc_document', nocFile);
+        
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: docFormData
+        }).catch(err => console.error('Failed to upload documents', err));
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/pdd`, {
         method: 'PUT',
         headers: {
@@ -261,6 +277,18 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="text" value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="space-y-1.5 mt-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <FileText size={12}/>
+                Upload FC Document
+              </label>
+              <input 
+                type="file" 
+                onChange={(e) => setFcFile(e.target.files?.[0] || null)}
+                disabled={!isEmployee}
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
             <InputField 
               label="Zero Statement" icon={<FileText size={12}/>}
               type="text" value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
@@ -374,6 +402,18 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
               type="text" value={formData.previous_dto_noc} onChange={(e) => setFormData({...formData, previous_dto_noc: e.target.value})} 
               disabled={!isEmployee}
             />
+            <div className="space-y-1.5 mt-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+                <FileText size={12}/>
+                Upload NOC Document
+              </label>
+              <input 
+                type="file" 
+                onChange={(e) => setNocFile(e.target.files?.[0] || null)}
+                disabled={!isEmployee}
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+              />
+            </div>
             <InputField 
               label="Commitment Date" icon={<Timer size={12}/>}
               type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} 
