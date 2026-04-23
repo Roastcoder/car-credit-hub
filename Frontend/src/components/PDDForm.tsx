@@ -157,8 +157,10 @@ const FormSection = ({ title, icon, children, colorClass }: { title: string, ico
       </div>
       <h3 className="text-[12px] font-black uppercase tracking-widest text-white leading-none">{title}</h3>
     </div>
-    <div className="p-6 space-y-5 flex-1">
-      {children}
+    <div className="p-8 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {children}
+      </div>
     </div>
   </div>
 );
@@ -379,8 +381,8 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           )}
         </div>
 
-        {/* High Density Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Stacked Layout - Single Page Form Style */}
+        <div className="flex flex-col gap-8 max-w-5xl mx-auto">
           
           <FormSection title="Finance & Bank" icon={<CreditCard size={20} />} colorClass="bg-blue-600/90">
             <InputField 
@@ -559,7 +561,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           </FormSection>
 
           <FormSection title="Additional Remarks" icon={<MessageSquare size={20} />} colorClass="bg-slate-700/90">
-            <div className="space-y-4">
+            <div className="md:col-span-2 lg:col-span-3 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Process Remarks</label>
                 <textarea 
