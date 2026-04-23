@@ -96,26 +96,16 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
               </div>
 
               {/* Step Content */}
-              <div className="mt-3 text-center max-w-[120px]">
+              <div className="mt-3 text-center px-1">
                 <div className={cn(
-                  "text-sm font-semibold mb-1",
+                  "text-[10px] font-black uppercase tracking-tight mb-0.5",
                   {
                     'text-green-600': state === 'completed',
                     'text-blue-600': state === 'current',
-                    'text-gray-500': state === 'pending'
-                  }
-                )}>
-                  {step.label}
-                </div>
-                <div className={cn(
-                  "text-xs leading-tight",
-                  {
-                    'text-green-500': state === 'completed',
-                    'text-blue-500': state === 'current',
                     'text-gray-400': state === 'pending'
                   }
                 )}>
-                  {step.description}
+                  {step.label}
                 </div>
               </div>
 

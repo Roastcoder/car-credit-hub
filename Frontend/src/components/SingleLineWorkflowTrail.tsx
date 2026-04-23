@@ -63,18 +63,18 @@ export function SingleLineWorkflowTrail({
   };
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center justify-between w-full gap-2", className)}>
       {WORKFLOW_STEPS.map((step, index) => {
         const state = getStepState(index);
         const isLast = index === WORKFLOW_STEPS.length - 1;
         
         return (
-          <div key={step.status} className="flex items-center">
+          <div key={step.status} className={cn("flex items-center", !isLast && "flex-1")}>
             {/* Step */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-fit">
               {/* Circle */}
               <div className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all",
+                "w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium transition-all",
                 {
                   'bg-green-500 text-white': state === 'completed',
                   'bg-blue-500 text-white ring-2 ring-blue-200': state === 'current',
@@ -90,29 +90,17 @@ export function SingleLineWorkflowTrail({
 
               {/* Label and Description */}
               {(showLabels || showDescriptions) && (
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   {showLabels && (
                     <span className={cn(
-                      "text-xs font-medium",
+                      "text-[10px] font-bold uppercase tracking-tight whitespace-nowrap",
                       {
                         'text-green-600': state === 'completed',
                         'text-blue-600': state === 'current',
-                        'text-gray-500': state === 'pending'
-                      }
-                    )}>
-                      {step.label}
-                    </span>
-                  )}
-                  {showDescriptions && (
-                    <span className={cn(
-                      "text-xs",
-                      {
-                        'text-green-500': state === 'completed',
-                        'text-blue-500': state === 'current',
                         'text-gray-400': state === 'pending'
                       }
                     )}>
-                      {step.description}
+                      {step.label}
                     </span>
                   )}
                 </div>
@@ -121,16 +109,18 @@ export function SingleLineWorkflowTrail({
 
             {/* Arrow Connector */}
             {!isLast && (
-              <ArrowRight 
-                size={12} 
-                className={cn(
-                  "mx-1 transition-colors",
-                  {
-                    'text-green-500': index < currentStepIndex,
-                    'text-gray-300': index >= currentStepIndex
-                  }
-                )}
-              />
+              <div className="flex-1 mx-2 flex items-center justify-center">
+                <ArrowRight 
+                  size={12} 
+                  className={cn(
+                    "transition-colors",
+                    {
+                      'text-green-500': index < currentStepIndex,
+                      'text-gray-200': index >= currentStepIndex
+                    }
+                  )}
+                />
+              </div>
             )}
           </div>
         );
