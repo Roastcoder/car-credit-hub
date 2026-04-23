@@ -261,7 +261,8 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     fc: null,
     noc: null,
-    rc: null,
+    rc_front: null,
+    rc_back: null,
     dm: null,
     insurance: null
   });
@@ -290,7 +291,8 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
         const docFormData = new FormData();
         if (files.fc) docFormData.append('foreclose_document', files.fc);
         if (files.noc) docFormData.append('noc', files.noc);
-        if (files.rc) docFormData.append('rc_document', files.rc);
+        if (files.rc_front) docFormData.append('rc_front', files.rc_front);
+        if (files.rc_back) docFormData.append('rc_back', files.rc_back);
         if (files.dm) docFormData.append('dm_document', files.dm);
         if (files.insurance) docFormData.append('insurance', files.insurance);
         
@@ -550,12 +552,21 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           {/* Consolidated Document Upload Section */}
           <FormSection title="Document Verification" icon={<Files size={18} />} index={isBT ? 6 : 5}>
             <DocumentUploadCard 
-              label="RC Image"
-              file={files.rc}
+              label="RC Front"
+              file={files.rc_front}
               existingDocs={existingDocuments}
-              types={['rc_front', 'rc_back', 'rc_document']}
-              onChange={(f) => setFiles({...files, rc: f})}
-              onClear={() => setFiles({...files, rc: null})}
+              types={['rc_front', 'rc_document']}
+              onChange={(f) => setFiles({...files, rc_front: f})}
+              onClear={() => setFiles({...files, rc_front: null})}
+              disabled={!isEmployee}
+            />
+            <DocumentUploadCard 
+              label="RC Back"
+              file={files.rc_back}
+              existingDocs={existingDocuments}
+              types={['rc_back']}
+              onChange={(f) => setFiles({...files, rc_back: f})}
+              onClear={() => setFiles({...files, rc_back: null})}
               disabled={!isEmployee}
             />
             <DocumentUploadCard 
