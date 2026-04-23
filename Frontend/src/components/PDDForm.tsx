@@ -121,7 +121,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
     try {
       if (fcFile || nocFile) {
         const docFormData = new FormData();
-        if (fcFile) docFormData.append('fitness_document', fcFile);
+        if (fcFile) docFormData.append('foreclose_document', fcFile);
         if (nocFile) docFormData.append('noc', nocFile);
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
@@ -280,7 +280,7 @@ export default function PDDForm({ loan, onCancel, onSuccess }: PDDFormProps) {
             <div className="space-y-1.5 mt-2">
               <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
                 <FileText size={12}/>
-                Upload FC Document
+                Upload Foreclose Document
               </label>
               <input 
                 type="file" 
