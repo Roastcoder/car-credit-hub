@@ -117,7 +117,7 @@ export const FetchCreditModal: React.FC<FetchCreditModalProps> = ({
         case 'CIBIL':
           payload.name = fetchForm.name;
           payload.pan = fetchForm.identifier_value;
-          payload.gender = fetchForm.gender.toUpperCase();
+          payload.gender = fetchForm.gender.charAt(0).toUpperCase() + fetchForm.gender.slice(1);
           break;
         case 'EXPERIAN':
           payload.name = fetchForm.name;
