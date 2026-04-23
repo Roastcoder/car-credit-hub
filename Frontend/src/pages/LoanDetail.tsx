@@ -1058,30 +1058,91 @@ export default function LoanDetail() {
                 )}
 
                 {/* Documents Section */}
-                {true && (
-                  <Section title="Documents" icon={<FileText size={16} />}>
-                    {documents.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {documents.map((doc: any) => (
-                          <DocumentPreviewCard
-                            key={doc.id}
-                            doc={doc}
-                            onDelete={handleDeleteDoc}
-                            onReupload={handleReuploadDoc}
-                            canDelete={permissions.canDelete}
-                            isUploading={uploadingDocId === doc.id}
-                            isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
-                          />
-                        ))}
+                {(() => {
+                  const categorizedDocs = documents.reduce((acc: any, doc: any) => {
+                    const type = doc.document_type;
+                    if (!acc[type] || new Date(doc.created_at) > new Date(acc[type].created_at)) {
+                      if (acc[type]) {
+                        acc.history = acc.history || [];
+                        acc.history.push(acc[type]);
+                      }
+                      acc[type] = doc;
+                    } else {
+                      acc.history = acc.history || [];
+                      acc.history.push(doc);
+                    }
+                    return acc;
+                  }, { history: [] });
+
+                  const latestDocs = Object.keys(categorizedDocs)
+                    .filter(key => key !== 'history')
+                    .map(key => categorizedDocs[key]);
+                  
+                  const historyDocs = categorizedDocs.history.sort((a: any, b: any) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                  );
+
+                  return (
+                    <Section title="Documents History" icon={<FileText size={16} />}>
+                      <div className="space-y-8">
+                        {/* Latest Documents */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-600 border border-emerald-500/20 uppercase tracking-widest">
+                              Current Latest Versions
+                            </span>
+                            <div className="h-[1px] flex-1 bg-border/50" />
+                          </div>
+                          {latestDocs.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {latestDocs.map((doc: any) => (
+                                <DocumentPreviewCard
+                                  key={doc.id}
+                                  doc={doc}
+                                  onDelete={handleDeleteDoc}
+                                  onReupload={handleReuploadDoc}
+                                  canDelete={permissions.canDelete}
+                                  isUploading={uploadingDocId === doc.id}
+                                  isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
+                              <Camera size={32} className="text-muted-foreground/30 mb-2" />
+                              <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* History Documents */}
+                        {historyDocs.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="px-2 py-0.5 rounded-full bg-muted text-[10px] font-black text-muted-foreground border border-border uppercase tracking-widest">
+                                Previous Versions (History)
+                              </span>
+                              <div className="h-[1px] flex-1 bg-border/50" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-75 hover:opacity-100 transition-opacity">
+                              {historyDocs.map((doc: any) => (
+                                <DocumentPreviewCard
+                                  key={doc.id}
+                                  doc={doc}
+                                  onDelete={handleDeleteDoc}
+                                  onReupload={handleReuploadDoc}
+                                  canDelete={permissions.canDelete}
+                                  isUploading={uploadingDocId === doc.id}
+                                  isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-xl bg-muted/20">
-                        <Camera size={32} className="text-muted-foreground/30 mb-2" />
-                        <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
-                      </div>
-                    )}
-                  </Section>
-                )}
+                    </Section>
+                  );
+                })()}
               </div>
 
               {/* Right Sidebar */}
