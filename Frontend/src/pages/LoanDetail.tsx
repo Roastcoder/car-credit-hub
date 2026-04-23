@@ -15,7 +15,7 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { getFileUrl } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer, RefreshCw } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
@@ -45,23 +45,31 @@ const CarAIVisualizer = ({ loanId, modelName }: { loanId: string | number; model
   const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAI = async (force = false) => {
+    try {
+      if (force) setRefreshing(true);
+      const response = await loansAPI.getAiVisuals(loanId, force);
+      if (response.data) {
+        setData(response.data);
+      }
+    } catch (e) {
+      console.error('AI Visuals Error:', e);
+      setError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAI = async () => {
-      try {
-        const response = await loansAPI.getAiVisuals(loanId);
-        if (response.data) {
-          setData(response.data);
-        }
-      } catch (e) {
-        console.error('AI Visuals Error:', e);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
     if (loanId) fetchAI();
   }, [loanId]);
+
+  const handleRefresh = () => {
+    fetchAI(true);
+  };
 
   if (loading) return (
     <div className="h-48 flex flex-col items-center justify-center bg-muted/20 rounded-2xl border border-dashed border-border animate-pulse">
@@ -87,6 +95,14 @@ const CarAIVisualizer = ({ loanId, modelName }: { loanId: string | number; model
           <CheckCircle2 size={10} className="text-emerald-400" />
           <span className="text-[9px] font-black text-white uppercase tracking-widest">AI Verified Visual</span>
         </div>
+        <button 
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
+          title="Regenerate AI Visuals"
+        >
+          <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
+        </button>
       </div>
       <div className="p-4 space-y-3">
         <div>
