@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { 
@@ -18,7 +18,14 @@ import {
   MapPin,
   Eye,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Car,
+  IndianRupee,
+  CheckCircle2,
+  Trash2,
+  Camera,
+  Upload,
+  ArrowLeft
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -30,37 +37,127 @@ interface PDDFormProps {
   existingDocuments?: any[];
 }
 
-const ExistingDocLink = ({ types, docs }: { types: string[], docs: any[] }) => {
-  const matches = docs.filter(d => types.includes(d.document_type));
-  if (matches.length === 0) return null;
-  
+const DocumentUploadCard = ({
+  label,
+  file,
+  existingDocs,
+  types,
+  onChange,
+  onClear,
+  disabled
+}: {
+  label: string;
+  file: File | null;
+  existingDocs: any[];
+  types: string[];
+  onChange: (file: File | null) => void;
+  onClear: () => void;
+  disabled?: boolean;
+}) => {
+  const [preview, setPreview] = useState<string | null>(null);
+  const matchedDocs = existingDocs.filter(d => types.includes(d.document_type));
+
+  useEffect(() => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (matchedDocs.length > 0) {
+      const doc = matchedDocs[0];
+      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+      setPreview(`${baseUrl}${doc.file_url}`);
+    } else {
+      setPreview(null);
+    }
+  }, [file, matchedDocs]);
+
+  const isImage = (url: string | null) => {
+    if (!url) return false;
+    return url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || url.startsWith('blob:');
+  };
+
   return (
-    <div className="flex flex-wrap gap-1 mt-1 ml-1">
-      {matches.map((doc) => (
-        <a 
-          key={doc.id} 
-          href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${doc.file_url}`} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-[9px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-md flex items-center gap-1 hover:bg-accent/20 transition-all shadow-sm border border-accent/20"
-        >
-          <Eye size={10} />
-          {doc.document_type.replace(/_/g, ' ').toUpperCase()}
-        </a>
-      ))}
+    <div className={cn(
+      "group relative bg-card border border-border/60 rounded-2xl p-4 transition-all hover:shadow-md hover:border-accent/40 flex flex-col gap-3",
+      (file || matchedDocs.length > 0) ? "bg-accent/[0.02]" : ""
+    )}>
+      <div className="flex justify-between items-center">
+        <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+          <FileText size={12} className="text-accent" />
+          {label}
+        </h4>
+        {(file || matchedDocs.length > 0) && (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-[9px] font-black text-green-600 border border-green-500/20 uppercase tracking-tighter">
+            <CheckCircle2 size={10} /> {file ? 'NEW FILE' : 'VERIFIED'}
+          </span>
+        )}
+      </div>
+
+      <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-all flex items-center justify-center">
+        {preview ? (
+          <>
+            {isImage(preview) ? (
+              <img src={preview} alt={label} className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <FileText size={32} className="text-accent/60" />
+                <span className="text-[10px] font-black text-muted-foreground uppercase">PDF Document</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.open(preview, '_blank')}
+                className="p-2 rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
+                title="View Document"
+              >
+                <Eye size={18} />
+              </button>
+              {file && !disabled && (
+                <button
+                  type="button"
+                  onClick={onClear}
+                  className="p-2 rounded-full bg-red-500/20 text-red-200 hover:bg-red-500/40 transition-colors"
+                  title="Remove File"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 py-4">
+            <Upload size={24} className="text-muted-foreground/40" />
+            <span className="text-[10px] font-black text-muted-foreground/60 uppercase">No Document</span>
+          </div>
+        )}
+      </div>
+
+      {!disabled && (
+        <label className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-accent/10 text-accent text-xs font-black cursor-pointer hover:bg-accent/20 transition-all active:scale-95">
+          <Camera size={14} />
+          {file ? 'CHANGE FILE' : 'UPLOAD DOCUMENT'}
+          <input 
+            type="file" 
+            className="hidden" 
+            onChange={(e) => onChange(e.target.files?.[0] || null)}
+            accept="image/*,application/pdf"
+          />
+        </label>
+      )}
     </div>
   );
 };
 
 const FormSection = ({ title, icon, children, colorClass }: { title: string, icon: React.ReactNode, children: React.ReactNode, colorClass: string }) => (
-  <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full transform transition-all hover:shadow-md">
-    <div className={cn("px-4 py-3 flex items-center gap-2 border-b border-border/40", colorClass)}>
-      <div className="p-1.5 rounded-lg bg-white/20 text-white shadow-sm">
+  <div className="bg-card rounded-3xl border border-border/60 shadow-sm overflow-hidden flex flex-col h-full transform transition-all hover:shadow-md">
+    <div className={cn("px-5 py-4 flex items-center gap-3 border-b border-border/40", colorClass)}>
+      <div className="p-2 rounded-xl bg-white/20 text-white shadow-sm backdrop-blur-md">
         {icon}
       </div>
-      <h3 className="text-[11px] font-black uppercase tracking-widest text-white">{title}</h3>
+      <h3 className="text-[12px] font-black uppercase tracking-widest text-white leading-none">{title}</h3>
     </div>
-    <div className="p-5 space-y-4 flex-1">
+    <div className="p-6 space-y-5 flex-1">
       {children}
     </div>
   </div>
@@ -68,7 +165,7 @@ const FormSection = ({ title, icon, children, colorClass }: { title: string, ico
 
 const InputField = ({ label, icon, ...props }: { label: string, icon?: React.ReactNode } & React.InputHTMLAttributes<HTMLInputElement>) => (
   <div className="space-y-1.5">
-    <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
+    <label className="text-[10px] font-black text-muted-foreground uppercase flex items-center gap-1.5 ml-1 tracking-wider">
       {icon}
       {label}
     </label>
@@ -76,7 +173,7 @@ const InputField = ({ label, icon, ...props }: { label: string, icon?: React.Rea
       <input 
         {...props} 
         className={cn(
-          "w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent disabled:opacity-50 disabled:grayscale group-hover:border-accent/40",
+          "w-full px-4 py-3 bg-muted/20 border border-border/60 rounded-2xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent disabled:opacity-50 disabled:grayscale group-hover:border-accent/40 font-medium",
           props.className
         )} 
       />
@@ -120,11 +217,13 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     pdd_remarks: '',
   });
 
-  const [fcFile, setFcFile] = useState<File | null>(null);
-  const [nocFile, setNocFile] = useState<File | null>(null);
-  const [rcFile, setRcFile] = useState<File | null>(null);
-  const [dmFile, setDmFile] = useState<File | null>(null);
-  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<{ [key: string]: File | null }>({
+    fc: null,
+    noc: null,
+    rc: null,
+    dm: null,
+    insurance: null
+  });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
@@ -146,13 +245,13 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      if (fcFile || nocFile || rcFile || dmFile || insuranceFile) {
+      if (Object.values(files).some(f => !!f)) {
         const docFormData = new FormData();
-        if (fcFile) docFormData.append('foreclose_document', fcFile);
-        if (nocFile) docFormData.append('noc', nocFile);
-        if (rcFile) docFormData.append('rc_document', rcFile);
-        if (dmFile) docFormData.append('dm_document', dmFile);
-        if (insuranceFile) docFormData.append('insurance', insuranceFile);
+        if (files.fc) docFormData.append('foreclose_document', files.fc);
+        if (files.noc) docFormData.append('noc', files.noc);
+        if (files.rc) docFormData.append('rc_document', files.rc);
+        if (files.dm) docFormData.append('dm_document', files.dm);
+        if (files.insurance) docFormData.append('insurance', files.insurance);
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
           method: 'POST',
@@ -172,7 +271,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
         body: JSON.stringify(formData)
       });
       if (response.ok) {
-        toast.success('🎉 PDD Application Submitted Successfully for Manager Review!');
+        toast.success('🎉 PDD Application Submitted Successfully!');
         onSuccess();
       } else {
         const error = await response.json().catch(() => ({}));
@@ -187,47 +286,61 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
+    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-7xl mx-auto px-4 sm:px-6">
       <form onSubmit={handleSubmit} className="space-y-8 pb-12">
-        {/* Modern Header Info Card */}
-        <div className="bg-card rounded-3xl border-2 border-accent/20 shadow-xl shadow-accent/5 p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+        {/* Premium Header Summary Card */}
+        <div className="bg-card rounded-[2.5rem] border-2 border-accent/20 shadow-2xl shadow-accent/5 p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full -mr-48 -mt-48 blur-[100px] opacity-60" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full -ml-32 -mb-32 blur-[80px] opacity-40" />
           
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-wider">PDD Submission</span>
-              {isRejected && <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-wider">Revision Required</span>}
+          <div className="relative z-10 flex gap-6 items-center">
+            <div className="hidden sm:flex w-20 h-20 rounded-3xl bg-accent/10 border-2 border-accent/20 items-center justify-center text-accent shadow-inner">
+              <Car size={36} strokeWidth={1.5} />
             </div>
-            <h2 className="text-3xl font-black text-foreground tracking-tighter">
-              {loan.applicant_name}
-            </h2>
-            <p className="text-sm text-muted-foreground font-medium flex items-center gap-2 mt-1">
-              <span className="text-accent font-bold">{loan.loan_number}</span>
-              <span className="w-1 h-1 rounded-full bg-border" />
-              <span>{loan.car_make} {loan.car_model}</span>
-            </p>
+            <div>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className="px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest shadow-sm border border-accent/10">PDD UPDATE</span>
+                <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest shadow-sm border border-blue-500/10">{loan.loan_number}</span>
+                {isRejected && <span className="px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest shadow-sm border border-red-200">ACTION REQUIRED</span>}
+              </div>
+              <h2 className="text-4xl font-black text-foreground tracking-tight leading-none mb-2">
+                {loan.applicant_name}
+              </h2>
+              <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Car size={16} className="text-accent" />
+                  {loan.car_make} {loan.car_model}
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <IndianRupee size={16} className="text-emerald-500" />
+                  {new Intl.NumberFormat('en-IN').format(loan.loan_amount || 0)}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 relative z-10">
+          <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
             <button 
               type="button" 
               onClick={onCancel} 
-              className="px-6 py-3 rounded-2xl text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95"
+              className="flex-1 md:flex-none px-8 py-4 rounded-2xl text-sm font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95 border border-border/60 flex items-center justify-center gap-2"
             >
-              Cancel
+              <ArrowLeft size={18} />
+              Back
             </button>
             {isEmployee && (
               <button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-sm font-black hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 active:scale-95"
+                className="flex-1 md:flex-none px-10 py-4 bg-accent text-white rounded-2xl text-sm font-black hover:brightness-110 disabled:opacity-50 shadow-xl shadow-accent/30 transition-all flex items-center justify-center gap-2 active:scale-95 group"
               >
                 {isSubmitting ? (
-                  <>Saving...</>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Save size={18} />
-                    {isRejected ? 'Re-Submit PDD' : 'Submit for Approval'}
+                    <Save size={18} className="group-hover:scale-110 transition-transform" />
+                    {isRejected ? 'RE-SUBMIT PDD' : 'SAVE PDD DATA'}
                   </>
                 )}
               </button>
@@ -235,309 +348,238 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           </div>
         </div>
 
-        {/* Alerts Section */}
-        {(isRejected || isBT) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {isRejected && (
-              <div className="bg-red-50 border-2 border-red-100 p-5 rounded-2xl flex gap-4 items-start">
-                <div className="p-2 rounded-xl bg-red-500 text-white shadow-md">
-                  <AlertCircle size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">Rejection Remarks</p>
-                  <p className="text-sm text-red-700 font-medium italic">"{loan.pdd_rejection_reason || 'No specific reason provided'}"</p>
-                </div>
+        {/* Dynamic Alerts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {isRejected && (
+            <div className="bg-red-50/50 dark:bg-red-950/20 border-2 border-red-500/20 p-6 rounded-[2rem] flex gap-5 items-start animate-in zoom-in-95 duration-500">
+              <div className="p-3 rounded-2xl bg-red-500 text-white shadow-lg shadow-red-500/20">
+                <AlertCircle size={24} />
               </div>
-            )}
-            {isBT && (
-              <div className="bg-blue-50 border-2 border-blue-100 p-5 rounded-2xl flex gap-4 items-start">
-                <div className="p-2 rounded-xl bg-blue-500 text-white shadow-md">
-                  <Info size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1">Policy Notice</p>
-                  <p className="text-sm text-blue-700 font-medium">BT Scheme requires mandatory FC and NOC details for processing.</p>
-                </div>
+              <div className="flex-1">
+                <p className="text-[11px] font-black text-red-600 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  Correction Needed
+                </p>
+                <p className="text-sm text-red-700/90 dark:text-red-400 font-bold leading-relaxed italic border-l-4 border-red-500/30 pl-4 py-1">
+                  "{loan.pdd_rejection_reason || 'Please review all fields and documents before re-submitting.'}"
+                </p>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+          {isBT && (
+            <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-500/20 p-6 rounded-[2rem] flex gap-5 items-start">
+              <div className="p-3 rounded-2xl bg-indigo-500 text-white shadow-lg shadow-indigo-500/20">
+                <Landmark size={24} />
+              </div>
+              <div>
+                <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">BT Scheme Protocol</p>
+                <p className="text-sm text-indigo-700/80 dark:text-indigo-400 font-bold">Mandatory FC (Form C) and NOC documents are required for this application vertical.</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Form Grid with Section Outline */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FormSection title="Finance & Payment" icon={<CreditCard size={18} />} colorClass="bg-blue-600">
+        {/* High Density Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          <FormSection title="Finance & Bank" icon={<CreditCard size={20} />} colorClass="bg-blue-600/90">
             <InputField 
               label="Payment Received Date" icon={<Calendar size={12}/>}
               type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
-              label="Financier in M-Parivahan" icon={<Landmark size={12}/>}
-              type="text" placeholder="e.g. HDFC Bank"
+              label="M-Parivahan Financier" icon={<Landmark size={12}/>}
+              placeholder="e.g. HDFC Bank"
               value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
-              label="Balance Status" icon={<ShieldCheck size={12}/>}
-              type="text" placeholder="Pending/Clear"
+              label="Balance Status" icon={<IndianRupee size={12}/>}
+              placeholder="Full Payment Clear"
               value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} 
               disabled={!isEmployee}
             />
-
+            <InputField 
+              label="Finance Co. Update" icon={<Files size={12}/>}
+              placeholder="PDD Updated at Finance Co."
+              value={formData.pdd_update_finance_company} onChange={(e) => setFormData({...formData, pdd_update_finance_company: e.target.value})} 
+              disabled={!isEmployee}
+            />
           </FormSection>
 
           {isBT && (
-            <FormSection title="FC Details" icon={<Landmark size={18} />} colorClass="bg-indigo-600">
-              <InputField 
-                label={`FC Deposited By *`} icon={<User size={12}/>}
-                type="text" value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
-                disabled={!isEmployee}
-              />
-              <InputField 
-                label={`FC Deposit Date *`} icon={<Calendar size={12}/>}
-                type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
-                disabled={!isEmployee}
-              />
-              <InputField 
-                label={`Current FC Status *`} icon={<AlertCircle size={12}/>}
-                type="text" value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
-                disabled={!isEmployee}
-              />
-              <InputField 
-                label="FC Receipt" icon={<FileText size={12}/>}
-                type="text" value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
-                disabled={!isEmployee}
-              />
-              <div className="space-y-1.5 mt-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                  <FileText size={12}/>
-                  Upload Foreclose Document
-                  <ExistingDocLink types={['foreclose_document', 'fitness_document']} docs={existingDocuments} />
-                </label>
-                <input 
-                  type="file" 
-                  onChange={(e) => setFcFile(e.target.files?.[0] || null)}
+            <FormSection title="FC Details" icon={<Landmark size={20} />} colorClass="bg-indigo-600/90">
+              <div className="grid grid-cols-2 gap-4">
+                <InputField 
+                  label="FC Deposited By *" icon={<User size={12}/>}
+                  value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
                   disabled={!isEmployee}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                <InputField 
+                  label="Deposit Date *" icon={<Calendar size={12}/>}
+                  type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
+                  disabled={!isEmployee}
                 />
               </div>
               <InputField 
-                label="Zero Statement" icon={<FileText size={12}/>}
-                type="text" value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
+                label="Current FC Status *" icon={<AlertCircle size={12}/>}
+                value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
                 disabled={!isEmployee}
               />
               <InputField 
-                label="Prev Financier Name" icon={<Landmark size={12}/>}
-                type="text" value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
+                label="FC Receipt Number" icon={<FileText size={12}/>}
+                value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
+                disabled={!isEmployee}
+              />
+              <DocumentUploadCard 
+                label="Foreclose Document"
+                file={files.fc}
+                existingDocs={existingDocuments}
+                types={['foreclose_document', 'fitness_document']}
+                onChange={(f) => setFiles({...files, fc: f})}
+                onClear={() => setFiles({...files, fc: null})}
                 disabled={!isEmployee}
               />
             </FormSection>
           )}
 
-          <FormSection title="RTO & Documents" icon={<Files size={18} />} colorClass="bg-emerald-600">
+          <FormSection title="RTO & Description" icon={<Files size={20} />} colorClass="bg-emerald-600/90">
             <InputField 
               label="RTO Paper Details" icon={<FileText size={12}/>}
-              type="text" value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="Work Description" icon={<Info size={12}/>}
-              type="text" value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} 
+              value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
               label="Agent Name" icon={<User size={12}/>}
-              type="text" value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} 
+              value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Agent Contact" icon={<Phone size={12}/>}
+              value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
+              disabled={!isEmployee}
+            />
+            <InputField 
+              label="Work Status" icon={<AlertCircle size={12}/>}
+              value={formData.rto_work_status} onChange={(e) => setFormData({...formData, rto_work_status: e.target.value})} 
               disabled={!isEmployee}
             />
             <div className="grid grid-cols-2 gap-4">
-              <InputField 
-                label="Agent Mobile" icon={<Phone size={12}/>}
-                type="text" value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
+              <DocumentUploadCard 
+                label="RC Document"
+                file={files.rc}
+                existingDocs={existingDocuments}
+                types={['rc_front', 'rc_back', 'rc_document']}
+                onChange={(f) => setFiles({...files, rc: f})}
+                onClear={() => setFiles({...files, rc: null})}
                 disabled={!isEmployee}
               />
-              <InputField 
-                label="Agent Email" icon={<MessageSquare size={12}/>}
-                type="text" value={formData.rto_mail} onChange={(e) => setFormData({...formData, rto_mail: e.target.value})} 
+              <DocumentUploadCard 
+                label="DM Document"
+                file={files.dm}
+                existingDocs={existingDocuments}
+                types={['dm_document']}
+                onChange={(f) => setFiles({...files, dm: f})}
+                onClear={() => setFiles({...files, dm: null})}
                 disabled={!isEmployee}
-              />
-            </div>
-            <InputField 
-              label="Docs Location" icon={<MapPin size={12}/>}
-              type="text" value={formData.rto_docs_location} onChange={(e) => setFormData({...formData, rto_docs_location: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="RTO Work Status" icon={<AlertCircle size={12}/>}
-              type="text" value={formData.rto_work_status} onChange={(e) => setFormData({...formData, rto_work_status: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="Pending Documents" icon={<Files size={12}/>}
-              type="text" value={formData.pending_rto_documents} onChange={(e) => setFormData({...formData, pending_rto_documents: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <div className="space-y-1.5 mt-2">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <FileText size={12}/>
-                Upload RC Document
-                <ExistingDocLink types={['rc_front', 'rc_back', 'rc_document']} docs={existingDocuments} />
-              </label>
-              <input 
-                type="file" 
-                onChange={(e) => setRcFile(e.target.files?.[0] || null)}
-                disabled={!isEmployee}
-                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-              />
-            </div>
-            <div className="space-y-1.5 mt-2">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <FileText size={12}/>
-                Upload DM Document
-                <ExistingDocLink types={['dm_document']} docs={existingDocuments} />
-              </label>
-              <input 
-                type="file" 
-                onChange={(e) => setDmFile(e.target.files?.[0] || null)}
-                disabled={!isEmployee}
-                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
               />
             </div>
           </FormSection>
 
-          <FormSection title="Vehicle Verification" icon={<ClipboardCheck size={18} />} colorClass="bg-amber-600">
+          <FormSection title="Verification" icon={<ClipboardCheck size={20} />} colorClass="bg-amber-600/90">
             <div className="grid grid-cols-2 gap-4">
               <InputField 
-                label="Pollution" type="text" 
-                value={formData.pollution_status} onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} 
+                label="Pollution" value={formData.pollution_status} 
+                onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} 
                 disabled={!isEmployee}
               />
               <InputField 
-                label="Insurance" type="text"
-                value={formData.insurance_status} onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} 
+                label="Insurance" value={formData.insurance_status} 
+                onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} 
                 disabled={!isEmployee}
               />
               <InputField 
-                label="Vehicle Check" type="text"
-                value={formData.vehicle_check_status} onChange={(e) => setFormData({...formData, vehicle_check_status: e.target.value})} 
+                label="Challan" value={formData.challan_status} 
+                onChange={(e) => setFormData({...formData, challan_status: e.target.value})} 
                 disabled={!isEmployee}
               />
               <InputField 
-                label="Challan" type="text"
-                value={formData.challan_status} onChange={(e) => setFormData({...formData, challan_status: e.target.value})} 
+                label="Police Case" value={formData.police_case_status} 
+                onChange={(e) => setFormData({...formData, police_case_status: e.target.value})} 
                 disabled={!isEmployee}
               />
             </div>
             <InputField 
-              label="Insurance Endorsement" icon={<FileText size={12}/>}
-              type="text" value={formData.insurance_endorsement} onChange={(e) => setFormData({...formData, insurance_endorsement: e.target.value})} 
+              label="Insurance Endorsement" icon={<ShieldCheck size={12}/>}
+              value={formData.insurance_endorsement} onChange={(e) => setFormData({...formData, insurance_endorsement: e.target.value})} 
               disabled={!isEmployee}
             />
-            <div className="space-y-1.5 mt-2">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <ShieldCheck size={12}/>
-                Upload Insurance Document
-                <ExistingDocLink types={['insurance', 'insurance_document']} docs={existingDocuments} />
-              </label>
-              <input 
-                type="file" 
-                onChange={(e) => setInsuranceFile(e.target.files?.[0] || null)}
-                disabled={!isEmployee}
-                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
-              />
-            </div>
-            <InputField 
-              label="Police Case Status" icon={<ShieldCheck size={12}/>}
-              type="text" value={formData.police_case_status} onChange={(e) => setFormData({...formData, police_case_status: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <InputField 
-              label="Location" icon={<MapPin size={12}/>}
-              type="text" value={formData.dto_location} onChange={(e) => setFormData({...formData, dto_location: e.target.value})} 
+            <DocumentUploadCard 
+              label="Insurance Policy"
+              file={files.insurance}
+              existingDocs={existingDocuments}
+              types={['insurance', 'insurance_document']}
+              onChange={(f) => setFiles({...files, insurance: f})}
+              onClear={() => setFiles({...files, insurance: null})}
               disabled={!isEmployee}
             />
           </FormSection>
 
-          <FormSection title="NOC & Timeline" icon={<ShieldCheck size={18} />} colorClass="bg-purple-600">
+          <FormSection title="NOC & Schedule" icon={<ShieldCheck size={20} />} colorClass="bg-purple-600/90">
             <InputField 
               label={`NOC Status ${isBT ? '*' : ''}`} icon={<ShieldCheck size={12}/>}
-              type="text" value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
+              value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
-              label="NOC Checked By" icon={<User size={12}/>}
-              type="text" value={formData.noc_checked_by} onChange={(e) => setFormData({...formData, noc_checked_by: e.target.value})} 
+              label="Checked By" icon={<User size={12}/>}
+              value={formData.noc_checked_by} onChange={(e) => setFormData({...formData, noc_checked_by: e.target.value})} 
               disabled={!isEmployee}
             />
-            <InputField 
-              label="Previous DTO NOC" icon={<Files size={12}/>}
-              type="text" value={formData.previous_dto_noc} onChange={(e) => setFormData({...formData, previous_dto_noc: e.target.value})} 
-              disabled={!isEmployee}
-            />
-            <div className="space-y-1.5 mt-2">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <FileText size={12}/>
-                Upload NOC Document
-                <ExistingDocLink types={['noc']} docs={existingDocuments} />
-              </label>
-              <input 
-                type="file" 
-                onChange={(e) => setNocFile(e.target.files?.[0] || null)}
-                disabled={!isEmployee}
-                className="w-full px-3 py-2 text-sm border border-border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-              />
-            </div>
             <InputField 
               label="Commitment Date" icon={<Timer size={12}/>}
               type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} 
               disabled={!isEmployee}
             />
             <InputField 
-              label="Delay Days" icon={<AlertCircle size={12}/>}
+              label="Delay (Days)" icon={<AlertCircle size={12}/>}
               type="number" value={formData.delay_days} onChange={(e) => setFormData({...formData, delay_days: e.target.value})} 
               disabled={!isEmployee}
             />
-            <div className="col-span-1 space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 ml-1">
-                <MessageSquare size={12} />
-                Submission Remarks
-              </label>
-              <textarea 
-                value={formData.pdd_remarks} 
-                onChange={(e) => setFormData({...formData, pdd_remarks: e.target.value})}
-                placeholder="Optional submission notes..."
-                className="w-full h-20 p-3 bg-background border border-border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent disabled:opacity-50 resize-none"
-                disabled={!isEmployee}
-              />
+            <DocumentUploadCard 
+              label="NOC Document"
+              file={files.noc}
+              existingDocs={existingDocuments}
+              types={['noc']}
+              onChange={(f) => setFiles({...files, noc: f})}
+              onClear={() => setFiles({...files, noc: null})}
+              disabled={!isEmployee}
+            />
+          </FormSection>
+
+          <FormSection title="Additional Remarks" icon={<MessageSquare size={20} />} colorClass="bg-slate-700/90">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Process Remarks</label>
+                <textarea 
+                  className="w-full px-4 py-3 bg-muted/20 border border-border/60 rounded-2xl text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent group-hover:border-accent/40 font-medium"
+                  placeholder="Enter any additional notes for the manager..."
+                  value={formData.pdd_remarks}
+                  onChange={(e) => setFormData({...formData, pdd_remarks: e.target.value})}
+                  disabled={!isEmployee}
+                />
+              </div>
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-3">
+                <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                  Submitting this form will move the application to the Manager's PDD Approval queue. Ensure all required documents are attached.
+                </p>
+              </div>
             </div>
           </FormSection>
 
-
-          {/* Optional: Add a summary or guide section here */}
-          <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-center h-full relative overflow-hidden">
-            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
-            <h4 className="text-xl font-black mb-2 flex items-center gap-2">
-              <ClipboardCheck className="text-accent" />
-              Submission Guide
-            </h4>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Ensure all mandatory fields marked with an asterisk (*) are filled correctly. Submitted data will be sent to the PDD Manager for final verification and approval.
-            </p>
-            <div className="mt-6 flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-700 overflow-hidden flex items-center justify-center text-[10px] font-bold">{i}</div>)}
-              </div>
-              <p className="text-[10px] font-bold text-slate-400">Step-by-step verification active</p>
-            </div>
-          </div>
         </div>
-
-        {/* Footer info for admins */}
-        {!isEmployee && (
-          <div className="p-4 rounded-xl border border-dashed border-border text-center">
-            <p className="text-xs text-muted-foreground">You are viewing this form in read-only mode. Only assigned employees can edit PDD details.</p>
-          </div>
-        )}
       </form>
     </div>
   );
