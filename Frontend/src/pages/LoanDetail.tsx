@@ -78,7 +78,20 @@ const CarAIVisualizer = ({ loanId, modelName, canRefresh }: { loanId: string | n
     </div>
   );
 
-  if (error || !data) return null;
+  if (error && !data) return (
+    <div className="h-48 flex flex-col items-center justify-center bg-destructive/5 rounded-2xl border border-dashed border-destructive/20 p-6 text-center">
+      <Camera className="w-6 h-6 text-destructive/40 mb-2" />
+      <p className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest mb-3">AI Visuals Unavailable</p>
+      <button 
+        onClick={handleRefresh}
+        className="px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-2 mx-auto"
+      >
+        <RefreshCw size={12} /> Retry Fetch
+      </button>
+    </div>
+  );
+
+  if (!data) return null;
 
   return (
     <div className="group relative overflow-hidden bg-card border border-border rounded-2xl shadow-sm transition-all hover:shadow-md">
@@ -631,6 +644,12 @@ export default function LoanDetail() {
 
             <div className="flex flex-col lg:flex-row gap-6 mb-6">
               <div className="flex-1 min-w-0 space-y-6">
+                {/* AI Visualizer Section */}
+                <CarAIVisualizer 
+                  loanId={loan.id} 
+                  modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
+                  canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
+                />
                 {/* PDD Section - Audit Panel for PDD Manager */}
                 {isPddManager && (loan.status === 'approved' || loan.status === 'disbursed') && (loan as any).pdd_status === 'pending_approval' && (
                   <div className="space-y-6">
@@ -1231,13 +1250,6 @@ export default function LoanDetail() {
               {true && (
                 <div className="w-full lg:w-96 space-y-6">
                   <div className="lg:sticky lg:top-4 h-fit space-y-6">
-                    {/* AI Visualizer Section */}
-                    <CarAIVisualizer 
-                      loanId={loan.id} 
-                      modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
-                      canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
-                    />
-
                     {/* Remarks Section */}
                     {(loan as any).remark && (
                       <Section title="Admin Remarks" icon={<MessageSquare size={16} />}>
