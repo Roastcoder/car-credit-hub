@@ -248,15 +248,15 @@ export default function PDDTracking() {
                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">RTO Papers</span>
                          <span className="text-[11px] font-bold text-foreground truncate">{loan.rto_paper_details || '—'}</span>
                        </div>
-                       <div className="flex flex-col gap-0.5">
-                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">NOC Status</span>
-                         <span className="text-[11px] font-bold text-foreground truncate">{loan.noc_status || '—'}</span>
-                       </div>
-                       <div className="flex flex-col gap-0.5">
-                         <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">FC Status</span>
-                         <span className="text-[11px] font-bold text-foreground truncate">{loan.current_fc_status || '—'}</span>
-                       </div>
-                    </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">Insurance</span>
+                          <span className="text-[11px] font-bold text-foreground truncate">{loan.insurance_status || '—'}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-60">{loan.scheme?.includes('BT') ? 'FC Status' : 'Work Status'}</span>
+                          <span className="text-[11px] font-bold text-foreground truncate">{loan.scheme?.includes('BT') ? (loan.current_fc_status || '—') : (loan.rto_work_status || '—')}</span>
+                        </div>
+                     </div>
                   )}
 
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
@@ -372,40 +372,41 @@ export default function PDDTracking() {
                         <p className="font-semibold text-foreground">{loan.pdd_update_finance_company || '—'}</p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* FC Details */}
-                  <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
-                      FC (Form C) Details
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Deposited By</p>
-                        <p className="font-semibold text-foreground">{loan.fc_deposited_by || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Deposit Date</p>
-                        <p className="font-semibold text-foreground">{formatDisplayDate(loan.fc_deposit_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">FC Receipt</p>
-                        <p className="font-semibold text-foreground">{loan.fc_receipt || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Zero Statement</p>
-                        <p className="font-semibold text-foreground">{loan.zero_statement || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Current FC Status</p>
-                        <p className="font-semibold text-foreground">{loan.current_fc_status || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Prev. Financier Acc.</p>
-                        <p className="font-semibold text-foreground">{loan.prev_financier_account_status || '—'}</p>
+                      {/* FC Details - Only for BT */}
+                  {(loan.scheme === 'BT' || loan.scheme === 'Purchase & BT') && (
+                    <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
+                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
+                        FC (Form C) Details
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                        <div>
+                          <p className="text-muted-foreground mb-1">Deposited By</p>
+                          <p className="font-semibold text-foreground">{loan.fc_deposited_by || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Deposit Date</p>
+                          <p className="font-semibold text-foreground">{formatDisplayDate(loan.fc_deposit_date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">FC Receipt</p>
+                          <p className="font-semibold text-foreground">{loan.fc_receipt || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Zero Statement</p>
+                          <p className="font-semibold text-foreground">{loan.zero_statement || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Current FC Status</p>
+                          <p className="font-semibold text-foreground">{loan.current_fc_status || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Prev. Financier Acc.</p>
+                          <p className="font-semibold text-foreground">{loan.prev_financier_account_status || '—'}</p>
+                        </div>
                       </div>
                     </div>
+                  )} </div>
                   </div>
 
                   {/* RTO Details */}
@@ -469,12 +470,20 @@ export default function PDDTracking() {
                         <p className="font-semibold text-foreground">{loan.insurance_status || '—'}</p>
                       </div>
                       <div>
+                        <p className="text-muted-foreground mb-1">Challan</p>
+                        <p className="font-semibold text-foreground">{loan.challan_status || '—'}</p>
+                      </div>
+                      <div>
                         <p className="text-muted-foreground mb-1">Vehicle Check</p>
                         <p className="font-semibold text-foreground">{loan.vehicle_check_status || '—'}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">Police Case</p>
                         <p className="font-semibold text-foreground">{loan.police_case_status || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Ins. Endorsement</p>
+                        <p className="font-semibold text-foreground">{loan.insurance_endorsement || '—'}</p>
                       </div>
                       <div className="border-t border-border/50 pt-3 col-span-2 mt-1">
                         <div>
