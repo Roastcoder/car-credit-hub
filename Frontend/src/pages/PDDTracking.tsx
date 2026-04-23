@@ -372,6 +372,8 @@ export default function PDDTracking() {
                         <p className="font-semibold text-foreground">{loan.pdd_update_finance_company || '—'}</p>
                       </div>
                     </div>
+                  </div>
+
                       {/* FC Details - Only for BT */}
                   {(loan.scheme === 'BT' || loan.scheme === 'Purchase & BT') && (
                     <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
@@ -406,8 +408,8 @@ export default function PDDTracking() {
                         </div>
                       </div>
                     </div>
-                  )} </div>
-                  </div>
+                  )}
+
 
                   {/* RTO Details */}
                   <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border/50 lg:col-span-2">
