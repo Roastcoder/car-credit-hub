@@ -980,13 +980,13 @@ export default function CreateLoan() {
   }, [user, branches, isEditMode]);
 
   const emi = useMemo(() => {
-    const p = Number(form.sanctionAmount) || Number(form.loanAmount);
+    const p = Number(form.sanctionAmount);
     const r = Number(form.irr);
     const t = calculatedTenure;
     const mode = form.emiMode || 'Monthly';
     if (p > 0 && r > 0 && t > 0) return calculateEMI(p, r, t, mode);
     return 0;
-  }, [form.loanAmount, form.sanctionAmount, form.irr, calculatedTenure, form.emiMode]);
+  }, [form.sanctionAmount, form.irr, calculatedTenure, form.emiMode]);
 
   const totalPayable = useMemo(() => {
     const t = calculatedTenure;
@@ -1017,7 +1017,7 @@ export default function CreateLoan() {
     return calculateAdvancedCommission(financierName, form.vertical, Number(form.loanAmount) || 0, calculatedTenure);
   }, [form.assignedBankId, form.vertical, form.loanAmount, calculatedTenure, banks]);
 
-  const totalInterest = totalPayable - (Number(form.sanctionAmount) || Number(form.loanAmount));
+  const totalInterest = totalPayable - (Number(form.sanctionAmount) || 0);
   const effectiveVertical = normalizeLoanNumberVertical(form.financierTeamVertical || form.vertical) || '';
 
   const uploadDocuments = async (loanId: string) => {
@@ -1765,11 +1765,43 @@ export default function CreateLoan() {
                   Loan, EMI & Finance Details
                 </h2>
 
-                {/* Loan Amounts */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className={labelClass}>Proposed Loan Amount</label><input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>Actual Loan Amount (₹) *</label><input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} /></div>
-                  <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+                {/* Financial & Payout Summary */}
+                <div className="p-4 rounded-xl bg-accent/5 border border-accent/10 space-y-4">
+                  <h3 className="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2">
+                    <IndianRupee size={14} /> Financial & Payout Summary
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div>
+                      <label className={labelClass}>1. Purposed Loan Amount</label>
+                      <input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>2. Total Loan Amount (EMI)</label>
+                      <input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>3. Actual Loan Amount (Payout)</label>
+                      <input required type="number" className={inputClass} value={form.loanAmount} onChange={e => update('loanAmount', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>4. Received Amount (Bank)</label>
+                      <input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>5. Net Amount (After PF)</label>
+                      <input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-accent/10">
+                    <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+                    <div><label className={labelClass}>Hold Amount (Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
+                    <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
+                  </div>
+                </div>
+
+                {/* Foreclosure Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className={labelClass}>FC Amount (Foreclosure) (₹)</label><input type="number" className={inputClass} value={form.fcAmount} onChange={e => update('fcAmount', e.target.value)} /></div>
                   <div><label className={labelClass}>FC Date (Foreclosure Date)</label><input type="date" className={inputClass} value={form.fcDate} onChange={e => update('fcDate', e.target.value)} /></div>
                 </div>
@@ -1892,7 +1924,6 @@ export default function CreateLoan() {
                   )}
                   {form.assignedBankId && (
                     <>
-                      <div><label className={labelClass}>Total Loan Amount (₹)</label><input type="number" className={inputClass} value={form.sanctionAmount} onChange={e => update('sanctionAmount', e.target.value)} /></div>
                       <div><label className={labelClass}>Sanction Date</label><input type="date" className={inputClass} value={form.sanctionDate} onChange={e => update('sanctionDate', e.target.value)} /></div>
                     </>
                   )}
@@ -1916,66 +1947,36 @@ export default function CreateLoan() {
                 )}
               </div>
 
-              {/* ─── SECTION 4: Disbursement & Payout Details ─── */}
-              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
+              {/* ─── SECTION 4: Other Details & Tracking ─── */}
+              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground text-foreground">
                 <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
                   <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">4</span>
-                  Disbursement & Payout Details
+                  Other Details & Tracking
                 </h2>
 
-                {/* Deduction */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
-                    <IndianRupee size={14} /> Deduction Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
+                  <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
+                  <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
                 </div>
 
-                {/* Disbursement */}
-                <div className="pt-4 border-t border-border/50">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
-                    <Calculator size={14} /> Disbursement Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className={labelClass}>Hold Amount (By Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
-                    <div><label className={labelClass}>Received Amount (₹)</label><input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} /></div>
-                    <div><label className={labelClass}>Payment In Favour</label><input className={inputClass} value={form.paymentInFavour} onChange={e => update('paymentInFavour', e.target.value)} /></div>
-                    <div>
-                      <label className={labelClass}>Net Amount after Mehar PF (₹)</label>
-                      <input 
-                        type="number" 
-                        className={inputClass} 
-                        value={form.netDisbursementAmount} 
-                        onChange={e => update('netDisbursementAmount', e.target.value)}
-                      />
-                    </div>
-                    <div><label className={labelClass}>Disbursement Date</label><input type="date" className={inputClass} value={form.disbursementDate} onChange={e => update('disbursementDate', e.target.value)} /></div>
-                    <div><label className={labelClass}>Payment Received Date</label><input type="date" className={inputClass} value={form.paymentReceivedDate} onChange={e => update('paymentReceivedDate', e.target.value)} /></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ─── SECTION 5: Other Details & Tracking ─── */}
-              <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
-                <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
-                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">5</span>
-                  Other Details & Remarks
-                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
-                  <div className="md:col-span-3"><label className={labelClass}>Remark</label><textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} /></div>
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className={labelClass}>Remark</label>
+                  <textarea className={inputClass} rows={3} value={form.remark} onChange={e => update('remark', e.target.value)} />
                 </div>
               </div>
 
-              {/* ─── SECTION 6: Document Uploads ─── */}
+              {/* ─── SECTION 5: Document Management ─── */}
               <div className="bg-card rounded-lg border border-border p-5 shadow-sm space-y-6 text-foreground">
                 <h2 className="text-lg font-bold flex items-center gap-2 pb-2 border-b border-border/50">
-                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">6</span>
-                  Document Uploads
+                  <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">5</span>
+                  Document Management
                 </h2>
 
                 {/* Customer Documents */}
