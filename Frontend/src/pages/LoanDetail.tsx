@@ -744,18 +744,18 @@ export default function LoanDetail() {
                           <div className="space-y-6">
                             {/* Primary Financial Sequence (1-5) */}
                             <div className="p-5 rounded-2xl bg-accent/5 border border-accent/10 shadow-sm">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                                 <Field label="1. Purposed Amount" value={formatCurrency(Number((loan as any).purpose_loan_amount || 0))} />
                                 <Field label="2. Total Amount (EMI)" value={formatCurrency(Number((loan as any).sanction_amount || 0))} className="text-accent font-black text-base" />
                                 <Field label="3. Actual Amount (Payout)" value={formatCurrency(Number(loan.loan_amount || 0))} />
                                 <Field label="4. Received (Bank)" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
-                                <Field label="5. Net Amount (PF)" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} className="text-green-600 font-black text-base" />
+                                <Field label="5. Mehar PF (₹)" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+                                <Field label="6. Net Amount (After PF)" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} className="text-green-600 font-black text-base" />
                               </div>
                             </div>
 
                             {/* Payout & Deductions Breakdown */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-2">
-                              <Field label="Mehar PF (₹)" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
                               <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
                               <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
                               <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
@@ -853,10 +853,9 @@ export default function LoanDetail() {
                           <Field label="RC Owner Name" value={(loan as any).rc_owner_name || '—'} />
                           <Field label="RTO Agent Name" value={(loan as any).rto_agent_name || '—'} />
                           <Field label="Agent Mobile" value={(loan as any).agent_mobile_no || '—'} />
+                          <Field label="Agent Email" value={(loan as any).rto_mail || '—'} />
                           <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
                           <Field label="Docs Location" value={(loan as any).rto_docs_location || '—'} />
-                          <Field label="Agent Mobile (RTO)" value={(loan as any).rto_agent_mobile || '—'} />
-                          <Field label="Agent Email (RTO)" value={(loan as any).rto_mail || '—'} />
                           <Field label="DTO Location" value={(loan as any).dto_location || '—'} />
                           <Field label="Work Status" value={(loan as any).rto_work_status || '—'} />
                           <Field label="Paper Details" value={(loan as any).rto_paper_details || '—'} />

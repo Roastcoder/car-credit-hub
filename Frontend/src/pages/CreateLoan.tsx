@@ -74,7 +74,7 @@ const DocumentUploadCard = ({
           )}
         </div>
 
-        <div 
+        <div
           onClick={toggleExpand}
           className={cn(
             "relative cursor-pointer rounded-lg overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
@@ -83,13 +83,13 @@ const DocumentUploadCard = ({
         >
           {preview ? (
             isImage(preview) ? (
-              <img 
-                src={preview} 
-                alt={label} 
+              <img
+                src={preview}
+                alt={label}
                 className={cn(
                   "transition-all",
                   isExpanded ? "w-full h-auto p-2 object-contain" : "w-full h-full object-cover"
-                )} 
+                )}
               />
             ) : (
               <div className="flex flex-col items-center gap-2 py-6">
@@ -124,7 +124,7 @@ const DocumentUploadCard = ({
               {isExpanded ? <><ChevronUp size={12} /> Collapse</> : <><ChevronDown size={12} /> Preview Inline</>}
             </button>
           )}
-          
+
           <div className="flex items-center gap-1.5 ml-auto">
             <label className="p-1.5 bg-muted text-foreground rounded-lg cursor-pointer hover:bg-accent hover:text-white transition-all shadow-sm">
               <Upload size={14} />
@@ -484,7 +484,7 @@ export default function CreateLoan() {
       const challans = (data.data?.challan_details?.challans || data.challan_details?.challans || data.challans || []);
       const pending = challans.filter((c: any) => c.challan_status === 'Pending');
       const totalAmount = pending.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
-      
+
       setForm(prev => ({
         ...prev,
         totalChallans: pending.length,
@@ -870,7 +870,7 @@ export default function CreateLoan() {
     // Populate documents from lead
     if (leadDocuments && leadDocuments.length > 0) {
       setUploadedDocs(leadDocuments);
-      
+
       setForm(f => {
         const newForm = { ...f };
         leadDocuments.forEach((doc: any) => {
@@ -998,12 +998,12 @@ export default function CreateLoan() {
 
     return emi * periods;
   }, [emi, calculatedTenure, form.emiMode]);
-  
+
   useEffect(() => {
     const received = Number(form.netSeedAmount) || 0;
     const deduction = Number(form.meharDeduction) || 0;
     const netDisbursement = Math.max(0, received - deduction);
-    
+
     if (netDisbursement !== Number(form.netDisbursementAmount)) {
       setForm(prev => ({
         ...prev,
@@ -1251,7 +1251,7 @@ export default function CreateLoan() {
           noc_status: form.nocStatus || null,
           noc_checked_by: form.nocCheckedBy || null,
           previous_dto_noc: form.previousDtoNoc || null,
-          rto_agent_mobile: form.rtoAgentMobile || null,
+          rto_agent_mobile: form.agentMobileNo || null,
           rto_mail: form.rtoMail || null,
           rto_docs_location: form.rtoDocsLocation || null,
           rto_work_status: form.rtoWorkStatus || null,
@@ -1523,11 +1523,10 @@ export default function CreateLoan() {
 
                       {rcCacheStatus && (
                         <div className="absolute -bottom-6 left-0">
-                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                            rcCacheStatus === 'db' 
-                              ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
+                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${rcCacheStatus === 'db'
+                              ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
                               : 'bg-green-500/10 text-green-600 border-green-500/20'
-                          }`}>
+                            }`}>
                             <div className={`w-1 h-1 rounded-full ${rcCacheStatus === 'db' ? 'bg-blue-500' : 'bg-green-500 animate-pulse'}`} />
                             {rcCacheStatus === 'db' ? 'from db' : 'Live API Response'}
                           </div>
@@ -1628,9 +1627,8 @@ export default function CreateLoan() {
                               </thead>
                               <tbody>
                                 {(challanData.challans || []).map((c: any, idx: number) => (
-                                  <tr key={idx} className={`border-b border-border/50 transition-colors ${
-                                    c.challan_status === 'Pending' ? 'bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/70' : 'hover:bg-muted/30'
-                                  }`}>
+                                  <tr key={idx} className={`border-b border-border/50 transition-colors ${c.challan_status === 'Pending' ? 'bg-red-50/40 dark:bg-red-950/10 hover:bg-red-50/70' : 'hover:bg-muted/30'
+                                    }`}>
                                     <td className="p-3 text-muted-foreground">{idx + 1}</td>
                                     <td className="p-3 font-mono text-xs text-foreground">{c.challan_number}</td>
                                     <td className="p-3 text-foreground whitespace-nowrap text-xs">{c.challan_date || '—'}</td>
@@ -1641,13 +1639,12 @@ export default function CreateLoan() {
                                     <td className="p-3 text-foreground text-xs">{c.accused_name || '—'}</td>
                                     <td className="p-3 text-right font-bold text-foreground">₹{(c.amount || 0).toLocaleString()}</td>
                                     <td className="p-3 text-center">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                        c.challan_status === 'Pending'
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.challan_status === 'Pending'
                                           ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                                           : c.challan_status
-                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                          : 'bg-muted text-muted-foreground'
-                                      }`}>
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                            : 'bg-muted text-muted-foreground'
+                                        }`}>
                                         {c.challan_status || 'Unknown'}
                                       </span>
                                     </td>
@@ -1735,25 +1732,30 @@ export default function CreateLoan() {
                 {/* RTO Details */}
                 <div className="pt-4 border-t border-border/50">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* RTO Agent Contact Group */}
                     <div><label className={labelClass}>RTO Agent Name</label><input className={inputClass} value={form.rtoAgentName} onChange={e => update('rtoAgentName', e.target.value)} /></div>
                     <div><label className={labelClass}>Agent Mobile</label><input className={inputClass} value={form.agentMobileNo} onChange={e => update('agentMobileNo', e.target.value)} maxLength={10} /></div>
+                    <div><label className={labelClass}>Agent Email</label><input className={inputClass} value={form.rtoMail} onChange={e => update('rtoMail', e.target.value)} /></div>
+
+                    {/* RTO Work Details Group */}
                     <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
-                    <div className="md:col-span-2"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
                     <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
-
-                    {/* Additional RTO Fields */}
-                    <div><label className={labelClass}>Agent Mobile (RTO)</label><input className={inputClass} value={form.rtoAgentMobile} onChange={e => update('rtoAgentMobile', e.target.value)} /></div>
-                    <div><label className={labelClass}>Agent Email (RTO)</label><input className={inputClass} value={form.rtoMail} onChange={e => update('rtoMail', e.target.value)} /></div>
-                    <div><label className={labelClass}>Docs Location</label><input className={inputClass} value={form.rtoDocsLocation} onChange={e => update('rtoDocsLocation', e.target.value)} /></div>
-                    <div><label className={labelClass}>Work Status</label><input className={inputClass} value={form.rtoWorkStatus} onChange={e => update('rtoWorkStatus', e.target.value)} /></div>
-                    <div><label className={labelClass}>Paper Details</label><input className={inputClass} value={form.rtoPaperDetails} onChange={e => update('rtoPaperDetails', e.target.value)} /></div>
-                    <div><label className={labelClass}>Pending Documents</label><input className={inputClass} value={form.pendingRtoDocuments} onChange={e => update('pendingRtoDocuments', e.target.value)} /></div>
-                    <div><label className={labelClass}>Pollution Status</label><input className={inputClass} value={form.pollutionStatus} onChange={e => update('pollutionStatus', e.target.value)} /></div>
-                    <div><label className={labelClass}>Vehicle Check Status</label><input className={inputClass} value={form.vehicleCheckStatus} onChange={e => update('vehicleCheckStatus', e.target.value)} /></div>
-
-                    {/* Dropdowns/Special fields moved here */}
-                    <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
+                    
+                    <div className="md:col-span-3"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
+
+                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/30">
+                      <div><label className={labelClass}>Docs Location</label><input className={inputClass} value={form.rtoDocsLocation} onChange={e => update('rtoDocsLocation', e.target.value)} /></div>
+                      <div><label className={labelClass}>Work Status</label><input className={inputClass} value={form.rtoWorkStatus} onChange={e => update('rtoWorkStatus', e.target.value)} /></div>
+                      <div><label className={labelClass}>Paper Details</label><input className={inputClass} value={form.rtoPaperDetails} onChange={e => update('rtoPaperDetails', e.target.value)} /></div>
+                    </div>
+
+                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div><label className={labelClass}>Pending Documents</label><input className={inputClass} value={form.pendingRtoDocuments} onChange={e => update('pendingRtoDocuments', e.target.value)} /></div>
+                      <div><label className={labelClass}>Pollution Status</label><input className={inputClass} value={form.pollutionStatus} onChange={e => update('pollutionStatus', e.target.value)} /></div>
+                      <div><label className={labelClass}>Vehicle Check Status</label><input className={inputClass} value={form.vehicleCheckStatus} onChange={e => update('vehicleCheckStatus', e.target.value)} /></div>
+                      <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1770,7 +1772,7 @@ export default function CreateLoan() {
                   <h3 className="text-xs font-bold text-accent uppercase tracking-widest flex items-center gap-2">
                     <IndianRupee size={14} /> Financial & Payout Summary
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     <div>
                       <label className={labelClass}>1. Purposed Loan Amount</label>
                       <input className={inputClass} value={form.purposeLoanAmount} onChange={e => update('purposeLoanAmount', e.target.value)} />
@@ -1788,13 +1790,16 @@ export default function CreateLoan() {
                       <input type="number" className={inputClass} value={form.netSeedAmount} onChange={e => update('netSeedAmount', e.target.value)} />
                     </div>
                     <div>
-                      <label className={labelClass}>5. Net Amount (After PF)</label>
+                      <label className={labelClass}>5. Mehar PF (₹)</label>
+                      <input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>6. Net Amount (After PF)</label>
                       <input type="number" className={inputClass} value={form.netDisbursementAmount} onChange={e => update('netDisbursementAmount', e.target.value)} />
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-accent/10">
-                    <div><label className={labelClass}>Mehar PF (₹)</label><input type="number" className={inputClass} value={form.meharDeduction} onChange={e => update('meharDeduction', e.target.value)} /></div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-accent/10">
                     <div><label className={labelClass}>Hold Amount (Financier) (₹)</label><input type="number" className={inputClass} value={form.holdAmount} onChange={e => update('holdAmount', e.target.value)} /></div>
                     <div><label className={labelClass}>LTV (%)</label><input type="number" className={inputClass} value={form.ltv} onChange={e => update('ltv', e.target.value)} /></div>
                   </div>
