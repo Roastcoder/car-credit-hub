@@ -15,7 +15,7 @@ import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
 import { CreditScoreGauge } from '@/components/CreditScoreGauge';
 import { getFileUrl } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Camera, Upload, CheckCircle2, ShieldCheck, Edit2, Timer, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, User, Car, IndianRupee, Building2, FileText, Eye, X, Printer, MessageCircle, Mail, Download, ExternalLink, MessageSquare, MapPin, Clock, CreditCard, Trash2, Upload, CheckCircle2, ShieldCheck, Edit2 } from 'lucide-react';
 import { exportLoanPDF, shareLoanPDF, downloadLoanPDF } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
@@ -41,109 +41,7 @@ const DOC_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 
-const CarAIVisualizer = ({ loanId, modelName, canRefresh }: { loanId: string | number; modelName: string; canRefresh: boolean }) => {
-  const [data, setData] = useState<{ imageUrl: string; facts: string[]; description: string } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAI = async (force = false) => {
-    try {
-      if (force) setRefreshing(true);
-      const response = await loansAPI.getAiVisuals(loanId, force);
-      if (response.data) {
-        setData(response.data);
-      }
-    } catch (e) {
-      console.error('AI Visuals Error:', e);
-      setError(true);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (loanId) fetchAI();
-  }, [loanId]);
-
-  const handleRefresh = () => {
-    fetchAI(true);
-  };
-
-  if (loading) return (
-    <div className="h-48 flex flex-col items-center justify-center bg-muted/20 rounded-2xl border border-dashed border-border animate-pulse">
-      <Timer className="w-6 h-6 text-accent mb-2 animate-spin" />
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">AI Generating Car Visuals...</span>
-    </div>
-  );
-
-  if (error && !data) return (
-    <div className="h-48 flex flex-col items-center justify-center bg-destructive/5 rounded-2xl border border-dashed border-destructive/20 p-6 text-center">
-      <Camera className="w-6 h-6 text-destructive/40 mb-2" />
-      <p className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest mb-3">AI Visuals Unavailable</p>
-      <button 
-        onClick={handleRefresh}
-        className="px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-2 mx-auto"
-      >
-        <RefreshCw size={12} /> Retry Fetch
-      </button>
-    </div>
-  );
-
-  if (!data) return null;
-
-  return (
-    <div className="group relative overflow-hidden bg-card border border-border rounded-2xl shadow-sm transition-all hover:shadow-md">
-      <div className="aspect-video w-full overflow-hidden bg-muted/30 relative">
-        <img 
-          src={data.imageUrl} 
-          alt={modelName} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop';
-          }}
-        />
-        <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10">
-          <CheckCircle2 size={10} className="text-emerald-400" />
-          <span className="text-[9px] font-black text-white uppercase tracking-widest">AI Verified Visual</span>
-        </div>
-        {canRefresh && (
-          <div className="absolute top-2 right-2 flex gap-2">
-            <button 
-              onClick={() => window.open(data.imageUrl, '_blank')}
-              className="p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors"
-              title="Full View"
-            >
-              <ExternalLink size={12} />
-            </button>
-            <button 
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
-              title="Regenerate AI Visuals"
-            >
-              <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="p-4 space-y-3">
-        <div>
-          <h4 className="text-[11px] font-black text-accent uppercase tracking-widest mb-1">Expert Overview</h4>
-          <p className="text-xs text-muted-foreground leading-relaxed italic">"{data.description}"</p>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {data.facts.map((fact, i) => (
-            <div key={i} className="px-2 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-center">
-              <p className="text-[9px] font-bold text-foreground truncate">{fact}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function LoanDetail() {
   const { id } = useParams();
@@ -338,7 +236,7 @@ export default function LoanDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
   const [isEditingPDD, setIsEditingPDD] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
+
   const [docToDelete, setDocToDelete] = useState<any>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [pddReason, setPddReason] = useState('');
@@ -750,12 +648,7 @@ export default function LoanDetail() {
                   </div>
                 )}
 
-                {/* AI Visualizer Section */}
-                <CarAIVisualizer 
-                  loanId={loan.id} 
-                  modelName={`${loan.maker_name || loan.car_make} ${loan.model_variant_name || loan.car_model}`} 
-                  canRefresh={['admin', 'super_admin', 'manager', 'pdd_manager'].includes(user?.role || '')}
-                />
+
 
                 {/* General Loan Details Grid */}
                 {true && (
