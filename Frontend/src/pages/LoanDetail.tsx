@@ -109,14 +109,23 @@ const CarAIVisualizer = ({ loanId, modelName, canRefresh }: { loanId: string | n
           <span className="text-[9px] font-black text-white uppercase tracking-widest">AI Verified Visual</span>
         </div>
         {canRefresh && (
-          <button 
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="absolute top-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
-            title="Regenerate AI Visuals"
-          >
-            <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
-          </button>
+          <div className="absolute top-2 right-2 flex gap-2">
+            <button 
+              onClick={() => window.open(data.imageUrl, '_blank')}
+              className="p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors"
+              title="Full View"
+            >
+              <ExternalLink size={12} />
+            </button>
+            <button 
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white/70 hover:text-white transition-colors disabled:opacity-50"
+              title="Regenerate AI Visuals"
+            >
+              <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
+            </button>
+          </div>
         )}
       </div>
       <div className="p-4 space-y-3">
@@ -796,6 +805,8 @@ export default function LoanDetail() {
                             />
                           </div>
                         )}
+                        <Field label="Application ID" value={applicationIdentifier} />
+                        <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
                       </div>
                     </Section>
 
@@ -833,72 +844,88 @@ export default function LoanDetail() {
                       </div>
                     </Section>
 
-                    {/* Loan Information */}
+                    {/* Financial Summary - Cohesive Block */}
                     {!isPddManager && (
-                      <Section title="Loan Information" icon={<IndianRupee size={16} />}>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Field label="Loan Number" value={hasFinalLoanNumber ? (loan as any).loan_number : 'Not assigned yet'} />
-                          <Field label="Application ID" value={applicationIdentifier} />
-                          <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
-                          <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
-                          <Field label="Loan Amount" value={formatCurrency(Number(loan.loan_amount))} />
-                          {user?.role !== 'broker' && (
-                            <>
-                              <Field label="Total Released" value={formatCurrency(Number((loan as any).total_released_amount || 0))} />
-                              <Field
-                                label="Remaining Balance"
-                                value={formatCurrency(Number((loan as any).remaining_balance || 0))}
-                                className={(loan as any).remaining_balance > 0 ? "text-blue-600 font-bold" : ""}
-                              />
-                            </>
-                          )}
-                          {user?.role !== 'broker' ? (
-                            <>
-                              <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
-                              <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                              <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} />
-                              <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
-                              <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
-                              <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
-                              <Field label="Purpose" value={(loan as any).purpose_loan_amount || '—'} />
+                      <div className="lg:col-span-2">
+                        <Section title="Financial & Payout Summary" icon={<IndianRupee size={16} />}>
+                          <div className="space-y-6">
+                            {/* Primary Financial Sequence (1-5) */}
+                            <div className="p-5 rounded-2xl bg-accent/5 border border-accent/10 shadow-sm">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                                <Field label="1. Purposed Amount" value={formatCurrency(Number((loan as any).purpose_loan_amount || 0))} />
+                                <Field label="2. Total Amount (EMI)" value={formatCurrency(Number((loan as any).sanction_amount || 0))} className="text-accent font-black text-base" />
+                                <Field label="3. Actual Amount (Payout)" value={formatCurrency(Number(loan.loan_amount || 0))} />
+                                <Field label="4. Received (Bank)" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
+                                <Field label="5. Net Amount (PF)" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} className="text-green-600 font-black text-base" />
+                              </div>
+                            </div>
+
+                            {/* Payout & Deductions Breakdown */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-2">
+                              <Field label="Mehar PF (₹)" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+                              <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
                               <Field label="Processing Fee" value={formatCurrency(Number((loan as any).processing_fee || 0))} />
-                              <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
-                              <Field label="Commitment Date" value={formatDisplayDate((loan as any).commitment_date)} />
-                              <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
-                              <Field label="Balance Status" value={(loan as any).balance_payment_status || '—'} />
-                              <Field label="FC Amount (Foreclosure)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
-                              <Field label="FC Date (Foreclosure)" value={formatDisplayDate((loan as any).fc_date)} />
-                            </>
-                          ) : (
-                            <>
-                              <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
-                              <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
-                            </>
-                          )}
+                              <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
+                            </div>
+
+                            {/* Balance Info */}
+                            <div className="pt-4 border-t border-border/50 flex flex-wrap gap-10 px-2">
+                              <div>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Remaining Balance</p>
+                                <p className={cn("text-xl font-black", (loan as any).remaining_balance > 0 ? "text-blue-600" : "text-foreground")}>
+                                  {formatCurrency(Number((loan as any).remaining_balance || 0))}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Total Released</p>
+                                <p className="text-xl font-black text-foreground">
+                                  {formatCurrency(Number((loan as any).total_released_amount || 0))}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </Section>
+                      </div>
+                    )}
+
+                    {/* EMI & Tenure Details */}
+                    {!isPddManager && (
+                      <Section title="EMI & Tenure Details" icon={<Clock size={16} />}>
+                        <div className="grid grid-cols-2 gap-4">
+                          <Field label="IRR (%)" value={String((loan as any).irr || (loan as any).interest_rate || '—')} />
+                          <Field label="Tenure (Months)" value={String((loan as any).tenure || (loan as any).tenure_months || '—')} />
+                          <Field label="EMI Amount" value={formatCurrency(Number((loan as any).emi_amount || loan.emi || 0))} className="text-accent font-bold" />
+                          <Field label="EMI Mode" value={(loan as any).emi_mode || '—'} />
+                          <Field label="EMI Start Date" value={formatDisplayDate((loan as any).emi_start_date)} />
+                          <Field label="EMI End Date" value={formatDisplayDate((loan as any).emi_end_date)} />
+                          <Field label="Total Interest" value={formatCurrency(Number((loan as any).total_interest || 0))} />
+                          <Field label="Delay Days" value={String((loan as any).delay_days || 0)} />
                         </div>
                       </Section>
                     )}
 
-                    {/* Bank Information */}
+                    {/* Bank & Executive Details */}
                     {!isPddManager && (
-                      <Section title="Bank Information" icon={<Building2 size={16} />}>
+                      <Section title="Bank & Executive Details" icon={<Building2 size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
-                          <Field label="Assigned Bank" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
-                          {user?.role !== 'broker' && <Field label="Broker" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
-                          {user?.role !== 'broker' && (
-                            <>
-                              <Field label="Total Loan Amount" value={formatCurrency(Number((loan as any).sanction_amount || 0))} />
-                              <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
-                            </>
-                          )}
+                          <Field label="Assigned Financier" value={(loan as any).assigned_bank_name || loan.assignedBank || '—'} />
+                          <Field label="Booking Mode" value={((loan as any).booking_mode || 'self').toString().replace(/\b\w/g, (c: string) => c.toUpperCase())} />
+                          {user?.role !== 'broker' && <Field label="Broker Name" value={(loan as any).booking_mode === 'broker' ? ((loan as any).assigned_broker_name || loan.assignedBroker || '—') : '—'} />}
+                          <Field label="Sanction Date" value={formatDisplayDate((loan as any).sanction_date)} />
                           <Field label="Disbursement Date" value={formatDisplayDate((loan as any).disbursement_date)} />
-                          {user?.role !== 'broker' && (
-                            <>
-                              <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
-                              <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
-                              <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
-                            </>
-                          )}
+                          <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
+                          <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
+                          <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
+                        </div>
+                      </Section>
+                    )}
+
+                    {/* Foreclosure Details */}
+                    {!isPddManager && ((loan as any).fc_amount > 0) && (
+                      <Section title="Foreclosure Details" icon={<RefreshCw size={16} />}>
+                        <div className="grid grid-cols-2 gap-4">
+                          <Field label="FC Amount (₹)" value={formatCurrency(Number((loan as any).fc_amount || 0))} />
+                          <Field label="FC Date" value={formatDisplayDate((loan as any).fc_date)} />
                         </div>
                       </Section>
                     )}
@@ -959,16 +986,14 @@ export default function LoanDetail() {
                       </Section>
                     )}
 
-                    {/* Disbursement details */}
+                    {/* Tracking details */}
                     {user?.role !== 'broker' && !isPddManager && (
-                      <Section title="Disbursement & Payouts" icon={<IndianRupee size={16} />}>
+                      <Section title="Tracking & Payment Details" icon={<MapPin size={16} />}>
                         <div className="grid grid-cols-2 gap-4">
-                          <Field label="Net Amount after Mehar PF" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} />
-                          <Field label="Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} />
-                          <Field label="Received Amount" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
                           <Field label="Payment In Favour" value={(loan as any).payment_in_favour || '—'} />
-                          <Field label="Payment Date" value={formatDisplayDate((loan as any).payment_received_date)} />
-                          <Field label="Mehar PF" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
+                          <Field label="Payment Received Date" value={formatDisplayDate((loan as any).payment_received_date)} />
+                          <Field label="Login Date" value={formatDisplayDate((loan as any).login_date)} />
+                          <Field label="Approval Date" value={formatDisplayDate((loan as any).approval_date)} />
                           <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
                         </div>
                       </Section>

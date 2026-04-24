@@ -126,9 +126,16 @@ const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
               onClick={toggleExpand}
               className="flex items-center gap-1 text-[10px] font-bold text-accent hover:underline uppercase tracking-tight"
             >
-              {isImage ? (isExpanded ? <><ChevronUp size={12} /> Collapse</> : <><ChevronDown size={12} /> Preview Inline</>) : <><ExternalLink size={12} /> Open Full</>}
+              {isImage ? (isExpanded ? <><ChevronUp size={12} /> Collapse</> : <><ChevronDown size={12} /> Preview</>) : <><ExternalLink size={12} /> Open</>}
             </button>
-            <span className="text-[8px] text-muted-foreground uppercase font-medium opacity-50">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); window.open(fileUrl, '_blank'); }}
+              className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-accent hover:underline uppercase tracking-tight ml-2"
+            >
+              <ExternalLink size={12} /> Full View
+            </button>
+            <span className="text-[8px] text-muted-foreground uppercase font-medium opacity-50 ml-auto">
               {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : ''}
             </span>
           </div>
