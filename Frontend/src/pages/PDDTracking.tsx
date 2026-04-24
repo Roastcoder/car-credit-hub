@@ -8,6 +8,14 @@ import { toast } from 'sonner';
 import { getRolePermissions } from '@/lib/permissions';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const getPddStatusStyles = (status?: string) => {
   if (status === 'approved') {
@@ -587,66 +595,62 @@ export default function PDDTracking() {
         )}
       </div>
 
-      {/* Custom Rejection Modal */}
-      {rejectionModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-card w-full max-w-md rounded-[2.5rem] border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 space-y-6">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
-                    <AlertTriangle size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-foreground">Reject PDD</h3>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Correction Required</p>
-                  </div>
+      <Dialog 
+        open={rejectionModal.isOpen} 
+        onOpenChange={(open) => !open && setRejectionModal({ isOpen: false, loanId: null })}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-[2.5rem]">
+          <div className="p-8 space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+                  <AlertTriangle size={24} />
                 </div>
-                <button 
-                  onClick={() => setRejectionModal({ isOpen: false, loanId: null })}
-                  className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground"
-                >
-                  <CloseIcon size={20} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-sm font-bold text-foreground/80 leading-relaxed">
-                  Please provide a clear reason for sending this application back. The employee will see this as revision remarks.
-                </p>
-                <textarea
-                  autoFocus
-                  placeholder="e.g. RC Document is blurry, please re-upload..."
-                  className="w-full px-5 py-4 bg-muted/30 border border-border rounded-2xl text-sm min-h-[140px] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  onClick={() => setRejectionModal({ isOpen: false, loanId: null })}
-                  className="flex-1 px-6 py-4 rounded-2xl text-xs font-black text-muted-foreground hover:bg-muted transition-all uppercase tracking-widest"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (!rejectionReason.trim()) return toast.error('Please enter a reason');
-                    rejectPdd.mutate({ loanIdOrNumber: rejectionModal.loanId!, reason: rejectionReason });
-                    setRejectionModal({ isOpen: false, loanId: null });
-                  }}
-                  disabled={rejectPdd.isPending}
-                  className="flex-[2] px-8 py-4 bg-rose-600 text-white rounded-2xl text-xs font-black hover:bg-rose-700 shadow-xl shadow-rose-600/30 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
-                >
-                  <Send size={16} />
-                  Confirm Rejection
-                </button>
+                <DialogHeader className="p-0 text-left">
+                  <DialogTitle className="text-xl font-black text-foreground">Reject PDD</DialogTitle>
+                  <DialogDescription className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    Correction Required
+                  </DialogDescription>
+                </DialogHeader>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-bold text-foreground/80 leading-relaxed">
+                Please provide a clear reason for sending this application back. The employee will see this as revision remarks.
+              </p>
+              <textarea
+                autoFocus
+                placeholder="e.g. RC Document is blurry, please re-upload..."
+                className="w-full px-5 py-4 bg-muted/30 border border-border rounded-2xl text-sm min-h-[140px] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium resize-none"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
+            </div>
+
+            <DialogFooter className="flex-row items-center gap-3 pt-2">
+              <button
+                onClick={() => setRejectionModal({ isOpen: false, loanId: null })}
+                className="flex-1 px-6 py-4 rounded-2xl text-xs font-black text-muted-foreground hover:bg-muted transition-all uppercase tracking-widest active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!rejectionReason.trim()) return toast.error('Please enter a reason');
+                  rejectPdd.mutate({ loanIdOrNumber: rejectionModal.loanId!, reason: rejectionReason });
+                  setRejectionModal({ isOpen: false, loanId: null });
+                }}
+                disabled={rejectPdd.isPending}
+                className="flex-[2] px-8 py-4 bg-rose-600 text-white rounded-2xl text-xs font-black hover:bg-rose-700 shadow-xl shadow-rose-600/30 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98]"
+              >
+                <Send size={16} />
+                {rejectPdd.isPending ? 'Processing...' : 'Confirm Rejection'}
+              </button>
+            </DialogFooter>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -13,8 +13,16 @@ import { RemarksModal } from '@/components/RemarksModal';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck, ShieldCheck, AlertTriangle } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admin_approved' | 'disbursed' | 'rejected' | 'cancelled';
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
@@ -503,45 +511,49 @@ export default function Loans() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 border border-border" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+      <Dialog 
+        open={!!deleteConfirm} 
+        onOpenChange={(open) => !open && setDeleteConfirm(null)}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <div className="p-8 space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-500" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Delete Loan Application</h3>
-                <p className="text-sm text-muted-foreground">This action cannot be undone</p>
+              <div className="flex-1">
+                <DialogHeader className="p-0 text-left">
+                  <DialogTitle className="text-lg font-bold text-foreground">
+                    Delete Loan Application
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    This action cannot be undone. Are you sure you want to delete this loan application? All associated data will be permanently removed.
+                  </DialogDescription>
+                </DialogHeader>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              Are you sure you want to delete this loan application? All associated data will be permanently removed.
-            </p>
-            <div className="flex gap-3">
+
+            <DialogFooter className="flex-row items-center gap-3 pt-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground font-medium hover:bg-muted/80 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-all active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  deleteLoan.mutate(deleteConfirm);
+                  if (deleteConfirm) deleteLoan.mutate(deleteConfirm);
                   setDeleteConfirm(null);
                 }}
                 disabled={deleteLoan.isPending}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 {deleteLoan.isPending ? 'Deleting...' : 'Delete'}
               </button>
-            </div>
+            </DialogFooter>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
       
       {/* Remarks Modal */}
       <RemarksModal

@@ -6,6 +6,14 @@ import type { LoanStatus } from '@/lib/types';
 import { loansAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, ArrowLeft, MessageSquare, Send } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface WorkflowActionsProps {
   loanId: string;
@@ -110,57 +118,60 @@ export function WorkflowActions({ loanId, currentStatus, onSuccess }: WorkflowAc
         })}
       </div>
 
-      {/* Remarks Modal */}
-      {showRemarksModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+      <Dialog open={!!showRemarksModal} onOpenChange={(open) => !open && setShowRemarksModal(null)}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl">
+          <div className="p-6 space-y-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
                 <MessageSquare size={24} className="text-orange-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {availableActions.find(a => a.action === showRemarksModal)?.label || 'Workflow Action'}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Please provide remarks for this action:
-                </p>
-                <textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Enter remarks (optional)..."
-                  className="w-full p-3 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent resize-none"
-                  rows={4}
-                />
+                <DialogHeader className="p-0 space-y-1">
+                  <DialogTitle className="text-lg font-bold">
+                    {availableActions.find(a => a.action === showRemarksModal)?.label || 'Workflow Action'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    Please provide remarks for this action:
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="mt-4">
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Enter remarks (optional)..."
+                    className="w-full p-4 rounded-xl border border-border bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none min-h-[120px] transition-all"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mt-6">
+            <DialogFooter className="flex-row gap-3 pt-2">
               <button
                 onClick={() => {
                   setShowRemarksModal(null);
                   setRemarks('');
                 }}
                 disabled={workflowMutation.isPending}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 Cancel
               </button>
-                <button
-                  onClick={handleRemarksSubmit}
-                  disabled={workflowMutation.isPending}
-                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    availableActions.find(a => a.action === showRemarksModal)?.type === 'back' 
-                      ? 'bg-orange-500 hover:bg-orange-600' 
-                      : 'bg-green-500 hover:bg-green-600'
-                  }`}
-                >
-                  {workflowMutation.isPending ? 'Processing...' : (availableActions.find(a => a.action === showRemarksModal)?.label || 'Confirm')}
-                </button>
-            </div>
+              <button
+                onClick={handleRemarksSubmit}
+                disabled={workflowMutation.isPending}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg shadow-accent/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
+                  availableActions.find(a => a.action === showRemarksModal)?.type === 'back' 
+                    ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20' 
+                    : 'bg-green-600 hover:bg-green-700 shadow-green-600/20'
+                }`}
+              >
+                {workflowMutation.isPending ? 'Processing...' : (availableActions.find(a => a.action === showRemarksModal)?.label || 'Confirm')}
+              </button>
+            </DialogFooter>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

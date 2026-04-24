@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Building2, UserCircle, Edit, Trash2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function BranchManagement() {
@@ -199,17 +207,24 @@ export default function BranchManagement() {
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-border animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 mb-6">
+      <Dialog 
+        open={showModal} 
+        onOpenChange={(open) => !open && setShowModal(false)}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <div className="p-8 space-y-6">
+            <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
                 <Building2 size={20} className="text-accent-foreground" />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground leading-none">{editingBranch ? 'Update Branch' : 'Create New Branch'}</h2>
-                <p className="text-xs text-muted-foreground mt-1">Set branch details and choose the official manager for this branch.</p>
-              </div>
+              <DialogHeader className="p-0 text-left">
+                <DialogTitle className="text-xl font-bold text-foreground leading-none">
+                  {editingBranch ? 'Update Branch' : 'Create New Branch'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
+                  Set branch details and choose the official manager for this branch.
+                </DialogDescription>
+              </DialogHeader>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -256,7 +271,7 @@ export default function BranchManagement() {
                     </div>
                   </div>
                   <p className="text-[10px] text-accent font-medium mt-2 flex items-center gap-1">
-                    <MapPin size={10} /> This sets the official branch manager. For additional branch allocation, use User Management.
+                    <MapPin size={10} /> This sets the official branch manager.
                   </p>
                 </div>
 
@@ -272,26 +287,26 @@ export default function BranchManagement() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-border">
-                <button
-                  type="submit"
-                  disabled={saveBranch.isPending}
-                  className="flex-1 bg-accent text-accent-foreground font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-accent/20"
-                >
-                  {saveBranch.isPending ? 'Saving...' : editingBranch ? 'Update Details' : 'Create Branch'}
-                </button>
+              <DialogFooter className="flex-row items-center gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="px-6 py-3 rounded-xl border border-border hover:bg-muted font-bold text-sm transition-colors"
+                  className="px-6 py-3 rounded-xl border border-border hover:bg-muted font-bold text-sm transition-colors flex-1"
                 >
                   Cancel
                 </button>
-              </div>
+                <button
+                  type="submit"
+                  disabled={saveBranch.isPending}
+                  className="flex-[2] bg-accent text-accent-foreground font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-accent/20"
+                >
+                  {saveBranch.isPending ? 'Saving...' : editingBranch ? 'Update Details' : 'Create Branch'}
+                </button>
+              </DialogFooter>
             </form>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

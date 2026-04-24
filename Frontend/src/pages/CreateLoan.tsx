@@ -11,6 +11,14 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const DocumentUploadCard = ({
   label,
@@ -2399,54 +2407,58 @@ export default function CreateLoan() {
         </div>
       )}
 
-      {/* Delete Document Confirmation Modal */}
-      {showDeleteDocModal && docToDelete && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+      <Dialog 
+        open={showDeleteDocModal} 
+        onOpenChange={(open) => !open && setShowDeleteDocModal(false)}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <div className="p-8 space-y-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
                 <FileText size={24} className="text-red-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Delete Saved Document?
-                </h3>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Are you sure you want to delete this document from the server?
-                </p>
-                <p className="text-sm font-medium text-red-500">
-                  This action cannot be undone.
-                </p>
-                <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Document Details:</p>
-                  <p className="text-sm font-medium text-foreground">{docToDelete.document_name || docToDelete.file_name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{docToDelete.document_type?.replace(/_/g, ' ').toUpperCase()}</p>
+                <DialogHeader className="p-0 text-left">
+                  <DialogTitle className="text-lg font-bold text-foreground">
+                    Delete Saved Document?
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    Are you sure you want to delete this document from the server? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="mt-4 p-4 rounded-xl bg-muted/40 border border-border/50">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Document Details</p>
+                  <p className="text-sm font-semibold text-foreground">{docToDelete?.document_name || docToDelete?.file_name}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mt-1 uppercase tracking-tighter">
+                    {docToDelete?.document_type?.replace(/_/g, ' ')}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 mt-6">
+            <DialogFooter className="flex-row items-center gap-3 pt-2">
               <button
                 onClick={() => {
                   setShowDeleteDocModal(false);
                   setDocToDelete(null);
                 }}
                 disabled={deleteDocument.isPending}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
-                onClick={() => deleteDocument.mutate(docToDelete.id)}
+                onClick={() => deleteDocument.mutate(docToDelete?.id)}
                 disabled={deleteDocument.isPending}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-[1.5] px-4 py-3 rounded-xl bg-red-500 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {deleteDocument.isPending ? 'Deleting...' : 'Delete Document'}
               </button>
-            </div>
+            </DialogFooter>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
 
     </div>
