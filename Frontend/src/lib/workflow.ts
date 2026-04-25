@@ -144,10 +144,10 @@ export class WorkflowService {
 
     if (userRole === ownerRole) return true;
 
-    // Brokers should see their assigned loans regardless of status
+    // Brokers should see their assigned loans or lead-generated loans regardless of status
     if (userRole === 'broker' && currentUserId !== undefined) {
       const uid = Number(currentUserId);
-      if (Number(loan.broker_id) === uid || Number(loan.assigned_broker_id) === uid) return true;
+      if (Number(loan.broker_id) === uid || Number(loan.assigned_broker_id) === uid || Number(loan.lead_creator_id) === uid || Number(loan.created_by) === uid) return true;
     }
 
     // Disbursed files still need to remain visible for creator and branch manager for PDD work.
@@ -237,7 +237,8 @@ export class WorkflowService {
       'rejected': 0,
       'cancelled': 0,
       'under_review': 40,
-      'approved': 60
+      'approved': 60,
+      'pending_approval': 70,
     };
     
     return progressMap[currentStatus] || 0;

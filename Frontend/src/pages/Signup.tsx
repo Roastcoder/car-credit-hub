@@ -235,7 +235,6 @@ export default function Signup() {
                       required
                       value={branchId}
                       onChange={(e) => setBranchId(e.target.value)}
-                      disabled={!!refBranch}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                       <option value="">Select branch</option>

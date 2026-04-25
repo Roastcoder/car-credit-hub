@@ -178,7 +178,17 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
                 <select
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background"
                   value={referredBy}
-                  onChange={e => setReferredBy(e.target.value)}
+                  onChange={e => {
+                    const newRef = e.target.value;
+                    setReferredBy(newRef);
+                    if (newRef && role === 'broker') {
+                      const refUser = allUsers.find((u: any) => u.id === Number(newRef) || String(u.id) === newRef);
+                      if (refUser && refUser.branch_id) {
+                        setBranchId(String(refUser.branch_id));
+                        setManagedBranchIds((prev) => Array.from(new Set([...prev, Number(refUser.branch_id)])));
+                      }
+                    }
+                  }}
                 >
                   <option value="">No Referrer</option>
                   {allUsers

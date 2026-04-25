@@ -123,7 +123,6 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
       };
 
     case 'bank':
-    case 'broker':
       return {
         canCreate: false,
         canCreateLead: true,
@@ -133,6 +132,19 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canDelete: false,
         canChangeStatus: false,
         canAddRemarks: true,
+        canViewAll: false,
+      };
+
+    case 'broker':
+      return {
+        canCreate: false,
+        canCreateLead: true,
+        canCreateLoan: false,
+        canEdit: false,
+        canView: true,
+        canDelete: false,
+        canChangeStatus: false,
+        canAddRemarks: false,
         canViewAll: false,
       };
 
@@ -215,6 +227,10 @@ export const canAccessLoan = (userRole: string, userId: number | string, loan: a
 
   if (normalizedRole === 'employee') {
     return Number(loan.created_by) === Number(userId);
+  }
+
+  if (normalizedRole === 'broker') {
+    return Number(loan.broker_id) === Number(userId) || Number(loan.assigned_broker_id) === Number(userId) || Number(loan.lead_creator_id) === Number(userId) || Number(loan.created_by) === Number(userId);
   }
 
   if (normalizedRole === 'manager') {
