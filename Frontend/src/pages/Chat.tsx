@@ -6,7 +6,7 @@ import {
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
   ChevronRight, ChevronLeft, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
-  Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info, Share2, Forward
+  Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info, Share2, Forward, Download
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCall } from '@/contexts/CallContext';
@@ -474,7 +474,7 @@ export default function Chat() {
                                <p className="text-[10px] font-bold truncate">{msg.file_name || 'Document'}</p>
                                {msg.file_size && <p className="text-[8px] opacity-60">{(msg.file_size / 1024).toFixed(1)} KB</p>}
                             </div>
-                            <a href={`${API_URL}${msg.file_url}`} target="_blank" rel="noreferrer" className="p-1 bg-white/20 rounded-full hover:bg-white/40"><Plus size={12} className="rotate-45" /></a>
+                            <a href={`${API_URL}${msg.file_url}`} target="_blank" rel="noreferrer" className="p-1 bg-white/20 rounded-full hover:bg-white/40"><Download size={14} className="text-slate-600 dark:text-slate-300" /></a>
                           </div>
                         </div>
                       )}
