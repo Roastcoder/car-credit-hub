@@ -38,6 +38,8 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const [lastNotificationId, setLastNotificationId] = useState<number | null>(null);
+
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -52,8 +54,36 @@ export default function NotificationBell() {
       }
     },
     enabled: !!user,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time feel
   });
+
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch (e) { console.error('Notification sound failed', e); }
+  };
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latest = notifications[0]; // Assuming sorted by created_at DESC
+      if (lastNotificationId !== null && latest.id !== lastNotificationId) {
+        playNotificationSound();
+      }
+      setLastNotificationId(latest.id);
+    }
+  }, [notifications, lastNotificationId]);
 
   useEffect(() => {
     // Realtime disabled for now
