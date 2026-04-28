@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { 
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
-  ChevronRight, Phone, Laptop, Lock
+  ChevronRight, Phone, Laptop, Lock, Check, CheckCheck
 } from 'lucide-react';
 
 interface Member {
@@ -26,6 +26,7 @@ interface Message {
   file_name?: string;
   file_size?: number;
   meeting_link?: string;
+  is_read?: boolean;
   created_at: string;
 }
 
@@ -541,9 +542,20 @@ export default function Chat() {
                         </div>
                       )}
 
-                      <span className={`block text-[9px] mt-1 text-right opacity-70`}>
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <div className="flex items-center justify-end gap-1 mt-1 text-[9px] opacity-80">
+                        <span>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {isMe && (
+                          <span title={msg.is_read ? "Seen" : "Delivered"}>
+                            {msg.is_read ? (
+                              <CheckCheck size={12} className="text-blue-200 dark:text-blue-100 font-bold" />
+                            ) : (
+                              <CheckCheck size={12} className="text-slate-300/80" />
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
