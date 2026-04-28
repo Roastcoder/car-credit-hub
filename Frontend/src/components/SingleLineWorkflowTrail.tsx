@@ -54,7 +54,20 @@ export function SingleLineWorkflowTrail({
   showLabels = true,
   showDescriptions = false
 }: SingleLineWorkflowTrailProps) {
-  const currentStepIndex = WORKFLOW_STEPS.findIndex(step => step.status === currentStatus);
+  const getStatusIndex = (status: string) => {
+    switch (status) {
+      case 'submitted': return 0;
+      case 'under_review':
+      case 'manager_review': return 1;
+      case 'manager_approved': return 2;
+      case 'approved':
+      case 'admin_approved': return 3;
+      case 'disbursed': return 4;
+      default: return -1;
+    }
+  };
+
+  const currentStepIndex = getStatusIndex(currentStatus);
 
   const getStepState = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) return 'completed';
