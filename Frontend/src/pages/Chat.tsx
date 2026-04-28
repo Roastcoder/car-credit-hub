@@ -822,12 +822,22 @@ export default function Chat() {
         )}
 
         {activeCall && (
-          <div className="fixed inset-0 z-[2000] bg-black flex flex-col">
-            <div className="flex-1 relative flex items-center justify-center">
-               {remoteStream ? <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain" /> : <div className="text-white animate-pulse font-bold tracking-widest">CONNECTING...</div>}
-               <div className="absolute top-6 right-6 w-32 h-44 md:w-48 md:h-64 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl">
+          <div className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-xl flex flex-col p-4 md:p-10">
+            <div className="flex-1 relative flex items-center justify-center max-w-6xl mx-auto w-full bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-white/5">
+               {remoteStream ? (
+                 <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+               ) : (
+                 <div className="flex flex-col items-center gap-4">
+                    <div className="w-20 h-20 bg-[#00a884]/20 rounded-full flex items-center justify-center animate-pulse">
+                        <Video size={40} className="text-[#00a884]" />
+                    </div>
+                    <p className="text-white/60 font-bold tracking-widest text-xs uppercase">Establishing Secure Connection...</p>
+                 </div>
+               )}
+               {/* Local Video PiP - Smaller and Sleeker */}
+               <div className="absolute top-6 right-6 w-28 h-40 md:w-36 md:h-52 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl z-20 transition-all hover:scale-105">
                   <video ref={localVideoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${isVideoOff ? 'hidden' : 'block'}`} />
-                  {isVideoOff && <div className="w-full h-full flex items-center justify-center bg-slate-900"><VideoOff className="text-slate-600" size={32} /></div>}
+                  {isVideoOff && <div className="w-full h-full flex items-center justify-center bg-slate-900"><VideoOff className="text-slate-600" size={24} /></div>}
                </div>
             </div>
             <div className="h-24 bg-[#0b141a]/95 flex items-center justify-center gap-10">
