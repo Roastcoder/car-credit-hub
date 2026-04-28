@@ -43,6 +43,8 @@ interface PaymentApplication {
   created_by: number;
   created_by_name?: string;
   approved_by?: number;
+  approved_by_name?: string;
+  approved_at?: string;
   processed_by?: number;
   utr_number?: string;
   payment_proof_path?: string;
@@ -371,6 +373,9 @@ export default function PaymentApplicationsList() {
                       {app.created_by_name && (
                          <p className="text-[10px] text-gray-400">Created by: {app.created_by_name}</p>
                       )}
+                      {app.approved_by_name && (
+                         <p className="text-[10px] text-gray-500 font-medium">Approved by: {app.approved_by_name} {app.approved_at && `at ${new Date(app.approved_at).toLocaleDateString()}`}</p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500 italic mb-1">{new Date(app.created_at).toLocaleString()}</p>
@@ -517,7 +522,12 @@ export default function PaymentApplicationsList() {
                         <div className="text-[10px] text-gray-400 italic">ID: #{app.id.toString().padStart(4, '0')}</div>
                         {isAccountant && (
                           <div className="text-[10px] text-gray-500 mt-1">
-                            {new Date(app.created_at).toLocaleDateString()}
+                            Approved by: <span className="font-medium text-gray-700 dark:text-gray-300">{app.approved_by_name || 'N/A'}</span>
+                            {app.approved_at && (
+                              <div className="text-[9px] text-gray-400 mt-0.5">
+                                at {new Date(app.approved_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>
