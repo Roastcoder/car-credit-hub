@@ -50,6 +50,7 @@ const Download = lazy(() => import("@/pages/Download"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const ExternalApiLogs = lazy(() => import("@/pages/ExternalApiLogs"));
 const CreditReports = lazy(() => import("./pages/CreditReports"));
+const Chat = lazy(() => import("@/pages/Chat"));
 const SchemeManagement = lazy(() => import("./pages/SchemeManagement"));
 const ModelManagement = lazy(() => import("./pages/ModelManagement"));
 const SubventionGrid = lazy(() => import("./pages/SubventionGrid"));
@@ -198,6 +199,7 @@ function AppRoutes() {
           </RoleProtectedRoute>
         </ProtectedRoute>
       } />
+      <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
       <Route path="/" element={<DashboardRedirect />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

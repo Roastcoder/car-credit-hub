@@ -7,7 +7,7 @@ import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
   Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List,
-  AlertTriangle, CheckCircle2
+  AlertTriangle, CheckCircle2, MessageSquare
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -30,6 +30,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  {
+    title: 'Workspace Chat',
+    path: '/chat',
+    icon: MessageSquare,
+    shortLabel: 'CH',
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant', 'sales']
+  },
   {
     title: 'Dashboard',
     path: '/dashboard',
@@ -91,6 +98,13 @@ const NAV_ITEMS: NavItem[] = [
 
 const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
   {
+    title: 'Workspace Chat',
+    path: '/chat',
+    icon: MessageSquare,
+    shortLabel: 'CH',
+    roles: ['pdd_manager']
+  },
+  {
     title: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
@@ -112,6 +126,7 @@ const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
 ];
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
+  { title: 'Workspace Chat', path: '/chat', icon: MessageSquare, shortLabel: 'CH', roles: ['accountant', 'admin', 'super_admin'] },
   { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV', roles: ['accountant', 'admin', 'super_admin'] },
   { title: 'Payment Requests', path: '/payments', icon: CreditCard, shortLabel: 'PR', roles: ['accountant', 'admin', 'super_admin'] },
   { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV', roles: ['accountant', 'admin', 'super_admin'] },
