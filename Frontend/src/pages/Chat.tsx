@@ -399,6 +399,14 @@ export default function Chat() {
     return title?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  const otherUsers = searchQuery.trim() ? users.filter(u => {
+    const match = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  u.email.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!match) return false;
+    const hasRoom = rooms.some(r => r.type === 'direct' && r.members.some(m => m.id === u.id));
+    return !hasRoom;
+  }) : [];
+
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -438,7 +446,9 @@ export default function Chat() {
               </div>
               <button onClick={() => createRoomMutation.mutate({ name: groupName, type: 'group', participantIds: selectedUsers })} className="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-xl">Create Session</button>
             </div>
-          ) : filteredRooms.map(room => {
+          ) : (
+            <div className="flex flex-col">
+              {filteredRooms.map(room => {
                 const otherMember = room.members.find(m => m.id !== user?.id);
                 const title = room.type === 'group' ? room.name : (otherMember?.name || 'DC');
                 const isOnline = room.type === 'direct' && otherMember?.is_online;
@@ -455,6 +465,33 @@ export default function Chat() {
                   </button>
                 );
               })}
+
+              {otherUsers.length > 0 && (
+                <div className="mt-4 px-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">New Connections</p>
+                  {otherUsers.map(u => (
+                    <button key={u.id} onClick={() => createRoomMutation.mutate({ type: 'direct', participantIds: [u.id] })} className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group">
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">{u.name.slice(0, 2).toUpperCase()}</div>
+                        {u.is_online && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />}
+                      </div>
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{u.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{u.role}</p>
+                      </div>
+                      <Plus className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" size={16} />
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {searchQuery && filteredRooms.length === 0 && otherUsers.length === 0 && (
+                <div className="p-8 text-center">
+                  <p className="text-sm text-muted-foreground">No matches found</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
