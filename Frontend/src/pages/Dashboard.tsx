@@ -571,24 +571,84 @@ export default function Dashboard() {
             </div>
           </>
         ) : isBroker ? (
-          // ── BROKER DASHBOARD: only their own application counts ──
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            {[
-              { label: 'My Applications', value: totalLoans, sub: 'Total submitted', icon: <FileText size={18} className="text-blue-500" /> },
-              { label: 'Disbursed', value: disbursed.length, sub: `${disbursed.length} completed`, icon: <CheckCircle2 size={18} className="text-emerald-500" />, status: 'disbursed' },
-              { label: 'Under Review', value: pendingReview, sub: 'Awaiting decision', icon: <Clock size={18} className="text-amber-500" />, status: 'under_review' },
-              { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Ready to disburse', icon: <CheckCircle2 size={18} className="text-blue-500" />, status: 'approved' },
-            ].map((kpi) => (
-              <div
-                key={kpi.label}
-                onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
-                className={`stat-card cursor-pointer transition-all ${'status' in kpi && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5' : 'hover:border-accent/40'}`}
-              >
-                <div className="flex items-center gap-2 mb-2">{kpi.icon}<p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{kpi.label}</p></div>
-                <p className="text-3xl font-bold text-blue-950 dark:text-white">{kpi.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+          // ── BROKER DASHBOARD: expanded KPIs and Charts ──
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+              {[
+                { label: 'Total Volume', value: formatCurrency(totalVolume), sub: `${totalLoans} applications`, icon: <IndianRupee size={18} className="text-primary" /> },
+                { label: 'Disbursed', value: formatCurrency(disbursedAmount), sub: `${disbursed.length} files`, icon: <CheckCircle2 size={18} className="text-emerald-500" />, status: 'disbursed' },
+                { label: 'In Process', value: pendingReview, sub: 'Under Review', icon: <Clock size={18} className="text-amber-500" />, status: 'under_review' },
+                { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Awaiting Disb.', icon: <CheckCircle2 size={18} className="text-blue-500" />, status: 'approved' },
+              ].map((kpi) => (
+                <div
+                  key={kpi.label}
+                  onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
+                  className={`stat-card cursor-pointer transition-all ${'status' in kpi && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
+                >
+                  <div className="flex items-center gap-2 mb-2">{kpi.icon}<p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{kpi.label}</p></div>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-950 dark:text-white">{kpi.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="stat-card">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <Activity size={18} className="text-blue-500" />
+                    My Monthly Trend (₹ Lakhs)
+                  </h2>
+                </div>
+                <div className="h-[250px] w-full">
+                  {trendData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData}>
+                        <defs>
+                          <linearGradient id="colorAmountBroker" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} />
+                        <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorAmountBroker)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No submission history yet</div>
+                  )}
+                </div>
               </div>
-            ))}
+
+              <div className="stat-card">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <BarChart3 size={18} className="text-blue-500" />
+                    Status Distribution
+                  </h2>
+                </div>
+                <div className="h-[250px] w-full">
+                  {statusData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={4} dataKey="value" stroke="none">
+                          {statusData.map((_, i) => (
+                            <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 600 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm">No status data available</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         ) : isAccountant ? (
           // ── ACCOUNTANT DASHBOARD: payment-focused KPIs ──

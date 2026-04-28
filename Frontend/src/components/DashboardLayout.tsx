@@ -37,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
     path: '/chat',
     icon: MessageSquare,
     shortLabel: 'CH',
-    roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant']
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'employee', 'accountant']
   },
   {
     title: 'Dashboard',
