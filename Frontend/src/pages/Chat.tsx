@@ -6,10 +6,11 @@ import Peer from 'peerjs';
 import { 
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
-  ChevronRight, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
+  ChevronRight, ChevronLeft, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
   Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import logo from '@/assets/logo.png';
 
 interface Member {
   id: number;
@@ -95,7 +96,7 @@ export default function Chat() {
   const [activeCall, setActiveCall] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [declinedCalls, setDeclinedCalls] = useState<number[]>([]);
+  const [handledCallIds, setHandledCallIds] = useState<number[]>([]);
   
   // Presence & Typing States
   const [typingUsers, setTypingUsers] = useState<Record<number, boolean>>({});
@@ -358,7 +359,7 @@ export default function Chat() {
     if (!messages || messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];
     
-    if (lastMessage.message_type === 'meeting' && lastMessage.sender_id !== user?.id && !declinedCalls.includes(lastMessage.id) && !activeCall) {
+    if (lastMessage.message_type === 'meeting' && lastMessage.sender_id !== user?.id && !handledCallIds.includes(lastMessage.id) && !activeCall) {
       const msgTime = new Date(lastMessage.created_at).getTime();
       if (Date.now() - msgTime < 30000) { 
         if (!incomingCall) {
@@ -377,7 +378,7 @@ export default function Chat() {
        endCall();
        toast.info('Call ended by other user');
     }
-  }, [messages, user?.id, declinedCalls, incomingCall, activeCall]);
+  }, [messages, user?.id, handledCallIds, incomingCall, activeCall]);
 
   const VIDEO_CONSTRAINTS = {
     video: {
@@ -414,6 +415,7 @@ export default function Chat() {
   const answerCall = async () => {
     if (!incomingCall || !peer) return;
     stopRingtone();
+    setHandledCallIds(prev => [...prev, incomingCall.id]);
     try {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
       setLocalStream(stream);
@@ -423,7 +425,6 @@ export default function Chat() {
         setActiveCall(incomingCall.callObj);
         setIncomingCall(null);
       } else {
-        // Fallback for signaling latency
         peer.on('call', (newCall) => {
           newCall.answer(stream);
           setupCallHandlers(newCall);
@@ -436,7 +437,11 @@ export default function Chat() {
   };
 
   const declineCall = () => {
-    if (incomingCall) { setDeclinedCalls([...declinedCalls, incomingCall.id]); setIncomingCall(null); stopRingtone(); }
+    if (incomingCall) { 
+      setHandledCallIds(prev => [...prev, incomingCall.id]); 
+      setIncomingCall(null); 
+      stopRingtone(); 
+    }
   };
 
   const endCall = () => {
