@@ -314,6 +314,32 @@ export default function CreateLoan() {
     );
   }
 
+  // Broker read-only check
+  const isBrokerReadOnly = isEditMode && user?.role === 'broker' && existingLoan?.booking_mode === 'broker';
+
+  if (isBrokerReadOnly) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={32} className="text-amber-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground mb-4">Read-Only Access</h2>
+        <p className="text-muted-foreground mb-8">
+          This loan application was booked via a broker and is read-only for your account. 
+          Please contact the branch manager for any modifications.
+        </p>
+        <div className="flex justify-center gap-4">
+          <button onClick={() => navigate(`/loans/${id}`)} className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold">
+            View Details
+          </button>
+          <button onClick={() => navigate('/loans')} className="px-6 py-2 rounded-lg border border-border text-foreground font-semibold">
+            Back to Loans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   const { data: banks = [] } = useQuery({
     queryKey: ['banks-list'],

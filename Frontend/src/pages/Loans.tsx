@@ -328,7 +328,7 @@ export default function Loans() {
                     <MessageSquare size={13} className="text-blue-500" /> Remarks
                   </button>
                 )}
-                {permissions.canEdit && (
+                {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                   <button
                     onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
@@ -339,7 +339,7 @@ export default function Loans() {
                     Edit
                   </button>
                 )}
-                {permissions.canDelete && (
+                {permissions.canDelete && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                   <button
                     onClick={() => setDeleteConfirm(loan.id)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors"
@@ -350,7 +350,7 @@ export default function Loans() {
                     Delete
                   </button>
                 )}
-                {canEditStatus && (
+                {canEditStatus && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                   <select
                     value={loan.status}
                     onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}
@@ -432,7 +432,7 @@ export default function Loans() {
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            {permissions.canEdit && (
+                            {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                               <button
                                 onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                                 className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
@@ -461,7 +461,7 @@ export default function Loans() {
                                 <CreditCard size={14} className="text-green-600" />
                               </button>
                             )}
-                            {canAddRemarks && (
+                            {canAddRemarks && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                               <button
                                 onClick={() => setRemarksModal({ open: true, loanId: loan.id, currentRemarks: loan.remark || '' })}
                                 className="p-1.5 rounded-md border border-border bg-card hover:bg-blue-500/10 transition-colors"
@@ -470,7 +470,7 @@ export default function Loans() {
                                 <MessageSquare size={14} className="text-blue-500" />
                               </button>
                             )}
-                            {permissions.canDelete && (
+                            {permissions.canDelete && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                               <button
                                 onClick={() => setDeleteConfirm(loan.id)}
                                 className="p-1.5 rounded-md border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors"
@@ -481,7 +481,7 @@ export default function Loans() {
                                 </svg>
                               </button>
                             )}
-                            {canEditStatus && (
+                            {canEditStatus && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
                               <select
                                 value={loan.status}
                                 onChange={(e) => updateStatus.mutate({ id: loan.id, status: e.target.value })}

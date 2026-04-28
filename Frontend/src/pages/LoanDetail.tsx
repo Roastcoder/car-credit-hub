@@ -242,6 +242,7 @@ export default function LoanDetail() {
   const [pddReason, setPddReason] = useState('');
 
   const isPddManager = user?.role === 'pdd_manager';
+  const isBrokerReadOnly = user?.role === 'broker' && (loan as any)?.booking_mode === 'broker';
 
   const baseCanEditPDD = ['employee', 'manager', 'pdd_manager', 'admin', 'super_admin'].includes(user?.role || '');
   const isPDDSubmitted = (loan as any)?.pdd_status === 'pending_approval' || (loan as any)?.pdd_status === 'approved';
@@ -411,6 +412,15 @@ export default function LoanDetail() {
           </div>
         </div>
 
+        {isBrokerReadOnly && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3 text-amber-700">
+            <AlertTriangle size={18} className="shrink-0" />
+            <p className="text-xs font-semibold">
+              Read-Only Access: This application was booked via a broker. Please contact the branch manager for modifications.
+            </p>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -436,7 +446,7 @@ export default function LoanDetail() {
             <p className="text-sm text-muted-foreground mt-2">{loan.applicant_name} • {(loan as any).maker_name || loan.car_make} {(loan as any).model_variant_name || loan.car_model}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {canEditPDD && (
+            {canEditPDD && !isBrokerReadOnly && (
               <button
                 onClick={() => setIsEditingPDD(!isEditingPDD)}
                 className={cn(
@@ -476,7 +486,7 @@ export default function LoanDetail() {
               </>
             )}
 
-            {permissions.canAddRemarks && (
+            {permissions.canAddRemarks && !isBrokerReadOnly && (
               <button
                 onClick={() => setRemarksModal({ open: true, currentRemarks: loan.remark || '' })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-blue-500/10 hover:border-blue-500 transition-colors"
@@ -488,7 +498,7 @@ export default function LoanDetail() {
 
 
             {/* Workflow Actions */}
-            {!isPddManager && (
+            {!isPddManager && !isBrokerReadOnly && (
               <WorkflowActions
                 loanId={id!}
                 currentStatus={loan.status}
