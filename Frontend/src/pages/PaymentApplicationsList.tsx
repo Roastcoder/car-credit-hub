@@ -432,7 +432,7 @@ export default function PaymentApplicationsList() {
                     View
                   </Button>
                   
-                  {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') && (
+                  {((user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') || user?.role === 'super_admin') && (
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -622,7 +622,7 @@ export default function PaymentApplicationsList() {
                             <Eye size={14} />
                           </Button>
                           
-                          {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') && (
+                          {((user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && (app.status === 'draft' || app.status === 'sent_back') || user?.role === 'super_admin') && (
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600" onClick={() => navigate(`/payments/edit/${app.id}`)}>
                               <Edit size={14} />
                             </Button>

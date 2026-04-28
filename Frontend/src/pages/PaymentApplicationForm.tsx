@@ -193,7 +193,7 @@ export default function PaymentApplicationForm() {
   const totalReleased = (formData.vouchers || []).reduce((sum, voucher) => sum + (Number(voucher.amount) || 0), 0);
   const remainingLoanAmount = Math.max(0, (Number(formData.disbursement_amount) || 0) - totalReleased);
   const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
-  const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode;
+  const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode && user?.role !== 'super_admin';
 
   const fetchApplicationData = async () => {
     try {
@@ -563,7 +563,7 @@ export default function PaymentApplicationForm() {
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
       // Check Aadhaar verification for submitted status
-      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified' && formData.status !== 'sent_back') {
+      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified' && formData.status !== 'sent_back' && user?.role !== 'super_admin') {
         toast.error('Please complete Aadhaar verification before submitting');
         return;
       }

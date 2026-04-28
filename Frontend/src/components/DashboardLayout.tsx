@@ -13,7 +13,7 @@ import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
 import ProfileCompletionModal from './ProfileCompletionModal';
-import FloatingChatWidget from './FloatingChatWidget';
+import FloatingChatWidget from '@/components/FloatingChatWidget';
 import { toast } from 'sonner';
 
 interface NavItem {

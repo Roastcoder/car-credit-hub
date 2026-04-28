@@ -98,6 +98,7 @@ interface PaymentApplication {
   remarks?: string;
   banking_documents?: string | any[];
   ledger_entries?: any[];
+  all_loan_ledger_entries?: any[];
   vouchers?: any[];
   payment_history?: any[];
 }
@@ -127,8 +128,9 @@ export default function PaymentDetail() {
   const [releaseAmount, setReleaseAmount] = useState('');
   const [releaseNarration, setReleaseNarration] = useState('');
 
-  // Ledger state
+  // Ledger state: editable rows = current app only; display rows = all apps for this loan
   const [ledgerEntries, setLedgerEntries] = useState<{ date: string; debit: string; credit: string; narration: string; isNew?: boolean }[]>([]);
+  const [allLoanLedgerEntries, setAllLoanLedgerEntries] = useState<any[]>([]);
   const [ledgerSaved, setLedgerSaved] = useState(false);
   const [savedLedgerCount, setSavedLedgerCount] = useState(0);
 
@@ -149,6 +151,13 @@ export default function PaymentDetail() {
     if (payment?.ledger_entries?.length) {
       setLedgerEntries(payment.ledger_entries);
       setSavedLedgerCount(payment.ledger_entries.length);
+    }
+    // Show all ledger entries for the loan (from all payment applications)
+    if (payment?.all_loan_ledger_entries?.length) {
+      setAllLoanLedgerEntries(payment.all_loan_ledger_entries);
+    } else if (payment?.ledger_entries?.length) {
+      // fallback: at minimum show current app's entries
+      setAllLoanLedgerEntries(payment.ledger_entries);
     }
   }, [payment]);
 
@@ -540,8 +549,13 @@ export default function PaymentDetail() {
   const targetAmount = Number(payment.today_release_amount || 0);
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
-  const ledgerDebitTotalSum = ledgerEntries.reduce((sum, r) => sum + safeParseNumber(r.debit), 0);
-  const ledgerCreditTotalSum = ledgerEntries.reduce((sum, r) => sum + safeParseNumber(r.credit), 0);
+  // Derived ledger totals — use merged all-loan ledger for display/PDF
+  const displayLedger = [
+    ...(allLoanLedgerEntries || []).filter(entry => entry.application_id && entry.application_id !== Number(id)),
+    ...ledgerEntries
+  ];
+  const ledgerDebitTotalSum = displayLedger.reduce((sum, r) => sum + safeParseNumber(r.debit), 0);
+  const ledgerCreditTotalSum = displayLedger.reduce((sum, r) => sum + safeParseNumber(r.credit), 0);
   
   const ledgerDebitTotal = ledgerDebitTotalSum;
   const remainingLoanBalance = ledgerCreditTotalSum - ledgerDebitTotalSum;
@@ -838,9 +852,9 @@ export default function PaymentDetail() {
               </Section>
             )}
 
-            {/* Complete Payment Applications Operations */}
+            {/* All Loan Payment Operations — only when UTR-confirmed entries exist */}
             {(payment.payment_history && payment.payment_history.length > 0) && (
-              <Section title="All Loan Payment Operations" icon={<FileText size={20} className="text-blue-500" />}>
+              <Section title="Payment Release History (UTR Confirmed)" icon={<FileText size={20} className="text-blue-500" />}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -856,21 +870,21 @@ export default function PaymentDetail() {
                         <tr key={idx} className={`border-b border-border/50 text-left ${ph.id === Number(id) ? 'bg-blue-50/50 dark:bg-blue-900/10 font-bold' : ''}`}>
                           <td className="py-2">
                             <span className="font-mono text-xs">#PAY-{ph.id}</span>
-                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(ph.created_at)}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(ph.released_at || ph.created_at)}</p>
                           </td>
                           <td className="py-2">
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-slate-100 text-slate-800">
-                              {ph.status?.replace('_', ' ')}
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-green-100 text-green-800">
+                              Released
                             </span>
                           </td>
                           <td className="py-2">
-                            {ph.voucher_number ? (
+                            {ph.utr_number ? (
                               <div className="text-xs">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300">{ph.voucher_number}</span>
-                                {ph.reference_number && <p className="text-[10px] text-muted-foreground">UTR: {ph.reference_number}</p>}
+                                <span className="font-mono font-semibold text-green-700 dark:text-green-400">{ph.utr_number}</span>
+                                {ph.voucher_number && <p className="text-[10px] text-muted-foreground">Voucher: {ph.voucher_number}</p>}
                               </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground italic">Pending Voucher</span>
+                              <span className="text-xs text-muted-foreground italic">—</span>
                             )}
                           </td>
                           <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.payment_amount).toLocaleString()}</td>
@@ -976,7 +990,7 @@ export default function PaymentDetail() {
               </div>
 
               {/* Ledger */}
-              {(canEditLedger || (payment.ledger_entries?.length > 0)) && (
+              {(canEditLedger || (displayLedger.length > 0)) && (
                 <div className="bg-card border border-border rounded-lg p-4">
                   <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <FileText size={16} className="text-blue-500" /> Payment Ledger
@@ -995,49 +1009,56 @@ export default function PaymentDetail() {
                       <tbody>
 
 
-                        {ledgerEntries.map((row, i) => (
-                          <tr key={i} className="border-b border-border/50">
-                            <td className="py-1 pr-2">
-                              {canEditLedger && row.isNew
-                                ? <input type="date" value={row.date} onChange={e => updateLedgerRow(i, 'date', e.target.value)}
-                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
-                                : <span className="text-xs">{row.date}</span>}
-                            </td>
-                            <td className="py-1 pr-2">
-                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
-                                ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(i, 'credit', e.target.value)}
-                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
-                                : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
-                            </td>
-                            <td className="py-1 pr-2">
-                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
-                                ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value)}
-                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
-                                : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
-                            </td>
-                            <td className="py-1">
-                              {canEditLedger && row.isNew && !row.narration?.includes('Initial Sanction')
-                                ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(i, 'narration', e.target.value)}
-                                  className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
-                                : <span className="text-xs">{row.narration}</span>}
-                            </td>
-                            {canEditLedger && (
-                              <td className="py-1 pl-1">
-                                {!row.narration?.includes('Initial Sanction') && (
-                                  <button type="button" onClick={() => removeLedgerRow(i)} className="text-red-400 hover:text-red-600" title="Remove row">
-                                    <XCircle size={14} />
-                                  </button>
-                                )}
+                        {/* Display merged all-loan ledger entries (read-only for old entries) */}
+                        {displayLedger.map((row, i) => {
+                          const otherCount = (allLoanLedgerEntries || []).filter(e => e.application_id && e.application_id !== Number(id)).length;
+                          const ledgerIdx = i - otherCount;
+                          const isFromCurrentApp = i >= otherCount;
+                          
+                          return (
+                            <tr key={i} className="border-b border-border/50">
+                              <td className="py-1 pr-2">
+                                {isFromCurrentApp && canEditLedger
+                                  ? <input type="date" value={row.date} onChange={e => updateLedgerRow(ledgerIdx, 'date', e.target.value)}
+                                    className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+                                  : <span className="text-xs">{row.date}</span>}
                               </td>
-                            )}
-                          </tr>
-                        ))}
-                        {ledgerEntries.length > 0 && (
+                              <td className="py-1 pr-2">
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                  ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(ledgerIdx, 'credit', e.target.value)}
+                                    className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
+                                  : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
+                              </td>
+                              <td className="py-1 pr-2">
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                  ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(ledgerIdx, 'debit', e.target.value)}
+                                    className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
+                                  : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
+                              </td>
+                              <td className="py-1">
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                  ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(ledgerIdx, 'narration', e.target.value)}
+                                    className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
+                                  : <span className="text-xs">{row.narration}</span>}
+                              </td>
+                              {canEditLedger && (
+                                <td className="py-1 pl-1">
+                                  {isFromCurrentApp && !row.narration?.includes('Initial Sanction') && (
+                                    <button type="button" onClick={() => removeLedgerRow(ledgerIdx)} className="text-red-400 hover:text-red-600" title="Remove row">
+                                      <XCircle size={14} />
+                                    </button>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                        {displayLedger.length > 0 && (
                           <>
                             <tr className="font-bold border-t border-border">
                               <td className="pt-2 text-muted-foreground">Ledger Sum</td>
-                              <td className="pt-2 font-mono text-green-600">₹{ledgerEntries.reduce((s, r) => s + safeParseNumber(r.credit), 0).toLocaleString()}</td>
-                              <td className="pt-2 font-mono text-red-600">₹{ledgerEntries.reduce((s, r) => s + safeParseNumber(r.debit), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono text-green-600">₹{displayLedger.reduce((s, r) => s + safeParseNumber(r.credit), 0).toLocaleString()}</td>
+                              <td className="pt-2 font-mono text-red-600">₹{displayLedger.reduce((s, r) => s + safeParseNumber(r.debit), 0).toLocaleString()}</td>
                               <td />{canEditLedger && <td />}
                             </tr>
                             <tr className="font-bold text-accent">
@@ -1155,8 +1176,8 @@ export default function PaymentDetail() {
                 </div>
               )}
 
-              {(user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && 
-                (payment.status === 'draft' || payment.status === 'sent_back') && (
+              {((user?.role === 'employee' || user?.role === 'manager' || user?.role === 'super_admin') && 
+                (payment.status === 'draft' || payment.status === 'sent_back') || user?.role === 'super_admin') && (
                 <div className="bg-card border border-amber-200 dark:border-amber-900 rounded-lg p-4 space-y-2">
                   <p className="text-sm font-semibold text-foreground mb-1">Application Actions</p>
                   <button onClick={() => navigate(`/payments/edit/${id}`)}
