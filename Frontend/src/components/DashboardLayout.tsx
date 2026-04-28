@@ -13,6 +13,7 @@ import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
 import ProfileCompletionModal from './ProfileCompletionModal';
+import FloatingChatWidget from './FloatingChatWidget';
 import { toast } from 'sonner';
 
 interface NavItem {
@@ -459,6 +460,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Floating Global Chat Widget */}
+      <FloatingChatWidget />
     </div>
   );
 }
