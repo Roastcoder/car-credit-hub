@@ -440,16 +440,37 @@ export default function Chat() {
               backgroundSize: '300px',
               backgroundColor: '#e5ddd5'
             }}>
-              {messages.map((msg) => {
+              {messages.map((msg, index) => {
                 const isMe = msg.sender_id === user?.id;
+                const msgDate = new Date(msg.created_at).toDateString();
+                const prevMsgDate = index > 0 ? new Date(messages[index - 1].created_at).toDateString() : null;
+                const showDateSeparator = msgDate !== prevMsgDate;
+
                 return (
-                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group/msg`}>
-                    <div className={`relative max-w-[85%] md:max-w-[60%] rounded-lg p-1.5 px-2.5 shadow-sm ${isMe ? 'bg-[#dcf8c6] dark:bg-[#056162] text-slate-900 dark:text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none'}`}>
-                      <div className={`absolute top-0 w-1.5 h-1.5 ${isMe ? '-right-1.5 bg-[#dcf8c6] dark:bg-[#056162]' : '-left-1.5 bg-white dark:bg-slate-800'}`} style={{ clipPath: isMe ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(0 0, 100% 100%, 100% 0)' }}></div>
-                      
-                      {!isMe && activeRoom?.type === 'group' && (
-                        <span className="block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mb-0.5">{msg.sender_name}</span>
-                      )}
+                  <div key={msg.id} className="flex flex-col gap-1.5">
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-4">
+                        <span className="px-3 py-1 bg-[#d1d7db] dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold rounded-lg uppercase shadow-sm">
+                          {(() => {
+                            const date = new Date(msg.created_at);
+                            const today = new Date();
+                            const yesterday = new Date();
+                            yesterday.setDate(today.getDate() - 1);
+
+                            if (date.toDateString() === today.toDateString()) return 'Today';
+                            if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+                            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group/msg`}>
+                      <div className={`relative max-w-[85%] md:max-w-[60%] rounded-lg p-1.5 px-2.5 shadow-sm ${isMe ? 'bg-[#dcf8c6] dark:bg-[#056162] text-slate-900 dark:text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none'}`}>
+                        <div className={`absolute top-0 w-1.5 h-1.5 ${isMe ? '-right-1.5 bg-[#dcf8c6] dark:bg-[#056162]' : '-left-1.5 bg-white dark:bg-slate-800'}`} style={{ clipPath: isMe ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(0 0, 100% 100%, 100% 0)' }}></div>
+                        
+                        {!isMe && activeRoom?.type === 'group' && (
+                          <span className="block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mb-0.5">{msg.sender_name}</span>
+                        )}
                       
                       {msg.message_type === 'text' && <p className="text-[13px] leading-relaxed pr-14 pb-1">{msg.content}</p>}
                       {msg.message_type === 'document' && (
@@ -502,7 +523,8 @@ export default function Chat() {
                       </button>
                     </div>
                   </div>
-                );
+                </div>
+              );
               })}
               <div ref={messagesEndRef} />
             </div>
