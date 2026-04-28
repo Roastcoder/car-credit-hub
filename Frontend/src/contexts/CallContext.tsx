@@ -73,6 +73,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     newPeer.on('open', () => console.log('Global Peer Connected:', newPeer.id));
     newPeer.on('call', (call) => {
+      // Attach close listener immediately to stop ringing if caller cancels
+      call.on('close', () => {
+        setIncomingCall(null);
+        stopRingtone();
+      });
+
       setIncomingCall({
         senderName: 'Incoming Call...',
         peerId: call.peer,

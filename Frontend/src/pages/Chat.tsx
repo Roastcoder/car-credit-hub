@@ -272,32 +272,34 @@ export default function Chat() {
       
       {/* Sidebar - Contacts List */}
       <div className={`${activeRoomId || isCreatingGroup ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20`}>
-        {/* Sidebar Header - Compact */}
-        <div className="p-3 bg-[#f0f2f5] dark:bg-slate-800/50 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-          <UserAvatar member={user} className="w-8 h-8 border-2 border-white dark:border-slate-700" />
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => setIsCreatingGroup(!isCreatingGroup)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition" title="New Group">
-              <Users size={16} />
-            </button>
-            <button className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition">
-              <MessageSquare size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Search - Compact */}
-        <div className="p-2 bg-white dark:bg-slate-900">
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-               {searchQuery ? <ChevronRight size={14} className="rotate-180" onClick={() => setSearchQuery('')} /> : <Search size={14} />}
+        {/* Sidebar Header - Compact & Locked */}
+        <div className="sticky top-0 z-30 bg-[#f0f2f5]/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="p-3 flex items-center justify-between">
+            <UserAvatar member={user} className="w-8 h-8 border-2 border-white dark:border-slate-700" />
+            <div className="flex items-center gap-0.5">
+              <button onClick={() => setIsCreatingGroup(!isCreatingGroup)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition" title="New Group">
+                <Users size={16} />
+              </button>
+              <button className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition">
+                <MessageSquare size={16} />
+              </button>
             </div>
-            <input 
-              type="text" 
-              placeholder="Search or start chat" 
-              className="w-full pl-10 pr-4 py-1.5 text-xs bg-[#f0f2f5] dark:bg-slate-800 rounded-lg border-none focus:ring-0 outline-none" 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-            />
+          </div>
+
+          {/* Search - Compact */}
+          <div className="p-2 pt-0">
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                 {searchQuery ? <ChevronRight size={14} className="rotate-180" onClick={() => setSearchQuery('')} /> : <Search size={14} />}
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search or start chat" 
+                className="w-full pl-10 pr-4 py-1.5 text-xs bg-white/50 dark:bg-slate-900/50 rounded-lg border-none focus:ring-0 outline-none transition-all" 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+              />
+            </div>
           </div>
         </div>
 
