@@ -17,6 +17,7 @@ interface Member {
   email: string;
   role: string;
   phone?: string;
+  profile_image?: string;
   is_online?: boolean;
 }
 
@@ -48,6 +49,30 @@ interface Room {
   };
 }
 
+const UserAvatar = ({ member, className, onClick }: { member: Member | any, className?: string, onClick?: () => void }) => {
+  const [error, setError] = useState(false);
+  const initials = member?.name?.slice(0, 2).toUpperCase() || 'U';
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
+
+  return (
+    <div 
+      onClick={onClick}
+      className={`rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold overflow-hidden shrink-0 transition-transform active:scale-95 ${className} ${onClick ? 'cursor-pointer' : ''}`}
+    >
+      {(member?.profile_image && !error) ? (
+        <img 
+          src={`${API_URL}${member.profile_image}`} 
+          alt="" 
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        initials
+      )}
+    </div>
+  );
+};
+
 export default function Chat() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -59,6 +84,7 @@ export default function Chat() {
   const [groupName, setGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [viewingProfile, setViewingProfile] = useState<Member | null>(null);
+  const [lastMessageId, setLastMessageId] = useState<number | null>(null);
   
   // Custom Calling & Real-time States
   const [peer, setPeer] = useState<Peer | null>(null);
@@ -101,6 +127,24 @@ export default function Chat() {
     const interval = setInterval(sendHeartbeat, 30000); // 30 seconds
     return () => clearInterval(interval);
   }, [API_URL]);
+
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch (e) { console.error('Notification sound failed', e); }
+  };
 
   const startRingtone = () => {
     try {
@@ -241,6 +285,19 @@ export default function Chat() {
     enabled: !!activeRoomId,
     refetchInterval: 3000 
   });
+
+  // Notification Sound Logic
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.id !== lastMessageId) {
+        if (lastMsg.sender_id !== user?.id) {
+           playNotificationSound();
+        }
+        setLastMessageId(lastMsg.id);
+      }
+    }
+  }, [messages, user?.id, lastMessageId]);
 
   // Fetch Users
   const { data: users = [] } = useQuery<Member[]>({
@@ -440,6 +497,7 @@ export default function Chat() {
                 {users.map(u => (
                   <label key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer">
                     <input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => { if(selectedUsers.includes(u.id)) setSelectedUsers(selectedUsers.filter(i=>i!==u.id)); else setSelectedUsers([...selectedUsers,u.id]); }} className="rounded text-blue-600" />
+                    <UserAvatar member={u} className="w-8 h-8" />
                     <div><p className="text-xs font-bold flex items-center gap-1.5">{u.name} {u.is_online && <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />}</p><p className="text-[10px] text-muted-foreground">{u.role}</p></div>
                   </label>
                 ))}
@@ -455,7 +513,7 @@ export default function Chat() {
                 return (
                   <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${activeRoomId === room.id ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                     <div className="relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${activeRoomId === room.id ? 'bg-white/20' : 'bg-blue-50 dark:bg-slate-800 text-blue-600'}`}>{title?.slice(0, 2).toUpperCase()}</div>
+                      <UserAvatar member={otherMember} className={`w-10 h-10 ${activeRoomId === room.id ? 'bg-white/20' : ''}`} />
                       {isOnline && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />}
                     </div>
                     <div className="text-left flex-1 min-w-0">
@@ -472,7 +530,7 @@ export default function Chat() {
                   {otherUsers.map(u => (
                     <button key={u.id} onClick={() => createRoomMutation.mutate({ type: 'direct', participantIds: [u.id] })} className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">{u.name.slice(0, 2).toUpperCase()}</div>
+                        <UserAvatar member={u} className="w-10 h-10 group-hover:bg-blue-600 group-hover:text-white transition-colors" />
                         {u.is_online && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />}
                       </div>
                       <div className="text-left flex-1 min-w-0">
@@ -508,9 +566,7 @@ export default function Chat() {
                    const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
                    if (otherMember) setViewingProfile(otherMember);
                 }}>
-                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold">
-                    {activeRoom?.type === 'group' ? <Users size={18} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'DC').slice(0, 2).toUpperCase()}
-                  </div>
+                  <UserAvatar member={activeRoom?.type === 'group' ? { name: activeRoom.name } : activeRoom?.members.find(m => m.id !== user?.id)} className="w-10 h-10" />
                   {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
@@ -602,7 +658,7 @@ export default function Chat() {
         {/* Overlay Modals (Calling) */}
         {isCalling && (
           <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white">
-            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl animate-pulse">{(activeRoom?.members.find(m => m.id !== user?.id)?.name || 'U').slice(0, 2).toUpperCase()}</div>
+            <UserAvatar member={activeRoom?.members.find(m => m.id !== user?.id)} className="w-24 h-24 bg-blue-600 shadow-2xl animate-pulse" />
             <h2 className="text-xl font-bold mt-8">Calling...</h2>
             <button onClick={endCall} className="mt-12 px-8 py-3 bg-red-600 font-bold rounded-2xl flex items-center gap-2"><X size={18} /> Cancel</button>
           </div>
@@ -610,7 +666,7 @@ export default function Chat() {
 
         {incomingCall && (
           <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white">
-            <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl animate-bounce">{incomingCall.senderName.slice(0, 2).toUpperCase()}</div>
+            <UserAvatar member={{ name: incomingCall.senderName }} className="w-24 h-24 bg-green-600 shadow-2xl animate-bounce" />
             <h2 className="text-xl font-bold mt-8">Incoming Call</h2>
             <p className="text-slate-300 mb-12">{incomingCall.senderName} is calling you</p>
             <div className="flex gap-6"><button onClick={answerCall} className="px-8 py-4 bg-green-600 font-bold rounded-2xl flex items-center gap-2 shadow-xl"><Phone size={20} /> Answer</button><button onClick={declineCall} className="px-8 py-4 bg-red-600 font-bold rounded-2xl flex items-center gap-2 shadow-xl"><PhoneOff size={20} /> Decline</button></div>
@@ -643,9 +699,7 @@ export default function Chat() {
           </div>
           <div className="px-6 pb-8 -mt-12 relative">
              <div className="w-24 h-24 rounded-3xl bg-white dark:bg-slate-900 p-1 shadow-xl mx-auto">
-                <div className="w-full h-full rounded-2xl bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-600 text-3xl font-black uppercase">
-                   {viewingProfile?.name?.slice(0, 2)}
-                </div>
+                <UserAvatar member={viewingProfile} className="w-full h-full text-3xl" />
              </div>
              <div className="text-center mt-4">
                 <h2 className="text-xl font-black text-slate-900 dark:text-white">{viewingProfile?.name}</h2>
