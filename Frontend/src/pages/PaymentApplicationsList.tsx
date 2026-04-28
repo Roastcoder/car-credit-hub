@@ -156,9 +156,12 @@ export default function PaymentApplicationsList() {
   };
 
   const filteredApplications = applications.filter(app => {
-    const matchesSearch = app.applicant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.loan_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.id.toString().includes(searchTerm);
+    const matchesSearch = (app.applicant_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (app.loan_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         app.id.toString().includes(searchTerm) ||
+                         (app.utr_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (app.voucher_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (app.bank_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     
     // Release Percentage Calculation
