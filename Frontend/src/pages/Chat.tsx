@@ -390,30 +390,32 @@ export default function Chat() {
         {activeRoomId ? (
           <>
             {/* Header - Compact */}
-            <div className="h-[60px] md:h-[50px] px-3 bg-[#f0f2f5] dark:bg-slate-800 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 shrink-0">
-              <div className="flex items-center gap-2">
-                <button onClick={() => setActiveRoomId(null)} className="md:hidden p-1 text-slate-600"><ChevronLeft size={24} /></button>
-                <div className="relative cursor-pointer" onClick={() => {
-                   const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
-                   if (otherMember) setViewingProfile(otherMember);
-                }}>
-                  <UserAvatar member={activeRoom?.type === 'group' ? { name: activeRoom.name } : activeRoom?.members.find(m => m.id !== user?.id)} className="w-9 h-9 md:w-8 md:h-8" />
+            <div className="h-[60px] md:h-[50px] px-3 bg-[#f0f2f5] dark:bg-slate-800 flex items-center justify-center border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 shrink-0">
+              <div className="max-w-5xl w-full flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setActiveRoomId(null)} className="md:hidden p-1 text-slate-600"><ChevronLeft size={24} /></button>
+                  <div className="relative cursor-pointer" onClick={() => {
+                    const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
+                    if (otherMember) setViewingProfile(otherMember);
+                  }}>
+                    <UserAvatar member={activeRoom?.type === 'group' ? { name: activeRoom.name } : activeRoom?.members.find(m => m.id !== user?.id)} className="w-9 h-9 md:w-8 md:h-8" />
+                  </div>
+                  <div className="cursor-pointer overflow-hidden" onClick={() => {
+                    const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
+                    if (otherMember) setViewingProfile(otherMember);
+                  }}>
+                    <h3 className="text-[15px] md:text-[14px] font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      {activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}
+                    </h3>
+                    {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online && (
+                      <p className="text-[10px] md:text-[9px] text-[#00a884] font-medium leading-none">online</p>
+                    )}
+                  </div>
                 </div>
-                <div className="cursor-pointer overflow-hidden" onClick={() => {
-                   const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
-                   if (otherMember) setViewingProfile(otherMember);
-                }}>
-                  <h3 className="text-[15px] md:text-[14px] font-semibold text-slate-900 dark:text-slate-100 truncate">
-                    {activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}
-                  </h3>
-                  {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online && (
-                    <p className="text-[10px] md:text-[9px] text-[#00a884] font-medium leading-none">online</p>
-                  )}
+                <div className="flex items-center gap-1">
+                  <button onClick={() => initiateCall(false)} className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition"><Video size={20} /></button>
+                  <button onClick={() => initiateCall(true)} className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition"><Phone size={20} /></button>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => initiateCall(false)} className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition"><Video size={20} /></button>
-                <button onClick={() => initiateCall(true)} className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition"><Phone size={20} /></button>
               </div>
             </div>
 
@@ -425,7 +427,7 @@ export default function Chat() {
             }}>
               <div className="absolute inset-0 bg-[#e5ddd5]/95 dark:bg-slate-900/98 pointer-events-none"></div>
               
-              <div className="relative z-10 flex flex-col gap-1.5">
+              <div className="relative z-10 flex flex-col gap-1.5 max-w-5xl mx-auto w-full">
                 {messages.map((msg, index) => {
                   const isMe = msg.sender_id === user?.id;
                   const prevMsg = index > 0 ? messages[index - 1] : null;
@@ -549,28 +551,30 @@ export default function Chat() {
             )}
 
             {/* Input Bar - Zoomed Out */}
-            <div className="p-2 bg-[#f0f2f5] dark:bg-slate-800 flex items-center gap-1.5 shrink-0 pb-[safe-area-inset-bottom]">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-500 hover:text-[#00a884]"><Paperclip size={24} /></button>
-              <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              
-              <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-1.5">
-                <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm">
-                   <input 
-                    type="text" 
-                    placeholder="Message" 
-                    className="w-full px-4 py-2.5 text-[15px] bg-transparent outline-none" 
-                    value={newMessage} 
-                    onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} 
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={sendMessageMutation.isPending || (!newMessage.trim() && !file)} 
-                  className="w-10 h-10 flex items-center justify-center bg-[#00a884] text-white rounded-full transition-all active:scale-90 disabled:opacity-50"
-                >
-                  {sendMessageMutation.isPending ? <Circle size={16} className="animate-spin" /> : <Send size={20} className="ml-0.5" />}
-                </button>
-              </form>
+            <div className="p-2 bg-[#f0f2f5] dark:bg-slate-800 flex items-center justify-center shrink-0 pb-[safe-area-inset-bottom]">
+              <div className="max-w-5xl w-full flex items-center gap-1.5">
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-500 hover:text-[#00a884]"><Paperclip size={24} /></button>
+                <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                
+                <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-1.5">
+                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm">
+                    <input 
+                      type="text" 
+                      placeholder="Message" 
+                      className="w-full px-4 py-2.5 text-[15px] bg-transparent outline-none" 
+                      value={newMessage} 
+                      onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} 
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={sendMessageMutation.isPending || (!newMessage.trim() && !file)} 
+                    className="w-10 h-10 flex items-center justify-center bg-[#00a884] text-white rounded-full transition-all active:scale-90 disabled:opacity-50"
+                  >
+                    {sendMessageMutation.isPending ? <Circle size={16} className="animate-spin" /> : <Send size={20} className="ml-0.5" />}
+                  </button>
+                </form>
+              </div>
             </div>
           </>
         ) : isCreatingGroup ? (
