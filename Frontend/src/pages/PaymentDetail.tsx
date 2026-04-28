@@ -529,7 +529,12 @@ export default function PaymentDetail() {
     doc.save(`Mehar_Ledger_${payment.loan_number}.pdf`);
   };
 
-  const statusConfig = PAYMENT_STATUSES.find(s => s.value === payment.status);
+  const totalDisb = Number(payment.disbursement_amount) || 1;
+  const oldRel = Number(payment.old_release_amount || payment.total_release_amount) || 0;
+  const releasePct = (oldRel / totalDisb) * 100;
+  
+  const currentStatus = (payment.status === 'completed' && releasePct < 99) ? 'payment_released' : payment.status;
+  const statusConfig = PAYMENT_STATUSES.find(s => s.value === currentStatus);
 
   const totalReleased = (payment.vouchers || []).reduce((sum, v) => sum + (Number(v.amount) || 0), 0);
   const targetAmount = Number(payment.today_release_amount || 0);

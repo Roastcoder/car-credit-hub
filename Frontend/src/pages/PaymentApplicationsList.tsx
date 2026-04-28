@@ -357,9 +357,15 @@ export default function PaymentApplicationsList() {
             {filteredApplications.map((app) => (
               <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
                 <div className="flex items-center justify-between mb-3 relative z-10">
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(app.status)}`}>
-                    {app.status.replace('_', ' ')}
-                  </div>
+                  {(() => {
+                    const appPct = (Number(app.old_release_amount || app.total_release_amount) || 0) / (Number(app.disbursement_amount) || 1) * 100;
+                    const actualStatus = (app.status === 'completed' && appPct < 99) ? 'payment_released' : app.status;
+                    return (
+                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(actualStatus)}`}>
+                        {actualStatus.replace('_', ' ')}
+                      </div>
+                    );
+                  })()}
                   <div className="text-[10px] text-gray-500 font-mono italic">#{app.id.toString().padStart(4, '0')}</div>
                 </div>
                 
@@ -590,9 +596,15 @@ export default function PaymentApplicationsList() {
                         })()}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(app.status)}`}>
-                          {app.status.replace('_', ' ')}
-                        </span>
+                        {(() => {
+                          const appPct = (Number(app.old_release_amount || app.total_release_amount) || 0) / (Number(app.disbursement_amount) || 1) * 100;
+                          const actualStatus = (app.status === 'completed' && appPct < 99) ? 'payment_released' : app.status;
+                          return (
+                            <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(actualStatus)}`}>
+                              {actualStatus.replace('_', ' ')}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border ${getFulfilmentColor(app)}`}>
