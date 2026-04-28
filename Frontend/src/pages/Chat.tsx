@@ -491,22 +491,34 @@ export default function Chat() {
                       )}
 
                       {msg.message_type === 'document' && (
-                        <div className="flex items-center gap-3 bg-black/10 dark:bg-white/10 p-2 rounded-xl">
-                          <File size={24} className={isMe ? 'text-white' : 'text-blue-500'} />
-                          <div className="text-left min-w-0">
-                            <p className="text-xs font-bold truncate max-w-[150px]">{msg.file_name || 'Document'}</p>
-                            <p className="text-[9px] opacity-70">
-                              {msg.file_size ? `${Math.round(msg.file_size / 1024)} KB` : ''}
-                            </p>
+                        <div className="flex flex-col gap-2">
+                          {msg.file_url && (msg.file_name?.match(/\.(jpeg|jpg|png|gif|webp)$/i)) && (
+                            <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] border border-black/10 dark:border-white/10 shadow-sm bg-black/5 mt-1">
+                              <img 
+                                src={`${API_URL}${msg.file_url}`} 
+                                alt={msg.file_name} 
+                                className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition"
+                                onClick={() => window.open(`${API_URL}${msg.file_url}`, '_blank')}
+                              />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 bg-black/10 dark:bg-white/10 p-2 rounded-xl">
+                            <File size={24} className={isMe ? 'text-white' : 'text-blue-500'} />
+                            <div className="text-left min-w-0">
+                              <p className="text-xs font-bold truncate max-w-[150px]">{msg.file_name || 'Document'}</p>
+                              <p className="text-[9px] opacity-70">
+                                {msg.file_size ? `${Math.round(msg.file_size / 1024)} KB` : ''}
+                              </p>
+                            </div>
+                            <a 
+                              href={`${API_URL}${msg.file_url}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className={`p-1.5 rounded-lg text-xs font-bold underline ${isMe ? 'hover:bg-white/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                            >
+                              Download
+                            </a>
                           </div>
-                          <a 
-                            href={`${API_URL}${msg.file_url}`} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className={`p-1.5 rounded-lg text-xs font-bold underline ${isMe ? 'hover:bg-white/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                          >
-                            Download
-                          </a>
                         </div>
                       )}
 
