@@ -15,6 +15,8 @@ interface RoleAssignModalProps {
 
 export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignModalProps) {
   const [role, setRole] = useState(user?.role || 'employee');
+  const [name, setName] = useState(user?.full_name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [branchId, setBranchId] = useState(user?.branch_id || '');
   const [managedBranchIds, setManagedBranchIds] = useState<number[]>([]);
   const [isBranchManager, setIsBranchManager] = useState(false);
@@ -48,6 +50,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
   useEffect(() => {
     if (user) {
       setRole(user.role || 'employee');
+      setName(user.full_name || '');
+      setPhone(user.phone || '');
       setBranchId(user.branch_id || '');
       setManagedBranchIds(
         Array.isArray(user.managed_branch_ids)
@@ -74,6 +78,8 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
     try {
       const updateData = { 
         role, 
+        name,
+        phone,
         branch_id: branchId || null,
         referred_by: referredBy || null,
         managed_branch_ids: managedBranchIds,
@@ -111,6 +117,16 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
         </DialogHeader>
         <div className="max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
           <form onSubmit={handleSubmit} className="space-y-3.5 py-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Full Name *</label>
+              <input required className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Phone Number</label>
+              <input className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Select Role *</label>
             <select required className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={role} onChange={e => setRole(e.target.value)}>

@@ -7,14 +7,16 @@ import {
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
   ChevronRight, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
-  Mic, MicOff, VideoOff, Maximize, Minimize, Circle
+  Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Member {
   id: number;
   name: string;
   email: string;
   role: string;
+  phone?: string;
   is_online?: boolean;
 }
 
@@ -56,6 +58,7 @@ export default function Chat() {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [viewingProfile, setViewingProfile] = useState<Member | null>(null);
   
   // Custom Calling & Real-time States
   const [peer, setPeer] = useState<Peer | null>(null);
@@ -390,6 +393,12 @@ export default function Chat() {
 
   const activeRoom = rooms.find(r => r.id === activeRoomId);
 
+  const filteredRooms = rooms.filter(room => {
+    const otherMember = room.members.find(m => m.id !== user?.id);
+    const title = room.type === 'group' ? room.name : (otherMember?.name || 'DC');
+    return title?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -429,7 +438,7 @@ export default function Chat() {
               </div>
               <button onClick={() => createRoomMutation.mutate({ name: groupName, type: 'group', participantIds: selectedUsers })} className="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-xl">Create Session</button>
             </div>
-          ) : rooms.map(room => {
+          ) : filteredRooms.map(room => {
                 const otherMember = room.members.find(m => m.id !== user?.id);
                 const title = room.type === 'group' ? room.name : (otherMember?.name || 'DC');
                 const isOnline = room.type === 'direct' && otherMember?.is_online;
@@ -458,7 +467,10 @@ export default function Chat() {
             <div className="p-4 border-b border-blue-50 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button onClick={() => setActiveRoomId(null)} className="md:hidden p-2"><X size={20} /></button>
-                <div className="relative">
+                <div className="relative cursor-pointer" onClick={() => {
+                   const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
+                   if (otherMember) setViewingProfile(otherMember);
+                }}>
                   <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold">
                     {activeRoom?.type === 'group' ? <Users size={18} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'DC').slice(0, 2).toUpperCase()}
                   </div>
@@ -466,8 +478,11 @@ export default function Chat() {
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold">{activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}</h3>
+                <div className="cursor-pointer" onClick={() => {
+                   const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
+                   if (otherMember) setViewingProfile(otherMember);
+                }}>
+                  <h3 className="text-sm font-bold flex items-center gap-1.5">{activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name} <Info size={12} className="text-slate-400" /></h3>
                   {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online ? (
                     <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Active Now</p>
                   ) : (
@@ -582,6 +597,52 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* Member Profile Modal */}
+      <Dialog open={!!viewingProfile} onOpenChange={() => setViewingProfile(null)}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border-none shadow-2xl">
+          <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
+             <button onClick={() => setViewingProfile(null)} className="absolute top-4 right-4 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 transition"><X size={18} /></button>
+          </div>
+          <div className="px-6 pb-8 -mt-12 relative">
+             <div className="w-24 h-24 rounded-3xl bg-white dark:bg-slate-900 p-1 shadow-xl mx-auto">
+                <div className="w-full h-full rounded-2xl bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-600 text-3xl font-black uppercase">
+                   {viewingProfile?.name?.slice(0, 2)}
+                </div>
+             </div>
+             <div className="text-center mt-4">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">{viewingProfile?.name}</h2>
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">{viewingProfile?.role}</p>
+             </div>
+
+             <div className="mt-8 space-y-4">
+                <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl"><Phone size={18} /></div>
+                   <div className="flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone Number</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{viewingProfile?.phone || 'Not available'}</p>
+                   </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                   <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl"><Mail size={18} /></div>
+                   <div className="flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Address</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{viewingProfile?.email}</p>
+                   </div>
+                </div>
+             </div>
+
+             <div className="mt-8 flex gap-3">
+                <button 
+                  onClick={() => { setViewingProfile(null); startMeeting(); }}
+                  className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-lg hover:bg-blue-700 active:scale-95 transition"
+                >
+                  Start Call
+                </button>
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
