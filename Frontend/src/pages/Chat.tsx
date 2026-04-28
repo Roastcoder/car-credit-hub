@@ -180,7 +180,7 @@ export default function Chat() {
 
   const startMeeting = () => {
     if (!activeRoomId) return;
-    const meetingUrl = `https://whereby.com/meharpulse-${activeRoomId}-${Date.now()}`;
+    const meetingUrl = `https://whereby.com/meharfinance-${activeRoomId}-${Date.now()}`;
 
     sendMessageMutation.mutate({
       content: 'Started a video meeting',
