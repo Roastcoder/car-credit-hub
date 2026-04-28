@@ -627,7 +627,7 @@ export default function PaymentDetail() {
                     <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
                     <Field label="Branch Name" value={payment.branch_name} />
                     <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
-                    <Field label="RBM Approval Status" value={payment.dm_approval ? 'APPROVED' : 'PENDING'} />
+                    <Field label="RBM Approval Status" value={payment.status === 'manager_rejected' ? 'REJECTED' : ['manager_approved', 'voucher_created', 'payment_released', 'completed'].includes(payment.status) ? 'APPROVED' : 'PENDING'} />
                   </div>
                 </Section>
               </div>
