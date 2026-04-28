@@ -99,6 +99,7 @@ interface PaymentApplication {
   banking_documents?: string | any[];
   ledger_entries?: any[];
   vouchers?: any[];
+  payment_history?: any[];
 }
 
 const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
@@ -829,6 +830,50 @@ export default function PaymentDetail() {
             {payment.remarks && (
               <Section title="Applicant Remarks" icon={<FileText size={20} />}>
                 <p className="text-sm text-foreground whitespace-pre-wrap">{payment.remarks}</p>
+              </Section>
+            )}
+
+            {/* Complete Payment Applications Operations */}
+            {(payment.payment_history && payment.payment_history.length > 0) && (
+              <Section title="All Loan Payment Operations" icon={<FileText size={20} className="text-blue-500" />}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left">
+                        <th className="py-2 text-muted-foreground font-semibold">ID / Date</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Status</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Voucher / UTR</th>
+                        <th className="py-2 text-right text-muted-foreground font-semibold">Amount (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payment.payment_history.map((ph, idx) => (
+                        <tr key={idx} className={`border-b border-border/50 text-left ${ph.id === Number(id) ? 'bg-blue-50/50 dark:bg-blue-900/10 font-bold' : ''}`}>
+                          <td className="py-2">
+                            <span className="font-mono text-xs">#PAY-{ph.id}</span>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(ph.created_at)}</p>
+                          </td>
+                          <td className="py-2">
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-slate-100 text-slate-800">
+                              {ph.status?.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-2">
+                            {ph.voucher_number ? (
+                              <div className="text-xs">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">{ph.voucher_number}</span>
+                                {ph.reference_number && <p className="text-[10px] text-muted-foreground">UTR: {ph.reference_number}</p>}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">Pending Voucher</span>
+                            )}
+                          </td>
+                          <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.payment_amount).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Section>
             )}
 
