@@ -462,7 +462,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <MobileBottomNav />
 
       {/* Floating Global Chat Widget */}
-      <FloatingChatWidget />
+      {location.pathname !== '/chat' && <FloatingChatWidget />}
     </div>
   );
 }
