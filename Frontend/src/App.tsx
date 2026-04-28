@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import RoleProtectedRoute from "@/components/RoleProtectedRoute";
 import DashboardRedirect from "@/components/DashboardRedirect";
+import { CallProvider } from "@/contexts/CallContext";
 
 // Lazy load pages to break circular dependencies and improve performance
 const Login = lazy(() => import("@/pages/Login"));
@@ -215,13 +216,15 @@ const App = () => {
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
-            <Suspense fallback={
-              <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            }>
-              <AppRoutes />
-            </Suspense>
+            <CallProvider>
+              <Suspense fallback={
+                <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              }>
+                <AppRoutes />
+              </Suspense>
+            </CallProvider>
           </AuthProvider>
         </BrowserRouter>
         <Toaster />

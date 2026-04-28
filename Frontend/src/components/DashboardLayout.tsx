@@ -14,6 +14,7 @@ import MobileBottomNav from './MobileBottomNav';
 import NotificationBell from './NotificationBell';
 import ProfileCompletionModal from './ProfileCompletionModal';
 import FloatingChatWidget from '@/components/FloatingChatWidget';
+import GlobalCallOverlay from '@/components/GlobalCallOverlay';
 import { toast } from 'sonner';
 
 interface NavItem {
@@ -463,6 +464,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Floating Global Chat Widget */}
       {location.pathname !== '/chat' && <FloatingChatWidget />}
+
+      {/* Global Call System */}
+      <GlobalCallOverlay />
     </div>
   );
 }
