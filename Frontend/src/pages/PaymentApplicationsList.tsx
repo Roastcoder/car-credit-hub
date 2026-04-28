@@ -56,6 +56,7 @@ interface PaymentApplication {
   disbursement_branch?: string;
   disbursement_amount?: number;
   old_release_amount?: number;
+  total_release_amount?: number;
   mehar_deduction?: number;
   emi_amount?: number;
   voucher_number?: string;
