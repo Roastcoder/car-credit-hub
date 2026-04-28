@@ -168,17 +168,6 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Load Jitsi Meet Script dynamically
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://meet.ffmuc.net/external_api.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() && !file) return;
@@ -191,54 +180,19 @@ export default function Chat() {
 
   const startMeeting = () => {
     if (!activeRoomId) return;
-    const roomName = `MeharPulse_Meeting_${activeRoomId}_${Date.now()}`;
-    const meetingUrl = `https://meet.ffmuc.net/${roomName}`;
+    const meetingUrl = `https://whereby.com/meharpulse-${activeRoomId}-${Date.now()}`;
 
-    // Send meeting message
     sendMessageMutation.mutate({
       content: 'Started a video meeting',
       message_type: 'meeting',
       meeting_link: meetingUrl
     });
 
-    joinMeeting(meetingUrl);
+    window.open(meetingUrl, '_blank');
   };
 
   const joinMeeting = (meetingUrl: string) => {
-    setCurrentMeetingUrl(meetingUrl);
-    setIsMeetingActive(true);
-
-    const roomName = meetingUrl.split('/').pop() || '';
-
-    setTimeout(() => {
-      if (jitsiContainerRef.current) {
-        // @ts-ignore
-        new window.JitsiMeetExternalAPI('meet.ffmuc.net', {
-          roomName: roomName,
-          width: '100%',
-          height: '100%',
-          parentNode: jitsiContainerRef.current,
-          interfaceConfigOverwrite: {
-            TOOLBAR_BUTTONS: [
-              'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-              'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
-              'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
-              'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
-              'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
-              'security'
-            ],
-          }
-        });
-      }
-    }, 500);
-  };
-
-  const endMeeting = () => {
-    setIsMeetingActive(false);
-    setCurrentMeetingUrl(null);
-    if (jitsiContainerRef.current) {
-      jitsiContainerRef.current.innerHTML = '';
-    }
+    window.open(meetingUrl, '_blank');
   };
 
   const handleUserSelect = (userId: number) => {
@@ -412,24 +366,6 @@ export default function Chat() {
       {/* Main Chat / Meeting Area */}
       <div className={`flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 relative ${!activeRoomId && !isCreatingGroup ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
         
-        {isMeetingActive && (
-          /* Jitsi Meeting Overlay */
-          <div className="absolute inset-0 z-50 bg-black flex flex-col">
-            <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white">
-              <span className="text-sm font-bold flex items-center gap-2">
-                <Video className="text-green-400 animate-pulse" /> Meeting In Progress
-              </span>
-              <button 
-                onClick={endMeeting} 
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition"
-              >
-                Leave Meeting
-              </button>
-            </div>
-            <div ref={jitsiContainerRef} className="flex-1 w-full bg-slate-900" id="jitsi-container"></div>
-          </div>
-        )}
-
         {activeRoomId ? (
           <>
             {/* Header */}
