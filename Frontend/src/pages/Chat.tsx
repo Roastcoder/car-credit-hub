@@ -170,7 +170,7 @@ export default function Chat() {
   // Load Jitsi Meet Script dynamically
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://meet.jit.si/external_api.js';
+    script.src = 'https://meet.ffmuc.net/external_api.js';
     script.async = true;
     document.body.appendChild(script);
     return () => {
@@ -191,7 +191,7 @@ export default function Chat() {
   const startMeeting = () => {
     if (!activeRoomId) return;
     const roomName = `MeharPulse_Meeting_${activeRoomId}_${Date.now()}`;
-    const meetingUrl = `https://meet.jit.si/${roomName}`;
+    const meetingUrl = `https://meet.ffmuc.net/${roomName}`;
 
     // Send meeting message
     sendMessageMutation.mutate({
@@ -212,7 +212,7 @@ export default function Chat() {
     setTimeout(() => {
       if (jitsiContainerRef.current) {
         // @ts-ignore
-        new window.JitsiMeetExternalAPI('meet.jit.si', {
+        new window.JitsiMeetExternalAPI('meet.ffmuc.net', {
           roomName: roomName,
           width: '100%',
           height: '100%',
