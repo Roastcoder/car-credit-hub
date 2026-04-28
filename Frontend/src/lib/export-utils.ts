@@ -10,6 +10,7 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
       'loan_number': 'Loan Number',
       'application_id': 'Application ID',
       'customer_id': 'Customer ID',
+      'booking_month': 'Booking Month',
       'applicant_name': 'Applicant Name',
       'mobile': 'Mobile',
       'pan_number': 'PAN Number',

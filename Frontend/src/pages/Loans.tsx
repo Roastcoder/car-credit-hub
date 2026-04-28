@@ -115,8 +115,19 @@ export default function Loans() {
 
   const handleExport = () => {
     if (filtered.length === 0) { toast.error('No data to export'); return; }
-    // Export complete loan data with all fields
-    exportToCSV(filtered, 'loans');
+    // Compute booking_month for each loan from login_date or created_at
+    const dataWithBookingMonth = filtered.map((loan: any) => {
+      const dateStr = loan.login_date || loan.created_at;
+      let bookingMonth = '';
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          bookingMonth = d.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+        }
+      }
+      return { ...loan, booking_month: bookingMonth };
+    });
+    exportToCSV(dataWithBookingMonth, 'loans');
     toast.success('Loans exported as CSV!');
   };
 
