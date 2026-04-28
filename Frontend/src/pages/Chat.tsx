@@ -108,6 +108,24 @@ export default function Chat() {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    }
+  };
+
   const playNotificationSound = () => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -473,15 +491,12 @@ export default function Chat() {
                                  <p className="text-[10px] font-bold truncate">{msg.file_name || 'Document'}</p>
                                  {msg.file_size && <p className="text-[8px] opacity-60">{(msg.file_size / 1024).toFixed(1)} KB</p>}
                               </div>
-                              <a 
-                                href={`${API_URL}${msg.file_url}`} 
-                                target="_blank" 
-                                rel="noreferrer" 
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-1 bg-white/20 rounded-full hover:bg-white/40"
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDownload(`${API_URL}${msg.file_url}`, msg.file_name || 'download'); }}
+                                className="p-1 bg-white/20 rounded-full hover:bg-white/40 transition-colors"
                               >
                                 <Download size={14} className="text-slate-600 dark:text-slate-300" />
-                              </a>
+                              </button>
                             </div>
                           </div>
                         )}
@@ -711,10 +726,7 @@ export default function Chat() {
              <button 
                onClick={() => {
                  if (previewMedia) {
-                   const a = document.createElement('a');
-                   a.href = previewMedia.url;
-                   a.download = previewMedia.name;
-                   a.click();
+                   handleDownload(previewMedia.url, previewMedia.name);
                  }
                }}
                className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all active:scale-90"
