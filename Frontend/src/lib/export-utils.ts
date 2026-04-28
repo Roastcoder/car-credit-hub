@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx';
+
 export function exportToCSV(data: Record<string, any>[], filename: string) {
   if (data.length === 0) return;
 
@@ -106,24 +108,23 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
   const allKeys = fieldMapping ? Object.keys(fieldMapping) : Object.keys(data[0]);
   const headers = fieldMapping ? allKeys.map(key => fieldMapping![key]) : allKeys;
 
-  const csvRows = [
-    headers.join(','),
+  // Build rows: first row is headers, rest are data values
+  const sheetRows = [
+    headers,
     ...data.map(row =>
       allKeys.map(key => {
         const val = row[key] ?? '';
-        const str = String(val).replace(/"/g, '""');
-        return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str}"` : str;
-      }).join(',')
+        // Return numbers as numbers so Excel treats them properly
+        if (val !== '' && !isNaN(Number(val)) && typeof val !== 'boolean') return Number(val);
+        return String(val);
+      })
     ),
   ];
 
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const worksheet = XLSX.utils.aoa_to_sheet(sheetRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Loans');
+  XLSX.writeFile(workbook, `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 export function parseCSV(text: string): Record<string, string>[] {
