@@ -6,7 +6,7 @@ import {
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
   ChevronRight, ChevronLeft, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
-  Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info
+  Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info, Share2, Forward
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCall } from '@/contexts/CallContext';
@@ -84,6 +84,8 @@ export default function Chat() {
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [viewingProfile, setViewingProfile] = useState<Member | null>(null);
   const [lastMessageId, setLastMessageId] = useState<number | null>(null);
+  const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
+  const [forwardSearch, setForwardSearch] = useState('');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,14 +151,15 @@ export default function Chat() {
   const activeRoom = rooms.find(r => r.id === activeRoomId);
 
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ content, message_type, file, meeting_link }: { content: string; message_type: 'text' | 'document' | 'meeting' | 'call_end'; file?: File; meeting_link?: string }) => {
+    mutationFn: async ({ content, message_type, file, meeting_link, targetRoomId }: { content: string; message_type: 'text' | 'document' | 'meeting' | 'call_end'; file?: File; meeting_link?: string; targetRoomId?: number }) => {
+      const roomId = targetRoomId || activeRoomId;
       const formData = new FormData();
       formData.append('content', content);
       formData.append('message_type', message_type);
       if (file) formData.append('file', file);
       if (meeting_link) formData.append('meeting_link', meeting_link);
 
-      const res = await fetch(`${API_URL}/api/chat/rooms/${activeRoomId}/messages`, {
+      const res = await fetch(`${API_URL}/api/chat/rooms/${roomId}/messages`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
         body: formData
@@ -164,10 +167,12 @@ export default function Chat() {
       if (!res.ok) throw new Error('Failed to send message');
       return res.json();
     },
-    onSuccess: () => {
-      setNewMessage('');
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    onSuccess: (_, variables) => {
+      if (!variables.targetRoomId) {
+        setNewMessage('');
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
       queryClient.invalidateQueries({ queryKey: ['chatMessages', activeRoomId] });
       queryClient.invalidateQueries({ queryKey: ['chatRooms'] });
     }
@@ -207,6 +212,17 @@ export default function Chat() {
 
   const handleTyping = () => {
     // Typing indicator logic
+  };
+
+  const handleForward = (roomId: number) => {
+    if (!forwardMessage) return;
+    sendMessageMutation.mutate({ 
+      content: forwardMessage.content, 
+      message_type: forwardMessage.message_type, 
+      targetRoomId: roomId 
+    });
+    setForwardMessage(null);
+    toast.success('Message forwarded');
   };
 
   const filteredRooms = rooms.filter(room => {
@@ -427,7 +443,7 @@ export default function Chat() {
               {messages.map((msg) => {
                 const isMe = msg.sender_id === user?.id;
                 return (
-                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group/msg`}>
                     <div className={`relative max-w-[85%] md:max-w-[60%] rounded-lg p-1.5 px-2.5 shadow-sm ${isMe ? 'bg-[#dcf8c6] dark:bg-[#056162] text-slate-900 dark:text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-none'}`}>
                       <div className={`absolute top-0 w-1.5 h-1.5 ${isMe ? '-right-1.5 bg-[#dcf8c6] dark:bg-[#056162]' : '-left-1.5 bg-white dark:bg-slate-800'}`} style={{ clipPath: isMe ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(0 0, 100% 100%, 100% 0)' }}></div>
                       
@@ -441,10 +457,20 @@ export default function Chat() {
                           {msg.file_url && (msg.file_name?.match(/\.(jpeg|jpg|png|gif|webp)$/i)) && (
                             <img src={`${API_URL}${msg.file_url}`} alt={msg.file_name} className="rounded-md max-h-[200px] object-cover border border-black/5" />
                           )}
+                          {msg.file_url && (msg.file_name?.match(/\.(mp4|webm|ogg)$/i)) && (
+                            <video src={`${API_URL}${msg.file_url}`} controls className="rounded-md max-h-[200px] w-full bg-black/10" />
+                          )}
                           <div className={`flex items-center gap-2 p-1.5 rounded-lg ${isMe ? 'bg-[#c5e4ac] dark:bg-[#044d4e]' : 'bg-slate-100 dark:bg-slate-700'}`}>
-                            <File size={20} className="text-slate-500" />
+                            {msg.file_name?.match(/\.pdf$/i) ? (
+                              <File size={20} className="text-red-500" />
+                            ) : msg.file_name?.match(/\.(doc|docx)$/i) ? (
+                              <File size={20} className="text-blue-500" />
+                            ) : (
+                              <File size={20} className="text-slate-500" />
+                            )}
                             <div className="flex-1 min-w-0">
                                <p className="text-[10px] font-bold truncate">{msg.file_name || 'Document'}</p>
+                               {msg.file_size && <p className="text-[8px] opacity-60">{(msg.file_size / 1024).toFixed(1)} KB</p>}
                             </div>
                             <a href={`${API_URL}${msg.file_url}`} target="_blank" rel="noreferrer" className="p-1 bg-white/20 rounded-full hover:bg-white/40"><Plus size={12} className="rotate-45" /></a>
                           </div>
@@ -464,6 +490,14 @@ export default function Chat() {
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {isMe && <CheckCheck size={12} className={msg.is_read ? 'text-blue-500' : ''} />}
                       </div>
+
+                      {/* Forward Button - Visible on Hover */}
+                      <button 
+                        onClick={() => setForwardMessage(msg)}
+                        className={`absolute top-1/2 -translate-y-1/2 p-1.5 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-lg opacity-0 group-hover/msg:opacity-100 transition-all ${isMe ? '-left-10' : '-right-10'} hover:bg-white dark:hover:bg-slate-700`}
+                      >
+                        <Forward size={14} className="text-slate-600 dark:text-slate-300" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -511,6 +545,52 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* Forward Modal */}
+      <Dialog open={!!forwardMessage} onOpenChange={() => setForwardMessage(null)}>
+        <DialogContent className="sm:max-w-xs p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white dark:bg-slate-900">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Forward Message</h3>
+            <div className="mt-2 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <input 
+                type="text" 
+                placeholder="Search chats..." 
+                className="w-full pl-9 pr-4 py-1.5 text-xs bg-[#f0f2f5] dark:bg-slate-800 rounded-lg outline-none"
+                value={forwardSearch}
+                onChange={(e) => setForwardSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="max-h-72 overflow-y-auto custom-scrollbar">
+            {rooms.filter(r => {
+                const other = r.members.find(m => m.id !== user?.id);
+                const title = r.type === 'group' ? r.name : (other?.name || '');
+                return title.toLowerCase().includes(forwardSearch.toLowerCase());
+            }).map(room => {
+               const otherMember = room.members.find(m => m.id !== user?.id);
+               const title = room.type === 'group' ? room.name : (otherMember?.name || 'DC');
+               return (
+                <button 
+                  key={room.id} 
+                  onClick={() => handleForward(room.id)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-[#f0f2f5] dark:hover:bg-slate-800 transition-colors border-b border-slate-50 dark:border-slate-800/50 text-left"
+                >
+                  <UserAvatar member={otherMember} className="w-8 h-8" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate">{title}</p>
+                    <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">{room.type}</p>
+                  </div>
+                  <Send size={14} className="text-[#00a884]" />
+                </button>
+               );
+            })}
+          </div>
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
+            <button onClick={() => setForwardMessage(null)} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700">Cancel</button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Profile Modal - Compact */}
       <Dialog open={!!viewingProfile} onOpenChange={() => setViewingProfile(null)}>
