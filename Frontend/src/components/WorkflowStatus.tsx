@@ -55,9 +55,11 @@ export default function WorkflowStatus({
 
   if (variant === 'single-line') {
     return (
-      <div className={`flex items-center gap-3 ${className}`}>
-        <span className="text-sm font-medium text-foreground">Progress:</span>
-        <SingleLineWorkflowTrail currentStatus={currentStatus} showLabels={true} />
+      <div className={`w-full overflow-x-auto ${className}`}>
+        <div className="flex items-center gap-3 min-w-max pb-1">
+          <span className="text-sm font-medium text-foreground flex-shrink-0">Progress:</span>
+          <SingleLineWorkflowTrail currentStatus={currentStatus} showLabels={true} />
+        </div>
       </div>
     );
   }

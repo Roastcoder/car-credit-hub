@@ -76,7 +76,7 @@ export function SingleLineWorkflowTrail({
   };
 
   return (
-    <div className={cn("flex items-center justify-between w-full gap-2", className)}>
+    <div className={cn("flex items-center flex-nowrap gap-1 min-w-max", className)}>
       {WORKFLOW_STEPS.map((step, index) => {
         const state = getStepState(index);
         const isLast = index === WORKFLOW_STEPS.length - 1;
