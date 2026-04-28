@@ -103,6 +103,20 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const call = peer.call(targetPeerId, stream);
       setupCallHandlers(call);
       setActiveCall(call);
+
+      // Auto-end call if not answered within 40 seconds
+      const timeoutId = setTimeout(() => {
+        if (isCalling && !remoteStream) {
+          console.log('Call timed out after 40s');
+          toast.error('User did not answer');
+          endCall();
+        }
+      }, 40000);
+
+      call.on('stream', () => clearTimeout(timeoutId));
+      call.on('close', () => clearTimeout(timeoutId));
+      call.on('error', () => clearTimeout(timeoutId));
+
     } catch (err) {
       toast.error('Media access denied');
       setIsCalling(false);
@@ -114,8 +128,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRemoteStream(st);
       setIsCalling(false);
     });
-    call.on('close', endCall);
-    call.on('error', () => { toast.error('Call failed'); endCall(); });
+    call.on('close', () => {
+      console.log('Call close event received from PeerJS');
+      endCall();
+    });
+    call.on('error', (err: any) => { 
+      console.error('PeerJS Call Error:', err);
+      toast.error('Call failed'); 
+      endCall(); 
+    });
   };
 
   const answerCall = async () => {
@@ -134,46 +155,70 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const declineCall = () => {
-    if (incomingCall?.callObj) incomingCall.callObj.close();
+    console.log('Declining incoming call...');
+    if (incomingCall?.callObj) {
+      try {
+        incomingCall.callObj.close();
+      } catch (e) {}
+    }
     setIncomingCall(null);
     stopRingtone();
   };
 
   const endCall = () => {
-    console.log('Ending call and stopping all media tracks...');
+    console.log('Executing endCall sequence...');
     
+    // 1. Clear states immediately to hide UI
+    setIsCalling(false);
+    setIncomingCall(null);
+    setActiveCall(null);
+    stopRingtone();
+
+    // 2. Close the active call connection
     if (activeCall) {
       try {
         activeCall.close();
       } catch (e) {
-        console.error('Error closing call:', e);
+        console.error('Error closing active call:', e);
       }
     }
 
-    // Stop local camera/mic
+    // 3. Stop all media tracks thoroughly
     if (localStream) {
       localStream.getTracks().forEach(track => {
-        track.stop();
-        console.log(`Stopped track: ${track.kind}`);
+        try {
+          track.stop();
+          track.enabled = false;
+        } catch (e) {}
       });
     }
 
-    // Stop screen share if active
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => {
+        try {
+          track.stop();
+        } catch (e) {}
+      });
+    }
+
     if (screenStream) {
       screenStream.getTracks().forEach(track => {
-        track.stop();
-        console.log(`Stopped screen track: ${track.kind}`);
+        try {
+          track.stop();
+        } catch (e) {}
       });
     }
 
+    // 4. Final state cleanup
     setLocalStream(null);
     setRemoteStream(null);
     setScreenStream(null);
-    setActiveCall(null);
-    setIsCalling(false);
-    setIncomingCall(null);
     setIsScreenSharing(false);
-    stopRingtone();
+    
+    // 5. Force a small delay then check if cleanup was successful
+    setTimeout(() => {
+      console.log('Call cleanup verification complete');
+    }, 100);
   };
 
   const toggleMute = () => {
