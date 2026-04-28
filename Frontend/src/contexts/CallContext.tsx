@@ -91,8 +91,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     audio: true
   });
 
+  const isAnsweredRef = useRef(false);
+
   const startCall = async (targetPeerId: string, audioOnly = false) => {
     if (!peer) return;
+    isAnsweredRef.current = false;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS(audioOnly));
       setLocalStream(stream);
@@ -105,17 +109,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveCall(call);
 
       // Auto-end call if not answered within 40 seconds
-      const timeoutId = setTimeout(() => {
-        if (isCalling && !remoteStream) {
+      setTimeout(() => {
+        if (!isAnsweredRef.current) {
           console.log('Call timed out after 40s');
           toast.error('User did not answer');
           endCall();
         }
       }, 40000);
-
-      call.on('stream', () => clearTimeout(timeoutId));
-      call.on('close', () => clearTimeout(timeoutId));
-      call.on('error', () => clearTimeout(timeoutId));
 
     } catch (err) {
       toast.error('Media access denied');
@@ -125,14 +125,17 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setupCallHandlers = (call: any) => {
     call.on('stream', (st: MediaStream) => {
+      isAnsweredRef.current = true;
       setRemoteStream(st);
       setIsCalling(false);
     });
     call.on('close', () => {
+      isAnsweredRef.current = true; // Mark as "handled"
       console.log('Call close event received from PeerJS');
       endCall();
     });
     call.on('error', (err: any) => { 
+      isAnsweredRef.current = true;
       console.error('PeerJS Call Error:', err);
       toast.error('Call failed'); 
       endCall(); 
