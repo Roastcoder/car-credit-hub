@@ -465,6 +465,8 @@ export default function Chat() {
                               <File size={20} className="text-red-500" />
                             ) : msg.file_name?.match(/\.(doc|docx)$/i) ? (
                               <File size={20} className="text-blue-500" />
+                            ) : msg.file_name?.match(/\.(xls|xlsx|csv)$/i) ? (
+                              <File size={20} className="text-emerald-600" />
                             ) : (
                               <File size={20} className="text-slate-500" />
                             )}
