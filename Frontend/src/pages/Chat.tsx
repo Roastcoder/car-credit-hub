@@ -286,7 +286,7 @@ export default function Chat() {
   }, [messages, lastMessageId, user?.id]);
 
   return (
-    <div className="fixed md:static inset-0 z-[100] md:z-auto flex h-full bg-[#f0f2f5] dark:bg-slate-950 md:rounded-2xl overflow-hidden md:shadow-2xl md:border border-border animate-in fade-in duration-500">
+    <div className="fixed md:static inset-0 z-[100] md:z-auto flex h-full md:h-[calc(100vh-110px)] bg-[#f0f2f5] dark:bg-slate-950 md:rounded-2xl overflow-hidden md:shadow-2xl md:border border-border animate-in fade-in duration-500">
       
       {/* Sidebar - Contacts List */}
       <div className={`${activeRoomId || isCreatingGroup ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20`}>
@@ -385,7 +385,7 @@ export default function Chat() {
       </div>
 
       {/* Main Chat Area - Refactored as a 'Box' */}
-      <div className={`${!activeRoomId && !isCreatingGroup ? 'hidden md:flex' : 'flex'} fixed md:static inset-0 z-[100] md:z-auto flex-1 flex flex-col bg-[#f0f2f5] dark:bg-slate-950 h-full p-0 md:p-4 lg:p-6`}>
+      <div className={`${!activeRoomId && !isCreatingGroup ? 'hidden md:flex' : 'flex'} fixed md:static inset-0 z-[100] md:z-auto flex-1 flex flex-col bg-[#f0f2f5] dark:bg-slate-950 h-full overflow-hidden p-0 md:p-3 lg:p-4`}>
         <div className="flex-1 flex flex-col bg-[#e5ddd5] dark:bg-slate-900 md:rounded-2xl shadow-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60 relative">
           
           {activeRoomId ? (
