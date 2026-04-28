@@ -190,7 +190,16 @@ export default function Chat() {
 
     // Handle Incoming Media (Call)
     newPeer.on('call', (call) => {
-      setIncomingCall(prev => prev ? { ...prev, callObj: call } : null);
+      // Find the sender user from the peer ID
+      const senderUserId = call.peer.replace('mehar-finance-user-', '');
+      
+      setIncomingCall(prev => ({
+        senderName: prev?.senderName || 'A Colleague',
+        peerId: call.peer,
+        id: prev?.id || Date.now(),
+        callObj: call
+      }));
+      startRingtone();
     });
 
     // Handle Incoming Data (Typing etc.)
@@ -370,10 +379,19 @@ export default function Chat() {
     }
   }, [messages, user?.id, declinedCalls, incomingCall, activeCall]);
 
+  const VIDEO_CONSTRAINTS = {
+    video: {
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+      frameRate: { ideal: 24 }
+    },
+    audio: true
+  };
+
   const startMeeting = async () => {
     if (!activeRoomId || !peer) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
       setLocalStream(stream);
       setIsCalling(true);
       const activeRoom = rooms.find(r => r.id === activeRoomId);
@@ -397,15 +415,22 @@ export default function Chat() {
     if (!incomingCall || !peer) return;
     stopRingtone();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
       setLocalStream(stream);
-      let callObj = incomingCall.callObj;
-      if (!callObj) {
-        peer.on('call', (newCall) => {
-          newCall.answer(stream); setupCallHandlers(newCall); setActiveCall(newCall); setIncomingCall(null);
-        });
+      if (incomingCall.callObj) {
+        incomingCall.callObj.answer(stream);
+        setupCallHandlers(incomingCall.callObj);
+        setActiveCall(incomingCall.callObj);
+        setIncomingCall(null);
       } else {
-        callObj.answer(stream); setupCallHandlers(callObj); setActiveCall(callObj); setIncomingCall(null);
+        // Fallback for signaling latency
+        peer.on('call', (newCall) => {
+          newCall.answer(stream);
+          setupCallHandlers(newCall);
+          setActiveCall(newCall);
+          setIncomingCall(null);
+        });
+        toast.info('Connecting...');
       }
     } catch (err) { declineCall(); }
   };
