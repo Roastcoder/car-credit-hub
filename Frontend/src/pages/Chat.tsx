@@ -66,7 +66,7 @@ export default function Chat() {
     queryKey: ['chatRooms'],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/api/chat/rooms`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!res.ok) throw new Error('Failed to fetch rooms');
       return res.json();
@@ -80,7 +80,7 @@ export default function Chat() {
     queryFn: async () => {
       if (!activeRoomId) return [];
       const res = await fetch(`${API_URL}/api/chat/rooms/${activeRoomId}/messages`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!res.ok) throw new Error('Failed to fetch messages');
       return res.json();
@@ -94,7 +94,7 @@ export default function Chat() {
     queryKey: ['chatUsers'],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/api/chat/users`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
@@ -118,7 +118,7 @@ export default function Chat() {
       const res = await fetch(`${API_URL}/api/chat/rooms/${activeRoomId}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: formData
       });
@@ -145,7 +145,7 @@ export default function Chat() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({ name, type, participantIds })
       });
