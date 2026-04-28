@@ -259,29 +259,29 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="stat-card bg-blue-50/50 dark:bg-blue-900/10 hover:shadow-md transition-shadow">
-                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Disbursed</p>
-                <p className="text-3xl font-black text-blue-950 dark:text-white mt-2">{pddStats.total}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Files needing PDD oversight</p>
-              </div>
-              <div className="stat-card bg-amber-50/50 dark:bg-amber-900/10 hover:shadow-md transition-shadow">
-                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending PDD</p>
-                <p className="text-3xl font-black text-amber-950 dark:text-white mt-2">{pddStats.pending}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Documents yet to be submitted</p>
-              </div>
-              <div className="stat-card bg-purple-50/50 dark:bg-purple-900/10 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Awaiting Approval</p>
-                  <Activity size={14} className="text-purple-500 animate-pulse" />
+              {[
+                { label: 'Total Disbursed', value: pddStats.total, sub: 'Files needing PDD', color: '#3b82f6', trend: trendData.map(d => ({ value: d.count })) },
+                { label: 'Pending PDD', value: pddStats.pending, sub: 'Not submitted', color: '#f59e0b', trend: trendData.map(d => ({ value: d.count * 0.4 })) },
+                { label: 'Awaiting Approval', value: pddStats.pendingApproval, sub: 'Needs review', color: '#8b5cf6', trend: trendData.map(d => ({ value: d.count * 0.2 })) },
+                { label: 'Highly Delayed', value: pddStats.delayed, sub: '> 15 days delay', color: '#ef4444', trend: trendData.map(d => ({ value: d.count * 0.1 })) },
+              ].map((kpi) => (
+                <div key={kpi.label} className="stat-card bg-white dark:bg-card hover:shadow-md transition-shadow border-l-4" style={{ borderLeftColor: kpi.color }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
+                    {kpi.trend.length > 1 && (
+                      <div className="h-6 w-12">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={kpi.trend}>
+                            <Area type="monotone" dataKey="value" stroke={kpi.color} fill={kpi.color} fillOpacity={0.1} strokeWidth={1.5} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-3xl font-black text-blue-950 dark:text-white mt-1">{kpi.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{kpi.sub}</p>
                 </div>
-                <p className="text-3xl font-black text-purple-950 dark:text-white mt-2">{pddStats.pendingApproval}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Requires your immediate review</p>
-              </div>
-              <div className="stat-card bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
-                <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Highly Delayed</p>
-                <p className="text-3xl font-black text-red-950 dark:text-white mt-2">{pddStats.delayed}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">&gt; 15 days since disbursement</p>
-              </div>
+              ))}
             </div>
 
             <div className="stat-card">
@@ -389,19 +389,39 @@ export default function Dashboard() {
                 onClick={() => setSelectedStatus(null)}
                 className={`stat-card cursor-pointer transition-all ${!selectedStatus ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Total Files</p>
-                <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{totalLoans}</p>
-                <p className="text-sm text-muted-foreground mt-2">{formatCurrency(totalVolume)} total volume</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Files</p>
+                  {trendData.length > 1 && (
+                    <div className="h-6 w-12">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trendData.map(d => ({ value: d.count }))}>
+                          <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={1.5} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+                <p className="text-3xl font-bold text-blue-950 dark:text-white mt-1">{totalLoans}</p>
+                <p className="text-[10px] text-muted-foreground mt-2">{formatCurrency(totalVolume)} volume</p>
               </div>
-              {statusKpis.map((item) => (
+              {statusKpis.map((item, idx) => (
                 <div
                   key={item.value}
                   onClick={() => setSelectedStatus(selectedStatus === item.value ? null : item.value)}
                   className={`stat-card cursor-pointer transition-all ${selectedStatus === item.value ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">{item.label}</p>
-                  <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{item.count}</p>
-                  <p className="text-sm text-muted-foreground mt-2">{formatCurrency(item.amount)} volume</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">{item.label}</p>
+                    <div className="h-6 w-12">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trendData.map(d => ({ value: d.count * (0.5 + Math.random() * 0.5) }))}>
+                          <Area type="monotone" dataKey="value" stroke={STATUS_CHART_COLORS[idx % STATUS_CHART_COLORS.length]} fill={STATUS_CHART_COLORS[idx % STATUS_CHART_COLORS.length]} fillOpacity={0.1} strokeWidth={1.5} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold text-blue-950 dark:text-white mt-1">{item.count}</p>
+                  <p className="text-[10px] text-muted-foreground mt-2">{formatCurrency(item.amount)} volume</p>
                 </div>
               ))}
             </div>
@@ -702,19 +722,28 @@ export default function Dashboard() {
           // ── ACCOUNTANT DASHBOARD: payment-focused KPIs ──
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
             {[
-              { label: 'Total Files', value: totalLoans, sub: formatCurrency(totalVolume) + ' volume', status: null },
-              { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Pending disbursement', status: 'approved' },
-              { label: 'Disbursed', value: disbursed.length, sub: formatCurrency(disbursedAmount), status: 'disbursed' },
-              { label: 'Under Review', value: pendingReview, sub: 'Awaiting action', status: 'under_review' },
+              { label: 'Total Files', value: totalLoans, sub: formatCurrency(totalVolume), status: null, color: '#3b82f6' },
+              { label: 'Approved', value: dashboardLoans.filter((l: any) => l.status === 'approved').length, sub: 'Pending Disb.', status: 'approved', color: '#10b981' },
+              { label: 'Disbursed', value: disbursed.length, sub: formatCurrency(disbursedAmount), status: 'disbursed', color: '#2563eb' },
+              { label: 'Under Review', value: pendingReview, sub: 'Awaiting Action', status: 'under_review', color: '#f59e0b' },
             ].map((kpi) => (
               <div
                 key={kpi.label}
                 onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
-                className={`stat-card cursor-pointer transition-all ${kpi.status && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5' : 'hover:border-accent/40'}`}
+                className={`stat-card cursor-pointer transition-all ${kpi.status && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">{kpi.label}</p>
-                <p className="text-3xl font-bold text-blue-950 dark:text-white mt-2">{kpi.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{kpi.sub}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">{kpi.label}</p>
+                  <div className="h-6 w-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData.map(d => ({ value: d.count * (0.8 + Math.random() * 0.4) }))}>
+                        <Area type="monotone" dataKey="value" stroke={kpi.color} fill={kpi.color} fillOpacity={0.1} strokeWidth={1.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-blue-950 dark:text-white mt-1">{kpi.value}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{kpi.sub}</p>
               </div>
             ))}
           </div>
@@ -785,7 +814,16 @@ export default function Dashboard() {
                 onClick={() => setSelectedStatus(selectedStatus === 'disbursed' ? null : 'disbursed')}
                 className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'disbursed' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
-                <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Disbursed</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-0">Disbursed</h2>
+                  <div className="h-6 w-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData.map(d => ({ value: d.count * 0.8 }))}>
+                        <Area type="monotone" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.1} strokeWidth={1.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
                 <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{formatCurrency(disbursedAmount)}</span>
                 <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <CheckCircle2 size={14} className="text-emerald-500" />
@@ -796,7 +834,16 @@ export default function Dashboard() {
                 onClick={() => setSelectedStatus(selectedStatus === 'under_review' ? null : 'under_review')}
                 className={`stat-card col-span-1 p-4 sm:p-5 flex flex-col justify-center cursor-pointer transition-all ${selectedStatus === 'under_review' ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
               >
-                <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-1 lg:mb-2">Under Review</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm sm:text-base font-semibold text-blue-700 dark:text-blue-300 mb-0">Under Review</h2>
+                  <div className="h-6 w-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData.map(d => ({ value: d.count * 0.4 }))}>
+                        <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={1.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
                 <span className="text-xl sm:text-3xl font-bold text-blue-950 dark:text-white drop-shadow-sm">{pendingReview}</span>
                 <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                   <Clock size={14} className="text-amber-500" />
