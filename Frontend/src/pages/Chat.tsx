@@ -8,7 +8,7 @@ import {
   ChevronRight, ChevronLeft, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
   Mic, MicOff, VideoOff, Maximize, Minimize, Circle, Mail, Info, Share2, Forward, Download
 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
 import { useCall } from '@/contexts/CallContext';
 import logo from '@/assets/logo.png';
 
@@ -716,6 +716,7 @@ export default function Chat() {
       {/* Mobile Profile Overlay */}
       {viewingProfile && (
         <Dialog open={!!viewingProfile} onOpenChange={() => setViewingProfile(null)}>
+          <DialogOverlay />
           <DialogContent className="lg:hidden sm:max-w-xs p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl bg-white dark:bg-slate-900">
             <div className="relative h-32 bg-gradient-to-br from-[#00a884] to-emerald-600">
                <button onClick={() => setViewingProfile(null)} className="absolute top-4 left-4 text-white hover:scale-110 transition-transform"><ChevronLeft size={24} /></button>
