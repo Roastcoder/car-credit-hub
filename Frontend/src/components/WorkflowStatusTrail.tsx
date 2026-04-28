@@ -76,10 +76,10 @@ export function WorkflowStatusTrail({ currentStatus, className }: WorkflowStatus
   };
 
   return (
-    <div className={cn("w-full", className)}>
-      <div className="flex items-center justify-between relative">
+    <div className={cn("w-full overflow-x-auto pb-2 scrollbar-hide sm:scrollbar-default", className)}>
+      <div className="flex items-center justify-between relative min-w-[650px] px-8 py-4">
         {/* Progress Line */}
-        <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700 -z-10">
+        <div className="absolute top-10 left-8 right-8 h-0.5 bg-gray-200 dark:bg-gray-700 -z-10">
           <div 
             className="h-full bg-green-300 transition-all duration-500 ease-in-out"
             style={{ 
