@@ -166,7 +166,19 @@ export default function Dashboard() {
       monthly[monthYear].count += 1;
     });
     
-    return Object.values(monthly).sort((a, b) => a.name.localeCompare(b.name));
+    // Pad with last 6 months to ensure a line is drawn even with single month data
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      months.push(d.toISOString().slice(0, 7));
+    }
+
+    return months.map(m => ({
+      name: m,
+      amount: monthly[m]?.amount || 0,
+      count: monthly[m]?.count || 0
+    }));
   }, [loans, displayLoans, adminFilterMode]);
 
   const loanTypeData = useMemo(() => {
