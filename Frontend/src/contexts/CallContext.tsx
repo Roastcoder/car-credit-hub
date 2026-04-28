@@ -140,9 +140,32 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const endCall = () => {
-    if (activeCall) activeCall.close();
-    if (localStream) localStream.getTracks().forEach(t => t.stop());
-    if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+    console.log('Ending call and stopping all media tracks...');
+    
+    if (activeCall) {
+      try {
+        activeCall.close();
+      } catch (e) {
+        console.error('Error closing call:', e);
+      }
+    }
+
+    // Stop local camera/mic
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped track: ${track.kind}`);
+      });
+    }
+
+    // Stop screen share if active
+    if (screenStream) {
+      screenStream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped screen track: ${track.kind}`);
+      });
+    }
+
     setLocalStream(null);
     setRemoteStream(null);
     setScreenStream(null);
