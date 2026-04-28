@@ -161,7 +161,8 @@ export default function PaymentApplicationsList() {
                          app.id.toString().includes(searchTerm) ||
                          (app.utr_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (app.voucher_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (app.bank_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+                         (app.bank_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (app.payment_amount || '').toString().includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     
     // Release Percentage Calculation
