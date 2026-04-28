@@ -24,7 +24,7 @@ interface NavItem {
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
-  { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant', 'sales'] },
+  { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant'] },
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['pdd_manager'] },
   { 
