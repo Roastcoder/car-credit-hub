@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { 
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
-  ChevronRight, Phone, Laptop, Lock, Check, CheckCheck
+  ChevronRight, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck
 } from 'lucide-react';
 
 interface Member {
@@ -53,12 +53,62 @@ export default function Chat() {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
-  const [isMeetingActive, setIsMeetingActive] = useState(false);
-  const [currentMeetingUrl, setCurrentMeetingUrl] = useState<string | null>(null);
+  const [outgoingCallUrl, setOutgoingCallUrl] = useState<string | null>(null);
+  const [incomingCall, setIncomingCall] = useState<{ senderName: string; link: string; id: number } | null>(null);
+  const [declinedCalls, setDeclinedCalls] = useState<number[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const startRingtone = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioCtxRef.current = audioCtx;
+      
+      const playRing = () => {
+        if (!audioCtxRef.current) return;
+        
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc1.type = 'sine';
+        osc1.frequency.value = 400;
+        osc2.type = 'sine';
+        osc2.frequency.value = 450;
+        
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime + 1.2);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.3);
+        
+        osc1.start(audioCtx.currentTime);
+        osc2.start(audioCtx.currentTime);
+        osc1.stop(audioCtx.currentTime + 1.3);
+        osc2.stop(audioCtx.currentTime + 1.3);
+        
+        setTimeout(() => {
+          if (audioCtxRef.current) playRing();
+        }, 2500);
+      };
+      
+      playRing();
+    } catch (e) {
+      console.error('Ringtone failed', e);
+    }
+  };
+
+  const stopRingtone = () => {
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close();
+      audioCtxRef.current = null;
+    }
+  };
 
   const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
 
@@ -139,7 +189,33 @@ export default function Chat() {
     }
   });
 
-  // 5. Create Room Mutation
+  // 4.5 Listen for Incoming Calls
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
+    
+    if (
+      lastMessage.message_type === 'meeting' && 
+      lastMessage.sender_id !== user?.id &&
+      !declinedCalls.includes(lastMessage.id)
+    ) {
+      const msgTime = new Date(lastMessage.created_at).getTime();
+      const nowTime = Date.now();
+      
+      if (nowTime - msgTime < 60000) { 
+        if (!incomingCall) {
+          setIncomingCall({
+            senderName: lastMessage.sender_name || 'A Colleague',
+            link: lastMessage.meeting_link || '',
+            id: lastMessage.id
+          });
+          startRingtone();
+        }
+      }
+    }
+    
+    return () => stopRingtone();
+  }, [messages, user?.id, declinedCalls, incomingCall]);
   const createRoomMutation = useMutation({
     mutationFn: async ({ name, type, participantIds }: { name?: string; type: 'direct' | 'group'; participantIds: number[] }) => {
       const res = await fetch(`${API_URL}/api/chat/rooms`, {
@@ -188,7 +264,7 @@ export default function Chat() {
       meeting_link: meetingUrl
     });
 
-    window.open(meetingUrl, '_blank');
+    setOutgoingCallUrl(meetingUrl);
   };
 
   const joinMeeting = (meetingUrl: string) => {
@@ -557,6 +633,76 @@ export default function Chat() {
               <p className="text-sm text-muted-foreground mt-1">
                 Exchange encrypted messages, share financial documents, and launch secure group video sessions with any colleague.
               </p>
+            </div>
+          </div>
+        )}
+        {/* Outgoing Call Overlay */}
+        {outgoingCallUrl && (
+          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white animate-in fade-in">
+            <div className="relative flex items-center justify-center mb-8">
+              <div className="absolute w-32 h-32 bg-blue-500/20 rounded-full animate-ping" />
+              <div className="absolute w-40 h-40 bg-blue-500/10 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl border-4 border-white/10">
+                {activeRoom?.type === 'group' ? <Users size={32} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'ME').slice(0, 2).toUpperCase()}
+              </div>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight mb-1">Calling...</h2>
+            <p className="text-sm text-slate-300 mb-12">Waiting for connection to secure session</p>
+            
+            <div className="flex gap-4">
+              <button 
+                onClick={() => {
+                  window.open(outgoingCallUrl, '_blank');
+                  setOutgoingCallUrl(null);
+                }}
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition"
+              >
+                <Video size={18} /> Join Now
+              </button>
+              <button 
+                onClick={() => setOutgoingCallUrl(null)}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition"
+              >
+                <X size={18} /> Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Incoming Call Overlay */}
+        {incomingCall && (
+          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white animate-in fade-in">
+            <div className="relative flex items-center justify-center mb-8">
+              <div className="absolute w-32 h-32 bg-green-500/20 rounded-full animate-ping" />
+              <div className="absolute w-40 h-40 bg-green-500/10 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+              <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl border-4 border-white/10">
+                {incomingCall.senderName.slice(0, 2).toUpperCase()}
+              </div>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight mb-1">Incoming Call</h2>
+            <p className="text-sm text-slate-300 mb-12">{incomingCall.senderName} is inviting you to a secure video session</p>
+            
+            <div className="flex gap-6">
+              <button 
+                onClick={() => {
+                  window.open(incomingCall.link, '_blank');
+                  setIncomingCall(null);
+                  stopRingtone();
+                }}
+                className="px-8 py-4 bg-green-600 hover:bg-green-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+              >
+                <Phone size={20} className="animate-pulse" /> Answer
+              </button>
+              <button 
+                onClick={() => {
+                  setDeclinedCalls([...declinedCalls, incomingCall.id]);
+                  setIncomingCall(null);
+                  stopRingtone();
+                }}
+                className="px-8 py-4 bg-red-600 hover:bg-red-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+              >
+                <PhoneOff size={20} /> Decline
+              </button>
             </div>
           </div>
         )}
