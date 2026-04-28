@@ -536,28 +536,65 @@ export default function Chat() {
         {/* Rooms List */}
         <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 custom-scrollbar">
           {isCreatingGroup ? (
-            <div className="p-4 space-y-4 animate-in slide-in-from-left duration-200">
-              <div className="flex items-center justify-between"><h3 className="text-sm font-bold text-foreground uppercase tracking-wider">New Group Session</h3><button onClick={() => setIsCreatingGroup(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={18} /></button></div>
-              <input type="text" placeholder="Group Session Name" className="w-full px-4 py-2.5 text-sm bg-[#f0f2f5] dark:bg-slate-800 rounded-xl outline-none" value={groupName} onChange={(e) => setGroupName(e.target.value)} />
-              <div className="space-y-0.5 max-h-80 overflow-y-auto">
-                {users.map(u => (
-                  <label key={u.id} className="flex items-center gap-4 p-3 hover:bg-[#f0f2f5] dark:hover:bg-slate-800 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50">
-                    <input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => { if(selectedUsers.includes(u.id)) setSelectedUsers(selectedUsers.filter(i=>i!==u.id)); else setSelectedUsers([...selectedUsers,u.id]); }} className="w-4 h-4 rounded-full text-[#00a884] focus:ring-[#00a884]" />
-                    <UserAvatar member={u} className="w-10 h-10" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{u.name}</p>
-                      <p className="text-[11px] text-slate-500 uppercase font-bold tracking-tighter">{u.role}</p>
-                    </div>
-                  </label>
-                ))}
+            <div className="p-4 space-y-4 animate-in slide-in-from-left duration-200 bg-white dark:bg-slate-900 h-full">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-[#00a884]/10 text-[#00a884] rounded-lg">
+                    <Users size={20} />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">New Group</h3>
+                </div>
+                <button onClick={() => setIsCreatingGroup(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition">
+                  <X size={20} className="text-slate-500" />
+                </button>
               </div>
-              <button 
-                onClick={() => createRoomMutation.mutate({ name: groupName, type: 'group', participantIds: selectedUsers })} 
-                disabled={!groupName.trim() || selectedUsers.length === 0}
-                className="w-full py-3 bg-[#00a884] hover:bg-[#008f6f] text-white text-sm font-bold rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
-              >
-                Create Group
-              </button>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Group Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Sales Team, PDD Discussion..." 
+                  className="w-full px-4 py-3 text-[15px] bg-[#f0f2f5] dark:bg-slate-800 rounded-xl border-none focus:ring-2 focus:ring-[#00a884]/20 outline-none transition-all shadow-inner" 
+                  value={groupName} 
+                  onChange={(e) => setGroupName(e.target.value)} 
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Participants</label>
+                <div className="space-y-0.5 max-h-80 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-xl custom-scrollbar">
+                  {users.map(u => (
+                    <label key={u.id} className={`flex items-center gap-4 p-3 hover:bg-[#f0f2f5] dark:hover:bg-slate-800 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 ${selectedUsers.includes(u.id) ? 'bg-[#00a884]/5' : ''}`}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedUsers.includes(u.id)} 
+                        onChange={() => { 
+                          if(selectedUsers.includes(u.id)) setSelectedUsers(selectedUsers.filter(i=>i!==u.id)); 
+                          else setSelectedUsers([...selectedUsers,u.id]); 
+                        }} 
+                        className="w-5 h-5 rounded-full text-[#00a884] border-slate-300 focus:ring-[#00a884] transition-all" 
+                      />
+                      <UserAvatar member={u} className="w-10 h-10" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{u.name}</p>
+                        <p className="text-[11px] text-slate-500 uppercase font-bold tracking-tighter">{u.role}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button 
+                  onClick={() => createRoomMutation.mutate({ name: groupName, type: 'group', participantIds: selectedUsers })} 
+                  disabled={!groupName.trim() || selectedUsers.length === 0 || createRoomMutation.isPending}
+                  className="w-full py-4 bg-[#00a884] hover:bg-[#008f6f] text-white text-[15px] font-black rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+                >
+                  {createRoomMutation.isPending ? 'Creating...' : (
+                    <><Check size={20} /> Create Group Session</>
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col">
