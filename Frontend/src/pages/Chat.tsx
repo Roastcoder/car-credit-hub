@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import Peer from 'peerjs';
 import { 
   MessageSquare, Send, Users, Shield, Video, 
   Paperclip, Plus, Search, User, File, X, 
-  ChevronRight, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck
+  ChevronRight, Phone, PhoneOff, Laptop, Lock, Check, CheckCheck,
+  Mic, MicOff, VideoOff, Maximize, Minimize, Circle
 } from 'lucide-react';
 
 interface Member {
@@ -13,6 +15,7 @@ interface Member {
   name: string;
   email: string;
   role: string;
+  is_online?: boolean;
 }
 
 interface Message {
@@ -21,7 +24,7 @@ interface Message {
   sender_id: number;
   sender_name: string;
   content: string;
-  message_type: 'text' | 'document' | 'meeting';
+  message_type: 'text' | 'document' | 'meeting' | 'call_end';
   file_url?: string;
   file_name?: string;
   file_size?: number;
@@ -53,66 +56,162 @@ export default function Chat() {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
-  const [outgoingCallUrl, setOutgoingCallUrl] = useState<string | null>(null);
-  const [incomingCall, setIncomingCall] = useState<{ senderName: string; link: string; id: number } | null>(null);
+  
+  // Custom Calling & Real-time States
+  const [peer, setPeer] = useState<Peer | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isCalling, setIsCalling] = useState(false);
+  const [incomingCall, setIncomingCall] = useState<{ senderName: string; peerId: string; id: number; callObj: any } | null>(null);
+  const [activeCall, setActiveCall] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
   const [declinedCalls, setDeclinedCalls] = useState<number[]>([]);
+  
+  // Presence & Typing States
+  const [typingUsers, setTypingUsers] = useState<Record<number, boolean>>({});
+  const typingTimeoutRef = useRef<any>(null);
+  const dataConnections = useRef<Record<string, any>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
+
+  // Heartbeat polling
+  useEffect(() => {
+    const sendHeartbeat = async () => {
+      try {
+        await fetch(`${API_URL}/api/users/heartbeat`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+      } catch (e) {
+        console.error('Heartbeat failed', e);
+      }
+    };
+    
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [API_URL]);
 
   const startRingtone = () => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       audioCtxRef.current = audioCtx;
-      
       const playRing = () => {
         if (!audioCtxRef.current) return;
-        
         const osc1 = audioCtx.createOscillator();
         const osc2 = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        
-        osc1.type = 'sine';
-        osc1.frequency.value = 400;
-        osc2.type = 'sine';
-        osc2.frequency.value = 450;
-        
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        
+        osc1.type = 'sine'; osc1.frequency.value = 400;
+        osc2.type = 'sine'; osc2.frequency.value = 450;
+        osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
         gain.gain.setValueAtTime(0, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.5, audioCtx.currentTime + 1.2);
         gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.3);
-        
-        osc1.start(audioCtx.currentTime);
-        osc2.start(audioCtx.currentTime);
-        osc1.stop(audioCtx.currentTime + 1.3);
-        osc2.stop(audioCtx.currentTime + 1.3);
-        
-        setTimeout(() => {
-          if (audioCtxRef.current) playRing();
-        }, 2500);
+        osc1.start(audioCtx.currentTime); osc2.start(audioCtx.currentTime);
+        osc1.stop(audioCtx.currentTime + 1.3); osc2.stop(audioCtx.currentTime + 1.3);
+        setTimeout(() => { if (audioCtxRef.current) playRing(); }, 2500);
       };
-      
       playRing();
-    } catch (e) {
-      console.error('Ringtone failed', e);
-    }
+    } catch (e) { console.error('Ringtone failed', e); }
   };
 
   const stopRingtone = () => {
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close();
-      audioCtxRef.current = null;
-    }
+    if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; }
   };
 
-  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
+  // Initialize PeerJS
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const myPeerId = `mehar-finance-user-${user.id}`;
+    const newPeer = new Peer(myPeerId, {
+      debug: 1,
+      config: {
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
+      }
+    });
 
-  // 1. Fetch Chat Rooms
+    newPeer.on('open', (id) => console.log('Peer connected with ID:', id));
+
+    // Handle Incoming Media (Call)
+    newPeer.on('call', (call) => {
+      setIncomingCall(prev => prev ? { ...prev, callObj: call } : null);
+    });
+
+    // Handle Incoming Data (Typing etc.)
+    newPeer.on('connection', (conn) => {
+      conn.on('data', (data: any) => {
+        if (data.type === 'typing') {
+          setTypingUsers(prev => ({ ...prev, [data.userId]: data.isTyping }));
+          // Clear typing after 3 seconds if no update
+          setTimeout(() => {
+            setTypingUsers(prev => ({ ...prev, [data.userId]: false }));
+          }, 3000);
+        }
+      });
+    });
+
+    newPeer.on('error', (err) => {
+      console.error('Peer error:', err);
+      if (err.type === 'peer-unavailable') {
+        toast.error('The user is currently offline');
+        endCall();
+      }
+    });
+
+    setPeer(newPeer);
+    return () => newPeer.destroy();
+  }, [user?.id]);
+
+  // Notify Typing
+  const handleTyping = () => {
+    if (!activeRoomId || !peer || !activeRoom) return;
+    
+    const notifyMembers = () => {
+      activeRoom.members.forEach(m => {
+        if (m.id === user?.id) return;
+        const targetPeerId = `mehar-finance-user-${m.id}`;
+        
+        let conn = dataConnections.current[targetPeerId];
+        if (!conn || !conn.open) {
+          conn = peer.connect(targetPeerId);
+          dataConnections.current[targetPeerId] = conn;
+        }
+        
+        if (conn.open) {
+          conn.send({ type: 'typing', userId: user?.id, isTyping: true });
+        } else {
+          conn.on('open', () => conn.send({ type: 'typing', userId: user?.id, isTyping: true }));
+        }
+      });
+    };
+
+    notifyMembers();
+    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+       // Optional: send "stop typing" event
+    }, 2000);
+  };
+
+  // Handle Video Elements
+  useEffect(() => {
+    if (localStream && localVideoRef.current) localVideoRef.current.srcObject = localStream;
+  }, [localStream]);
+
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+  }, [remoteStream]);
+
+  // Fetch Chat Rooms
   const { data: rooms = [], isLoading: roomsLoading } = useQuery<Room[]>({
     queryKey: ['chatRooms'],
     queryFn: async () => {
@@ -122,10 +221,10 @@ export default function Chat() {
       if (!res.ok) throw new Error('Failed to fetch rooms');
       return res.json();
     },
-    refetchInterval: 5000 // Poll rooms every 5 seconds
+    refetchInterval: 5000 
   });
 
-  // 2. Fetch Messages for active room
+  // Fetch Messages
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ['chatMessages', activeRoomId],
     queryFn: async () => {
@@ -137,10 +236,10 @@ export default function Chat() {
       return res.json();
     },
     enabled: !!activeRoomId,
-    refetchInterval: 3000 // Poll messages every 3 seconds for active room
+    refetchInterval: 3000 
   });
 
-  // 3. Fetch all users to start chat
+  // Fetch Users
   const { data: users = [] } = useQuery<Member[]>({
     queryKey: ['chatUsers'],
     queryFn: async () => {
@@ -149,10 +248,11 @@ export default function Chat() {
       });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
-    }
+    },
+    refetchInterval: 10000 // Poll online status
   });
 
-  // 4. Send Message Mutation
+  // Send Message
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, message_type, file, meeting_link }: { 
       content?: string; 
@@ -168,9 +268,7 @@ export default function Chat() {
 
       const res = await fetch(`${API_URL}/api/chat/rooms/${activeRoomId}/messages`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
         body: formData
       });
 
@@ -183,263 +281,175 @@ export default function Chat() {
       if (fileInputRef.current) fileInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['chatMessages', activeRoomId] });
       queryClient.invalidateQueries({ queryKey: ['chatRooms'] });
-    },
-    onError: (err) => {
-      toast.error(err.message || 'Error sending message');
     }
   });
 
-  // 4.5 Listen for Incoming Calls
+  // Listen for Incoming Calls
   useEffect(() => {
     if (!messages || messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];
     
-    if (
-      lastMessage.message_type === 'meeting' && 
-      lastMessage.sender_id !== user?.id &&
-      !declinedCalls.includes(lastMessage.id)
-    ) {
+    if (lastMessage.message_type === 'meeting' && lastMessage.sender_id !== user?.id && !declinedCalls.includes(lastMessage.id) && !activeCall) {
       const msgTime = new Date(lastMessage.created_at).getTime();
-      const nowTime = Date.now();
-      
-      if (nowTime - msgTime < 60000) { 
+      if (Date.now() - msgTime < 30000) { 
         if (!incomingCall) {
           setIncomingCall({
             senderName: lastMessage.sender_name || 'A Colleague',
-            link: lastMessage.meeting_link || '',
-            id: lastMessage.id
+            peerId: lastMessage.meeting_link || '', 
+            id: lastMessage.id,
+            callObj: null
           });
           startRingtone();
         }
       }
     }
-    
-    return () => stopRingtone();
-  }, [messages, user?.id, declinedCalls, incomingCall]);
+
+    if (lastMessage.message_type === 'call_end' && activeCall && lastMessage.sender_id !== user?.id) {
+       endCall();
+       toast.info('Call ended by other user');
+    }
+  }, [messages, user?.id, declinedCalls, incomingCall, activeCall]);
+
+  const startMeeting = async () => {
+    if (!activeRoomId || !peer) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      setIsCalling(true);
+      const activeRoom = rooms.find(r => r.id === activeRoomId);
+      const otherUser = activeRoom?.members.find(m => m.id !== user?.id);
+      if (!otherUser) return toast.error('Cannot call here');
+      const targetPeerId = `mehar-finance-user-${otherUser.id}`;
+      sendMessageMutation.mutate({ content: 'Incoming video call...', message_type: 'meeting', meeting_link: `mehar-finance-user-${user?.id}` });
+      const call = peer.call(targetPeerId, stream);
+      setupCallHandlers(call);
+      setActiveCall(call);
+    } catch (err) { toast.error('Camera/mic access denied'); }
+  };
+
+  const setupCallHandlers = (call: any) => {
+    call.on('stream', (st: MediaStream) => { setRemoteStream(st); setIsCalling(false); });
+    call.on('close', endCall);
+    call.on('error', () => { toast.error('Call error'); endCall(); });
+  };
+
+  const answerCall = async () => {
+    if (!incomingCall || !peer) return;
+    stopRingtone();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      let callObj = incomingCall.callObj;
+      if (!callObj) {
+        peer.on('call', (newCall) => {
+          newCall.answer(stream); setupCallHandlers(newCall); setActiveCall(newCall); setIncomingCall(null);
+        });
+      } else {
+        callObj.answer(stream); setupCallHandlers(callObj); setActiveCall(callObj); setIncomingCall(null);
+      }
+    } catch (err) { declineCall(); }
+  };
+
+  const declineCall = () => {
+    if (incomingCall) { setDeclinedCalls([...declinedCalls, incomingCall.id]); setIncomingCall(null); stopRingtone(); }
+  };
+
+  const endCall = () => {
+    if (activeCall) activeCall.close();
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    if (activeCall || isCalling) sendMessageMutation.mutate({ content: 'Call ended', message_type: 'call_end' });
+    setLocalStream(null); setRemoteStream(null); setActiveCall(null); setIsCalling(false); setIncomingCall(null); stopRingtone();
+  };
+
+  const toggleMute = () => {
+    if (localStream) { localStream.getAudioTracks().forEach(t => t.enabled = !t.enabled); setIsMuted(!isMuted); }
+  };
+
+  const toggleVideo = () => {
+    if (localStream) { localStream.getVideoTracks().forEach(t => t.enabled = !t.enabled); setIsVideoOff(!isVideoOff); }
+  };
+
   const createRoomMutation = useMutation({
     mutationFn: async ({ name, type, participantIds }: { name?: string; type: 'direct' | 'group'; participantIds: number[] }) => {
       const res = await fetch(`${API_URL}/api/chat/rooms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
         body: JSON.stringify({ name, type, participantIds })
       });
-      if (!res.ok) throw new Error('Failed to create chat');
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success('Chat created successfully');
-      setIsCreatingGroup(false);
-      setGroupName('');
-      setSelectedUsers([]);
-      setActiveRoomId(data.id);
-      queryClient.invalidateQueries({ queryKey: ['chatRooms'] });
+      setActiveRoomId(data.id); setIsCreatingGroup(false); queryClient.invalidateQueries({ queryKey: ['chatRooms'] });
     }
   });
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() && !file) return;
-    sendMessageMutation.mutate({
-      content: newMessage,
-      message_type: file ? 'document' : 'text',
-      file: file || undefined
-    });
+    sendMessageMutation.mutate({ content: newMessage, message_type: file ? 'document' : 'text', file: file || undefined });
   };
-
-  const startMeeting = () => {
-    if (!activeRoomId) return;
-    const meetingUrl = `https://whereby.com/meharfinance-${activeRoomId}-${Date.now()}`;
-
-    sendMessageMutation.mutate({
-      content: 'Started a video meeting',
-      message_type: 'meeting',
-      meeting_link: meetingUrl
-    });
-
-    setOutgoingCallUrl(meetingUrl);
-  };
-
-  const joinMeeting = (meetingUrl: string) => {
-    window.open(meetingUrl, '_blank');
-  };
-
-  const handleUserSelect = (userId: number) => {
-    if (selectedUsers.includes(userId)) {
-      setSelectedUsers(selectedUsers.filter(id => id !== userId));
-    } else {
-      setSelectedUsers([...selectedUsers, userId]);
-    }
-  };
-
-  const createGroupChat = () => {
-    if (!groupName.trim() || selectedUsers.length === 0) {
-      toast.error('Please enter a group name and select members');
-      return;
-    }
-    createRoomMutation.mutate({
-      name: groupName,
-      type: 'group',
-      participantIds: selectedUsers
-    });
-  };
-
-  const startDirectChat = (otherUserId: number) => {
-    createRoomMutation.mutate({
-      type: 'direct',
-      participantIds: [otherUserId]
-    });
-  };
-
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const activeRoom = rooms.find(r => r.id === activeRoomId);
+
+  // Scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div className="h-[calc(100vh-6.5rem)] flex bg-slate-50 dark:bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-blue-100 dark:border-slate-800">
       
-      {/* Sidebar: Rooms and User list */}
+      {/* Sidebar */}
       <div className={`w-full md:w-80 border-r border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col ${activeRoomId && !isCreatingGroup ? 'hidden md:flex' : 'flex'}`}>
-        
-        {/* Header with Search */}
         <div className="p-4 border-b border-blue-50 dark:border-slate-800">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-blue-950 dark:text-white flex items-center gap-2">
               <MessageSquare className="text-blue-600 w-6 h-6" />
               Workspace
             </h1>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setIsCreatingGroup(!isCreatingGroup)} 
-                className="p-2 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 dark:hover:bg-slate-700 transition"
-                title="Create Group Session"
-              >
-                <Users size={18} />
-              </button>
-            </div>
+            <button onClick={() => setIsCreatingGroup(!isCreatingGroup)} className="p-2 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 transition"><Users size={18} /></button>
           </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="Search people..." 
-              className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <input type="text" placeholder="Search people..." className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent focus:border-blue-500 outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
 
-        {/* Content Area for Sidebar */}
         <div className="flex-1 overflow-y-auto">
           {isCreatingGroup ? (
-            /* Create Group Interface */
             <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-foreground">Create Group Session</h3>
-                <button onClick={() => setIsCreatingGroup(false)} className="text-muted-foreground hover:text-foreground">
-                  <X size={18} />
-                </button>
-              </div>
-              <input 
-                type="text" 
-                placeholder="Group Session Name" 
-                className="w-full px-4 py-2 text-sm border border-border bg-slate-50 dark:bg-slate-800 rounded-xl outline-none focus:border-blue-500"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-              />
+              <div className="flex items-center justify-between"><h3 className="text-sm font-bold text-foreground">Create Group Session</h3><button onClick={() => setIsCreatingGroup(false)}><X size={18} /></button></div>
+              <input type="text" placeholder="Group Session Name" className="w-full px-4 py-2 text-sm border border-border bg-slate-50 dark:bg-slate-800 rounded-xl outline-none" value={groupName} onChange={(e) => setGroupName(e.target.value)} />
               <div className="space-y-1 max-h-60 overflow-y-auto">
-                <p className="text-xs font-bold text-muted-foreground mb-2">Select Members:</p>
                 {users.map(u => (
                   <label key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedUsers.includes(u.id)}
-                      onChange={() => handleUserSelect(u.id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
-                    />
-                    <div>
-                      <p className="text-xs font-bold text-foreground">{u.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{u.role}</p>
-                    </div>
+                    <input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => { if(selectedUsers.includes(u.id)) setSelectedUsers(selectedUsers.filter(i=>i!==u.id)); else setSelectedUsers([...selectedUsers,u.id]); }} className="rounded text-blue-600" />
+                    <div><p className="text-xs font-bold flex items-center gap-1.5">{u.name} {u.is_online && <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />}</p><p className="text-[10px] text-muted-foreground">{u.role}</p></div>
                   </label>
                 ))}
               </div>
-              <button 
-                onClick={createGroupChat}
-                className="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition"
-              >
-                Create Session
-              </button>
+              <button onClick={() => createRoomMutation.mutate({ name: groupName, type: 'group', participantIds: selectedUsers })} className="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-xl">Create Session</button>
             </div>
-          ) : searchQuery.trim() ? (
-            /* User search results */
-            <div className="p-2 space-y-1">
-              <p className="text-xs font-bold text-muted-foreground px-3 py-2">People</p>
-              {filteredUsers.map(u => (
-                <button 
-                  key={u.id} 
-                  onClick={() => startDirectChat(u.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
-                    {u.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">{u.name}</p>
-                    <p className="text-xs text-muted-foreground">{u.role}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            /* Active Rooms */
-            <div className="p-2 space-y-1">
-              {roomsLoading ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">Loading chats…</div>
-              ) : rooms.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">No active chats. Search users above to start.</div>
-              ) : rooms.map(room => {
-                const isGroup = room.type === 'group';
+          ) : rooms.map(room => {
                 const otherMember = room.members.find(m => m.id !== user?.id);
-                const title = isGroup ? room.name : (otherMember?.name || 'Direct Chat');
-
+                const title = room.type === 'group' ? room.name : (otherMember?.name || 'DC');
+                const isOnline = room.type === 'direct' && otherMember?.is_online;
                 return (
-                  <button 
-                    key={room.id} 
-                    onClick={() => setActiveRoomId(room.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-200 ${activeRoomId === room.id ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
-                  >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${activeRoomId === room.id ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400'}`}>
-                      {isGroup ? <Users size={18} /> : title.slice(0, 2).toUpperCase()}
+                  <button key={room.id} onClick={() => setActiveRoomId(room.id)} className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${activeRoomId === room.id ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                    <div className="relative">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${activeRoomId === room.id ? 'bg-white/20' : 'bg-blue-50 dark:bg-slate-800 text-blue-600'}`}>{title?.slice(0, 2).toUpperCase()}</div>
+                      {isOnline && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />}
                     </div>
                     <div className="text-left flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{title}</p>
-                      <p className={`text-xs truncate ${activeRoomId === room.id ? 'text-white/80' : 'text-muted-foreground'}`}>
-                        {room.last_message?.content || (isGroup ? 'Group Chat' : 'Start messaging')}
-                      </p>
+                      <p className={`text-xs truncate ${activeRoomId === room.id ? 'text-white/80' : 'text-muted-foreground'}`}>{room.last_message?.content || 'Start messaging'}</p>
                     </div>
-                    <ChevronRight size={14} className={`opacity-50 ${activeRoomId === room.id ? 'text-white' : ''}`} />
                   </button>
                 );
               })}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Main Chat / Meeting Area */}
+      {/* Main Chat Area */}
       <div className={`flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 relative ${!activeRoomId && !isCreatingGroup ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
         
         {activeRoomId ? (
@@ -447,262 +457,127 @@ export default function Chat() {
             {/* Header */}
             <div className="p-4 border-b border-blue-50 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <button onClick={() => setActiveRoomId(null)} className="md:hidden p-2 text-muted-foreground hover:text-foreground">
-                  <X size={20} />
-                </button>
-                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
-                  {activeRoom?.type === 'group' ? <Users size={18} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'Direct Chat').slice(0, 2).toUpperCase()}
+                <button onClick={() => setActiveRoomId(null)} className="md:hidden p-2"><X size={20} /></button>
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 flex items-center justify-center font-bold">
+                    {activeRoom?.type === 'group' ? <Users size={18} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'DC').slice(0, 2).toUpperCase()}
+                  </div>
+                  {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                  )}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">
-                    {activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}
-                  </h3>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-widest">
-                    <Lock size={10} /> Encrypted Workspace
-                  </div>
+                  <h3 className="text-sm font-bold">{activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}</h3>
+                  {activeRoom?.type === 'direct' && activeRoom?.members.find(m => m.id !== user?.id)?.is_online ? (
+                    <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Active Now</p>
+                  ) : (
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><Lock size={10} /> Encrypted Session</div>
+                  )}
                 </div>
               </div>
-
-              {/* Action Toolbar */}
-              <div className="flex gap-2">
-                <button 
-                  onClick={startMeeting}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-2xl shadow-md hover:bg-blue-700 transition"
-                >
-                  <Video size={16} /> Meeting
-                </button>
-              </div>
+              <button onClick={startMeeting} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-2xl shadow-md hover:bg-blue-700 transition"><Phone size={16} /> Call</button>
             </div>
 
-            {/* Messages Area */}
+            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messagesLoading ? (
-                <div className="text-center py-4 text-muted-foreground text-sm">Loading messages…</div>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-sm flex flex-col items-center gap-2">
-                  <Shield size={32} className="text-blue-200 dark:text-blue-800" />
-                  Messages are end-to-end encrypted in the database.
-                </div>
-              ) : messages.map((msg) => {
+              {messages.map((msg) => {
                 const isMe = msg.sender_id === user?.id;
-                
                 return (
                   <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-2xl p-3 px-4 shadow-sm ${
-                      isMe 
-                        ? 'bg-blue-600 text-white rounded-br-none' 
-                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-none border border-blue-50 dark:border-slate-800'
-                    }`}>
-                      {!isMe && (
-                        <span className="block text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1">
-                          {msg.sender_name}
-                        </span>
-                      )}
-
-                      {msg.message_type === 'text' && (
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      )}
-
+                    <div className={`max-w-[75%] rounded-2xl p-3 px-4 shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 rounded-bl-none border border-blue-50'}`}>
+                      {!isMe && <span className="block text-[10px] font-bold text-blue-500 mb-1">{msg.sender_name}</span>}
+                      {msg.message_type === 'text' && <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
                       {msg.message_type === 'document' && (
                         <div className="flex flex-col gap-2">
                           {msg.file_url && (msg.file_name?.match(/\.(jpeg|jpg|png|gif|webp)$/i)) && (
-                            <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] border border-black/10 dark:border-white/10 shadow-sm bg-black/5 mt-1">
-                              <img 
-                                src={`${API_URL}${msg.file_url}`} 
-                                alt={msg.file_name} 
-                                className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition"
-                                onClick={() => window.open(`${API_URL}${msg.file_url}`, '_blank')}
-                              />
-                            </div>
+                            <img src={`${API_URL}${msg.file_url}`} alt={msg.file_name} className="rounded-xl max-h-[200px] object-cover" />
                           )}
-                          <div className="flex items-center gap-3 bg-black/10 dark:bg-white/10 p-2 rounded-xl">
+                          <div className="flex items-center gap-3 bg-black/10 p-2 rounded-xl">
                             <File size={24} className={isMe ? 'text-white' : 'text-blue-500'} />
-                            <div className="text-left min-w-0">
-                              <p className="text-xs font-bold truncate max-w-[150px]">{msg.file_name || 'Document'}</p>
-                              <p className="text-[9px] opacity-70">
-                                {msg.file_size ? `${Math.round(msg.file_size / 1024)} KB` : ''}
-                              </p>
-                            </div>
-                            <a 
-                              href={`${API_URL}${msg.file_url}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className={`p-1.5 rounded-lg text-xs font-bold underline ${isMe ? 'hover:bg-white/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                            >
-                              Download
-                            </a>
+                            <p className="text-xs font-bold truncate max-w-[150px]">{msg.file_name || 'Doc'}</p>
+                            <a href={`${API_URL}${msg.file_url}`} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg text-xs font-bold underline">Download</a>
                           </div>
                         </div>
                       )}
-
-                      {msg.message_type === 'meeting' && (
-                        <div className="flex flex-col gap-2 bg-black/10 dark:bg-white/10 p-3 rounded-xl border border-dashed border-white/40">
-                          <div className="flex items-center gap-2 text-xs font-bold">
-                            <Video size={16} />
-                            Conference Group Session
-                          </div>
-                          <button 
-                            onClick={() => msg.meeting_link && joinMeeting(msg.meeting_link)}
-                            className={`w-full py-2 text-xs font-bold rounded-lg transition ${
-                              isMe 
-                                ? 'bg-white text-blue-600 hover:bg-slate-50' 
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
-                            }`}
-                          >
-                            Join Session
-                          </button>
-                        </div>
-                      )}
-
+                      {msg.message_type === 'meeting' && <div className="flex flex-col gap-2 bg-black/10 p-3 rounded-xl border border-dashed border-white/40"><p className="text-xs font-bold flex items-center gap-2"><Phone size={14} /> {isMe ? 'You started a call' : 'Incoming call...'}</p></div>}
+                      {msg.message_type === 'call_end' && <p className="text-[10px] italic opacity-70">Call ended</p>}
                       <div className="flex items-center justify-end gap-1 mt-1 text-[9px] opacity-80">
-                        <span>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        {isMe && (
-                          <span title={msg.is_read ? "Seen" : "Delivered"}>
-                            {msg.is_read ? (
-                              <CheckCheck size={12} className="text-blue-200 dark:text-blue-100 font-bold" />
-                            ) : (
-                              <CheckCheck size={12} className="text-slate-300/80" />
-                            )}
-                          </span>
-                        )}
+                        <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {isMe && <span>{msg.is_read ? <CheckCheck size={12} className="text-blue-200" /> : <CheckCheck size={12} className="opacity-50" />}</span>}
                       </div>
                     </div>
                   </div>
                 );
               })}
+              
+              {/* Typing Indicator */}
+              {activeRoom?.members.some(m => m.id !== user?.id && typingUsers[m.id]) && (
+                <div className="flex justify-start animate-in slide-in-from-left-2 duration-300">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl rounded-bl-none p-3 px-4 shadow-sm border border-blue-50 flex items-center gap-2">
+                     <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                     </div>
+                     <span className="text-[10px] font-bold text-slate-500 uppercase">Someone is typing...</span>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Attachment preview */}
-            {file && (
-              <div className="p-2 px-4 bg-blue-50 dark:bg-slate-900 border-t border-blue-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
-                  <File size={16} /> {file.name}
-                </span>
-                <button onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1 rounded-full text-red-500 hover:bg-red-50">
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-
             {/* Input Form */}
             <form onSubmit={handleSendMessage} className="p-4 border-t border-blue-50 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3">
-              <input 
-                type="file" 
-                ref={fileInputRef}
-                className="hidden" 
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              <button 
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-2xl transition"
-                title="Share Document"
-              >
-                <Paperclip size={20} />
-              </button>
-
+              <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 text-muted-foreground hover:text-blue-600 rounded-2xl"><Paperclip size={20} /></button>
               <input 
                 type="text" 
-                placeholder="Type your encrypted message…" 
-                className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 rounded-2xl outline-none transition"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                disabled={sendMessageMutation.isPending}
+                placeholder="Type your message…" 
+                className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 text-sm border border-transparent focus:border-blue-500 rounded-2xl outline-none" 
+                value={newMessage} 
+                onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} 
               />
-
-              <button 
-                type="submit" 
-                disabled={sendMessageMutation.isPending || (!newMessage.trim() && !file)}
-                className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md disabled:opacity-50 transition"
-              >
-                <Send size={20} />
-              </button>
+              <button type="submit" disabled={sendMessageMutation.isPending || (!newMessage.trim() && !file)} className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md transition"><Send size={20} /></button>
             </form>
           </>
         ) : (
-          /* Empty State */
           <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-            <div className="p-4 bg-blue-50 dark:bg-slate-900 rounded-full text-blue-600">
-              <Shield size={40} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Secure Workspace Chat</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Exchange encrypted messages, share financial documents, and launch secure group video sessions with any colleague.
-              </p>
-            </div>
-          </div>
-        )}
-        {/* Outgoing Call Overlay */}
-        {outgoingCallUrl && (
-          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white animate-in fade-in">
-            <div className="relative flex items-center justify-center mb-8">
-              <div className="absolute w-32 h-32 bg-blue-500/20 rounded-full animate-ping" />
-              <div className="absolute w-40 h-40 bg-blue-500/10 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl border-4 border-white/10">
-                {activeRoom?.type === 'group' ? <Users size={32} /> : (activeRoom?.members.find(m => m.id !== user?.id)?.name || 'ME').slice(0, 2).toUpperCase()}
-              </div>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight mb-1">Calling...</h2>
-            <p className="text-sm text-slate-300 mb-12">Waiting for connection to secure session</p>
-            
-            <div className="flex gap-4">
-              <button 
-                onClick={() => {
-                  window.open(outgoingCallUrl, '_blank');
-                  setOutgoingCallUrl(null);
-                }}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition"
-              >
-                <Video size={18} /> Join Now
-              </button>
-              <button 
-                onClick={() => setOutgoingCallUrl(null)}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition"
-              >
-                <X size={18} /> Cancel
-              </button>
-            </div>
+            <div className="p-4 bg-blue-50 dark:bg-slate-900 rounded-full text-blue-600"><Shield size={40} /></div>
+            <div><h2 className="text-xl font-bold">Secure Workspace Chat</h2><p className="text-sm text-muted-foreground mt-1">Exchange encrypted messages and launch secure internal calls with any colleague.</p></div>
           </div>
         )}
 
-        {/* Incoming Call Overlay */}
+        {/* Overlay Modals (Calling) */}
+        {isCalling && (
+          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white">
+            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl animate-pulse">{(activeRoom?.members.find(m => m.id !== user?.id)?.name || 'U').slice(0, 2).toUpperCase()}</div>
+            <h2 className="text-xl font-bold mt-8">Calling...</h2>
+            <button onClick={endCall} className="mt-12 px-8 py-3 bg-red-600 font-bold rounded-2xl flex items-center gap-2"><X size={18} /> Cancel</button>
+          </div>
+        )}
+
         {incomingCall && (
-          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white animate-in fade-in">
-            <div className="relative flex items-center justify-center mb-8">
-              <div className="absolute w-32 h-32 bg-green-500/20 rounded-full animate-ping" />
-              <div className="absolute w-40 h-40 bg-green-500/10 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-              <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl border-4 border-white/10">
-                {incomingCall.senderName.slice(0, 2).toUpperCase()}
-              </div>
+          <div className="fixed inset-0 z-[1000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white">
+            <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center font-bold text-2xl shadow-2xl animate-bounce">{incomingCall.senderName.slice(0, 2).toUpperCase()}</div>
+            <h2 className="text-xl font-bold mt-8">Incoming Call</h2>
+            <p className="text-slate-300 mb-12">{incomingCall.senderName} is calling you</p>
+            <div className="flex gap-6"><button onClick={answerCall} className="px-8 py-4 bg-green-600 font-bold rounded-2xl flex items-center gap-2 shadow-xl"><Phone size={20} /> Answer</button><button onClick={declineCall} className="px-8 py-4 bg-red-600 font-bold rounded-2xl flex items-center gap-2 shadow-xl"><PhoneOff size={20} /> Decline</button></div>
+          </div>
+        )}
+
+        {activeCall && (
+          <div className="fixed inset-0 z-[2000] bg-black flex flex-col">
+            <div className="flex-1 relative flex items-center justify-center">
+               {remoteStream ? <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" /> : <div className="text-white animate-pulse">Connecting...</div>}
+               <div className="absolute bottom-24 right-6 w-32 h-48 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden">
+                  <video ref={localVideoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${isVideoOff ? 'hidden' : 'block'}`} />
+                  {isVideoOff && <div className="w-full h-full flex items-center justify-center bg-slate-900"><VideoOff className="text-slate-600" size={32} /></div>}
+               </div>
             </div>
-            <h2 className="text-xl font-bold tracking-tight mb-1">Incoming Call</h2>
-            <p className="text-sm text-slate-300 mb-12">{incomingCall.senderName} is inviting you to a secure video session</p>
-            
-            <div className="flex gap-6">
-              <button 
-                onClick={() => {
-                  window.open(incomingCall.link, '_blank');
-                  setIncomingCall(null);
-                  stopRingtone();
-                }}
-                className="px-8 py-4 bg-green-600 hover:bg-green-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
-              >
-                <Phone size={20} className="animate-pulse" /> Answer
-              </button>
-              <button 
-                onClick={() => {
-                  setDeclinedCalls([...declinedCalls, incomingCall.id]);
-                  setIncomingCall(null);
-                  stopRingtone();
-                }}
-                className="px-8 py-4 bg-red-600 hover:bg-red-700 font-bold text-sm rounded-2xl flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
-              >
-                <PhoneOff size={20} /> Decline
-              </button>
+            <div className="h-24 bg-slate-900/90 flex items-center justify-center gap-6">
+               <button onClick={toggleMute} className={`p-4 rounded-full ${isMuted ? 'bg-red-500' : 'bg-white/10 text-white'}`}>{isMuted ? <MicOff /> : <Mic />}</button>
+               <button onClick={endCall} className="p-5 bg-red-600 text-white rounded-full"><PhoneOff size={28} /></button>
+               <button onClick={toggleVideo} className={`p-4 rounded-full ${isVideoOff ? 'bg-red-500' : 'bg-white/10 text-white'}`}>{isVideoOff ? <VideoOff /> : <Video />}</button>
             </div>
           </div>
         )}
