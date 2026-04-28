@@ -507,6 +507,24 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* File Preview Bar */}
+            {file && (
+              <div className="px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between animate-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-3 truncate">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
+                    <File size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold truncate">{file.name}</p>
+                    <p className="text-[10px] text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                </div>
+                <button onClick={() => setFile(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400">
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+
             {/* Input Bar - Zoomed Out */}
             <div className="p-2 bg-[#f0f2f5] dark:bg-slate-800 flex items-center gap-1.5">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="p-1.5 text-slate-500 hover:text-[#00a884]"><Paperclip size={20} /></button>
@@ -527,7 +545,7 @@ export default function Chat() {
                   disabled={sendMessageMutation.isPending || (!newMessage.trim() && !file)} 
                   className="w-9 h-9 flex items-center justify-center bg-[#00a884] text-white rounded-full transition-all active:scale-90 disabled:opacity-50"
                 >
-                  <Send size={18} className="ml-0.5" />
+                  {sendMessageMutation.isPending ? <Circle size={14} className="animate-spin" /> : <Send size={18} className="ml-0.5" />}
                 </button>
               </form>
             </div>
