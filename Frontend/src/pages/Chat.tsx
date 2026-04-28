@@ -46,6 +46,10 @@ interface Room {
   last_message?: Message;
 }
 
+type ChatProfileView =
+  | { type: 'member'; member: Member }
+  | { type: 'group'; room: Room };
+
 const UserAvatar = ({ member, className = "w-10 h-10", onClick }: { member?: Partial<Member> | null, className?: string, onClick?: () => void }) => {
   const [error, setError] = useState(false);
   const initials = member?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
@@ -82,7 +86,7 @@ export default function Chat() {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
-  const [viewingProfile, setViewingProfile] = useState<Member | null>(null);
+  const [viewingProfile, setViewingProfile] = useState<ChatProfileView | null>(null);
   const [lastMessageId, setLastMessageId] = useState<number | null>(null);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [forwardSearch, setForwardSearch] = useState('');
@@ -183,6 +187,9 @@ export default function Chat() {
   });
 
   const activeRoom = rooms.find(r => r.id === activeRoomId);
+  const viewedMember = viewingProfile?.type === 'member' ? viewingProfile.member : null;
+  const viewedGroup = viewingProfile?.type === 'group' ? viewingProfile.room : null;
+  const availableGroupMembers = viewedGroup?.members.filter(member => member.is_online) ?? [];
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, message_type, file, meeting_link, targetRoomId }: { content: string; message_type: 'text' | 'document' | 'meeting' | 'call_end'; file?: File; meeting_link?: string; targetRoomId?: number }) => {
@@ -396,14 +403,24 @@ export default function Chat() {
                   <div className="flex items-center gap-2">
                     <button onClick={() => setActiveRoomId(null)} className="md:hidden p-1 text-slate-600"><ChevronLeft size={24} /></button>
                     <div className="relative cursor-pointer" onClick={() => {
-                      const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
-                      if (otherMember) setViewingProfile(otherMember);
+                      if (!activeRoom) return;
+                      if (activeRoom.type === 'group') {
+                        setViewingProfile({ type: 'group', room: activeRoom });
+                        return;
+                      }
+                      const otherMember = activeRoom.members.find(m => m.id !== user?.id);
+                      if (otherMember) setViewingProfile({ type: 'member', member: otherMember });
                     }}>
                       <UserAvatar member={activeRoom?.type === 'group' ? { name: activeRoom.name } : activeRoom?.members.find(m => m.id !== user?.id)} className="w-9 h-9 md:w-8 md:h-8" />
                     </div>
                     <div className="cursor-pointer overflow-hidden" onClick={() => {
-                      const otherMember = activeRoom?.members.find(m => m.id !== user?.id);
-                      if (otherMember) setViewingProfile(otherMember);
+                      if (!activeRoom) return;
+                      if (activeRoom.type === 'group') {
+                        setViewingProfile({ type: 'group', room: activeRoom });
+                        return;
+                      }
+                      const otherMember = activeRoom.members.find(m => m.id !== user?.id);
+                      if (otherMember) setViewingProfile({ type: 'member', member: otherMember });
                     }}>
                       <h3 className="text-[15px] md:text-[14px] font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {activeRoom?.type === 'group' ? activeRoom.name : activeRoom?.members.find(m => m.id !== user?.id)?.name}
@@ -657,7 +674,7 @@ export default function Chat() {
       {viewingProfile && (
         <div className="hidden lg:flex w-72 flex-col bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-300">
            <div className="h-[50px] px-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50 dark:bg-slate-800/50">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Contact Info</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{viewingProfile.type === 'group' ? 'Group Info' : 'Contact Info'}</span>
               <button onClick={() => setViewingProfile(null)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500">
                 <X size={16} />
               </button>
@@ -666,28 +683,65 @@ export default function Chat() {
            <div className="flex-1 overflow-y-auto custom-scrollbar">
               <div className="p-6 flex flex-col items-center text-center">
                  <div className="relative mb-4">
-                    <UserAvatar member={viewingProfile} className="w-32 h-32 border-4 border-white dark:border-slate-800 shadow-xl" />
-                    {viewingProfile.is_online && (
+                    <UserAvatar member={viewedGroup ? { name: viewedGroup.name } : viewedMember} className="w-32 h-32 border-4 border-white dark:border-slate-800 shadow-xl" />
+                    {viewedMember?.is_online && (
                       <div className="absolute bottom-2 right-2 w-5 h-5 bg-[#00a884] border-4 border-white dark:border-slate-900 rounded-full" />
                     )}
                  </div>
-                 <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{viewingProfile.name}</h3>
-                 <p className="text-[10px] font-bold text-[#00a884] uppercase tracking-[0.2em] mb-6">{viewingProfile.role}</p>
+                 <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{viewedGroup ? viewedGroup.name : viewedMember?.name}</h3>
+                 <p className="text-[10px] font-bold text-[#00a884] uppercase tracking-[0.2em] mb-6">
+                   {viewedGroup ? `${viewedGroup.members.length} Members` : viewedMember?.role}
+                 </p>
                  
                  <div className="w-full space-y-4">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
-                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
-                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{viewingProfile.email}</p>
-                    </div>
+                    {viewedGroup ? (
+                      <>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Available Users</p>
+                           <p className="text-xs font-bold text-[#00a884]">{availableGroupMembers.length} online now</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Group Members</p>
+                           <div className="space-y-3">
+                             {viewedGroup.members.map((member) => (
+                               <div key={member.id} className="flex items-center gap-3">
+                                 <div className="relative shrink-0">
+                                   <UserAvatar member={member} className="w-10 h-10" />
+                                   <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${member.is_online ? 'bg-[#00a884]' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                                 </div>
+                                 <div className="min-w-0 flex-1">
+                                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                                     {member.name} {member.id === user?.id ? '(You)' : ''}
+                                   </p>
+                                   <p className="text-[10px] uppercase tracking-widest text-slate-500 truncate">
+                                     {member.role}
+                                   </p>
+                                 </div>
+                                 <span className={`text-[9px] font-black uppercase tracking-widest ${member.is_online ? 'text-[#00a884]' : 'text-slate-400'}`}>
+                                   {member.is_online ? 'Available' : 'Away'}
+                                 </span>
+                               </div>
+                             ))}
+                           </div>
+                        </div>
+                      </>
+                    ) : viewedMember && (
+                      <>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
+                           <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{viewedMember.email}</p>
+                        </div>
 
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
-                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                       <p className={`text-xs font-bold ${viewingProfile.is_online ? 'text-[#00a884]' : 'text-slate-500'}`}>
-                          {viewingProfile.is_online ? 'Available' : 'Away'}
-                       </p>
-                    </div>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-left border border-slate-100 dark:border-slate-800">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                           <p className={`text-xs font-bold ${viewedMember.is_online ? 'text-[#00a884]' : 'text-slate-500'}`}>
+                              {viewedMember.is_online ? 'Available' : 'Away'}
+                           </p>
+                        </div>
+                      </>
+                    )}
                     
-                    {viewingProfile.id !== user?.id && (
+                    {viewedMember && viewedMember.id !== user?.id && (
                       <div className="grid grid-cols-2 gap-3 pt-2">
                         <button onClick={() => { setViewingProfile(null); initiateCall(true); }} className="flex flex-col items-center gap-2 p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all group">
                            <div className="p-2 bg-white dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform"><Phone size={16} /></div>
@@ -721,19 +775,51 @@ export default function Chat() {
           </div>
           <div className="flex-1 overflow-y-auto px-6 pb-6 text-center -mt-12 relative z-10">
              <div className="inline-block p-1 bg-white dark:bg-slate-900 rounded-full shadow-xl mb-4">
-                <UserAvatar member={viewingProfile} className="w-24 h-24" />
-             </div>
-             <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{viewingProfile.name}</h3>
-             <p className="text-[10px] font-bold text-[#00a884] uppercase tracking-[0.2em] mb-4">{viewingProfile.role}</p>
+                <UserAvatar member={viewedGroup ? { name: viewedGroup.name } : viewedMember} className="w-24 h-24" />
+              </div>
+             <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{viewedGroup ? viewedGroup.name : viewedMember?.name}</h3>
+             <p className="text-[10px] font-bold text-[#00a884] uppercase tracking-[0.2em] mb-4">
+               {viewedGroup ? `${viewedGroup.members.length} Members` : viewedMember?.role}
+             </p>
              
              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</span>
-                   <span className={`text-[10px] font-bold uppercase tracking-widest ${viewingProfile.is_online ? 'text-[#00a884]' : 'text-slate-400'}`}>
-                      {viewingProfile.is_online ? 'Online' : 'Offline'}
-                   </span>
-                </div>
-                {viewingProfile.id !== user?.id && (
+                {viewedGroup ? (
+                  <>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Users</span>
+                       <span className="text-[10px] font-bold uppercase tracking-widest text-[#00a884]">
+                          {availableGroupMembers.length} Online
+                       </span>
+                    </div>
+                    <div className="space-y-2">
+                      {viewedGroup.members.map((member) => (
+                        <div key={member.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-left">
+                          <div className="relative shrink-0">
+                            <UserAvatar member={member} className="w-10 h-10" />
+                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${member.is_online ? 'bg-[#00a884]' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-slate-800 dark:text-white truncate">
+                              {member.name} {member.id === user?.id ? '(You)' : ''}
+                            </p>
+                            <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500 truncate">{member.role}</p>
+                          </div>
+                          <span className={`text-[9px] font-bold uppercase tracking-widest ${member.is_online ? 'text-[#00a884]' : 'text-slate-400'}`}>
+                            {member.is_online ? 'Online' : 'Away'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : viewedMember && (
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</span>
+                     <span className={`text-[10px] font-bold uppercase tracking-widest ${viewedMember.is_online ? 'text-[#00a884]' : 'text-slate-400'}`}>
+                        {viewedMember.is_online ? 'Online' : 'Offline'}
+                     </span>
+                  </div>
+                )}
+                {viewedMember && viewedMember.id !== user?.id && (
                   <div className="flex gap-2">
                      <button onClick={() => { setViewingProfile(null); initiateCall(true); }} className="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95">Call</button>
                      <button onClick={() => { setViewingProfile(null); initiateCall(false); }} className="flex-1 py-3 bg-[#00a884] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-[#00a884]/20 hover:bg-[#008f6f] transition-all active:scale-95">Video</button>
