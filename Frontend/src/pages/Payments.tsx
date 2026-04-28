@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, Plus, Eye, FileText, CreditCard, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import { Search, Plus, Eye, FileText, CreditCard, CheckCircle, XCircle, Clock, DollarSign, Download } from 'lucide-react';
 
 type PaymentStatus = 'pending' | 'manager_approved' | 'accounts_processing' | 'paid' | 'rejected';
 
@@ -96,6 +96,14 @@ export default function Payments() {
   const canProcess = user?.role === 'accountant';
   const isAccountant = user?.role === 'accountant';
 
+  const handleExport = () => {
+    if (filtered.length === 0) { toast.error('No data to export'); return; }
+    import('@/lib/export-utils').then(({ exportToCSV }) => {
+      exportToCSV(filtered, 'payments');
+      toast.success('Payments exported as CSV!');
+    });
+  };
+
   return (
     <div className="pb-20 lg:pb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -104,6 +112,12 @@ export default function Payments() {
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 bg-muted text-muted-foreground font-semibold py-2 px-4 rounded-xl hover:bg-muted/80 transition-colors text-sm"
+          >
+            <Download size={16} /> Export CSV
+          </button>
           {canCreatePayment && (
             <Link 
               to="/payments/new" 

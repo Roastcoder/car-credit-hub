@@ -84,6 +84,22 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
       'created_at': 'Created At',
       'updated_at': 'Updated At'
     };
+  } else if (filename.includes('payments')) {
+    fieldMapping = {
+      'payment_id': 'Payment ID',
+      'loan_number': 'Loan Number',
+      'applicant_name': 'Applicant',
+      'payment_type': 'Payment Type',
+      'amount': 'Amount',
+      'beneficiary_name': 'Beneficiary Name',
+      'bank_name': 'Beneficiary Bank',
+      'ifsc_code': 'IFSC Code',
+      'account_number': 'Account Number',
+      'status': 'Status',
+      'remarks': 'Remarks',
+      'created_at': 'Created At',
+      'updated_at': 'Updated At'
+    };
   }
 
   const allKeys = fieldMapping ? Object.keys(fieldMapping) : Object.keys(data[0]);
