@@ -37,6 +37,27 @@ const DocumentUploadCard = ({
 }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFile = e.dataTransfer.files[0];
+      onChange(droppedFile);
+      e.dataTransfer.clearData();
+    }
+  };
 
   useEffect(() => {
     if (file) {
@@ -68,10 +89,16 @@ const DocumentUploadCard = ({
   };
 
   return (
-    <div className={cn(
-      "group relative bg-card border border-border rounded-xl p-3 transition-all hover:shadow-md",
-      isExpanded ? "col-span-full border-accent/40 bg-accent/5 shadow-lg" : "hover:border-accent/40"
-    )}>
+    <div 
+      className={cn(
+        "group relative bg-card border rounded-xl p-3 transition-all hover:shadow-md",
+        isExpanded ? "col-span-full border-accent/40 bg-accent/5 shadow-lg" : "border-border hover:border-accent/40",
+        isDragging && "border-accent border-dashed bg-accent/5 scale-[1.02]"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <h4 className="text-[10px] font-bold text-foreground/80 uppercase tracking-widest">{label}</h4>
@@ -107,8 +134,10 @@ const DocumentUploadCard = ({
             )
           ) : (
             <div className="flex flex-col items-center gap-2 py-6">
-              <Camera size={24} className="text-muted-foreground/40" />
-              <span className="text-[10px] font-medium text-muted-foreground/60 tracking-wider">NO DOCUMENT</span>
+              <Upload size={24} className={cn("transition-colors", isDragging ? "text-accent" : "text-muted-foreground/40")} />
+              <span className={cn("text-[10px] font-medium tracking-wider", isDragging ? "text-accent" : "text-muted-foreground/60")}>
+                {isDragging ? 'DROP TO UPLOAD' : 'DRAG OR CLICK TO UPLOAD'}
+              </span>
             </div>
           )}
 

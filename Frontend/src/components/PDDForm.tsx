@@ -64,7 +64,31 @@ const DocumentUploadCard = ({
 }) => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (disabled) return;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (disabled) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (disabled) return;
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      onChange([...files, ...droppedFiles]);
+      e.dataTransfer.clearData();
+    }
+  };
+
   const matchedDocs = existingDocs.filter(d => types.includes(d.document_type));
   const hasExisting = matchedDocs.length > 0;
 
@@ -89,10 +113,16 @@ const DocumentUploadCard = ({
   };
 
   return (
-    <div className={cn(
-      "group relative bg-card border border-border rounded-2xl p-4 transition-all hover:shadow-md",
-      isExpanded ? "col-span-full border-accent/40 bg-accent/5" : "hover:border-accent/40"
-    )}>
+    <div 
+      className={cn(
+        "group relative bg-card border rounded-2xl p-4 transition-all hover:shadow-md",
+        isExpanded ? "col-span-full border-accent/40 bg-accent/5" : "border-border hover:border-accent/40",
+        isDragging && "border-accent border-dashed bg-accent/5 scale-[1.02]"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
@@ -192,8 +222,8 @@ const DocumentUploadCard = ({
                 <div className="p-2 rounded-full bg-accent/10 text-accent mb-2 transition-transform group-hover:scale-110">
                   <Upload size={20} />
                 </div>
-                <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest group-hover:text-accent/60">
-                  {files.length > 0 ? 'Add Another File' : 'Choose New File'}
+                <span className={cn("text-[9px] font-black uppercase tracking-widest group-hover:text-accent/60", isDragging ? "text-accent" : "text-muted-foreground/50")}>
+                  {isDragging ? 'DROP TO UPLOAD' : (files.length > 0 ? 'DRAG OR CHOOSE ANOTHER FILE' : 'DRAG OR CHOOSE NEW FILE')}
                 </span>
                 <input 
                   type="file" 

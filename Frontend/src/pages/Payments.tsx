@@ -19,7 +19,7 @@ const PAYMENT_STATUSES = [
 const PaymentStatusBadge = ({ status }: { status: PaymentStatus }) => {
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === status);
   if (!statusConfig) return <span className="text-xs text-muted-foreground">Unknown</span>;
-  
+
   return (
     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
       {statusConfig.label}
@@ -40,7 +40,7 @@ export default function Payments() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payments?${params}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
       });
@@ -75,19 +75,19 @@ export default function Payments() {
   });
 
   const filtered = payments.filter((payment: any) => {
-    const matchSearch = !search || 
+    const matchSearch = !search ||
       payment.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
       payment.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
       payment.payment_id?.toLowerCase().includes(search.toLowerCase()) ||
       payment.beneficiary_name?.toLowerCase().includes(search.toLowerCase());
-    
+
     const matchStatus = statusFilter === 'all' || payment.status === statusFilter;
-    
+
     // Role-based filtering
     if (user?.role === 'accountant') {
       return matchSearch && matchStatus && ['manager_approved', 'accounts_processing', 'paid'].includes(payment.status);
     }
-    
+
     return matchSearch && matchStatus;
   });
 
@@ -112,15 +112,15 @@ export default function Payments() {
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} applications found</p>
         </div>
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 bg-muted text-muted-foreground font-semibold py-2 px-4 rounded-xl hover:bg-muted/80 transition-colors text-sm"
           >
             <Download size={16} /> Export CSV
           </button>
           {canCreatePayment && (
-            <Link 
-              to="/payments/new" 
+            <Link
+              to="/payments/new"
               className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold py-2 px-4 rounded-xl hover:opacity-90 transition-opacity text-sm"
             >
               <Plus size={16} /> New Payment Application
@@ -141,7 +141,7 @@ export default function Payments() {
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
           />
         </div>
-        
+
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as PaymentStatus | 'all')}
@@ -159,7 +159,7 @@ export default function Payments() {
         {PAYMENT_STATUSES.map(status => {
           const count = payments.filter((p: any) => p.status === status.value).length;
           const total = payments.filter((p: any) => p.status === status.value).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
-          
+
           return (
             <div key={status.value} className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center justify-between mb-2">
@@ -203,7 +203,7 @@ export default function Payments() {
                 </div>
                 <PaymentStatusBadge status={payment.status} />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">Amount</p>
@@ -280,8 +280,8 @@ export default function Payments() {
                 </thead>
                 <tbody>
                   {filtered.map((payment: any) => (
-                    <tr 
-                      key={payment.id} 
+                    <tr
+                      key={payment.id}
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => navigate(`/payments/${payment.id}`)}
                     >
@@ -325,19 +325,12 @@ export default function Payments() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => navigate(`/payments/${payment.id}`)}
-                            className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors text-blue-600 border-blue-100"
-                            title="Upload Documents"
-                          >
-                            <Upload size={14} />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/payments/${payment.id}`)}
                             className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
                             title="View Details"
                           >
                             <Eye size={14} />
                           </button>
-                          
+
                           {canApprove && payment.status === 'pending' && (
                             <>
                               <button
@@ -356,7 +349,7 @@ export default function Payments() {
                               </button>
                             </>
                           )}
-                          
+
                           {canProcess && payment.status === 'manager_approved' && (
                             <button
                               onClick={() => navigate(`/payments/${payment.id}`)}

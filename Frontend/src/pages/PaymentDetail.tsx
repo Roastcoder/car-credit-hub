@@ -61,6 +61,7 @@ interface PaymentApplication {
   financier_name?: string;
   loan_amount?: number | string;
   disbursement_amount?: number | string;
+  received_amount?: number | string;
   disbursement_date?: string;
   tenure_months?: number;
   emi_amount?: number | string;
@@ -149,16 +150,84 @@ export default function PaymentDetail() {
   });
 
   useEffect(() => {
-    if (payment?.ledger_entries?.length) {
-      setLedgerEntries(payment.ledger_entries);
-      setSavedLedgerCount(payment.ledger_entries.length);
+    let entries = payment?.ledger_entries || [];
+    const hasInitialCredit = entries.some((e: any) => 
+      e.narration?.includes('Initial Sanction') || 
+      e.narration?.includes('Received Amount')
+    );
+
+    const creditAmount = payment?.received_amount || payment?.disbursement_amount || payment?.loan_amount || 0;
+
+    if (!hasInitialCredit && creditAmount) {
+      const initialEntry = {
+        date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        credit: String(creditAmount),
+        debit: '0',
+        narration: 'Initial Sanction (Received Amount)',
+        isNew: true
+      };
+      entries = [initialEntry, ...entries];
     }
-    // Show all ledger entries for the loan (from all payment applications)
-    if (payment?.all_loan_ledger_entries?.length) {
-      setAllLoanLedgerEntries(payment.all_loan_ledger_entries);
-    } else if (payment?.ledger_entries?.length) {
-      // fallback: at minimum show current app's entries
-      setAllLoanLedgerEntries(payment.ledger_entries);
+
+    const hasMeharPF = entries.some((e: any) => 
+      e.narration?.includes('Mehar PF') || 
+      e.narration?.includes('Processing Fee')
+    );
+
+    if (!hasMeharPF && payment?.mehar_deduction && Number(payment.mehar_deduction) > 0) {
+      const pfEntry = {
+        date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        credit: '0',
+        debit: String(payment.mehar_deduction),
+        narration: 'Mehar PF (Processing Fee)',
+        isNew: true
+      };
+      entries = [...entries, pfEntry];
+    }
+
+    if (entries.length) {
+      setLedgerEntries(entries);
+      setSavedLedgerCount(entries.length);
+    }
+
+    // Show all ledger entries for the loan
+    let allEntries = payment?.all_loan_ledger_entries || [];
+    const hasInitialCreditAll = allEntries.some((e: any) => 
+      e.narration?.includes('Initial Sanction') || 
+      e.narration?.includes('Received Amount')
+    );
+
+    if (!hasInitialCreditAll && creditAmount) {
+      const initialEntry = {
+        date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        credit: String(creditAmount),
+        debit: '0',
+        narration: 'Initial Sanction (Received Amount)',
+        isNew: true
+      };
+      allEntries = [initialEntry, ...allEntries];
+    }
+
+    const hasMeharPFAll = allEntries.some((e: any) => 
+      e.narration?.includes('Mehar PF') || 
+      e.narration?.includes('Processing Fee')
+    );
+
+    if (!hasMeharPFAll && payment?.mehar_deduction && Number(payment.mehar_deduction) > 0) {
+      const pfEntry = {
+        date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        credit: '0',
+        debit: String(payment.mehar_deduction),
+        narration: 'Mehar PF (Processing Fee)',
+        isNew: true
+      };
+      allEntries = [...allEntries, pfEntry];
+    }
+
+    if (allEntries.length) {
+      setAllLoanLedgerEntries(allEntries);
+    } else if (entries.length) {
+      setAllLoanLedgerEntries(entries);
     }
   }, [payment]);
 
@@ -1043,26 +1112,26 @@ export default function PaymentDetail() {
                                   : <span className="text-xs">{row.date}</span>}
                               </td>
                               <td className="py-1 pr-2">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
                                   ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(ledgerIdx, 'credit', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1 pr-2">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
                                   ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(ledgerIdx, 'debit', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction')
+                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
                                   ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(ledgerIdx, 'narration', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
                                   : <span className="text-xs">{row.narration}</span>}
                               </td>
                               {canEditLedger && (
                                 <td className="py-1 pl-1">
-                                  {isFromCurrentApp && !row.narration?.includes('Initial Sanction') && (
+                                  {isFromCurrentApp && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF') && (
                                     <button type="button" onClick={() => removeLedgerRow(ledgerIdx)} className="text-red-400 hover:text-red-600" title="Remove row">
                                       <XCircle size={14} />
                                     </button>
