@@ -18,7 +18,6 @@ interface VehicleDetailsCardProps {
     engine_number?: string;
     vehicle_class?: string;
     status?: string;
-    // New fields for completeness
     vertical?: string;
     scheme?: string;
     on_road_price?: string | number;
@@ -71,107 +70,120 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
   ].filter(f => f.value && f.value !== '—' && f.value !== 'N/A');
 
   return (
-    <div className={cn("bg-gradient-to-br from-card to-muted/30 border border-border rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 group/card", className)}>
-      <div className="flex flex-col lg:flex-row">
-        {/* Visual Section */}
-        <div className="w-full lg:w-2/5 p-6 relative bg-muted/20">
-          <div className="absolute top-8 left-8 z-10">
+    <div className={cn("bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 group/card", className)}>
+      <div className="flex flex-col">
+        {/* Top Section: Half Image */}
+        <div className="relative h-64 sm:h-80 overflow-hidden bg-muted/20">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+          
+          <div className="absolute top-6 left-6 z-20">
             <span className={cn(
-              "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border backdrop-blur-md",
+              "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xl border backdrop-blur-xl",
               status?.toLowerCase() === 'active' 
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                : "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+                : "bg-orange-500/20 text-orange-400 border-orange-500/30"
             )}>
-              {status || 'Verified'}
+              {status || 'Verified Record'}
             </span>
+          </div>
+
+          <div className="absolute bottom-6 left-8 z-20">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/20">
+                <UserIcon size={12} className="text-white" />
+              </div>
+              <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em]">
+                {owner_name || 'System Records'}
+              </span>
+            </div>
+            <h2 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">
+              {make} <span className="text-white/60">{model}</span>
+            </h2>
+            <p className="text-xs font-bold text-white/50 uppercase tracking-[0.3em] mt-2">
+              {variant || 'Standard Configuration'}
+            </p>
           </div>
           
           <VehicleImage 
             make={make} 
             model={model} 
             variant={variant} 
-            className="aspect-[4/3] w-full shadow-2xl rounded-2xl ring-1 ring-border/50 group-hover/card:scale-[1.02] transition-transform duration-700"
+            className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-1000 ease-out"
           />
         </div>
 
-        {/* Info Section */}
-        <div className="flex-1 p-8 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-accent/10 border border-accent/20">
-                  <UserIcon size={14} className="text-accent" />
+        {/* Bottom Section: Info Grid */}
+        <div className="p-8 sm:p-10">
+          {/* Main Info Strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10 pb-8 border-b border-border/50">
+            {mainFields.map((field, idx) => (
+              <div key={idx} className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-muted-foreground/50">
+                  {field.icon}
+                  <span className="text-[9px] font-black uppercase tracking-[0.15em] leading-none">{field.label}</span>
                 </div>
-                <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">
-                  {owner_name || 'System Records'}
-                </span>
+                <p className="text-base font-bold text-foreground uppercase tracking-tight">
+                  {field.value || 'N/A'}
+                </p>
               </div>
-            </div>
-            
-            <h2 className="text-3xl font-black text-foreground uppercase tracking-tight leading-none mb-1 group-hover/card:text-accent transition-colors">
-              {make} <span className="opacity-70">{model}</span>
-            </h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-60">
-              {variant || 'Standard Variant'}
-            </p>
+            ))}
+          </div>
 
-            {/* Primary Grid */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-6 mt-8">
-              {mainFields.map((field, idx) => (
-                <div key={idx} className="flex flex-col gap-1.5 group/item">
-                  <div className="flex items-center gap-2 text-muted-foreground/50 transition-colors group-hover/item:text-foreground/70">
-                    {field.icon}
-                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">{field.label}</span>
-                  </div>
-                  <p className="text-sm font-bold text-foreground uppercase tracking-tight">
-                    {field.value || 'N/A'}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Secondary Horizontal Strip */}
-            {secondaryFields.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 py-4 border-y border-border/40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Secondary Info */}
+            <div className="space-y-6">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-4">Loan & Vehicle Parameters</h3>
+              <div className="grid grid-cols-2 gap-x-10 gap-y-6">
                 {secondaryFields.map((field, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-md bg-muted/50">{field.icon}</div>
+                  <div key={idx} className="flex items-center gap-3 group/item">
+                    <div className="p-2 rounded-xl bg-muted/50 group-hover/item:bg-accent/10 transition-colors">
+                      {field.icon}
+                    </div>
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-0.5">{field.label}</span>
-                      <span className="text-xs font-bold text-foreground uppercase">{field.value}</span>
+                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1">{field.label}</span>
+                      <span className="text-sm font-bold text-foreground uppercase">{field.value}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+
+            {/* Technical Identifiers */}
+            <div className="space-y-6">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-4">Technical Identifiers</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {technicalFields.map((field, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl border border-border/30 hover:border-accent/30 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="text-muted-foreground/40">{field.icon}</div>
+                      <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">{field.label}</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">{field.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Technical Grid - Compact */}
-          {technicalFields.length > 0 && (
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {technicalFields.map((field, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-muted/30 p-2.5 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors">
-                  <div className="text-muted-foreground/40">{field.icon}</div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1">{field.label}</span>
-                    <span className="text-[10px] font-mono font-bold text-foreground truncate uppercase">{field.value}</span>
+          {/* Footer Verification */}
+          <div className="mt-12 pt-8 border-t border-border/40 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-card bg-emerald-500/10 flex items-center justify-center">
+                    <Shield size={10} className="text-emerald-500" />
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                Identity & Record Verified via Surepass API
+              </span>
             </div>
-          )}
-
-          <div className="mt-8 flex items-center gap-2">
-            <div className="flex -space-x-1.5">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="w-5 h-5 rounded-full border-2 border-card bg-accent/20 flex items-center justify-center">
-                  <Shield size={8} className="text-accent" />
-                </div>
-              ))}
+            
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-accent/5 border border-accent/10">
+              <Activity size={10} className="text-accent" />
+              <span className="text-[8px] font-black text-accent uppercase tracking-tighter">System Health: Optimal</span>
             </div>
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-1">
-              Data Verified via Surepass API
-            </span>
           </div>
         </div>
       </div>
