@@ -90,3 +90,16 @@ export function generateLoanNumber(vertical: string, lastLoanNumber?: string): s
   // Pad with zeros to maintain 4-digit format
   return `${prefix}${nextNumber.toString().padStart(4, '0')}`;
 }
+
+export function formatDate(value: unknown): string {
+  if (!value) return '—';
+  
+  const date = new Date(value as string | number | Date);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).replace(/\//g, '/');
+}

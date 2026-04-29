@@ -1,7 +1,7 @@
 import React from 'react';
 import VehicleImage from './VehicleImage';
 import { IndianRupee, Fuel, Calendar, Shield, Hash, MapPin } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 
 interface VehicleDetailsCardProps {
   vehicleData: {
@@ -34,7 +34,7 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
     { label: 'Registration', value: registration_number, icon: <Hash size={14} /> },
     { label: 'Fuel Type', value: fuel_type, icon: <Fuel size={14} /> },
     { label: 'Mfg Year', value: manufacturing_year, icon: <Calendar size={14} /> },
-    { label: 'Insurance Expiry', value: insurance_expiry, icon: <Shield size={14} /> },
+    { label: 'Insurance Expiry', value: formatDate(insurance_expiry), icon: <Shield size={14} /> },
   ];
 
   return (
