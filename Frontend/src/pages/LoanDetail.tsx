@@ -267,24 +267,19 @@ export default function LoanDetail() {
     setDocToDelete(null);
   };
 
-  const handleReuploadDoc = async (e: React.ChangeEvent<HTMLInputElement>, docId: string, docType: string) => {
+  const handleAddDoc = async (e: React.ChangeEvent<HTMLInputElement>, docId: string | null, docType: string) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    // Set loading
-    setUploadingDocId(docId);
+    // Set loading (if docId is provided)
+    if (docId) setUploadingDocId(docId);
 
     try {
-      // 1. First delete the existing document
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}/documents/${docId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-
-      // 2. Upload the new document
+      // 1. Upload the new document (WITHOUT deleting the old one)
       await uploadDocument.mutateAsync({ file, documentType: docType });
+      toast.success(`New ${docType.replace(/_/g, ' ')} added successfully`);
     } catch (error) {
-      toast.error('Failed to re-upload document');
+      toast.error('Failed to add document');
     } finally {
       setUploadingDocId(null);
       // Reset input value
@@ -1131,7 +1126,7 @@ export default function LoanDetail() {
                                   key={doc.id}
                                   doc={doc}
                                   onDelete={handleDeleteDoc}
-                                  onReupload={handleReuploadDoc}
+                                  onReupload={handleAddDoc}
                                   canDelete={permissions.canDelete}
                                   isUploading={uploadingDocId === doc.id}
                                   isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
@@ -1161,7 +1156,7 @@ export default function LoanDetail() {
                                   key={doc.id}
                                   doc={doc}
                                   onDelete={handleDeleteDoc}
-                                  onReupload={handleReuploadDoc}
+                                  onReupload={handleAddDoc}
                                   canDelete={permissions.canDelete}
                                   isUploading={uploadingDocId === doc.id}
                                   isAdmin={['admin', 'super_admin', 'manager'].includes(user?.role || '')}
@@ -1170,6 +1165,42 @@ export default function LoanDetail() {
                             </div>
                           </div>
                         )}
+
+                        {/* Add New Document Types Section */}
+                        <div className="pt-6 border-t border-border/50">
+                          <div className="flex items-center gap-2 mb-4">
+                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-[10px] font-black text-blue-600 border border-blue-500/20 uppercase tracking-widest">
+                              Upload More Documents
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {DOC_TYPES.map((type) => {
+                              const hasDoc = latestDocs.some(d => d.document_type === type.value);
+                              return (
+                                <div key={type.value} className="relative group">
+                                  <label className="flex items-center justify-between p-3 rounded-xl border border-dashed border-border bg-muted/20 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                                        <Plus size={16} />
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] font-black uppercase text-foreground/80">{type.label}</p>
+                                        <p className="text-[9px] text-muted-foreground uppercase">{hasDoc ? 'Add Another' : 'Upload File'}</p>
+                                      </div>
+                                    </div>
+                                    <Upload size={14} className="text-muted-foreground group-hover:text-accent transition-colors" />
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      onChange={(e) => handleAddDoc(e, null, type.value)}
+                                      accept="image/*,.pdf"
+                                    />
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </Section>
                   );
