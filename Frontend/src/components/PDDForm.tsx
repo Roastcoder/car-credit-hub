@@ -47,7 +47,7 @@ const inputClass = "w-full px-4 py-2.5 bg-background border border-border rounde
 
 const DocumentUploadCard = ({
   label,
-  file,
+  files,
   existingDocs,
   types,
   onChange,
@@ -55,28 +55,28 @@ const DocumentUploadCard = ({
   disabled
 }: {
   label: string;
-  file: File | null;
+  files: File[];
   existingDocs: any[];
   types: string[];
-  onChange: (file: File | null) => void;
+  onChange: (files: File[]) => void;
   onClear: () => void;
   disabled?: boolean;
 }) => {
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
   
   const matchedDocs = existingDocs.filter(d => types.includes(d.document_type));
   const hasExisting = matchedDocs.length > 0;
 
   useEffect(() => {
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview(url);
-      return () => URL.revokeObjectURL(url);
+    if (files && files.length > 0) {
+      const urls = files.map(f => URL.createObjectURL(f));
+      setPreviews(urls);
+      return () => urls.forEach(url => URL.revokeObjectURL(url));
     } else {
-      setPreview(null);
+      setPreviews([]);
     }
-  }, [file]);
+  }, [files]);
 
   const isImage = (url: string | null) => {
     if (!url) return false;
@@ -105,9 +105,9 @@ const DocumentUploadCard = ({
                 {matchedDocs.length} SAVED
               </span>
             )}
-            {file && (
+            {files && files.length > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[9px] font-black text-green-600 border border-green-500/20 uppercase tracking-tighter">
-                NEW
+                {files.length} NEW
               </span>
             )}
           </div>
@@ -153,44 +153,59 @@ const DocumentUploadCard = ({
             <p className="text-[9px] font-black text-muted-foreground uppercase ml-1 opacity-60 flex items-center gap-1">
               <Plus size={10} /> {hasExisting ? 'Add New Document' : 'Upload Document'}
             </p>
-            {file ? (
-              <div 
-                className="relative aspect-video rounded-xl overflow-hidden bg-green-500/5 border-2 border-dashed border-green-500/30 flex items-center justify-center group/new"
-              >
-                {isImage(preview) ? (
-                  <img src={preview!} alt="New" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <FileText size={24} className="text-green-500/40" />
-                    <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">New File Ready</span>
+            {files && files.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {files.map((file, idx) => (
+                  <div 
+                    key={idx}
+                    className="relative aspect-video rounded-xl overflow-hidden bg-green-500/5 border-2 border-dashed border-green-500/30 flex items-center justify-center group/new"
+                  >
+                    {isImage(previews[idx]) ? (
+                      <img src={previews[idx]!} alt="New" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-4">
+                        <FileText size={24} className="text-green-500/40" />
+                        <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">New File</span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        const newFiles = [...files];
+                        newFiles.splice(idx, 1);
+                        onChange(newFiles);
+                      }} 
+                      className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all opacity-0 group-hover/new:opacity-100"
+                    >
+                      <X size={12} />
+                    </button>
+                    <div className="absolute bottom-2 left-2 pointer-events-none">
+                      <span className="text-[8px] font-black text-white uppercase bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">Pending</span>
+                    </div>
                   </div>
-                )}
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); onClear(); }} className="p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all">
-                    <X size={12} />
-                  </button>
-                </div>
-                <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-black text-white uppercase bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">Pending Save</span>
-                </div>
+                ))}
               </div>
-            ) : (
-              !disabled && (
-                <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer group-hover:shadow-inner">
-                  <div className="p-2 rounded-full bg-accent/10 text-accent mb-2 transition-transform group-hover:scale-110">
-                    <Upload size={20} />
-                  </div>
-                  <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest group-hover:text-accent/60">
-                    Choose New File
-                  </span>
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    onChange={(e) => onChange(e.target.files?.[0] || null)}
-                    accept="image/*,application/pdf"
-                  />
-                </label>
-              )
+            )}
+            
+            {!disabled && (
+              <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer group-hover:shadow-inner mt-2">
+                <div className="p-2 rounded-full bg-accent/10 text-accent mb-2 transition-transform group-hover:scale-110">
+                  <Upload size={20} />
+                </div>
+                <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest group-hover:text-accent/60">
+                  {files.length > 0 ? 'Add Another File' : 'Choose New File'}
+                </span>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const newFile = e.target.files?.[0];
+                    if (newFile) onChange([...files, newFile]);
+                  }}
+                  accept="image/*,application/pdf"
+                  multiple
+                />
+              </label>
             )}
           </div>
         </div>
@@ -267,13 +282,13 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     pdd_remarks: loan.pdd_remarks || '',
   });
 
-  const [files, setFiles] = useState<{ [key: string]: File | null }>({
-    fc: null,
-    noc: null,
-    rc_front: null,
-    rc_back: null,
-    dm: null,
-    insurance: null
+  const [files, setFiles] = useState<{ [key: string]: File[] }>({
+    fc: [],
+    noc: [],
+    rc_front: [],
+    rc_back: [],
+    dm: [],
+    insurance: []
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -296,14 +311,15 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      if (Object.values(files).some(f => !!f)) {
+      const allFiles = Object.values(files).flat();
+      if (allFiles.length > 0) {
         const docFormData = new FormData();
-        if (files.fc) docFormData.append('foreclose_document', files.fc);
-        if (files.noc) docFormData.append('noc', files.noc);
-        if (files.rc_front) docFormData.append('rc_front', files.rc_front);
-        if (files.rc_back) docFormData.append('rc_back', files.rc_back);
-        if (files.dm) docFormData.append('dm_document', files.dm);
-        if (files.insurance) docFormData.append('insurance', files.insurance);
+        files.fc.forEach(f => docFormData.append('foreclose_document', f));
+        files.noc.forEach(f => docFormData.append('noc', f));
+        files.rc_front.forEach(f => docFormData.append('rc_front', f));
+        files.rc_back.forEach(f => docFormData.append('rc_back', f));
+        files.dm.forEach(f => docFormData.append('dm_document', f));
+        files.insurance.forEach(f => docFormData.append('insurance', f));
         
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${loan.loan_number || loan.id}/documents/multiple`, {
           method: 'POST',
@@ -563,58 +579,58 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           <FormSection title="Document Verification" icon={<Files size={18} />} index={6}>
             <DocumentUploadCard 
               label="RC Front"
-              file={files.rc_front}
+              files={files.rc_front}
               existingDocs={existingDocuments}
               types={['rc_front', 'rc_document']}
               onChange={(f) => setFiles({...files, rc_front: f})}
-              onClear={() => setFiles({...files, rc_front: null})}
+              onClear={() => setFiles({...files, rc_front: []})}
               disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="RC Back"
-              file={files.rc_back}
+              files={files.rc_back}
               existingDocs={existingDocuments}
               types={['rc_back']}
               onChange={(f) => setFiles({...files, rc_back: f})}
-              onClear={() => setFiles({...files, rc_back: null})}
+              onClear={() => setFiles({...files, rc_back: []})}
               disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="Insurance Policy"
-              file={files.insurance}
+              files={files.insurance}
               existingDocs={existingDocuments}
               types={['insurance', 'insurance_document']}
               onChange={(f) => setFiles({...files, insurance: f})}
-              onClear={() => setFiles({...files, insurance: null})}
+              onClear={() => setFiles({...files, insurance: []})}
               disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="NOC Document"
-              file={files.noc}
+              files={files.noc}
               existingDocs={existingDocuments}
               types={['noc']}
               onChange={(f) => setFiles({...files, noc: f})}
-              onClear={() => setFiles({...files, noc: null})}
+              onClear={() => setFiles({...files, noc: []})}
               disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="DM Document"
-              file={files.dm}
+              files={files.dm}
               existingDocs={existingDocuments}
               types={['dm_document']}
               onChange={(f) => setFiles({...files, dm: f})}
-              onClear={() => setFiles({...files, dm: null})}
+              onClear={() => setFiles({...files, dm: []})}
               disabled={!canEdit}
             />
             {/* Always show Foreclose if data exists, or if isBT */}
             {(isBT || loan.fc_receipt || formData.fc_receipt) && (
               <DocumentUploadCard 
                 label="Foreclose Document"
-                file={files.fc}
+                files={files.fc}
                 existingDocs={existingDocuments}
                 types={['foreclose_document', 'fitness_document']}
                 onChange={(f) => setFiles({...files, fc: f})}
-                onClear={() => setFiles({...files, fc: null})}
+                onClear={() => setFiles({...files, fc: []})}
                 disabled={!canEdit}
               />
             )}

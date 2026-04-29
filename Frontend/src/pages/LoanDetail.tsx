@@ -1086,7 +1086,12 @@ export default function LoanDetail() {
                 {/* Documents Section */}
                 {(() => {
                   const categorizedDocs = documents.reduce((acc: any, doc: any) => {
-                    const type = doc.document_type;
+                    // Normalize types for grouping
+                    let type = doc.document_type || 'other';
+                    if (['rc_front', 'rc_document'].includes(type)) type = 'rc_front';
+                    if (['insurance', 'insurance_document'].includes(type)) type = 'insurance';
+                    if (['foreclose_document', 'fitness_document'].includes(type)) type = 'foreclose_document';
+                    
                     if (!acc[type] || new Date(doc.created_at) > new Date(acc[type].created_at)) {
                       if (acc[type]) {
                         acc.history = acc.history || [];
