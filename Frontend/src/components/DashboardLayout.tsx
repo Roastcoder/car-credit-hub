@@ -160,6 +160,7 @@ const EMPLOYEE_NAV_ITEMS: NavItem[] = [
     roles: ['employee'],
     children: [
       { title: 'My Leads', path: '/leads-list', icon: FileText, shortLabel: 'LL' },
+      { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck, shortLabel: 'BR' },
       { title: 'Create Lead', path: '/add-lead', icon: Plus, shortLabel: 'CL' },
     ],
   },
