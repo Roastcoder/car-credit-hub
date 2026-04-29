@@ -195,6 +195,12 @@ export default function PaymentApplicationForm() {
   const remainingLoanAmount = Math.max(0, (Number(formData.disbursement_amount) || 0) - totalReleased);
   const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
   const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode && user?.role !== 'super_admin';
+  const normalizePaymentName = (name?: string) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const applicantPaymentName = normalizePaymentName(formData.applicant_name);
+  const beneficiaryPaymentName = normalizePaymentName(formData.payment_in_favour_name);
+  const isBeneficiaryPayment = !!applicantPaymentName && !!beneficiaryPaymentName && applicantPaymentName !== beneficiaryPaymentName;
+  const needsPaymentVerification = isBeneficiaryPayment && formData.status !== 'sent_back' && user?.role !== 'super_admin';
+  const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
     try {
@@ -563,9 +569,9 @@ export default function PaymentApplicationForm() {
 
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
-      // Check Aadhaar verification for submitted status
-      if (status === 'submitted' && aadhaarVerificationStatus !== 'verified' && formData.status !== 'sent_back' && user?.role !== 'super_admin') {
-        toast.error('Please complete Aadhaar verification before submitting');
+      // Only third-party/beneficiary payments need Aadhaar + OTP verification.
+      if (status === 'submitted' && !isPaymentVerificationDone) {
+        toast.error('Please complete beneficiary verification before submitting');
         return;
       }
 
@@ -581,10 +587,8 @@ export default function PaymentApplicationForm() {
         today_release_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.today_release_amount,
         payment_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.payment_amount,
         status,
-        ...(formData.status !== 'sent_back' ? {
-          aadhaar_number: aadhaarNumber,
-          aadhaar_verified: aadhaarVerificationStatus === 'verified'
-        } : {})
+        aadhaar_number: needsPaymentVerification ? aadhaarNumber : null,
+        aadhaar_verified: needsPaymentVerification && aadhaarVerificationStatus === 'verified'
       };
 
       if (id) {
@@ -722,7 +726,7 @@ export default function PaymentApplicationForm() {
               { label: 'Confirm amount', done: Number(formData.today_release_amount || formData.payment_amount) > 0 },
               { label: 'Bank details', done: !!formData.payment_in_favour_name && !!formData.bank_name && !!formData.account_number && !!formData.ifsc_code },
               { label: 'Documents', done: bankingDocs.length > 0 || (formData.banking_documents || []).length > 0 },
-              { label: 'Verify & submit', done: aadhaarVerificationStatus === 'verified' || formData.status === 'sent_back' || isReadOnly },
+              { label: 'Verify & submit', done: isPaymentVerificationDone || isReadOnly },
             ].map((step, index) => (
               <div key={step.label} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-gray-950/50">
                 <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step.done ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 dark:bg-gray-900 dark:border-gray-700'}`}>
@@ -968,6 +972,17 @@ export default function PaymentApplicationForm() {
             <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" disabled={isReadOnly} />
             <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
+          {!isReadOnly && formData.applicant_name && formData.payment_in_favour_name && (
+            <div className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
+              needsPaymentVerification
+                ? 'border-purple-200 bg-purple-50 text-purple-800 dark:border-purple-900/40 dark:bg-purple-900/10 dark:text-purple-200'
+                : 'border-green-200 bg-green-50 text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-200'
+            }`}>
+              {needsPaymentVerification
+                ? 'Beneficiary is different from the customer. Aadhaar and OTP verification is required.'
+                : 'Payment is going to the customer. Aadhaar and OTP verification is not required.'}
+            </div>
+          )}
         </section>
 
         {/* 4. Payment Details (Docs & Remarks) */}
@@ -1049,7 +1064,7 @@ export default function PaymentApplicationForm() {
         </section>
 
         {/* 5. Aadhaar Verification */}
-        {!isReadOnly && formData.status !== 'sent_back' && (
+        {!isReadOnly && needsPaymentVerification && (
           <section className="glass-card p-6 rounded-xl border border-purple-200 dark:border-purple-800/50 shadow-sm bg-purple-50/30 dark:bg-purple-900/5">
             <div className="flex items-center gap-3 mb-6 border-b border-purple-100 dark:border-purple-800 pb-4">
               <CheckCircle className="h-5 w-5 text-purple-600" />
