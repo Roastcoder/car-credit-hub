@@ -225,6 +225,18 @@ export default function PaymentDetail() {
     }
   });
 
+  const updateRemarksMutation = useMutation({
+    mutationFn: (remarks: string) =>
+      paymentApplicationAPI.updateRemarks(Number(id), remarks),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment', id] });
+      toast.success('Remarks updated');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update remarks');
+    }
+  });
+
   // Add UTR number
   const addUTRNumber = useMutation({
     mutationFn: async ({ utr, amount, narration, voucher_date }: { utr: string; amount: number; narration?: string; voucher_date?: string }) => {
@@ -1168,6 +1180,10 @@ export default function PaymentDetail() {
                   <button onClick={() => managerAction.mutate({ action: 'approve' })} disabled={managerAction.isPending}
                     className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold disabled:opacity-50 transition-colors">
                     Approve
+                  </button>
+                  <button onClick={() => { const r = prompt('Add remarks?', payment.remarks || ''); if (r !== null) updateRemarksMutation.mutate(r); }} disabled={updateRemarksMutation.isPending}
+                    className="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-semibold disabled:opacity-50 transition-colors">
+                    {updateRemarksMutation.isPending ? 'Updating...' : 'Add Remarks'}
                   </button>
                   <button onClick={() => { const r = prompt('Rejection reason?'); if (r) managerAction.mutate({ action: 'reject', remarks: r }); }} disabled={managerAction.isPending}
                     className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold disabled:opacity-50 transition-colors">

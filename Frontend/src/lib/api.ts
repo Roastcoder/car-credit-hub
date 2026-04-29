@@ -286,6 +286,8 @@ export const paymentApplicationAPI = {
   update: (id: number, data: any) => api.put(`/payments/applications/${id}`, data),
   managerAction: (id: number, action: string, remarks?: string) => 
     api.post(`/payments/applications/${id}/manager-action`, { action, remarks }),
+  updateRemarks: (id: number, remarks: string) =>
+    api.post(`/payments/applications/${id}/remarks`, { remarks }),
   addUTR: (id: number, utr_number: string, extra?: { amount: number; narration?: string; voucher_date?: string }) => 
     api.post(`/payments/applications/${id}/utr`, { utr_number, ...extra }),
   saveLedger: (id: number, ledger_entries: any[]) =>
