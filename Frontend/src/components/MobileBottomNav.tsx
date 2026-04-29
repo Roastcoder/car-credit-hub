@@ -24,13 +24,13 @@ interface NavItem {
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
-  { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant'] },
-  { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'bank', 'broker', 'employee'] },
-  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['pdd_manager'] },
+  { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant'] },
+  { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee'] },
+  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'] },
   { 
     label: 'Leads', 
     icon: <UserPlus size={20} />, 
-    roles: ['super_admin', 'admin', 'manager', 'broker', 'employee'],
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'broker', 'employee'],
     children: [
       { label: 'Leads List', path: '/leads-list', icon: <FileText size={18} /> },
       { label: 'Create Lead', path: '/add-lead', icon: <Plus size={18} /> },
@@ -40,7 +40,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Loans', 
     icon: <FileText size={20} />, 
-    roles: ['super_admin', 'admin', 'manager', 'bank', 'broker', 'employee'],
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'],
     children: [
       { label: 'Loans List', path: '/loans', icon: <FileText size={18} /> },
       { label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> },
@@ -50,13 +50,13 @@ const ALL_NAV_ITEMS: NavItem[] = [
   {
     label: 'Apps',
     icon: <Activity size={20} />,
-    roles: ['super_admin', 'admin', 'manager', 'employee', 'accountant'],
+    roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee', 'accountant'],
     children: [
       { label: 'Application List', path: '/payments', icon: <FileText size={18} /> },
       { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
     ]
   },
-  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm'] },
+  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager'] },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={20} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={20} />, roles: ['super_admin', 'admin'] },
@@ -65,10 +65,10 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Send Notification', path: '/broadcast', icon: <Send size={20} />, roles: ['super_admin', 'admin'] },
   { label: 'Credit Reports', path: '/credit-reports', icon: <ShieldCheck size={20} />, roles: ['super_admin'] },
   { label: 'Permissions', path: '/permissions', icon: <Shield size={20} />, roles: ['super_admin'] },
+  { label: 'Account Home', path: '/account', icon: <LayoutDashboard size={20} />, roles: ['accountant'] },
   { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
   { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'] },
   { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'] },
-  { label: 'Account Home', path: '/account', icon: <LayoutDashboard size={20} />, roles: ['accountant'] },
 ];
 
 export default function MobileBottomNav() {
@@ -81,23 +81,28 @@ export default function MobileBottomNav() {
 
   const filteredNav = ALL_NAV_ITEMS.filter(item => !user.role || item.roles.includes(user.role));
   
-  // Define primary nav items based on role - using labels or common sets
   const primaryNavItems = useMemo(() => {
     let labels: string[] = [];
     if (user.role === 'super_admin' || user.role === 'admin') {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
-    } else if (user.role === 'manager') {
+    } else if (user.role === 'manager' || user.role === 'rbm') {
       labels = ['Home', 'Leads', 'Loans', 'Reports'];
     } else if (user.role === 'broker') {
       labels = ['Home', 'Leads', 'Loans', 'Commission'];
     } else if (user.role === 'accountant') {
       labels = ['Account Home', 'Receivables', 'Payables', 'Vouchers'];
     } else if (user.role === 'pdd_manager') {
-      labels = ['Home', 'PDD Tracking'];
+      labels = ['Home', 'PDD Tracking', 'Reports', 'Chat'];
+    } else if (user.role === 'bank') {
+      labels = ['Home', 'Loans', 'Chat'];
     } else {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
     }
-    return filteredNav.filter(item => labels.includes(item.label));
+    
+    // Map the labels to preserve order and keep only valid ones
+    return labels
+      .map(label => filteredNav.find(item => item.label === label))
+      .filter((item): item is NavItem => item !== undefined);
   }, [user.role, filteredNav]);
 
   const moreNav = filteredNav.filter(item => !primaryNavItems.find(p => p.label === item.label));
