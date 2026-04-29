@@ -137,6 +137,68 @@ const ACCOUNT_NAV_ITEMS: NavItem[] = [
   { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV', roles: ['accountant', 'admin', 'super_admin'] },
 ];
 
+const EMPLOYEE_NAV_ITEMS: NavItem[] = [
+  {
+    title: 'Workspace Chat',
+    path: '/chat',
+    icon: MessageSquare,
+    shortLabel: 'CH',
+    roles: ['employee']
+  },
+  {
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard,
+    shortLabel: 'DB',
+    roles: ['employee']
+  },
+  {
+    title: 'Leads',
+    path: '/leads-list',
+    icon: UserPlus,
+    shortLabel: 'LD',
+    roles: ['employee'],
+    children: [
+      { title: 'My Leads', path: '/leads-list', icon: FileText, shortLabel: 'LL' },
+      { title: 'Create Lead', path: '/add-lead', icon: Plus, shortLabel: 'CL' },
+    ],
+  },
+  {
+    title: 'Loan Applications',
+    path: '/loans',
+    icon: FileText,
+    shortLabel: 'LN',
+    roles: ['employee'],
+    children: [
+      { title: 'All Loans', path: '/loans', icon: FileText, shortLabel: 'LL' },
+      { title: 'New Loan', path: '/loans/new', icon: Plus, shortLabel: 'NL' },
+      { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD' },
+    ]
+  },
+  {
+    title: 'Payments',
+    path: '/payments',
+    icon: Wallet,
+    shortLabel: 'PY',
+    roles: ['employee']
+  },
+  {
+    title: 'Reports',
+    path: '/reports',
+    icon: BarChart3,
+    shortLabel: 'RP',
+    roles: ['employee'],
+    permission: 'canViewReports'
+  },
+  {
+    title: 'My Brokers',
+    path: '/my-brokers',
+    icon: UserCheck,
+    shortLabel: 'MB',
+    roles: ['employee']
+  },
+];
+
 const RBM_NAV_ITEMS: NavItem[] = [
   {
     title: 'Dashboard',
@@ -237,6 +299,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     if (user.role === 'accountant') return ACCOUNT_NAV_ITEMS;
     if (user.role === 'pdd_manager') return PDD_MANAGER_NAV_ITEMS;
     if (user.role === 'rbm' || user.role === 'manager') return RBM_NAV_ITEMS;
+    if (user.role === 'employee') return EMPLOYEE_NAV_ITEMS;
     return NAV_ITEMS;
   };
 
