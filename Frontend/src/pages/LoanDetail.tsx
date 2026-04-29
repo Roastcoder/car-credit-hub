@@ -25,8 +25,7 @@ import {
   ClipboardCheck,
   CheckCircle,
   XSquare,
-  MessageCircleOff,
-  Plus
+  MessageCircleOff
 } from 'lucide-react';
 
 
@@ -1087,12 +1086,7 @@ export default function LoanDetail() {
                 {/* Documents Section */}
                 {(() => {
                   const categorizedDocs = documents.reduce((acc: any, doc: any) => {
-                    // Normalize types for grouping
-                    let type = doc.document_type || 'other';
-                    if (['rc_front', 'rc_document'].includes(type)) type = 'rc_front';
-                    if (['insurance', 'insurance_document'].includes(type)) type = 'insurance';
-                    if (['foreclose_document', 'fitness_document'].includes(type)) type = 'foreclose_document';
-                    
+                    const type = doc.document_type;
                     if (!acc[type] || new Date(doc.created_at) > new Date(acc[type].created_at)) {
                       if (acc[type]) {
                         acc.history = acc.history || [];
@@ -1109,8 +1103,8 @@ export default function LoanDetail() {
                   const latestDocs = Object.keys(categorizedDocs)
                     .filter(key => key !== 'history')
                     .map(key => categorizedDocs[key]);
-                  
-                  const historyDocs = categorizedDocs.history.sort((a: any, b: any) => 
+
+                  const historyDocs = categorizedDocs.history.sort((a: any, b: any) =>
                     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                   );
 
@@ -1171,42 +1165,6 @@ export default function LoanDetail() {
                             </div>
                           </div>
                         )}
-
-                        {/* Add New Document Types Section */}
-                        <div className="pt-6 border-t border-border/50">
-                          <div className="flex items-center gap-2 mb-4">
-                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-[10px] font-black text-blue-600 border border-blue-500/20 uppercase tracking-widest">
-                              Upload More Documents
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            {DOC_TYPES.map((type) => {
-                              const hasDoc = latestDocs.some(d => d.document_type === type.value);
-                              return (
-                                <div key={type.value} className="relative group">
-                                  <label className="flex items-center justify-between p-3 rounded-xl border border-dashed border-border bg-muted/20 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
-                                        <Plus size={16} />
-                                      </div>
-                                      <div>
-                                        <p className="text-[10px] font-black uppercase text-foreground/80">{type.label}</p>
-                                        <p className="text-[9px] text-muted-foreground uppercase">{hasDoc ? 'Add Another' : 'Upload File'}</p>
-                                      </div>
-                                    </div>
-                                    <Upload size={14} className="text-muted-foreground group-hover:text-accent transition-colors" />
-                                    <input
-                                      type="file"
-                                      className="hidden"
-                                      onChange={(e) => handleAddDoc(e, null, type.value)}
-                                      accept="image/*,.pdf"
-                                    />
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
                       </div>
                     </Section>
                   );
