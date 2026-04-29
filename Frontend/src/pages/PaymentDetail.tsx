@@ -213,10 +213,10 @@ export default function PaymentDetail() {
 
   // Sync pendingRemark when payment data loads
   useEffect(() => {
-    if (payment?.remarks) {
-      setPendingRemark(payment.remarks);
+    if (payment?.manager_remarks || payment?.remarks) {
+      setPendingRemark(payment.manager_remarks || payment.remarks || '');
     }
-  }, [payment?.remarks]);
+  }, [payment?.manager_remarks, payment?.remarks]);
 
   // Update payment status (manager action)
   const managerAction = useMutation({
