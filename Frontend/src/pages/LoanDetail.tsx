@@ -735,6 +735,10 @@ export default function LoanDetail() {
                             manufacturing_year: (loan as any).mfg_year,
                             owner_name: vehicleCache?.rc_full?.data?.owner_name || (loan as any).customer_name,
                             insurance_expiry: vehicleCache?.rc_full?.data?.insurance_upto || (loan as any).insurance_date,
+                            chassis_number: vehicleCache?.rc_full?.data?.chassis_number || (loan as any).chassis_number,
+                            engine_number: vehicleCache?.rc_full?.data?.engine_number || (loan as any).engine_number,
+                            vehicle_class: vehicleCache?.rc_full?.data?.vehicle_class,
+                            status: vehicleCache?.rc_full?.data?.rc_status,
                           }}
                         />
 
