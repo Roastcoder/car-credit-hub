@@ -170,20 +170,20 @@ const RBM_NAV_ITEMS: NavItem[] = [
     ]
   },
   { 
-    title: 'Operational Reports', 
-    path: '/reports', 
-    icon: BarChart3, 
-    shortLabel: 'RP', 
-    roles: ['rbm', 'manager'],
-    permission: 'canViewReports'
-  },
-  { 
     title: 'Apps', 
     path: '/payments', 
     icon: Wallet, 
     shortLabel: 'PY', 
     roles: ['rbm', 'manager'],
     permission: 'canManagePayments'
+  },
+  { 
+    title: 'Operational Reports', 
+    path: '/reports', 
+    icon: BarChart3, 
+    shortLabel: 'RP', 
+    roles: ['rbm', 'manager'],
+    permission: 'canViewReports'
   },
   {
     title: 'Workspace Chat',

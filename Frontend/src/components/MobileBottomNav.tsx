@@ -103,7 +103,7 @@ export default function MobileBottomNav() {
     if (user.role === 'super_admin' || user.role === 'admin') {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
     } else if (user.role === 'manager' || user.role === 'rbm') {
-      labels = ['Home', 'Leads', 'Loans', 'Reports'];
+      labels = ['Home', 'Leads', 'Loans', 'Apps'];
     } else if (user.role === 'broker') {
       labels = ['Home', 'Leads', 'Loans', 'Commission'];
     } else if (user.role === 'accountant') {
