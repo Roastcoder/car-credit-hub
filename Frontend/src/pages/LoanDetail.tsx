@@ -657,6 +657,31 @@ export default function LoanDetail() {
 
 
 
+                {/* Vehicle Information - Full Width Hero Section */}
+                <div className="mb-8">
+                  <VehicleDetailsCard 
+                    vehicleData={{
+                      registration_number: (loan as any).vehicle_number,
+                      make: (loan as any).maker_name || loan.car_make || (loan as any).vehicle_model,
+                      model: (loan as any).model_variant_name || loan.car_model,
+                      variant: (loan as any).loan_type_vehicle || loan.car_variant,
+                      fuel_type: vehicleCache?.rc_full?.data?.fuel_type || (loan as any).fuel_type,
+                      manufacturing_year: (loan as any).mfg_year,
+                      owner_name: vehicleCache?.rc_full?.data?.owner_name || (loan as any).customer_name,
+                      insurance_expiry: vehicleCache?.rc_full?.data?.insurance_upto || (loan as any).insurance_date,
+                      chassis_number: vehicleCache?.rc_full?.data?.chassis_number || (loan as any).chassis_number,
+                      engine_number: vehicleCache?.rc_full?.data?.engine_number || (loan as any).engine_number,
+                      vehicle_class: vehicleCache?.rc_full?.data?.vehicle_class,
+                      status: vehicleCache?.rc_full?.data?.rc_status,
+                      vertical: (loan as any).vertical,
+                      scheme: (loan as any).scheme,
+                      on_road_price: (loan as any).vehicle_price || loan.on_road_price,
+                      ltv: (loan as any).ltv,
+                      m_parivahan: (loan as any).financier_m_parivahan,
+                    }}
+                  />
+                </div>
+
                 {/* General Loan Details Grid */}
                 {true && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -721,33 +746,6 @@ export default function LoanDetail() {
                         </div>
                       </Section>
                     )}
-
-                    {/* Vehicle Information */}
-                    <Section title="Vehicle Information" icon={<Car size={16} />}>
-                      <div className="space-y-6">
-                        <VehicleDetailsCard 
-                          vehicleData={{
-                            registration_number: (loan as any).vehicle_number,
-                            make: (loan as any).maker_name || loan.car_make || (loan as any).vehicle_model,
-                            model: (loan as any).model_variant_name || loan.car_model,
-                            variant: (loan as any).loan_type_vehicle || loan.car_variant,
-                            fuel_type: vehicleCache?.rc_full?.data?.fuel_type || (loan as any).fuel_type,
-                            manufacturing_year: (loan as any).mfg_year,
-                            owner_name: vehicleCache?.rc_full?.data?.owner_name || (loan as any).customer_name,
-                            insurance_expiry: vehicleCache?.rc_full?.data?.insurance_upto || (loan as any).insurance_date,
-                            chassis_number: vehicleCache?.rc_full?.data?.chassis_number || (loan as any).chassis_number,
-                            engine_number: vehicleCache?.rc_full?.data?.engine_number || (loan as any).engine_number,
-                            vehicle_class: vehicleCache?.rc_full?.data?.vehicle_class,
-                            status: vehicleCache?.rc_full?.data?.rc_status,
-                            vertical: (loan as any).vertical,
-                            scheme: (loan as any).scheme,
-                            on_road_price: (loan as any).vehicle_price || loan.on_road_price,
-                            ltv: (loan as any).ltv,
-                            m_parivahan: (loan as any).financier_m_parivahan,
-                          }}
-                        />
-                      </div>
-                    </Section>
 
                     {/* Financial Summary - Cohesive Block */}
                     {!isPddManager && (
