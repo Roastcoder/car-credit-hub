@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/lib/auth';
+import { getUserPermissions, Permission } from '@/lib/permissions';
 import { 
   LayoutDashboard, FileText, Car, Users, UserPlus, 
   BarChart3, MoreHorizontal, Building2, UserCheck, 
@@ -21,16 +22,18 @@ interface NavItem {
   icon: React.ReactNode;
   roles: UserRole[];
   children?: NavSubItem[];
+  permission?: keyof Permission;
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant'] },
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee'] },
-  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'] },
+  { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'], permission: 'canManagePdd' },
   { 
     label: 'Leads', 
     icon: <UserPlus size={20} />, 
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'broker', 'employee'],
+    permission: 'canView',
     children: [
       { label: 'Leads List', path: '/leads-list', icon: <FileText size={18} /> },
       { label: 'Create Lead', path: '/add-lead', icon: <Plus size={18} /> },
@@ -41,6 +44,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
     label: 'Loans', 
     icon: <FileText size={20} />, 
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'],
+    permission: 'canView',
     children: [
       { label: 'Loans List', path: '/loans', icon: <FileText size={18} /> },
       { label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> },
@@ -51,12 +55,13 @@ const ALL_NAV_ITEMS: NavItem[] = [
     label: 'Apps',
     icon: <Activity size={20} />,
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee', 'accountant'],
+    permission: 'canManagePayments',
     children: [
       { label: 'Application List', path: '/payments', icon: <FileText size={18} /> },
       { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
     ]
   },
-  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager'] },
+  { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager'], permission: 'canViewReports' },
   { label: 'Commission', path: '/commission', icon: <CreditCard size={20} />, roles: ['super_admin', 'admin', 'broker'] },
   { label: 'Users', path: '/users', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'manager'] },
   { label: 'Banks / NBFC', path: '/banks', icon: <Building2 size={20} />, roles: ['super_admin', 'admin'] },
@@ -66,9 +71,9 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Credit Reports', path: '/credit-reports', icon: <ShieldCheck size={20} />, roles: ['super_admin'] },
   { label: 'Permissions', path: '/permissions', icon: <Shield size={20} />, roles: ['super_admin'] },
   { label: 'Account Home', path: '/account', icon: <LayoutDashboard size={20} />, roles: ['accountant'] },
-  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'] },
-  { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'] },
-  { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'] },
+  { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
+  { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
+  { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
 ];
 
 export default function MobileBottomNav() {
@@ -78,8 +83,20 @@ export default function MobileBottomNav() {
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
 
   if (!user) return null;
+  const permissions = getUserPermissions(user);
 
-  const filteredNav = ALL_NAV_ITEMS.filter(item => !user.role || item.roles.includes(user.role));
+  const filteredNav = ALL_NAV_ITEMS.filter(item => {
+    // Check role
+    const hasRole = !user.role || item.roles.includes(user.role);
+    if (!hasRole) return false;
+
+    // Check permission if specified
+    if (item.permission) {
+      return !!permissions[item.permission];
+    }
+
+    return true;
+  });
   
   const primaryNavItems = useMemo(() => {
     let labels: string[] = [];

@@ -1,13 +1,14 @@
 import { ReactNode, useState, ElementType, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getUserPermissions, Permission } from '@/lib/permissions';
 import { UserRole, ROLE_LABELS } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
   Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List,
-  AlertTriangle, CheckCircle2, MessageSquare
+  AlertTriangle, CheckCircle2, MessageSquare, Plus
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -23,6 +24,7 @@ interface NavItem {
   icon: ElementType;
   shortLabel?: string;
   roles: UserRole[];
+  permission?: keyof Permission;
   children?: {
     title: string;
     path: string;
@@ -72,9 +74,9 @@ const NAV_ITEMS: NavItem[] = [
   },
   { title: 'Loan Applications', path: '/loans', icon: FileText, shortLabel: 'LN', roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
   { title: 'Create Loan', path: '/loans/new', icon: Car, shortLabel: 'NL', roles: ['super_admin', 'admin', 'manager', 'employee'] },
-  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD', roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'] },
-  { title: 'Payments', path: '/payments', icon: Wallet, shortLabel: 'PY', roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'] },
-  { title: 'Reports', path: '/reports', icon: BarChart3, shortLabel: 'RP', roles: ['super_admin', 'admin', 'manager', 'rbm'] },
+  { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD', roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'], permission: 'canManagePdd' },
+  { title: 'Apps', path: '/payments', icon: Wallet, shortLabel: 'PY', roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'], permission: 'canManagePayments' },
+  { title: 'Reports', path: '/reports', icon: BarChart3, shortLabel: 'RP', roles: ['super_admin', 'admin', 'manager', 'rbm'], permission: 'canViewReports' },
   { title: 'Commission', path: '/commission', icon: CreditCard, shortLabel: 'CM', roles: ['super_admin', 'admin', 'broker'] },
   { title: 'Users', path: '/users', icon: Users, shortLabel: 'US', roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Permission Control', path: '/permissions', icon: Shield, shortLabel: 'PC', roles: ['super_admin'] },
@@ -134,6 +136,64 @@ const ACCOUNT_NAV_ITEMS: NavItem[] = [
   { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV', roles: ['accountant', 'admin', 'super_admin'] },
 ];
 
+const RBM_NAV_ITEMS: NavItem[] = [
+  {
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard,
+    shortLabel: 'DB',
+    roles: ['rbm', 'manager']
+  },
+  {
+    title: 'Leads Management',
+    path: '/leads-list',
+    icon: UserPlus,
+    shortLabel: 'LD',
+    roles: ['rbm', 'manager'],
+    permission: 'canView',
+    children: [
+      { title: 'All Leads', path: '/leads-list', icon: FileText, shortLabel: 'AL' },
+      { title: 'Create Lead', path: '/add-lead', icon: Plus, shortLabel: 'CL' },
+      { title: 'Broker Leads', path: '/broker-leads', icon: UserCheck, shortLabel: 'BR' },
+    ],
+  },
+  {
+    title: 'Loan Applications',
+    path: '/loans',
+    icon: FileText,
+    shortLabel: 'LN',
+    roles: ['rbm', 'manager'],
+    permission: 'canView',
+    children: [
+      { title: 'Loans List', path: '/loans', icon: FileText, shortLabel: 'LL' },
+      { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD' },
+    ]
+  },
+  { 
+    title: 'Operational Reports', 
+    path: '/reports', 
+    icon: BarChart3, 
+    shortLabel: 'RP', 
+    roles: ['rbm', 'manager'],
+    permission: 'canViewReports'
+  },
+  { 
+    title: 'Apps', 
+    path: '/payments', 
+    icon: Wallet, 
+    shortLabel: 'PY', 
+    roles: ['rbm', 'manager'],
+    permission: 'canManagePayments'
+  },
+  {
+    title: 'Workspace Chat',
+    path: '/chat',
+    icon: MessageSquare,
+    shortLabel: 'CH',
+    roles: ['rbm', 'manager']
+  },
+];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -175,19 +235,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const getNavItems = () => {
     if (user.role === 'accountant') return ACCOUNT_NAV_ITEMS;
     if (user.role === 'pdd_manager') return PDD_MANAGER_NAV_ITEMS;
+    if (user.role === 'rbm' || user.role === 'manager') return RBM_NAV_ITEMS;
     return NAV_ITEMS;
   };
 
-  const filteredNav = getNavItems().filter(item => !user.role || item.roles.includes(user.role));
+  const permissions = getUserPermissions(user);
+  const filteredNav = getNavItems().filter(item => {
+    const hasRole = !user.role || item.roles.includes(user.role);
+    if (!hasRole) return false;
+
+    if (item.permission) {
+      return !!permissions[item.permission];
+    }
+    return true;
+  });
 
   const isPathActive = (itemPath: string) => {
     // Exact match
     if (location.pathname + location.search === itemPath) return true;
     if (location.pathname === itemPath && !itemPath.includes('?')) return true;
-    
+
     if (itemPath === '/account') return location.pathname === '/account';
     if (itemPath === '/loans' && location.pathname === '/loans/new') return false;
-    
+
     // Handle parameterized paths (like /pdd-tracking?tab=pending)
     if (itemPath.includes('?')) {
       const [basePath, search] = itemPath.split('?');

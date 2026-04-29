@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import {
   Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { formatCurrency } from '@/lib/utils';
@@ -985,80 +985,157 @@ export default function PaymentApplicationForm() {
           )}
         </section>
 
-        {/* 4. Payment Details (Docs & Remarks) */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+        {/* 4. Supporting Documents - Permanently Visible */}
+        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm transition-all hover:shadow-md">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <FileText className="h-5 w-5 text-red-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Supporting Documents</h2>
+            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <FileText className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Supporting Documents</h2>
+              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-0.5">Banking & KYC Proofs</p>
+            </div>
+            {!isReadOnly && <span className="ml-auto text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800 uppercase tracking-wider">Required</span>}
           </div>
 
-          <div className={`mt-8 grid grid-cols-1 ${showAdvancedDetails ? 'md:grid-cols-2' : ''} gap-8`}>
-            {/* Loan & PDD Docs */}
-            {showAdvancedDetails && (
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Loan Documents</label>
-              <p className="text-xs text-gray-500 mb-4 text-left">Select documents attached to this loan</p>
-              {pddDocuments.length > 0 ? (
-                <div className="grid grid-cols-1 gap-2">
-                  {pddDocuments.map((doc, index) => {
-                    const docKey = doc.file_url || doc.file_path || String(doc.id || index);
-                    const docLabel = doc.document_name || doc.document_type || doc.file_name || `Document ${index + 1}`;
-                    const isSelected = formData.pdd_documents.includes(docKey);
-                    return (
-                      <div
-                        key={index}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center justify-between ${isSelected
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50'
-                          }`}
-                        onClick={() => handlePddDocumentToggle(docKey)}
-                      >
-                        <div className="flex items-center gap-2">
-                          {isSelected ? <CheckCircle size={16} className="text-blue-500" /> : <FileText size={16} className="text-gray-400" />}
-                          <div>
-                            <span className="text-sm font-medium">{docLabel}</span>
-                            {doc.document_type && doc.document_name && (
-                              <p className="text-xs text-gray-400">{doc.document_type}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : <p className="text-sm text-gray-500 italic text-left">No documents found for this loan</p>}
-            </div>
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Banking Docs - Left Side */}
+            <div className="space-y-4">
+              <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] text-left">Upload Banking Proofs</label>
+              
+              <div className="relative group">
+                <input 
+                  type="file" 
+                  id="banking-docs-final" 
+                  multiple 
+                  onChange={handleBankingDocUpload} 
+                  className="hidden" 
+                  disabled={isReadOnly} 
+                />
+                <label 
+                  htmlFor="banking-docs-final" 
+                  className={`flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-3xl transition-all duration-300 ${
+                    isReadOnly 
+                      ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-900/10' 
+                      : 'border-blue-200 bg-blue-50/20 hover:bg-blue-50 hover:border-blue-400 cursor-pointer active:scale-95 shadow-inner'
+                  }`}
+                >
+                  <div className={`p-4 rounded-2xl shadow-sm mb-4 transition-all duration-300 ${isReadOnly ? 'bg-gray-100' : 'bg-white dark:bg-gray-800 group-hover:rotate-6 group-hover:scale-110'}`}>
+                    <Upload size={32} className={isReadOnly ? "text-gray-300" : "text-blue-500"} />
+                  </div>
+                  <span className="text-sm font-black text-gray-800 dark:text-gray-200">
+                    {isReadOnly ? 'Uploads Disabled' : 'Drop Bank Documents Here'}
+                  </span>
+                  <p className="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-tighter">Click to browse • Max 10MB per file</p>
+                </label>
+              </div>
 
-            {/* Banking Docs */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Banking Documents</label>
-              <input type="file" id="banking-docs" multiple onChange={handleBankingDocUpload} className="hidden" disabled={isReadOnly} />
-              <label htmlFor="banking-docs" className={`flex items-center justify-center p-4 border-2 border-dashed rounded-lg transition-colors ${isReadOnly ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-900/30 dark:border-gray-800' : 'border-gray-300 rounded-lg cursor-pointer hover:border-blue-500'}`}>
-                <Upload size={20} className="mr-2 text-gray-400" />
-                <span className="text-sm text-gray-500">{isReadOnly ? 'Closed for upload' : 'Upload bank docs'}</span>
-              </label>
-              <div className="mt-2 space-y-1">
+              {/* Dynamic File Previews */}
+              <div className="grid grid-cols-1 gap-2.5 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
                 {bankingDocs.map((file, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    <span className="truncate">{file.name}</span>
-                    {!isReadOnly && <X size={14} className="text-red-500 cursor-pointer" onClick={() => removeBankingDoc(i)} />}
+                  <div key={i} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
+                        <FileText size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{(file.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <button 
+                        type="button" 
+                        onClick={() => removeBankingDoc(i)}
+                        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 hover:text-red-500 rounded-xl transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                   </div>
                 ))}
+                
+                {/* Server-Side Saved Files */}
+                {(formData.banking_documents || []).length > 0 && (
+                   <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
+                     <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                       <CheckCircle size={10} className="text-green-500" /> Currently Attached
+                     </p>
+                     <div className="space-y-2">
+                       {(formData.banking_documents || []).map((path, idx) => (
+                         <div key={idx} className="flex items-center gap-3 p-2.5 bg-green-50/30 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/20">
+                           <span className="text-[10px] font-black truncate text-green-700 dark:text-green-400 tracking-tight">{path.split('/').pop()}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                )}
               </div>
+            </div>
+
+            {/* Loan PDD Selection - Right Side */}
+            <div className="space-y-4">
+               <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] text-left">Select From Loan File</label>
+               <div className="p-4 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border border-gray-100 dark:border-gray-800">
+                 <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 leading-relaxed text-left">
+                   Choose any existing documents from the loan account that are relevant to this disbursement request.
+                 </p>
+               </div>
+               
+               <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                  {pddDocuments.length > 0 ? (
+                    pddDocuments.map((doc, index) => {
+                      const docKey = doc.file_url || doc.file_path || String(doc.id || index);
+                      const docLabel = doc.document_name || doc.document_type || doc.file_name || `Document ${index + 1}`;
+                      const isSelected = formData.pdd_documents.includes(docKey);
+                      return (
+                        <div
+                          key={index}
+                          className={`p-4 border-2 rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between ${isSelected
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/10'
+                            : 'border-gray-100 dark:border-gray-800 hover:border-blue-200 hover:bg-white dark:hover:bg-gray-800 shadow-sm'
+                            }`}
+                          onClick={() => handlePddDocumentToggle(docKey)}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-xl transition-all ${isSelected ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                              <FileText size={18} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={`text-sm font-black truncate max-w-[180px] ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>{docLabel}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{doc.document_type || 'Loan Document'}</p>
+                            </div>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-transparent'}`}>
+                             <CheckCircle size={14} />
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-900/30 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800 shadow-inner">
+                       <Activity size={32} className="text-gray-200 mb-3 animate-pulse" />
+                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest italic">No prior documents found</p>
+                    </div>
+                  )}
+               </div>
             </div>
           </div>
 
-          <div className="mt-8">
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 text-left">Remarks</label>
+          {/* Remarks Area */}
+          <div className="mt-10 pt-8 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-2 mb-3">
+               <Receipt size={16} className="text-gray-400" />
+               <label className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-left">Official Remarks</label>
+            </div>
             <textarea
               name="remarks"
               value={formData.remarks}
               onChange={handleInputChange}
-              rows={3}
+              rows={4}
               disabled={isReadOnly}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="Additional information..."
+              className="w-full px-6 py-5 border border-gray-100 dark:border-gray-800 rounded-3xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all text-sm font-medium shadow-inner outline-none placeholder:text-gray-300"
+              placeholder="Provide detailed context for the release manager (e.g., UTR details, hold justification, or partial release notes)..."
             />
           </div>
         </section>

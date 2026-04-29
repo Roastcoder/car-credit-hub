@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, Plus, Eye, CreditCard, CheckCircle, XCircle, Clock, DollarSign, Download } from 'lucide-react';
+import { Search, Plus, Eye, CreditCard, CheckCircle, XCircle, Clock, DollarSign, Download, Upload } from 'lucide-react';
 
 type PaymentStatus = 'pending' | 'manager_approved' | 'accounts_processing' | 'paid' | 'rejected';
 
@@ -221,6 +221,13 @@ export default function Payments() {
 
               {/* Action buttons for mobile */}
               <div className="mt-3 pt-3 border-t border-border flex gap-2" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => navigate(`/payments/${payment.id}`)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-muted text-foreground rounded-lg text-xs font-medium hover:bg-muted/80 transition-colors"
+                >
+                  <Upload size={14} />
+                  Upload
+                </button>
                 {canApprove && payment.status === 'pending' && (
                   <>
                     <button
@@ -242,7 +249,7 @@ export default function Payments() {
                     onClick={() => navigate(`/payments/${payment.id}`)}
                     className="flex-1 px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-colors"
                   >
-                    Process Payment
+                    Process
                   </button>
                 )}
               </div>
@@ -316,6 +323,13 @@ export default function Payments() {
                       )}
                       <td className="py-3 px-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/payments/${payment.id}`)}
+                            className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors text-blue-600 border-blue-100"
+                            title="Upload Documents"
+                          >
+                            <Upload size={14} />
+                          </button>
                           <button
                             onClick={() => navigate(`/payments/${payment.id}`)}
                             className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
