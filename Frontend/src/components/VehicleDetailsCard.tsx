@@ -91,9 +91,6 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Verified RC Data</span>
             </div>
-            <button className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">
-              View RC Full →
-            </button>
           </div>
         </div>
       </div>
