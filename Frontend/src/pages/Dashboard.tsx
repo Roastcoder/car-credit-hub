@@ -14,6 +14,8 @@ import {
 } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { SDUIRenderer } from '@/components/SDUI/SDUIRenderer';
+import { SDUIComponentProps } from '@/components/SDUI/types';
 
 const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
@@ -217,6 +219,70 @@ export default function Dashboard() {
 
     const queryString = params.toString();
     return queryString ? `/loans?${queryString}` : '/loans';
+  };
+
+  // SDUI Configuration (This would typically come from your backend API)
+  const brokerSduiConfig: SDUIComponentProps = {
+    type: 'Grid',
+    props: { columns: 4, className: 'mb-6' },
+    children: [
+      {
+        type: 'StatCard',
+        props: {
+          title: 'Total Volume',
+          value: 'ctx.totalVolume',
+          sub: 'ctx.totalLoansText',
+          iconName: 'IndianRupee',
+          trendData: 'ctx.volumeTrend',
+        }
+      },
+      {
+        type: 'StatCard',
+        props: {
+          title: 'Disbursed',
+          value: 'ctx.disbursedAmount',
+          sub: 'ctx.disbursedCountText',
+          iconName: 'CheckCircle2',
+          color: '#10b981',
+          trendData: 'ctx.disbursedTrend',
+        }
+      },
+      {
+        type: 'StatCard',
+        props: {
+          title: 'In Process',
+          value: 'ctx.pendingReview',
+          sub: 'Under Review',
+          iconName: 'Clock',
+          color: '#f59e0b',
+          trendData: 'ctx.pendingTrend',
+        }
+      },
+      {
+        type: 'StatCard',
+        props: {
+          title: 'Approved',
+          value: 'ctx.approvedCount',
+          sub: 'Awaiting Disb.',
+          iconName: 'CheckCircle2',
+          color: '#3b82f6',
+          trendData: 'ctx.approvedTrend',
+        }
+      }
+    ]
+  };
+
+  const sduiContext = {
+    totalVolume: formatCurrency(totalVolume),
+    totalLoansText: `${totalLoans} applications`,
+    volumeTrend: trendData.map(d => ({ value: d.amount })),
+    disbursedAmount: formatCurrency(disbursedAmount),
+    disbursedCountText: `${disbursed.length} files`,
+    disbursedTrend: trendData.map(d => ({ value: d.amount * 0.7 })),
+    pendingReview: pendingReview,
+    pendingTrend: trendData.map(d => ({ value: d.count })),
+    approvedCount: dashboardLoans.filter((l: any) => l.status === 'approved').length,
+    approvedTrend: trendData.map(d => ({ value: d.count * 1.2 }))
   };
 
   return (
@@ -605,72 +671,15 @@ export default function Dashboard() {
         ) : isBroker ? (
           // ── BROKER DASHBOARD: expanded KPIs and Charts ──
           <div className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-              {[
-                { 
-                  label: 'Total Volume', 
-                  value: formatCurrency(totalVolume), 
-                  sub: `${totalLoans} applications`, 
-                  icon: <IndianRupee size={18} className="text-primary" />,
-                  trend: trendData.map(d => ({ value: d.amount }))
-                },
-                { 
-                  label: 'Disbursed', 
-                  value: formatCurrency(disbursedAmount), 
-                  sub: `${disbursed.length} files`, 
-                  icon: <CheckCircle2 size={18} className="text-emerald-500" />, 
-                  status: 'disbursed',
-                  trend: trendData.map(d => ({ value: d.amount * 0.7 })) // Simulated for visual flair
-                },
-                { 
-                  label: 'In Process', 
-                  value: pendingReview, 
-                  sub: 'Under Review', 
-                  icon: <Clock size={18} className="text-amber-500" />, 
-                  status: 'under_review',
-                  trend: trendData.map(d => ({ value: d.count }))
-                },
-                { 
-                  label: 'Approved', 
-                  value: dashboardLoans.filter((l: any) => l.status === 'approved').length, 
-                  sub: 'Awaiting Disb.', 
-                  icon: <CheckCircle2 size={18} className="text-blue-500" />, 
-                  status: 'approved',
-                  trend: trendData.map(d => ({ value: d.count * 1.2 }))
-                },
-              ].map((kpi) => (
-                <div
-                  key={kpi.label}
-                  onClick={() => kpi.status && setSelectedStatus(selectedStatus === kpi.status ? null : kpi.status)}
-                  className={`stat-card cursor-pointer transition-all ${'status' in kpi && selectedStatus === kpi.status ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10 border-transparent shadow-md' : 'hover:border-accent/40 hover:shadow-lg'}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {kpi.icon}
-                      <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{kpi.label}</p>
-                    </div>
-                    {kpi.trend && kpi.trend.length > 1 && (
-                      <div className="h-6 w-12 hidden sm:block">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={kpi.trend}>
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke={kpi.label === 'Disbursed' ? '#10b981' : '#3b82f6'} 
-                              fill={kpi.label === 'Disbursed' ? '#10b981' : '#3b82f6'} 
-                              fillOpacity={0.1} 
-                              strokeWidth={1.5} 
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-blue-950 dark:text-white">{kpi.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
-                </div>
-              ))}
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-4 flex items-center justify-between">
+              <span className="text-sm font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                <Activity size={16} className="text-blue-500" />
+                Server-Driven UI Layout Active
+              </span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500 bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">SDUI V1</span>
             </div>
+            
+            <SDUIRenderer config={brokerSduiConfig} context={sduiContext} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="stat-card">
