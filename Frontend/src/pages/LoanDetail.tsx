@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { calculateCommission } from '@/lib/schemes';
 import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 import PDDForm from '@/components/PDDForm';
+import VehicleDetailsCard from '@/components/VehicleDetailsCard';
 import {
   ClipboardCheck,
   CheckCircle,
@@ -723,23 +724,33 @@ export default function LoanDetail() {
 
                     {/* Vehicle Information */}
                     <Section title="Vehicle Information" icon={<Car size={16} />}>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Field label="Vehicle Registration No" value={(loan as any).vehicle_number || '—'} />
-                        <Field label="Maker's Name" value={(loan as any).maker_name || loan.car_make || (loan as any).vehicle_model} />
-                        <Field label="Model / Variant" value={(loan as any).model_variant_name || loan.car_model} />
-                        <Field label="Mfg Year" value={(loan as any).mfg_year || '—'} />
-                        <Field label="Vertical" value={(loan as any).vertical || '—'} />
-                        <Field label="Scheme" value={(loan as any).scheme || '—'} />
-                        <Field label="Vehicle Type" value={(loan as any).loan_type_vehicle || loan.car_variant || '—'} />
-                        <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
-                        {user?.role !== 'broker' && (
-                          <>
-                            <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
-                            <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
-                            <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
-                            <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
-                          </>
-                        )}
+                      <div className="space-y-6">
+                        <VehicleDetailsCard 
+                          vehicleData={{
+                            registration_number: (loan as any).vehicle_number,
+                            make: (loan as any).maker_name || loan.car_make || (loan as any).vehicle_model,
+                            model: (loan as any).model_variant_name || loan.car_model,
+                            variant: (loan as any).loan_type_vehicle || loan.car_variant,
+                            fuel_type: vehicleCache?.rc_full?.data?.fuel_type || (loan as any).fuel_type,
+                            manufacturing_year: (loan as any).mfg_year,
+                            owner_name: vehicleCache?.rc_full?.data?.owner_name || (loan as any).customer_name,
+                            insurance_expiry: vehicleCache?.rc_full?.data?.insurance_upto || (loan as any).insurance_date,
+                          }}
+                        />
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/40">
+                          <Field label="Vertical" value={(loan as any).vertical || '—'} />
+                          <Field label="Scheme" value={(loan as any).scheme || '—'} />
+                          <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
+                          {user?.role !== 'broker' && (
+                            <>
+                              <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
+                              <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
+                              <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
+                              <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
+                            </>
+                          )}
+                        </div>
                       </div>
                     </Section>
 

@@ -251,6 +251,12 @@ export const externalAPI = {
   getVehicleCache: (vehicleNumber: string) => api.get(`/external/vehicle/${vehicleNumber}`),
 };
 
+// Vehicles API
+export const vehiclesAPI = {
+  getImage: (params: { make: string; model: string; variant?: string }) => 
+    api.get(`/vehicles/image?${new URLSearchParams(params as any)}`),
+};
+
 // Credit Reports API
 export const creditReportsAPI = {
   getAll: (params?: any) => api.get('/credit-reports' + (params ? `?${new URLSearchParams(params)}` : '')),
