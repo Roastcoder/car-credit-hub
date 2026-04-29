@@ -471,11 +471,11 @@ export default function PaymentApplicationsList() {
                   {canAccountProcess && app.status === 'manager_approved' && (
                     <Button 
                       size="sm" 
-                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-purple-600 hover:bg-purple-700 min-w-[110px]"
-                      onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
+                      className="flex-1 gap-1.5 rounded-xl text-[11px] h-9 bg-green-600 hover:bg-green-700 min-w-[110px]"
+                      onClick={() => navigate(`/payments/${app.id}`)}
                     >
-                      <FileText size={14} />
-                      Generate Voucher
+                      <CreditCard size={14} />
+                      Process Payment
                     </Button>
                   )}
 
@@ -643,10 +643,10 @@ export default function PaymentApplicationsList() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-7 px-2 text-purple-600 font-bold text-[9px] uppercase tracking-wider"
-                              onClick={() => navigate(`/account/vouchers/create/${app.id}`)}
+                              className="h-7 px-2 text-green-600 font-bold text-[9px] uppercase tracking-wider"
+                              onClick={() => navigate(`/payments/${app.id}`)}
                             >
-                              Voucher
+                              Pay
                             </Button>
                           )}
 

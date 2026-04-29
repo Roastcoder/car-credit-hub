@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import {
   Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { formatCurrency } from '@/lib/utils';
@@ -107,6 +107,7 @@ export default function PaymentApplicationForm() {
   const [otp, setOtp] = useState('');
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [isRaiseRemainingMode, setIsRaiseRemainingMode] = useState(false);
+  const [showAdvancedDetails, setShowAdvancedDetails] = useState(false);
 
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
@@ -714,6 +715,25 @@ export default function PaymentApplicationForm() {
       </div>
 
       <form className="space-y-8">
+        <section className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm dark:border-blue-900/30 dark:bg-gray-900">
+          <div className="grid gap-3 md:grid-cols-5">
+            {[
+              { label: 'Select customer', done: !!formData.loan_id || !!formData.applicant_name },
+              { label: 'Confirm amount', done: Number(formData.today_release_amount || formData.payment_amount) > 0 },
+              { label: 'Bank details', done: !!formData.payment_in_favour_name && !!formData.bank_name && !!formData.account_number && !!formData.ifsc_code },
+              { label: 'Documents', done: bankingDocs.length > 0 || (formData.banking_documents || []).length > 0 },
+              { label: 'Verify & submit', done: aadhaarVerificationStatus === 'verified' || formData.status === 'sent_back' || isReadOnly },
+            ].map((step, index) => (
+              <div key={step.label} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-gray-950/50">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step.done ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 dark:bg-gray-900 dark:border-gray-700'}`}>
+                  {step.done ? <CheckCircle size={14} /> : index + 1}
+                </span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{step.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {isReadOnly && (
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-300">
             This request is closed after accounts processing. Voucher, UTR, and proof can still be viewed from the payment detail page, but the form is now read-only.
@@ -766,11 +786,44 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 2. Loan Details */}
+        {/* 2. Payment Amount */}
+        <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
+          <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
+            <CreditCard className="h-5 w-5 text-blue-600" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Payment Amount</h2>
+            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Required</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FormField label="Net Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Previously Released" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Pay Today" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} required disabled={isReadOnly} />
+            <FormField label="Hold / Balance" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <AmountCard label="Total After This Payment" value={Number(formData.total_release_amount || 0)} tone="blue" />
+            <AmountCard label="Release Percentage" value={`${Number(formData.total_release_percentage || 0).toFixed(2)}%`} tone="green" />
+            <AmountCard label="Payment Left" value={Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0))} tone="orange" />
+          </div>
+        </section>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedDetails(prev => !prev)}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            <SlidersHorizontal size={16} />
+            {showAdvancedDetails ? 'Hide Advanced Details' : 'Show Advanced Details'}
+          </button>
+        </div>
+
+        {showAdvancedDetails && (
+          <>
+        {/* Advanced: Loan Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <Building2 className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Loan Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Loan Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} disabled={isReadOnly} />
@@ -787,11 +840,11 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 3. Vehicle Details */}
+        {/* Advanced: Vehicle Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <Upload className="h-5 w-5 text-purple-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Vehicle Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Vehicle Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} disabled={isReadOnly} />
@@ -801,11 +854,11 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 4. Branch & Manager Details */}
+        {/* Advanced: Branch & Manager Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <Building2 className="h-5 w-5 text-orange-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Branch & Manager Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Branch & Manager Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} disabled={isReadOnly} />
@@ -814,11 +867,11 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 5. RTO Details */}
+        {/* Advanced: RTO Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <FileText className="h-5 w-5 text-teal-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">5. RTO Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">RTO Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} disabled={isReadOnly} />
@@ -829,11 +882,11 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 6. Document & Status Details */}
+        {/* Advanced: Document & Status Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">6. Document & Status Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Document & Status Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
@@ -846,11 +899,11 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 7. Payment & Foreclosure Details */}
+        {/* Advanced: Payment & Foreclosure Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <Plus className="h-5 w-5 text-indigo-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">7. Payment & Foreclosure Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Payment & Foreclosure Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} disabled={isReadOnly} />
@@ -886,23 +939,25 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 8. Hold & Balance Details */}
+        {/* Advanced: Hold & Balance Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <AlertCircle className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">8. Hold & Balance Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Hold & Balance Details</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
             <FormField label="Hold Amount (Balance)" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
+          </>
+        )}
 
-        {/* 9. Beneficiary Banking Details */}
+        {/* 3. Beneficiary Banking Details */}
         <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
           <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
             <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">9. Beneficiary Banking Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Banking Details</h2>
             <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -915,15 +970,16 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 10. Payment Details (Docs & Remarks) */}
+        {/* 4. Payment Details (Docs & Remarks) */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
             <FileText className="h-5 w-5 text-red-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">10. Supporting Documents</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">4. Supporting Documents</h2>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={`mt-8 grid grid-cols-1 ${showAdvancedDetails ? 'md:grid-cols-2' : ''} gap-8`}>
             {/* Loan & PDD Docs */}
+            {showAdvancedDetails && (
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 text-left">Loan Documents</label>
               <p className="text-xs text-gray-500 mb-4 text-left">Select documents attached to this loan</p>
@@ -957,6 +1013,7 @@ export default function PaymentApplicationForm() {
                 </div>
               ) : <p className="text-sm text-gray-500 italic text-left">No documents found for this loan</p>}
             </div>
+            )}
 
             {/* Banking Docs */}
             <div>
@@ -991,12 +1048,12 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 11. Aadhaar Verification */}
+        {/* 5. Aadhaar Verification */}
         {!isReadOnly && formData.status !== 'sent_back' && (
           <section className="glass-card p-6 rounded-xl border border-purple-200 dark:border-purple-800/50 shadow-sm bg-purple-50/30 dark:bg-purple-900/5">
             <div className="flex items-center gap-3 mb-6 border-b border-purple-100 dark:border-purple-800 pb-4">
               <CheckCircle className="h-5 w-5 text-purple-600" />
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">11. Aadhaar Verification</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">5. Aadhaar Verification</h2>
               <span className="ml-auto text-xs font-semibold text-purple-600 bg-purple-100 dark:bg-purple-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Required</span>
             </div>
 
@@ -1154,6 +1211,23 @@ export default function PaymentApplicationForm() {
 }
 
 // Helper Components for the Form
+function AmountCard({ label, value, tone }: { label: string; value: number | string; tone: 'blue' | 'green' | 'orange' }) {
+  const toneClasses = {
+    blue: 'bg-blue-50 text-blue-900 border-blue-100 dark:bg-blue-900/10 dark:text-blue-100 dark:border-blue-900/30',
+    green: 'bg-green-50 text-green-900 border-green-100 dark:bg-green-900/10 dark:text-green-100 dark:border-green-900/30',
+    orange: 'bg-orange-50 text-orange-900 border-orange-100 dark:bg-orange-900/10 dark:text-orange-100 dark:border-orange-900/30',
+  };
+
+  const displayValue = typeof value === 'number' ? `₹${value.toLocaleString()}` : value;
+
+  return (
+    <div className={`rounded-lg border p-4 ${toneClasses[tone]}`}>
+      <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+      <p className="mt-1 text-xl font-black">{displayValue}</p>
+    </div>
+  );
+}
+
 function FormField({ label, name, type = 'text', value, onChange, disabled, required, onFocus, placeholder, icon }: any) {
   return (
     <div className="space-y-1.5 text-left">

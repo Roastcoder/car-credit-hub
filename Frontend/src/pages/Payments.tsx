@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, Plus, Eye, FileText, CreditCard, CheckCircle, XCircle, Clock, DollarSign, Download } from 'lucide-react';
+import { Search, Plus, Eye, CreditCard, CheckCircle, XCircle, Clock, DollarSign, Download } from 'lucide-react';
 
 type PaymentStatus = 'pending' | 'manager_approved' | 'accounts_processing' | 'paid' | 'rejected';
 
@@ -239,10 +239,10 @@ export default function Payments() {
                 )}
                 {canProcess && payment.status === 'manager_approved' && (
                   <button
-                    onClick={() => navigate(`/account/vouchers/create/${payment.id}`)}
+                    onClick={() => navigate(`/payments/${payment.id}`)}
                     className="flex-1 px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-colors"
                   >
-                    Create Voucher
+                    Process Payment
                   </button>
                 )}
               </div>
@@ -345,11 +345,11 @@ export default function Payments() {
                           
                           {canProcess && payment.status === 'manager_approved' && (
                             <button
-                              onClick={() => navigate(`/account/vouchers/create/${payment.id}`)}
+                              onClick={() => navigate(`/payments/${payment.id}`)}
                               className="p-1.5 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
-                              title="Create Voucher"
+                              title="Process Payment"
                             >
-                              <FileText size={14} />
+                              <CreditCard size={14} />
                             </button>
                           )}
                         </div>

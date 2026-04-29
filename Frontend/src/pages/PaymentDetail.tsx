@@ -327,7 +327,7 @@ export default function PaymentDetail() {
       toast.error('Please enter UTR number');
       return;
     }
-    const amt = releaseAmount ? parseFloat(releaseAmount) : 0;
+    const amt = releaseAmount ? parseFloat(releaseAmount) : remainingAppBalance;
     if (isNaN(amt) || amt < 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -550,10 +550,7 @@ export default function PaymentDetail() {
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
   // Derived ledger totals — use merged all-loan ledger for display/PDF
-  const displayLedger = [
-    ...(allLoanLedgerEntries || []).filter(entry => entry.application_id && entry.application_id !== Number(id)),
-    ...ledgerEntries
-  ];
+  const displayLedger = (allLoanLedgerEntries || []).length > 0 ? allLoanLedgerEntries : ledgerEntries;
   const ledgerDebitTotalSum = displayLedger.reduce((sum, r) => sum + safeParseNumber(r.debit), 0);
   const ledgerCreditTotalSum = displayLedger.reduce((sum, r) => sum + safeParseNumber(r.credit), 0);
   
@@ -561,9 +558,9 @@ export default function PaymentDetail() {
   const remainingLoanBalance = ledgerCreditTotalSum - ledgerDebitTotalSum;
 
   const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
-  const canProcess = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) && payment.status === 'manager_approved';
   const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
-    (payment.status === 'voucher_created' || 
+    (payment.status === 'manager_approved' ||
+     payment.status === 'voucher_created' || 
      (payment.status === 'payment_released' && remainingAppBalance > 0) ||
      (payment.status === 'completed' && remainingAppBalance > 0));
   const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
@@ -887,7 +884,7 @@ export default function PaymentDetail() {
                               <span className="text-xs text-muted-foreground italic">—</span>
                             )}
                           </td>
-                          <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.payment_amount).toLocaleString()}</td>
+                          <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.voucher_amount || ph.payment_amount).toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1011,9 +1008,11 @@ export default function PaymentDetail() {
 
                         {/* Display merged all-loan ledger entries (read-only for old entries) */}
                         {displayLedger.map((row, i) => {
-                          const otherCount = (allLoanLedgerEntries || []).filter(e => e.application_id && e.application_id !== Number(id)).length;
-                          const ledgerIdx = i - otherCount;
-                          const isFromCurrentApp = i >= otherCount;
+                          const isFromCurrentApp = !row.application_id || row.application_id === Number(id);
+                          const ledgerIdx = displayLedger
+                            .slice(0, i + 1)
+                            .filter(entry => !entry.application_id || entry.application_id === Number(id))
+                            .length - 1;
                           
                           return (
                             <tr key={i} className="border-b border-border/50">
@@ -1094,8 +1093,13 @@ export default function PaymentDetail() {
               {canAddUTR && (
                 <div className="bg-card border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <DollarSign size={16} className="text-green-600" /> Enter UTR Number
+                    <DollarSign size={16} className="text-green-600" /> Release Payment
                   </p>
+                  {payment.status === 'manager_approved' && (
+                    <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-200">
+                      Enter the UTR here. The voucher will be created automatically for this file.
+                    </div>
+                  )}
                   <form onSubmit={handleUTRSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -1126,7 +1130,7 @@ export default function PaymentDetail() {
                         type="number"
                         value={releaseAmount}
                         onChange={(e) => setReleaseAmount(e.target.value)}
-                        placeholder={`e.g. ${remainingAppBalance} or leave empty`}
+                        placeholder={`Default: ${remainingAppBalance.toLocaleString()}`}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm font-bold text-green-600 focus:outline-none focus:ring-2 focus:ring-green-500/20"
                       />
                     </div>
@@ -1145,7 +1149,7 @@ export default function PaymentDetail() {
                       disabled={addUTRNumber.isPending || !utrNumber.trim()}
                       className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold disabled:opacity-50"
                     >
-                      {addUTRNumber.isPending ? 'Releasing...' : 'Confirm & Release Payment'}
+                      {addUTRNumber.isPending ? 'Releasing...' : 'Create Voucher & Release'}
                     </button>
                   </form>
                 </div>
@@ -1185,13 +1189,6 @@ export default function PaymentDetail() {
                     <Edit size={16} /> Edit & Submit
                   </button>
                 </div>
-              )}
-
-              {canProcess && (
-                <button onClick={() => navigate(`/account/vouchers/create/${id}`)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold transition-colors">
-                  <FileText size={16} /> Generate Voucher
-                </button>
               )}
 
             </div>
