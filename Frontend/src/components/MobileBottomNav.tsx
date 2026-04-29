@@ -2,10 +2,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/lib/auth';
 import { getUserPermissions, Permission } from '@/lib/permissions';
-import { 
-  LayoutDashboard, FileText, Car, Users, UserPlus, 
-  BarChart3, MoreHorizontal, Building2, UserCheck, 
-  MapPin, CreditCard, Send, X, ClipboardCheck, 
+import {
+  LayoutDashboard, FileText, Car, Users, UserPlus,
+  BarChart3, MoreHorizontal, Building2, UserCheck,
+  MapPin, CreditCard, Send, X, ClipboardCheck,
   TrendingUp, Receipt, Plus, ChevronRight, Activity, Shield, ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -21,7 +21,7 @@ interface NavItem {
   path?: string;
   icon: React.ReactNode;
   roles: UserRole[];
-  children?: NavSubItem[];
+  children?: (NavSubItem & { roles?: UserRole[] })[];
   permission?: keyof Permission;
 }
 
@@ -29,9 +29,9 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Chat', path: '/chat', icon: <MessageSquare size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee', 'accountant'] },
   { label: 'Home', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager', 'bank', 'broker', 'employee'] },
   { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={20} />, roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'], permission: 'canManagePdd' },
-  { 
-    label: 'Leads', 
-    icon: <UserPlus size={20} />, 
+  {
+    label: 'Leads',
+    icon: <UserPlus size={20} />,
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'broker', 'employee'],
     permission: 'canView',
     children: [
@@ -40,9 +40,9 @@ const ALL_NAV_ITEMS: NavItem[] = [
       { label: 'Broker Leads', path: '/broker-leads', icon: <UserCheck size={18} /> },
     ]
   },
-  { 
-    label: 'Loans', 
-    icon: <FileText size={20} />, 
+  {
+    label: 'Loans',
+    icon: <FileText size={20} />,
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'],
     permission: 'canView',
     children: [
@@ -52,13 +52,13 @@ const ALL_NAV_ITEMS: NavItem[] = [
     ]
   },
   {
-    label: 'Apps',
+    label: 'Payments',
     icon: <Activity size={20} />,
     roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee', 'accountant'],
     permission: 'canManagePayments',
     children: [
       { label: 'Application List', path: '/payments', icon: <FileText size={18} /> },
-      { label: 'New Application', path: '/payments/new', icon: <Plus size={18} /> },
+      { label: 'New Application', path: '/payments/new', icon: <Plus size={18} />, roles: ['super_admin', 'admin', 'employee', 'accountant'] },
     ]
   },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'admin', 'manager', 'rbm', 'pdd_manager'], permission: 'canViewReports' },
@@ -85,8 +85,24 @@ export default function MobileBottomNav() {
   if (!user) return null;
   const permissions = getUserPermissions(user);
 
-  const filteredNav = ALL_NAV_ITEMS.filter(item => {
-    // Check role
+  const filteredNav = ALL_NAV_ITEMS.map(item => {
+    // If item has children, filter them by role
+    if (item.children) {
+      const allowedChildren = item.children.filter(child => 
+        !child.roles || (user.role && child.roles.includes(user.role as UserRole))
+      );
+      
+      // If only one child remains, and it's the main view, make it a direct link
+      if (allowedChildren.length === 1) {
+        return { ...item, path: allowedChildren[0].path, children: undefined };
+      }
+      
+      // Return a copy of the item with filtered children
+      return { ...item, children: allowedChildren.length > 0 ? allowedChildren : undefined };
+    }
+    return item;
+  }).filter(item => {
+    // Check role for the main item
     const hasRole = !user.role || item.roles.includes(user.role);
     if (!hasRole) return false;
 
@@ -97,13 +113,13 @@ export default function MobileBottomNav() {
 
     return true;
   });
-  
+
   const primaryNavItems = useMemo(() => {
     let labels: string[] = [];
     if (user.role === 'super_admin' || user.role === 'admin') {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
     } else if (user.role === 'manager' || user.role === 'rbm') {
-      labels = ['Home', 'Leads', 'Loans', 'Apps'];
+      labels = ['Home', 'Leads', 'Loans', 'Pay..'];
     } else if (user.role === 'broker') {
       labels = ['Home', 'Leads', 'Loans', 'Commission'];
     } else if (user.role === 'accountant') {
@@ -115,7 +131,7 @@ export default function MobileBottomNav() {
     } else {
       labels = ['Home', 'Leads', 'Loans', 'Apps'];
     }
-    
+
     // Map the labels to preserve order and keep only valid ones
     return labels
       .map(label => filteredNav.find(item => item.label === label))
@@ -146,11 +162,10 @@ export default function MobileBottomNav() {
                 <button
                   key={item.label}
                   onClick={() => setActiveSubMenu(activeSubMenu === item.label ? null : item.label)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${
-                    active || activeSubMenu === item.label
-                      ? 'text-accent'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${active || activeSubMenu === item.label
+                    ? 'text-accent'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   <div className={`p-1.5 rounded-xl transition-colors ${active || activeSubMenu === item.label ? 'bg-accent/10' : ''}`}>
                     {item.icon}
@@ -165,11 +180,10 @@ export default function MobileBottomNav() {
               <Link
                 key={item.label}
                 to={item.path!}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${
-                  active
-                    ? 'text-accent'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-0 flex-1 relative ${active
+                  ? 'text-accent'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-accent/10' : ''}`}>
                   {item.icon}
@@ -179,7 +193,7 @@ export default function MobileBottomNav() {
               </Link>
             );
           })}
-          
+
           {moreNav.length > 0 && (
             <button
               onClick={() => setShowMore(true)}
@@ -197,9 +211,9 @@ export default function MobileBottomNav() {
       {/* Sub Menu / Bottom Sheet */}
       {activeSubMenu && (
         <>
-          <div 
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden animate-in fade-in duration-200" 
-            onClick={() => setActiveSubMenu(null)} 
+          <div
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden animate-in fade-in duration-200"
+            onClick={() => setActiveSubMenu(null)}
           />
           <div className="fixed bottom-20 left-4 right-4 z-50 lg:hidden animate-in slide-in-from-bottom-4 duration-200">
             <div className="bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden">
@@ -209,7 +223,7 @@ export default function MobileBottomNav() {
                     {primaryNavItems.find(i => i.label === activeSubMenu)?.icon}
                     {activeSubMenu}
                   </h3>
-                  <button 
+                  <button
                     onClick={() => setActiveSubMenu(null)}
                     className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
                   >
@@ -224,11 +238,10 @@ export default function MobileBottomNav() {
                         key={child.path}
                         to={child.path}
                         onClick={() => setActiveSubMenu(null)}
-                        className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all ${
-                          active
-                            ? 'bg-accent text-accent-foreground shadow-md font-bold'
-                            : 'text-foreground hover:bg-muted/50'
-                        }`}
+                        className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all ${active
+                          ? 'bg-accent text-accent-foreground shadow-md font-bold'
+                          : 'text-foreground hover:bg-muted/50'
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <span className={`p-1.5 rounded-lg ${active ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'}`}>
@@ -282,11 +295,10 @@ export default function MobileBottomNav() {
                                 key={child.path}
                                 to={child.path}
                                 onClick={() => setShowMore(false)}
-                                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${
-                                  childActive
-                                    ? 'bg-accent text-accent-foreground shadow-lg'
-                                    : 'text-foreground hover:bg-muted/50'
-                                }`}
+                                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${childActive
+                                  ? 'bg-accent text-accent-foreground shadow-lg'
+                                  : 'text-foreground hover:bg-muted/50'
+                                  }`}
                               >
                                 <span className={childActive ? 'scale-110' : 'text-accent'}>{child.icon}</span>
                                 <span className="text-sm font-semibold">{child.label}</span>
@@ -299,11 +311,10 @@ export default function MobileBottomNav() {
                         <Link
                           to={item.path!}
                           onClick={() => setShowMore(false)}
-                          className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${
-                            active
-                              ? 'bg-accent text-accent-foreground shadow-lg'
-                              : 'text-foreground hover:bg-muted/50'
-                          }`}
+                          className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${active
+                            ? 'bg-accent text-accent-foreground shadow-lg'
+                            : 'text-foreground hover:bg-muted/50'
+                            }`}
                         >
                           <span className={active ? 'scale-110' : 'text-accent'}>{item.icon}</span>
                           <span className="text-sm font-semibold">{item.label}</span>

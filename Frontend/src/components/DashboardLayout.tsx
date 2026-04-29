@@ -30,6 +30,7 @@ interface NavItem {
     path: string;
     icon: ElementType;
     shortLabel?: string;
+    roles?: UserRole[];
   }[];
 }
 
@@ -75,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'Loan Applications', path: '/loans', icon: FileText, shortLabel: 'LN', roles: ['super_admin', 'admin', 'manager', 'rbm', 'bank', 'broker', 'employee'] },
   { title: 'Create Loan', path: '/loans/new', icon: Car, shortLabel: 'NL', roles: ['super_admin', 'admin', 'manager', 'employee'] },
   { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD', roles: ['super_admin', 'admin', 'manager', 'pdd_manager', 'employee'], permission: 'canManagePdd' },
-  { title: 'Apps', path: '/payments', icon: Wallet, shortLabel: 'PY', roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'], permission: 'canManagePayments' },
+  { title: 'Payments', path: '/payments', icon: Wallet, shortLabel: 'PY', roles: ['super_admin', 'admin', 'manager', 'rbm', 'employee'], permission: 'canManagePayments' },
   { title: 'Reports', path: '/reports', icon: BarChart3, shortLabel: 'RP', roles: ['super_admin', 'admin', 'manager', 'rbm'], permission: 'canViewReports' },
   { title: 'Commission', path: '/commission', icon: CreditCard, shortLabel: 'CM', roles: ['super_admin', 'admin', 'broker'] },
   { title: 'Users', path: '/users', icon: Users, shortLabel: 'US', roles: ['super_admin', 'admin', 'manager'] },
@@ -169,19 +170,19 @@ const RBM_NAV_ITEMS: NavItem[] = [
       { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD' },
     ]
   },
-  { 
-    title: 'Apps', 
-    path: '/payments', 
-    icon: Wallet, 
-    shortLabel: 'PY', 
+  {
+    title: 'Payments',
+    path: '/payments',
+    icon: Wallet,
+    shortLabel: 'PY',
     roles: ['rbm', 'manager'],
     permission: 'canManagePayments'
   },
-  { 
-    title: 'Operational Reports', 
-    path: '/reports', 
-    icon: BarChart3, 
-    shortLabel: 'RP', 
+  {
+    title: 'Operational Reports',
+    path: '/reports',
+    icon: BarChart3,
+    shortLabel: 'RP',
     roles: ['rbm', 'manager'],
     permission: 'canViewReports'
   },
@@ -240,7 +241,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   const permissions = getUserPermissions(user);
-  const filteredNav = getNavItems().filter(item => {
+  const filteredNav = getNavItems().map(item => {
+    if (item.children) {
+      const allowedChildren = item.children.filter(child => 
+        !child.roles || (user.role && child.roles.includes(user.role))
+      );
+      
+      // If only one child remains, promote it to a direct link
+      if (allowedChildren.length === 1) {
+        return { ...item, path: allowedChildren[0].path, children: undefined };
+      }
+      
+      return { ...item, children: allowedChildren.length > 0 ? allowedChildren : undefined };
+    }
+    return item;
+  }).filter(item => {
     const hasRole = !user.role || item.roles.includes(user.role);
     if (!hasRole) return false;
 
@@ -347,7 +362,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
                 {!collapsed && item.children && isActive && (
                   <div className="ml-11 flex flex-col gap-0.5 border-l border-blue-200 dark:border-blue-800/50 mt-1 mb-2">
-                    {item.children.map((child) => {
+                    {item.children.filter(child => !child.roles || (user.role && child.roles.includes(user.role))).map((child) => {
                       const isChildActive = location.pathname === child.path;
                       return (
                         <Link
