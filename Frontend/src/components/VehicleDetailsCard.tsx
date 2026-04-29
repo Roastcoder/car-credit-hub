@@ -18,7 +18,6 @@ interface VehicleDetailsCardProps {
     engine_number?: string;
     vehicle_class?: string;
     status?: string;
-    // New fields for completeness
     vertical?: string;
     scheme?: string;
     on_road_price?: string | number;
@@ -59,86 +58,86 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
   const secondaryFields = [
     { label: 'Vertical', value: vertical, icon: <Layout size={12} className="text-pink-500" /> },
     { label: 'Scheme', value: scheme, icon: <Zap size={12} className="text-yellow-500" /> },
-    { label: 'On-Road Price', value: on_road_price ? `₹${Number(on_road_price).toLocaleString()}` : null, icon: <IndianRupee size={12} className="text-green-500" /> },
     { label: 'LTV (%)', value: ltv ? `${ltv}%` : null, icon: <Activity size={12} className="text-blue-500" /> },
-  ].filter(f => f.value && f.value !== '—' && f.value !== '0' && f.value !== '₹0');
-
-  const technicalFields = [
-    { label: 'Chassis', value: chassis_number, icon: <Fingerprint size={12} /> },
-    { label: 'Engine', value: engine_number, icon: <Settings size={12} /> },
-    { label: 'M-Parivahan', value: m_parivahan, icon: <Map size={12} /> },
-    { label: 'RC Status', value: status, icon: <Shield size={12} /> },
-  ].filter(f => f.value && f.value !== '—' && f.value !== 'N/A');
+  ].filter(f => f.value && f.value !== '—');
 
   return (
-    <div className={cn("bg-gradient-to-br from-card to-muted/30 border border-border rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 group/card", className)}>
-      <div className="flex flex-col lg:flex-row">
-        {/* Visual Section */}
-        <div className="w-full lg:w-2/5 p-6 relative bg-muted/20">
-          <div className="absolute top-8 left-8 z-10">
+    <div className={cn("bg-gradient-to-br from-card to-muted/30 border border-border rounded-[2rem] overflow-hidden shadow-2xl transition-all duration-500 group/card w-full", className)}>
+      <div className="flex flex-col md:flex-row h-full min-h-[400px]">
+        
+        {/* Left Section: Image (Hero Style) */}
+        <div className="w-full md:w-[35%] lg:w-[40%] relative min-h-[300px] md:min-h-full overflow-hidden bg-muted/40">
+          <div className="absolute top-6 left-6 z-10">
             <span className={cn(
-              "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border backdrop-blur-md",
+              "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg border backdrop-blur-xl",
               status?.toLowerCase() === 'active' 
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                : "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" 
+                : "bg-orange-500/20 text-orange-600 border-orange-500/30"
             )}>
               {status || 'Verified'}
             </span>
           </div>
           
-          <VehicleImage 
-            make={make} 
-            model={model} 
-            variant={variant} 
-            className="aspect-[4/3] w-full shadow-2xl rounded-2xl ring-1 ring-border/50 group-hover/card:scale-[1.02] transition-transform duration-700"
-          />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+             <VehicleImage 
+              make={make} 
+              model={model} 
+              variant={variant} 
+              className="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] group-hover/card:scale-110 transition-transform duration-1000"
+            />
+          </div>
+          
+          {/* Decorative background element */}
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
         </div>
 
-        {/* Info Section */}
-        <div className="flex-1 p-8 flex flex-col justify-between">
+        {/* Right Section: Detailed Info */}
+        <div className="flex-1 p-8 md:p-10 flex flex-col justify-between bg-card">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-accent/10 border border-accent/20">
-                  <UserIcon size={14} className="text-accent" />
-                </div>
-                <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">
-                  {owner_name || 'System Records'}
-                </span>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-accent/10 border border-accent/20">
+                <UserIcon size={16} className="text-accent" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] leading-none mb-1">Vehicle Owner</span>
+                <span className="text-xs font-bold text-foreground uppercase">{owner_name || 'System Records'}</span>
               </div>
             </div>
             
-            <h2 className="text-3xl font-black text-foreground uppercase tracking-tight leading-none mb-1 group-hover/card:text-accent transition-colors">
-              {make} <span className="opacity-70">{model}</span>
-            </h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-60">
-              {variant || 'Standard Variant'}
-            </p>
+            <div className="mb-8">
+              <h2 className="text-4xl lg:text-5xl font-black text-foreground uppercase tracking-tighter leading-[0.9] mb-2 group-hover/card:text-accent transition-colors duration-500">
+                {make} <br />
+                <span className="text-muted-foreground/40">{model}</span>
+              </h2>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-50 border-l-2 border-accent/30 pl-4 mt-4">
+                {variant || 'Standard Variant'}
+              </p>
+            </div>
 
             {/* Primary Grid */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-6 mt-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-10">
               {mainFields.map((field, idx) => (
-                <div key={idx} className="flex flex-col gap-1.5 group/item">
-                  <div className="flex items-center gap-2 text-muted-foreground/50 transition-colors group-hover/item:text-foreground/70">
+                <div key={idx} className="flex flex-col gap-2 group/item">
+                  <div className="flex items-center gap-2 text-muted-foreground/40 transition-colors group-hover/item:text-accent/60">
                     {field.icon}
                     <span className="text-[10px] font-black uppercase tracking-widest leading-none">{field.label}</span>
                   </div>
-                  <p className="text-sm font-bold text-foreground uppercase tracking-tight">
-                    {field.value || 'N/A'}
+                  <p className="text-base font-bold text-foreground uppercase tracking-tight">
+                    {field.value || '—'}
                   </p>
                 </div>
               ))}
             </div>
 
-            {/* Secondary Horizontal Strip */}
+            {/* Secondary Strip */}
             {secondaryFields.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 py-4 border-y border-border/40">
+              <div className="mt-10 flex flex-wrap gap-8 py-6 border-y border-border/40">
                 {secondaryFields.map((field, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-md bg-muted/50">{field.icon}</div>
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted/50 border border-border/50">{field.icon}</div>
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-0.5">{field.label}</span>
-                      <span className="text-xs font-bold text-foreground uppercase">{field.value}</span>
+                      <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1">{field.label}</span>
+                      <span className="text-sm font-bold text-foreground uppercase">{field.value}</span>
                     </div>
                   </div>
                 ))}
@@ -146,32 +145,35 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
             )}
           </div>
 
-          {/* Technical Grid - Compact */}
-          {technicalFields.length > 0 && (
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {technicalFields.map((field, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-muted/30 p-2.5 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors">
-                  <div className="text-muted-foreground/40">{field.icon}</div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1">{field.label}</span>
-                    <span className="text-[10px] font-mono font-bold text-foreground truncate uppercase">{field.value}</span>
-                  </div>
+          {/* Technical Info & Footer */}
+          <div className="mt-10 flex flex-col md:flex-row items-end md:items-center justify-between gap-6">
+            <div className="flex flex-wrap gap-4">
+              {chassis_number && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/40">
+                  <Fingerprint size={12} className="text-muted-foreground/40" />
+                  <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase">{chassis_number}</span>
                 </div>
-              ))}
+              )}
+              {engine_number && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/40">
+                  <Settings size={12} className="text-muted-foreground/40" />
+                  <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase">{engine_number}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="mt-8 flex items-center gap-2">
-            <div className="flex -space-x-1.5">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="w-5 h-5 rounded-full border-2 border-card bg-accent/20 flex items-center justify-center">
-                  <Shield size={8} className="text-accent" />
-                </div>
-              ))}
+            <div className="flex items-center gap-3 bg-emerald-500/5 px-4 py-2 rounded-full border border-emerald-500/10">
+              <div className="flex -space-x-1">
+                {[1, 2].map(i => (
+                  <div key={i} className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <Shield size={8} className="text-emerald-600" />
+                  </div>
+                ))}
+              </div>
+              <span className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em]">
+                Verified via Surepass
+              </span>
             </div>
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-1">
-              Data Verified via Surepass API
-            </span>
           </div>
         </div>
       </div>
