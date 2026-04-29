@@ -28,7 +28,8 @@ import {
   ArrowLeft,
   ChevronUp,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -62,7 +63,6 @@ const DocumentUploadCard = ({
   disabled?: boolean;
 }) => {
   const [preview, setPreview] = useState<string | null>(null);
-  const [existingPreview, setExistingPreview] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   
   const matchedDocs = existingDocs.filter(d => types.includes(d.document_type));
@@ -78,24 +78,14 @@ const DocumentUploadCard = ({
     }
   }, [file]);
 
-  useEffect(() => {
-    if (hasExisting) {
-      const doc = matchedDocs[0];
-      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
-      setExistingPreview(`${baseUrl}${doc.file_url}`);
-    } else {
-      setExistingPreview(null);
-    }
-  }, [hasExisting, matchedDocs]);
-
   const isImage = (url: string | null) => {
     if (!url) return false;
     return url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || url.startsWith('blob:');
   };
 
-  const toggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExpanded(!isExpanded);
+  const getDocUrl = (url: string) => {
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+    return url.startsWith('http') ? url : `${baseUrl}${url}`;
   };
 
   return (
@@ -112,7 +102,7 @@ const DocumentUploadCard = ({
           <div className="flex gap-1.5">
             {hasExisting && (
               <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-[9px] font-black text-blue-600 border border-blue-500/20 uppercase tracking-tighter">
-                EXISTING
+                {matchedDocs.length} SAVED
               </span>
             )}
             {file && (
@@ -123,45 +113,48 @@ const DocumentUploadCard = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
-          {/* Existing Document Display */}
+        <div className="grid grid-cols-1 gap-4">
+          {/* List of Existing Documents */}
           {hasExisting && (
-            <div className="space-y-1.5">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase ml-1 opacity-60">Current File</p>
-              <div 
-                onClick={() => existingPreview && (isImage(existingPreview) ? setIsExpanded(!isExpanded) : window.open(existingPreview, '_blank'))}
-                className={cn(
-                  "relative cursor-pointer rounded-xl overflow-hidden bg-muted/20 border border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
-                  isExpanded ? "aspect-auto max-h-[80vh]" : "aspect-video"
-                )}
-              >
-                {existingPreview ? (
-                  <>
-                    {isImage(existingPreview) ? (
-                      <img src={existingPreview} alt="Old" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 py-4">
-                        <FileText size={24} className="text-accent/40" />
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Old PDF</span>
+            <div className="space-y-2">
+              <p className="text-[9px] font-black text-muted-foreground uppercase ml-1 opacity-60 flex items-center gap-1">
+                <ClipboardCheck size={10} /> Existing Documents
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {matchedDocs.map((doc, idx) => {
+                  const url = getDocUrl(doc.file_url);
+                  return (
+                    <div 
+                      key={doc.id || idx}
+                      onClick={() => window.open(url, '_blank')}
+                      className="group/doc relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted/20 cursor-pointer hover:border-accent transition-all"
+                      title={doc.document_type}
+                    >
+                      {isImage(url) ? (
+                        <img src={url} alt="Doc" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-blue-500/5">
+                          <FileText size={20} className="text-blue-500/40" />
+                          <span className="text-[8px] font-bold text-blue-600/60 uppercase mt-1">PDF</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/doc:opacity-100 transition-opacity flex items-center justify-center">
+                        <Eye size={14} className="text-white" />
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Eye size={18} className="text-white shadow-lg" />
                     </div>
-                  </>
-                ) : null}
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* New Upload Area */}
-          <div className="space-y-1.5">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase ml-1 opacity-60">
-              {hasExisting ? 'Upload Replacement' : 'Add Document'}
+          {/* New Document Section */}
+          <div className="space-y-2">
+            <p className="text-[9px] font-black text-muted-foreground uppercase ml-1 opacity-60 flex items-center gap-1">
+              <Plus size={10} /> {hasExisting ? 'Add New Document' : 'Upload Document'}
             </p>
             {file ? (
               <div 
-                onClick={() => preview && (isImage(preview) ? setIsExpanded(!isExpanded) : window.open(preview, '_blank'))}
                 className="relative aspect-video rounded-xl overflow-hidden bg-green-500/5 border-2 border-dashed border-green-500/30 flex items-center justify-center group/new"
               >
                 {isImage(preview) ? (
@@ -169,7 +162,7 @@ const DocumentUploadCard = ({
                 ) : (
                   <div className="flex flex-col items-center gap-2 py-4">
                     <FileText size={24} className="text-green-500/40" />
-                    <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">New PDF Selected</span>
+                    <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">New File Ready</span>
                   </div>
                 )}
                 <div className="absolute top-2 right-2 flex gap-1">
@@ -177,13 +170,18 @@ const DocumentUploadCard = ({
                     <X size={12} />
                   </button>
                 </div>
+                <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <span className="text-[10px] font-black text-white uppercase bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">Pending Save</span>
+                </div>
               </div>
             ) : (
               !disabled && (
-                <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer group-hover:shadow-inner">
-                  <Upload size={24} className="text-muted-foreground/30 group-hover:text-accent/40 mb-1" />
+                <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer group-hover:shadow-inner">
+                  <div className="p-2 rounded-full bg-accent/10 text-accent mb-2 transition-transform group-hover:scale-110">
+                    <Upload size={20} />
+                  </div>
                   <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest group-hover:text-accent/60">
-                    Click to browse
+                    Choose New File
                   </span>
                   <input 
                     type="file" 
@@ -195,18 +193,6 @@ const DocumentUploadCard = ({
               )
             )}
           </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-2 mt-1">
-          {((hasExisting && isImage(existingPreview)) || (file && isImage(preview))) && (
-            <button
-              type="button"
-              onClick={toggleExpand}
-              className="flex items-center gap-1 text-[9px] font-black text-accent hover:underline uppercase tracking-tighter"
-            >
-              {isExpanded ? <><ChevronUp size={12} /> Collapse View</> : <><ChevronDown size={12} /> Expand Preview</>}
-            </button>
-          )}
         </div>
       </div>
     </div>
