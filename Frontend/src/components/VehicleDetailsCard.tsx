@@ -1,6 +1,6 @@
 import React from 'react';
 import VehicleImage from './VehicleImage';
-import { Fuel, Calendar, Shield, Hash, Fingerprint, Settings, User as UserIcon, Activity } from 'lucide-react';
+import { Fuel, Calendar, Shield, Hash, Fingerprint, Settings, User as UserIcon, Activity, Map, Layout, Zap, IndianRupee } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 
 interface VehicleDetailsCardProps {
@@ -18,6 +18,12 @@ interface VehicleDetailsCardProps {
     engine_number?: string;
     vehicle_class?: string;
     status?: string;
+    // New fields for completeness
+    vertical?: string;
+    scheme?: string;
+    on_road_price?: string | number;
+    ltv?: string | number;
+    m_parivahan?: string;
   };
   className?: string;
 }
@@ -35,7 +41,12 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
     chassis_number,
     engine_number,
     vehicle_class,
-    status
+    status,
+    vertical,
+    scheme,
+    on_road_price,
+    ltv,
+    m_parivahan
   } = vehicleData;
 
   const mainFields = [
@@ -45,10 +56,17 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
     { label: 'Insurance Expiry', value: formatDate(insurance_expiry), icon: <Shield size={14} className="text-emerald-500" /> },
   ];
 
+  const secondaryFields = [
+    { label: 'Vertical', value: vertical, icon: <Layout size={12} className="text-pink-500" /> },
+    { label: 'Scheme', value: scheme, icon: <Zap size={12} className="text-yellow-500" /> },
+    { label: 'On-Road Price', value: on_road_price ? `₹${Number(on_road_price).toLocaleString()}` : null, icon: <IndianRupee size={12} className="text-green-500" /> },
+    { label: 'LTV (%)', value: ltv ? `${ltv}%` : null, icon: <Activity size={12} className="text-blue-500" /> },
+  ].filter(f => f.value && f.value !== '—' && f.value !== '0' && f.value !== '₹0');
+
   const technicalFields = [
-    { label: 'Chassis Number', value: chassis_number, icon: <Fingerprint size={12} /> },
-    { label: 'Engine Number', value: engine_number, icon: <Settings size={12} /> },
-    { label: 'Vehicle Class', value: vehicle_class, icon: <Activity size={12} /> },
+    { label: 'Chassis', value: chassis_number, icon: <Fingerprint size={12} /> },
+    { label: 'Engine', value: engine_number, icon: <Settings size={12} /> },
+    { label: 'M-Parivahan', value: m_parivahan, icon: <Map size={12} /> },
     { label: 'RC Status', value: status, icon: <Shield size={12} /> },
   ].filter(f => f.value && f.value !== '—' && f.value !== 'N/A');
 
@@ -56,7 +74,7 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
     <div className={cn("bg-gradient-to-br from-card to-muted/30 border border-border rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 group/card", className)}>
       <div className="flex flex-col lg:flex-row">
         {/* Visual Section */}
-        <div className="w-full lg:w-2/5 p-6 relative">
+        <div className="w-full lg:w-2/5 p-6 relative bg-muted/20">
           <div className="absolute top-8 left-8 z-10">
             <span className={cn(
               "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border backdrop-blur-md",
@@ -72,7 +90,7 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
             make={make} 
             model={model} 
             variant={variant} 
-            className="aspect-[4/3] w-full shadow-2xl ring-1 ring-border/50 group-hover/card:scale-[1.02] transition-transform duration-700"
+            className="aspect-[4/3] w-full shadow-2xl rounded-2xl ring-1 ring-border/50 group-hover/card:scale-[1.02] transition-transform duration-700"
           />
         </div>
 
@@ -97,6 +115,7 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
               {variant || 'Standard Variant'}
             </p>
 
+            {/* Primary Grid */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-6 mt-8">
               {mainFields.map((field, idx) => (
                 <div key={idx} className="flex flex-col gap-1.5 group/item">
@@ -110,17 +129,32 @@ const VehicleDetailsCard: React.FC<VehicleDetailsCardProps> = ({ vehicleData, cl
                 </div>
               ))}
             </div>
+
+            {/* Secondary Horizontal Strip */}
+            {secondaryFields.length > 0 && (
+              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 py-4 border-y border-border/40">
+                {secondaryFields.map((field, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-md bg-muted/50">{field.icon}</div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-0.5">{field.label}</span>
+                      <span className="text-xs font-bold text-foreground uppercase">{field.value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Technical Grid - Conditional */}
+          {/* Technical Grid - Compact */}
           {technicalFields.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {technicalFields.map((field, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors">
+                <div key={idx} className="flex items-center gap-3 bg-muted/30 p-2.5 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors">
                   <div className="text-muted-foreground/40">{field.icon}</div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1">{field.label}</span>
-                    <span className="text-[10px] font-bold text-foreground truncate max-w-[140px] uppercase">{field.value}</span>
+                    <span className="text-[10px] font-mono font-bold text-foreground truncate uppercase">{field.value}</span>
                   </div>
                 </div>
               ))}

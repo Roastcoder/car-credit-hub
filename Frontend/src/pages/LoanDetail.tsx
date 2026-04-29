@@ -739,22 +739,13 @@ export default function LoanDetail() {
                             engine_number: vehicleCache?.rc_full?.data?.engine_number || (loan as any).engine_number,
                             vehicle_class: vehicleCache?.rc_full?.data?.vehicle_class,
                             status: vehicleCache?.rc_full?.data?.rc_status,
+                            vertical: (loan as any).vertical,
+                            scheme: (loan as any).scheme,
+                            on_road_price: (loan as any).vehicle_price || loan.on_road_price,
+                            ltv: (loan as any).ltv,
+                            m_parivahan: (loan as any).financier_m_parivahan,
                           }}
                         />
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/40">
-                          <Field label="Vertical" value={(loan as any).vertical || '—'} />
-                          <Field label="Scheme" value={(loan as any).scheme || '—'} />
-                          <Field label="On-Road Price" value={formatCurrency(Number((loan as any).vehicle_price || loan.on_road_price || 0))} />
-                          {user?.role !== 'broker' && (
-                            <>
-                              <Field label="LTV (%)" value={String((loan as any).ltv || '—')} />
-                              <Field label="Chassis Number" value={(loan as any).chassis_number || '—'} />
-                              <Field label="Engine Number" value={(loan as any).engine_number || '—'} />
-                              <Field label="M-Parivahan" value={(loan as any).financier_m_parivahan || '—'} />
-                            </>
-                          )}
-                        </div>
                       </div>
                     </Section>
 
