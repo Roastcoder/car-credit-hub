@@ -133,6 +133,7 @@ export default function PaymentDetail() {
   const [allLoanLedgerEntries, setAllLoanLedgerEntries] = useState<any[]>([]);
   const [ledgerSaved, setLedgerSaved] = useState(false);
   const [savedLedgerCount, setSavedLedgerCount] = useState(0);
+  const [pendingRemark, setPendingRemark] = useState('');
 
   // Aadhaar Verification State
   const [verificationStep, setVerificationStep] = useState<'aadhaar' | 'otp' | 'utr'>('aadhaar');
@@ -209,6 +210,13 @@ export default function PaymentDetail() {
     },
     enabled: !!loanIdentifier,
   });
+
+  // Sync pendingRemark when payment data loads
+  useEffect(() => {
+    if (payment?.remarks) {
+      setPendingRemark(payment.remarks);
+    }
+  }, [payment?.remarks]);
 
   // Update payment status (manager action)
   const managerAction = useMutation({
@@ -1175,24 +1183,42 @@ export default function PaymentDetail() {
               )}
 
               {canApprove && (
-                <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+                <div className="bg-card border border-border rounded-lg p-4 space-y-3">
                   <p className="text-sm font-semibold text-foreground mb-1">Manager Actions</p>
-                  <button onClick={() => managerAction.mutate({ action: 'approve' })} disabled={managerAction.isPending}
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold disabled:opacity-50 transition-colors">
-                    Approve
-                  </button>
-                  <button onClick={() => { const r = prompt('Add remarks?', payment.remarks || ''); if (r !== null) updateRemarksMutation.mutate(r); }} disabled={updateRemarksMutation.isPending}
-                    className="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-semibold disabled:opacity-50 transition-colors">
-                    {updateRemarksMutation.isPending ? 'Updating...' : 'Add Remarks'}
-                  </button>
-                  <button onClick={() => { const r = prompt('Rejection reason?'); if (r) managerAction.mutate({ action: 'reject', remarks: r }); }} disabled={managerAction.isPending}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold disabled:opacity-50 transition-colors">
-                    Reject
-                  </button>
-                  <button onClick={() => { const r = prompt('Send back reason?'); if (r) managerAction.mutate({ action: 'send_back', remarks: r }); }} disabled={managerAction.isPending}
-                    className="w-full px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm font-semibold disabled:opacity-50 transition-colors">
-                    Send Back
-                  </button>
+                  
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Manager Remarks / Notes</label>
+                    <textarea
+                      value={pendingRemark}
+                      onChange={(e) => setPendingRemark(e.target.value)}
+                      placeholder="Add internal notes or reasons for approval/rejection..."
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button 
+                      onClick={() => updateRemarksMutation.mutate(pendingRemark)} 
+                      disabled={updateRemarksMutation.isPending || pendingRemark === (payment.remarks || '')}
+                      className="mt-2 w-full px-3 py-1.5 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-xs font-semibold disabled:opacity-50 transition-colors"
+                    >
+                      {updateRemarksMutation.isPending ? 'Saving...' : 'Save Note Only'}
+                    </button>
+                  </div>
+
+                  <div className="pt-2 flex flex-col gap-2">
+                    <button onClick={() => managerAction.mutate({ action: 'approve', remarks: pendingRemark })} disabled={managerAction.isPending}
+                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold disabled:opacity-50 transition-colors">
+                      Approve with Remark
+                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => { if (!pendingRemark.trim()) return toast.error('Please add a reason in remarks'); managerAction.mutate({ action: 'reject', remarks: pendingRemark }); }} disabled={managerAction.isPending}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold disabled:opacity-50 transition-colors">
+                        Reject
+                      </button>
+                      <button onClick={() => { if (!pendingRemark.trim()) return toast.error('Please add a reason in remarks'); managerAction.mutate({ action: 'send_back', remarks: pendingRemark }); }} disabled={managerAction.isPending}
+                        className="px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm font-semibold disabled:opacity-50 transition-colors">
+                        Send Back
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
