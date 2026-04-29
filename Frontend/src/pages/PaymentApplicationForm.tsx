@@ -232,7 +232,17 @@ export default function PaymentApplicationForm() {
       });
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setPddDocuments(Array.isArray(data) ? data : []);
+      const docs = Array.isArray(data) ? data : [];
+      setPddDocuments(docs);
+      
+      // Auto-select all documents if this is a new application
+      if (!id && docs.length > 0) {
+        const allDocKeys = docs.map((doc: any, index: number) => doc.file_url || doc.file_path || String(doc.id || index));
+        setFormData(prev => ({
+          ...prev,
+          pdd_documents: allDocKeys
+        }));
+      }
     } catch (error) {
       console.error('Error fetching loan documents:', error);
     }
@@ -351,7 +361,17 @@ export default function PaymentApplicationForm() {
       });
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setPddDocuments(Array.isArray(data) ? data : []);
+      const docs = Array.isArray(data) ? data : [];
+      setPddDocuments(docs);
+
+      // Auto-select all documents if this is a new application
+      if (!id && docs.length > 0) {
+        const allDocKeys = docs.map((doc: any, index: number) => doc.file_url || doc.file_path || String(doc.id || index));
+        setFormData(prev => ({
+          ...prev,
+          pdd_documents: allDocKeys
+        }));
+      }
     } catch (error) {
       console.error('Error fetching loan documents:', error);
     }
