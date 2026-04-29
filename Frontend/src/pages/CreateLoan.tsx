@@ -640,7 +640,6 @@ export default function CreateLoan() {
     }
   };
 
-  const [customTenure, setCustomTenure] = useState('');
   const [showCustomTenure, setShowCustomTenure] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
   const [docToDelete, setDocToDelete] = useState<any>(null);
@@ -652,17 +651,9 @@ export default function CreateLoan() {
   const handleTenureChange = (value: string) => {
     if (value === 'custom') {
       setShowCustomTenure(true);
-      setCustomTenure('');
+      update('tenure', '');
     } else {
       setShowCustomTenure(false);
-      setCustomTenure('');
-      update('tenure', value);
-    }
-  };
-
-  const handleCustomTenureChange = (value: string) => {
-    setCustomTenure(value);
-    if (value && !isNaN(Number(value)) && Number(value) > 0) {
       update('tenure', value);
     }
   };
@@ -803,7 +794,6 @@ export default function CreateLoan() {
       const existingTenure = String(existingLoan.tenure || '60');
       if (!tenureOptions.includes(Number(existingTenure))) {
         setShowCustomTenure(true);
-        setCustomTenure(existingTenure);
       }
     }
   }, [isEditMode, existingLoan]);
@@ -1894,8 +1884,10 @@ export default function CreateLoan() {
                       </select>
                     ) : (
                       <div className="flex gap-2">
-                        <input required type="number" min="1" max="120" className={inputClass} value={customTenure} onChange={e => handleCustomTenureChange(e.target.value)} />
-                        <button type="button" onClick={() => { setShowCustomTenure(false); setCustomTenure(''); update('tenure', '60'); }} className="px-2 py-2 rounded-lg border border-border hover:bg-muted">↩</button>
+                        <input required type="number" min="1" max="120" className={inputClass} value={form.tenure} onChange={e => update('tenure', e.target.value)} />
+                        <button type="button" onClick={() => { setShowCustomTenure(false); update('tenure', '60'); }} title="Cancel custom input" className="px-3 py-2 rounded-lg border border-border hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:border-red-800 transition-colors flex items-center justify-center">
+                          <X size={16} />
+                        </button>
                       </div>
                     )}
                   </div>
