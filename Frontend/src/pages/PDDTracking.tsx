@@ -235,6 +235,20 @@ export default function PDDTracking() {
     });
   };
 
+  // Fetch documents for the loan being edited
+  const { data: editingLoanDocuments = [] } = useQuery({
+    queryKey: ['loan-documents', editingLoanId],
+    queryFn: async () => {
+      if (!editingLoanId) return [];
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${editingLoanId}/documents`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!editingLoanId,
+  });
+
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
@@ -423,7 +437,7 @@ export default function PDDTracking() {
                       {editingLoanId === loan.id ? (
                         <PDDForm 
                           loan={loan} 
-                          existingDocuments={[]}
+                          existingDocuments={editingLoanDocuments}
                           onCancel={() => setEditingLoanId(null)} 
                           onSuccess={() => {
                             setEditingLoanId(null);

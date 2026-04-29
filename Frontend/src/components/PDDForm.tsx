@@ -62,22 +62,31 @@ const DocumentUploadCard = ({
   disabled?: boolean;
 }) => {
   const [preview, setPreview] = useState<string | null>(null);
+  const [existingPreview, setExistingPreview] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  
   const matchedDocs = existingDocs.filter(d => types.includes(d.document_type));
+  const hasExisting = matchedDocs.length > 0;
 
   useEffect(() => {
     if (file) {
       const url = URL.createObjectURL(file);
       setPreview(url);
       return () => URL.revokeObjectURL(url);
-    } else if (matchedDocs.length > 0) {
-      const doc = matchedDocs[0];
-      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
-      setPreview(`${baseUrl}${doc.file_url}`);
     } else {
       setPreview(null);
     }
-  }, [file, matchedDocs]);
+  }, [file]);
+
+  useEffect(() => {
+    if (hasExisting) {
+      const doc = matchedDocs[0];
+      const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+      setExistingPreview(`${baseUrl}${doc.file_url}`);
+    } else {
+      setExistingPreview(null);
+    }
+  }, [hasExisting, matchedDocs]);
 
   const isImage = (url: string | null) => {
     if (!url) return false;
@@ -86,11 +95,7 @@ const DocumentUploadCard = ({
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (preview && isImage(preview)) {
-      setIsExpanded(!isExpanded);
-    } else if (preview) {
-      window.open(preview, '_blank');
-    }
+    setIsExpanded(!isExpanded);
   };
 
   return (
@@ -104,86 +109,104 @@ const DocumentUploadCard = ({
             <FileText size={12} className="text-accent" />
             {label}
           </h4>
-          {(file || matchedDocs.length > 0) && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-[9px] font-black text-green-600 border border-green-500/20 uppercase tracking-tighter">
-              <CheckCircle2 size={10} /> {file ? 'NEW' : 'SAVED'}
-            </span>
-          )}
+          <div className="flex gap-1.5">
+            {hasExisting && (
+              <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-[9px] font-black text-blue-600 border border-blue-500/20 uppercase tracking-tighter">
+                EXISTING
+              </span>
+            )}
+            {file && (
+              <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[9px] font-black text-green-600 border border-green-500/20 uppercase tracking-tighter">
+                NEW
+              </span>
+            )}
+          </div>
         </div>
 
-        <div 
-          onClick={toggleExpand}
-          className={cn(
-            "relative cursor-pointer rounded-xl overflow-hidden bg-muted/30 border border-dashed border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
-            isExpanded ? "aspect-auto max-h-[80vh]" : "aspect-video"
-          )}
-        >
-          {preview ? (
-            <>
-              {isImage(preview) ? (
-                <img 
-                  src={preview} 
-                  alt={label} 
-                  className={cn(
-                    "transition-all",
-                    isExpanded ? "w-full h-auto p-2 object-contain" : "w-full h-full object-cover"
-                  )} 
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2 py-6">
-                  <FileText size={32} className="text-accent/60" />
-                  <span className="text-[10px] font-black text-muted-foreground uppercase">PDF Document</span>
-                </div>
-              )}
-              {!isExpanded && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="p-2 bg-white text-black rounded-full shadow-lg">
-                    {isImage(preview) ? <Eye size={18} /> : <ExternalLink size={18} />}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-6">
-              <Upload size={24} className="text-muted-foreground/40" />
-              <span className="text-[10px] font-black text-muted-foreground/60 tracking-wider">NO DOCUMENT</span>
+        <div className="grid grid-cols-1 gap-3">
+          {/* Existing Document Display */}
+          {hasExisting && (
+            <div className="space-y-1.5">
+              <p className="text-[9px] font-bold text-muted-foreground uppercase ml-1 opacity-60">Current File</p>
+              <div 
+                onClick={() => existingPreview && (isImage(existingPreview) ? setIsExpanded(!isExpanded) : window.open(existingPreview, '_blank'))}
+                className={cn(
+                  "relative cursor-pointer rounded-xl overflow-hidden bg-muted/20 border border-border group-hover:border-accent/20 transition-all flex items-center justify-center",
+                  isExpanded ? "aspect-auto max-h-[80vh]" : "aspect-video"
+                )}
+              >
+                {existingPreview ? (
+                  <>
+                    {isImage(existingPreview) ? (
+                      <img src={existingPreview} alt="Old" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-4">
+                        <FileText size={24} className="text-accent/40" />
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Old PDF</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Eye size={18} className="text-white shadow-lg" />
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
           )}
+
+          {/* New Upload Area */}
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase ml-1 opacity-60">
+              {hasExisting ? 'Upload Replacement' : 'Add Document'}
+            </p>
+            {file ? (
+              <div 
+                onClick={() => preview && (isImage(preview) ? setIsExpanded(!isExpanded) : window.open(preview, '_blank'))}
+                className="relative aspect-video rounded-xl overflow-hidden bg-green-500/5 border-2 border-dashed border-green-500/30 flex items-center justify-center group/new"
+              >
+                {isImage(preview) ? (
+                  <img src={preview!} alt="New" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <FileText size={24} className="text-green-500/40" />
+                    <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">New PDF Selected</span>
+                  </div>
+                )}
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button onClick={(e) => { e.stopPropagation(); onClear(); }} className="p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all">
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              !disabled && (
+                <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/40 transition-all cursor-pointer group-hover:shadow-inner">
+                  <Upload size={24} className="text-muted-foreground/30 group-hover:text-accent/40 mb-1" />
+                  <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest group-hover:text-accent/60">
+                    Click to browse
+                  </span>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    onChange={(e) => onChange(e.target.files?.[0] || null)}
+                    accept="image/*,application/pdf"
+                  />
+                </label>
+              )
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          {preview && isImage(preview) && (
+        <div className="flex items-center justify-between gap-2 mt-1">
+          {((hasExisting && isImage(existingPreview)) || (file && isImage(preview))) && (
             <button
               type="button"
               onClick={toggleExpand}
-              className="flex items-center gap-1 text-[10px] font-black text-accent hover:underline uppercase tracking-tight"
+              className="flex items-center gap-1 text-[9px] font-black text-accent hover:underline uppercase tracking-tighter"
             >
-              {isExpanded ? <><ChevronUp size={12} /> Collapse</> : <><ChevronDown size={12} /> Inline Preview</>}
+              {isExpanded ? <><ChevronUp size={12} /> Collapse View</> : <><ChevronDown size={12} /> Expand Preview</>}
             </button>
           )}
-          
-          <div className="flex items-center gap-2 ml-auto">
-            {!disabled && (
-              <label className="p-2 bg-muted text-foreground rounded-xl cursor-pointer hover:bg-accent hover:text-white transition-all shadow-sm">
-                <Camera size={16} />
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  onChange={(e) => onChange(e.target.files?.[0] || null)}
-                  accept="image/*,application/pdf"
-                />
-              </label>
-            )}
-            {file && !disabled && (
-              <button
-                type="button"
-                onClick={onClear}
-                className="p-2 bg-muted text-foreground rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -255,7 +278,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     police_case_status: loan.police_case_status || '',
     commitment_date: loan.commitment_date?.split('T')[0] || '',
     delay_days: loan.delay_days || '',
-    pdd_remarks: '',
+    pdd_remarks: loan.pdd_remarks || '',
   });
 
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
@@ -268,7 +291,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEmployee = user?.role === 'employee' || user?.role === 'admin' || user?.role === 'super_admin';
+  const canEdit = user?.role === 'employee' || user?.role === 'manager' || user?.role === 'pdd_manager' || user?.role === 'admin' || user?.role === 'super_admin';
   const isRejected = loan.pdd_status === 'rejected';
   const isBT = loan.scheme === 'BT' || loan.scheme === 'Purchase & BT';
 
@@ -355,7 +378,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
             >
               Cancel
             </button>
-            {isEmployee && (
+            {canEdit && (
               <button 
                 type="submit" 
                 disabled={isSubmitting} 
@@ -403,154 +426,155 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
             <InputField 
               label="Payment Received Date" icon={<Calendar size={12}/>}
               type="date" value={formData.payment_received_date} onChange={(e) => setFormData({...formData, payment_received_date: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="M-Parivahan Financier" icon={<Landmark size={12}/>}
               placeholder="e.g. HDFC Bank"
               value={formData.financier_m_parivahan} onChange={(e) => setFormData({...formData, financier_m_parivahan: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Balance Status" icon={<IndianRupee size={12}/>}
               placeholder="Full Payment Clear"
               value={formData.balance_payment_status} onChange={(e) => setFormData({...formData, balance_payment_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Finance Co. Update" icon={<Files size={12}/>}
               placeholder="PDD Updated at Finance Co."
               value={formData.pdd_update_finance_company} onChange={(e) => setFormData({...formData, pdd_update_finance_company: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
           </FormSection>
 
-          {isBT && (
+          {/* FC Details - Always visible if data exists, or if isBT */}
+          {(isBT || loan.fc_deposited_by || formData.fc_deposited_by) && (
             <FormSection title="FC Details" icon={<Landmark size={18} />} index={2}>
               <InputField 
                 label="FC Deposited By *" icon={<User size={12}/>}
                 value={formData.fc_deposited_by} onChange={(e) => setFormData({...formData, fc_deposited_by: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
               <InputField 
                 label="Deposit Date *" icon={<Calendar size={12}/>}
                 type="date" value={formData.fc_deposit_date} onChange={(e) => setFormData({...formData, fc_deposit_date: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
               <InputField 
                 label="Current FC Status *" icon={<AlertCircle size={12}/>}
                 value={formData.current_fc_status} onChange={(e) => setFormData({...formData, current_fc_status: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
               <InputField 
                 label="FC Receipt Number" icon={<FileText size={12}/>}
                 value={formData.fc_receipt} onChange={(e) => setFormData({...formData, fc_receipt: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
               <InputField 
                 label="Zero Statement" icon={<FileText size={12}/>}
                 value={formData.zero_statement} onChange={(e) => setFormData({...formData, zero_statement: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
               <InputField 
                 label="Prev Financier Name" icon={<Landmark size={12}/>}
                 value={formData.prev_financier_account_status} onChange={(e) => setFormData({...formData, prev_financier_account_status: e.target.value})} 
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
             </FormSection>
           )}
 
-          <FormSection title="RTO & Description" icon={<Files size={18} />} index={isBT ? 3 : 2}>
+          <FormSection title="RTO & Description" icon={<Files size={18} />} index={3}>
             <InputField 
               label="RTO Paper Details" icon={<FileText size={12}/>}
               value={formData.rto_paper_details} onChange={(e) => setFormData({...formData, rto_paper_details: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Agent Name" icon={<User size={12}/>}
               value={formData.rto_agent_name} onChange={(e) => setFormData({...formData, rto_agent_name: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Agent Contact" icon={<Phone size={12}/>}
               value={formData.rto_agent_mobile} onChange={(e) => setFormData({...formData, rto_agent_mobile: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Work Status" icon={<AlertCircle size={12}/>}
               value={formData.rto_work_status} onChange={(e) => setFormData({...formData, rto_work_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Docs Location" icon={<MapPin size={12}/>}
               value={formData.rto_docs_location} onChange={(e) => setFormData({...formData, rto_docs_location: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Work Description" icon={<Info size={12}/>}
               value={formData.rto_work_description} onChange={(e) => setFormData({...formData, rto_work_description: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
           </FormSection>
 
-          <FormSection title="Verification" icon={<ClipboardCheck size={18} />} index={isBT ? 4 : 3}>
+          <FormSection title="Verification" icon={<ClipboardCheck size={18} />} index={4}>
             <InputField 
               label="Pollution" value={formData.pollution_status} 
               onChange={(e) => setFormData({...formData, pollution_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Insurance" value={formData.insurance_status} 
               onChange={(e) => setFormData({...formData, insurance_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Challan" value={formData.challan_status} 
               onChange={(e) => setFormData({...formData, challan_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Police Case" value={formData.police_case_status} 
               onChange={(e) => setFormData({...formData, police_case_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Insurance Endorsement" icon={<ShieldCheck size={12}/>}
               value={formData.insurance_endorsement} onChange={(e) => setFormData({...formData, insurance_endorsement: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Location" icon={<MapPin size={12}/>}
               value={formData.dto_location} onChange={(e) => setFormData({...formData, dto_location: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
           </FormSection>
 
-          <FormSection title="NOC & Schedule" icon={<ShieldCheck size={18} />} index={isBT ? 5 : 4}>
+          <FormSection title="NOC & Schedule" icon={<ShieldCheck size={18} />} index={5}>
             <InputField 
               label={`NOC Status ${isBT ? '*' : ''}`} icon={<ShieldCheck size={12}/>}
               value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Checked By" icon={<User size={12}/>}
               value={formData.noc_checked_by} onChange={(e) => setFormData({...formData, noc_checked_by: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Commitment Date" icon={<Timer size={12}/>}
               type="date" value={formData.commitment_date} onChange={(e) => setFormData({...formData, commitment_date: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <InputField 
               label="Delay (Days)" icon={<AlertCircle size={12}/>}
               type="number" value={formData.delay_days} onChange={(e) => setFormData({...formData, delay_days: e.target.value})} 
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
           </FormSection>
 
           {/* Consolidated Document Upload Section */}
-          <FormSection title="Document Verification" icon={<Files size={18} />} index={isBT ? 6 : 5}>
+          <FormSection title="Document Verification" icon={<Files size={18} />} index={6}>
             <DocumentUploadCard 
               label="RC Front"
               file={files.rc_front}
@@ -558,7 +582,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['rc_front', 'rc_document']}
               onChange={(f) => setFiles({...files, rc_front: f})}
               onClear={() => setFiles({...files, rc_front: null})}
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="RC Back"
@@ -567,7 +591,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['rc_back']}
               onChange={(f) => setFiles({...files, rc_back: f})}
               onClear={() => setFiles({...files, rc_back: null})}
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="Insurance Policy"
@@ -576,7 +600,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['insurance', 'insurance_document']}
               onChange={(f) => setFiles({...files, insurance: f})}
               onClear={() => setFiles({...files, insurance: null})}
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="NOC Document"
@@ -585,7 +609,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['noc']}
               onChange={(f) => setFiles({...files, noc: f})}
               onClear={() => setFiles({...files, noc: null})}
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
             <DocumentUploadCard 
               label="DM Document"
@@ -594,9 +618,10 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['dm_document']}
               onChange={(f) => setFiles({...files, dm: f})}
               onClear={() => setFiles({...files, dm: null})}
-              disabled={!isEmployee}
+              disabled={!canEdit}
             />
-            {isBT && (
+            {/* Always show Foreclose if data exists, or if isBT */}
+            {(isBT || loan.fc_receipt || formData.fc_receipt) && (
               <DocumentUploadCard 
                 label="Foreclose Document"
                 file={files.fc}
@@ -604,12 +629,12 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
                 types={['foreclose_document', 'fitness_document']}
                 onChange={(f) => setFiles({...files, fc: f})}
                 onClear={() => setFiles({...files, fc: null})}
-                disabled={!isEmployee}
+                disabled={!canEdit}
               />
             )}
           </FormSection>
 
-          <FormSection title="Other Remarks" icon={<MessageSquare size={18} />} index={isBT ? 7 : 6}>
+          <FormSection title="Other Remarks" icon={<MessageSquare size={18} />} index={7}>
             <div className="md:col-span-2 lg:col-span-3 space-y-4">
               <div className="space-y-2">
                 <label className={labelClass}>Process Remarks</label>
@@ -618,7 +643,7 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
                   placeholder="Enter any additional notes for the manager..."
                   value={formData.pdd_remarks}
                   onChange={(e) => setFormData({...formData, pdd_remarks: e.target.value})}
-                  disabled={!isEmployee}
+                  disabled={!canEdit}
                 />
               </div>
               <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 flex gap-3">
