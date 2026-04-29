@@ -130,7 +130,7 @@ export default function MobileBottomNav() {
     } else if (user.role === 'bank') {
       labels = ['Home', 'Loans', 'Chat'];
     } else {
-      labels = ['Home', 'Leads', 'Loans', 'Payments'];
+      labels = ['Home', 'Leads', 'Loans', 'PDD Tracking', 'Payments'];
     }
 
     // Map the labels to preserve order and keep only valid ones

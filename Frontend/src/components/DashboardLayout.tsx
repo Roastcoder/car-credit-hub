@@ -172,8 +172,15 @@ const EMPLOYEE_NAV_ITEMS: NavItem[] = [
     children: [
       { title: 'All Loans', path: '/loans', icon: FileText, shortLabel: 'LL' },
       { title: 'New Loan', path: '/loans/new', icon: Plus, shortLabel: 'NL' },
-      { title: 'PDD Tracking', path: '/pdd-tracking', icon: ClipboardCheck, shortLabel: 'PD' },
     ]
+  },
+  {
+    title: 'PDD Tracking',
+    path: '/pdd-tracking',
+    icon: ClipboardCheck,
+    shortLabel: 'PD',
+    roles: ['employee'],
+    permission: 'canManagePdd'
   },
   {
     title: 'Payments',
