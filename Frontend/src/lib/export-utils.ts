@@ -35,6 +35,7 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
       'emi_end_date': 'EMI End Date',
       'assigned_bank_name': 'Assigned Bank',
       'disburse_branch_name': 'Disburse Branch',
+      'booking_mode': 'Booking Mode',
       'assigned_broker_name': 'Broker Name',
       'insurance_company_name': 'Insurance Company',
       'insurance_date': 'Insurance Expiry',
