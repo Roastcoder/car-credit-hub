@@ -659,7 +659,7 @@ export default function LoanDetail() {
 
                 {/* Vehicle Information - Full Width Hero Section */}
                 <div className="mb-8">
-                  <VehicleDetailsCard 
+                  <VehicleDetailsCard
                     vehicleData={{
                       registration_number: (loan as any).vehicle_number,
                       make: (loan as any).maker_name || loan.car_make || (loan as any).vehicle_model,
@@ -735,17 +735,6 @@ export default function LoanDetail() {
                       </div>
                     </Section>
 
-                    {/* Co-Applicant & Guarantor Details */}
-                    {user?.role !== 'broker' && !isPddManager && ((loan as any).co_applicant_name || (loan as any).guarantor_name) && (
-                      <Section title="Co-Applicant & Guarantor" icon={<User size={16} />}>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Field label="Co-Applicant Name" value={(loan as any).co_applicant_name || '—'} />
-                          <Field label="Co-Applicant Mobile" value={(loan as any).co_applicant_mobile || '—'} />
-                          <Field label="Guarantor Name" value={(loan as any).guarantor_name || '—'} />
-                          <Field label="Guarantor Mobile" value={(loan as any).guarantor_mobile || '—'} />
-                        </div>
-                      </Section>
-                    )}
 
                     {/* Financial Summary - Cohesive Block */}
                     {!isPddManager && (
