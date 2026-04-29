@@ -74,6 +74,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: 'Receivables', path: '/account/receivables', icon: <TrendingUp size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
   { label: 'Payables', path: '/account/payables', icon: <Receipt size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
   { label: 'Vouchers', path: '/account/vouchers', icon: <FileText size={20} />, roles: ['accountant'], permission: 'canManagePayments' },
+  { label: 'My Brokers', path: '/my-brokers', icon: <UserCheck size={20} />, roles: ['employee'] },
 ];
 
 export default function MobileBottomNav() {
@@ -129,7 +130,7 @@ export default function MobileBottomNav() {
     } else if (user.role === 'bank') {
       labels = ['Home', 'Loans', 'Chat'];
     } else {
-      labels = ['Home', 'Leads', 'Loans', 'Apps'];
+      labels = ['Home', 'Leads', 'Loans', 'Payments'];
     }
 
     // Map the labels to preserve order and keep only valid ones

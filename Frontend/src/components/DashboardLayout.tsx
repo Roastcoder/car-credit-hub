@@ -243,15 +243,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const permissions = getUserPermissions(user);
   const filteredNav = getNavItems().map(item => {
     if (item.children) {
-      const allowedChildren = item.children.filter(child => 
+      const allowedChildren = item.children.filter(child =>
         !child.roles || (user.role && child.roles.includes(user.role))
       );
-      
+
       // If only one child remains, promote it to a direct link
       if (allowedChildren.length === 1) {
         return { ...item, path: allowedChildren[0].path, children: undefined };
       }
-      
+
       return { ...item, children: allowedChildren.length > 0 ? allowedChildren : undefined };
     }
     return item;
