@@ -282,6 +282,8 @@ export const accountAPI = {
     queryParams.append('v', Date.now().toString());
     return api.get('/account/reports' + `?${queryParams}`);
   },
+  updateLedger: (id: number | string, data: any) => api.put(`/account/ledger/${id}`, data),
+  deleteLedger: (id: number | string) => api.delete(`/account/ledger/${id}`),
 };
 
 // Payment Applications API

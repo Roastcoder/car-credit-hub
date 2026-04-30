@@ -1,19 +1,55 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Download, Calendar, FileText, BookOpen, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Filter, Download, Calendar, FileText, History, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { accountAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function GeneralLedger() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('this-month');
+  const [editingId, setEditingId] = useState<number | string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+
+  const isSuperAdmin = user?.role === 'super_admin';
 
   const { data: ledgerData, isLoading } = useQuery({
     queryKey: ['general-ledger', dateRange],
     queryFn: () => accountAPI.getLedger({ period: dateRange })
+  });
+
+  const { data: coaData } = useQuery({
+    queryKey: ['chart-of-accounts'],
+    queryFn: () => accountAPI.getChartOfAccounts(),
+    enabled: isSuperAdmin
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number | string, data: any }) => accountAPI.updateLedger(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['general-ledger'] });
+      setEditingId(null);
+      toast.success('Ledger entry updated');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update ledger');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number | string) => accountAPI.deleteLedger(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['general-ledger'] });
+      toast.success('Ledger entry deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete ledger');
+    }
   });
 
   const transactions = ledgerData?.transactions || [];
@@ -29,6 +65,28 @@ export default function GeneralLedger() {
     t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.account_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEdit = (transaction: any) => {
+    setEditingId(transaction.id);
+    setEditForm({
+      transaction_date: transaction.transaction_date?.split('T')[0],
+      description: transaction.description,
+      debit_amount: transaction.debit_amount || transaction.debit,
+      credit_amount: transaction.credit_amount || transaction.credit,
+      account_id: transaction.account_id
+    });
+  };
+
+  const handleSave = () => {
+    if (!editingId) return;
+    updateMutation.mutate({ id: editingId, data: editForm });
+  };
+
+  const handleDelete = (id: number | string) => {
+    if (window.confirm('Are you sure you want to delete this ledger entry? This action cannot be undone and may affect account balances.')) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const formatCurrency = (amount: number | string) => {
     const val = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -60,7 +118,7 @@ export default function GeneralLedger() {
 
       {/* Account Summary */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        {accountSummary.map((item, index) => (
+        {accountSummary.map((item: any, index: number) => (
           <div key={index} className="glass-card p-4 rounded-xl border border-white/20 dark:border-white/10">
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.account}</p>
@@ -118,7 +176,7 @@ export default function GeneralLedger() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Debit</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Credit</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
+                {isSuperAdmin && <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -128,34 +186,109 @@ export default function GeneralLedger() {
                 </tr>
               ) : filteredTransactions.length > 0 ? (
                 filteredTransactions.map((transaction: any) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 group">
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                      {new Date(transaction.transaction_date).toLocaleDateString()}
+                      {editingId === transaction.id ? (
+                        <Input 
+                          type="date" 
+                          value={editForm.transaction_date} 
+                          onChange={e => setEditForm({ ...editForm, transaction_date: e.target.value })}
+                          className="h-8 text-xs p-1"
+                        />
+                      ) : (
+                        new Date(transaction.transaction_date).toLocaleDateString()
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900 dark:text-white">{transaction.account_name}</div>
+                      {editingId === transaction.id ? (
+                        <Select 
+                          value={String(editForm.account_id)} 
+                          onValueChange={val => setEditForm({ ...editForm, account_id: val })}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(coaData || []).map((account: any) => (
+                              <SelectItem key={account.id} value={String(account.id)}>
+                                {account.account_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="font-medium text-gray-900 dark:text-white">{transaction.account_name}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-gray-600 dark:text-gray-400">{transaction.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {parseFloat(transaction.debit) > 0 && (
-                        <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(transaction.debit)}</span>
+                      {editingId === transaction.id ? (
+                        <Input 
+                          value={editForm.description} 
+                          onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                          className="h-8 text-xs"
+                        />
+                      ) : (
+                        <div className="text-gray-600 dark:text-gray-400">{transaction.description}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {parseFloat(transaction.credit) > 0 && (
-                        <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(transaction.credit)}</span>
+                      {editingId === transaction.id ? (
+                        <Input 
+                          type="number"
+                          value={editForm.debit_amount} 
+                          onChange={e => setEditForm({ ...editForm, debit_amount: e.target.value })}
+                          className="h-8 text-xs text-right w-24 ml-auto"
+                        />
+                      ) : (
+                        parseFloat(transaction.debit) > 0 && (
+                          <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(transaction.debit)}</span>
+                        )
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(transaction.balance)}</span>
+                      {editingId === transaction.id ? (
+                        <Input 
+                          type="number"
+                          value={editForm.credit_amount} 
+                          onChange={e => setEditForm({ ...editForm, credit_amount: e.target.value })}
+                          className="h-8 text-xs text-right w-24 ml-auto"
+                        />
+                      ) : (
+                        parseFloat(transaction.credit) > 0 && (
+                          <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(transaction.credit)}</span>
+                        )
+                      )}
                     </td>
+                    {isSuperAdmin && (
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {editingId === transaction.id ? (
+                            <>
+                              <button onClick={handleSave} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Save">
+                                <Check size={16} />
+                              </button>
+                              <button onClick={() => setEditingId(null)} className="p-1 text-gray-500 hover:bg-gray-50 rounded" title="Cancel">
+                                <X size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => handleEdit(transaction)} className="p-1 text-blue-500 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
+                                <Edit2 size={14} />
+                              </button>
+                              <button onClick={() => handleDelete(transaction.id)} className="p-1 text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={isSuperAdmin ? 6 : 5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center max-w-[300px] mx-auto">
                       <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
                         <History className="h-8 w-8 text-blue-500" />
@@ -181,9 +314,7 @@ export default function GeneralLedger() {
                   <td className="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
                     {formatCurrency(filteredTransactions.reduce((s: number, t: any) => s + parseFloat(t.credit || 0), 0))}
                   </td>
-                  <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                    -
-                  </td>
+                  {isSuperAdmin && <td />}
                 </tr>
               </tfoot>
             )}
