@@ -351,7 +351,7 @@ export default function PaymentDetail() {
       // Also update ledgerEntries if it's the same row
       const row = allLoanLedgerEntries[i];
       if (!row.application_id || row.application_id === Number(id)) {
-        const localIdx = ledgerEntries.findIndex(e => e.id === row.id || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
+        const localIdx = ledgerEntries.findIndex(e => ((e as any).id && (e as any).id === (row as any).id) || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
         if (localIdx !== -1) {
           setLedgerEntries(prev => prev.map((r, idx) => idx === localIdx ? { ...r, [field]: value } : r));
         }
@@ -360,7 +360,7 @@ export default function PaymentDetail() {
       setLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
       // Also update allLoanLedgerEntries
       const row = ledgerEntries[i];
-      const globalIdx = allLoanLedgerEntries.findIndex(e => e.id === row.id || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
+      const globalIdx = allLoanLedgerEntries.findIndex(e => ((e as any).id && (e as any).id === (row as any).id) || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
       if (globalIdx !== -1) {
         setAllLoanLedgerEntries(prev => prev.map((r, idx) => idx === globalIdx ? { ...r, [field]: value } : r));
       }
