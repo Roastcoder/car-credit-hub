@@ -87,6 +87,22 @@ const NAV_ITEMS: NavItem[] = [
   { title: 'Branches', path: '/branches', icon: MapPin, shortLabel: 'BN', roles: ['super_admin', 'admin', 'manager'] },
   { title: 'Send Notification', path: '/broadcast', icon: Send, shortLabel: 'NT', roles: ['super_admin', 'admin'] },
   { title: 'Credit Reports', path: '/credit-reports', icon: ShieldCheck, shortLabel: 'CR', roles: ['super_admin'] },
+    ],
+  },
+  {
+    title: 'Financials',
+    path: '/account',
+    icon: Wallet,
+    shortLabel: 'FN',
+    roles: ['super_admin', 'admin'],
+    children: [
+      { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV' },
+      { title: 'General Ledger', path: '/account/ledger', icon: BookOpen, shortLabel: 'GL' },
+      { title: 'Accounts Receivable', path: '/account/receivables', icon: ArrowUpRight, shortLabel: 'AR' },
+      { title: 'Accounts Payable', path: '/account/payables', icon: ArrowDownRight, shortLabel: 'AP' },
+      { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV' },
+    ],
+  },
   {
     title: 'Subvention Settings',
     path: '/settings/subvention',
@@ -132,9 +148,21 @@ const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
   { title: 'Workspace Chat', path: '/chat', icon: MessageSquare, shortLabel: 'CH', roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV', roles: ['accountant', 'admin', 'super_admin'] },
+  {
+    title: 'Financials',
+    path: '/account',
+    icon: Wallet,
+    shortLabel: 'FN',
+    roles: ['accountant', 'admin', 'super_admin'],
+    children: [
+      { title: 'Overview', path: '/account', icon: Activity, shortLabel: 'OV' },
+      { title: 'General Ledger', path: '/account/ledger', icon: BookOpen, shortLabel: 'GL' },
+      { title: 'Accounts Receivable', path: '/account/receivables', icon: ArrowUpRight, shortLabel: 'AR' },
+      { title: 'Accounts Payable', path: '/account/payables', icon: ArrowDownRight, shortLabel: 'AP' },
+      { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV' },
+    ],
+  },
   { title: 'Payment Requests', path: '/payments', icon: CreditCard, shortLabel: 'PR', roles: ['accountant', 'admin', 'super_admin'] },
-  { title: 'Payment Vouchers', path: '/account/vouchers', icon: Receipt, shortLabel: 'PV', roles: ['accountant', 'admin', 'super_admin'] },
 ];
 
 const EMPLOYEE_NAV_ITEMS: NavItem[] = [
