@@ -129,7 +129,19 @@ export function RoleAssignModal({ open, onClose, onSuccess, user }: RoleAssignMo
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Select Role *</label>
-            <select required className="w-full px-3 py-2 rounded-lg border border-border bg-background" value={role} onChange={e => setRole(e.target.value)}>
+            <select 
+              required 
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background" 
+              value={role} 
+              onChange={e => {
+                const newRole = e.target.value;
+                setRole(newRole);
+                // PDD Manager should have global access by default
+                if (newRole === 'pdd_manager') {
+                  setBranchId('');
+                }
+              }}
+            >
               {Object.entries(ROLE_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
               ))}

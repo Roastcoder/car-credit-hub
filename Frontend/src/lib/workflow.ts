@@ -131,6 +131,7 @@ export class WorkflowService {
     
     if (userRole === 'super_admin') return true;
     if (userRole === 'admin') return true;
+    if (userRole === 'pdd_manager') return true;
 
     // RBM: only show loans from their assigned branches
     if (userRole === 'rbm') {
@@ -184,6 +185,8 @@ export class WorkflowService {
         // Broker sees all statuses for their assigned loans (handled in shouldShowLoanToUser)
         return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
       case 'super_admin':
+        return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
+      case 'pdd_manager':
         return ['submitted', 'manager_review', 'manager_approved', 'admin_approved', 'disbursed', 'sent_back_employee', 'sent_back_manager', 'sent_back_admin', 'under_review', 'approved'];
       default:
         return [];
