@@ -29,7 +29,7 @@ export default function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   const { data: loans = [], isLoading: isLoadingLoans } = useQuery({
-    queryKey: ['loans-dashboard', user?.branch_id],
+    queryKey: ['loans-dashboard', user?.branch_id, user?.role],
     queryFn: async () => {
       try {
         const data = await loansAPI.getAll();

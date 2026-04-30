@@ -55,7 +55,7 @@ export default function Loans() {
   }, [urlStatusFilter]);
 
   const loanSwitcherOptions = [
-    ...(user?.role !== 'pdd_manager' ? [{ label: 'Loans List', path: '/loans', icon: <List size={18} /> }] : []),
+    { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
     { label: 'PDD Tracking', path: '/pdd-tracking', icon: <ClipboardCheck size={18} /> },
     ...(permissions.canCreateLoan ? [{ label: 'New Loan', path: '/loans/new', icon: <Plus size={18} /> }] : []),
   ];
