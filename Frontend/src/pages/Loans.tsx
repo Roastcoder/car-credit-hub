@@ -13,7 +13,7 @@ import { RemarksModal } from '@/components/RemarksModal';
 import { toast } from 'sonner';
 import LoanStatusBadge from '@/components/LoanStatusBadge';
 import PDDStatusBadge from '@/components/PDDStatusBadge';
-import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Search, Plus, ChevronRight, Download, Upload, Printer, MessageCircle, MessageSquare, CreditCard, List, FileText, ClipboardCheck, ShieldCheck, AlertTriangle, Filter, X, Calendar } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import {
   Dialog,
@@ -34,14 +34,25 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [pddStatusFilter, setPddStatusFilter] = useState<PDDStatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [financierFilter, setFinancierFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; loanId: string; currentRemarks: string }>({ open: false, loanId: '', currentRemarks: '' });
   const importRef = useRef<HTMLInputElement>(null);
   
   const permissions = getRolePermissions(user?.role || 'employee');
-  const statusFilter = searchParams.get('status');
+  const urlStatusFilter = searchParams.get('status');
   const monthFilter = searchParams.get('month');
   const dayFilter = searchParams.get('day');
+
+  // Sync URL status filter with local state
+  useMemo(() => {
+    if (urlStatusFilter) setStatusFilter(urlStatusFilter);
+  }, [urlStatusFilter]);
 
   const loanSwitcherOptions = [
     ...(user?.role !== 'pdd_manager' ? [{ label: 'Loans List', path: '/loans', icon: <List size={18} /> }] : []),
@@ -171,13 +182,34 @@ export default function Loans() {
       l.id?.toLowerCase().includes(search.toLowerCase()) ||
       l.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
       l.car_model?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = !statusFilter || l.status === statusFilter;
+    
+    const matchStatus = statusFilter === 'all' || l.status === statusFilter;
     const loanPddStatus = l.pdd_status || 'pending';
     const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
+    const matchBranch = branchFilter === 'all' || l.branch_name === branchFilter;
+    const matchFinancier = financierFilter === 'all' || (l.bank_name || l.assigned_bank_name) === financierFilter;
+    
     const createdAt = l.created_at ? new Date(l.created_at) : null;
     const matchMonth = !monthFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().slice(0, 7) === monthFilter);
     const matchDay = !dayFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().split('T')[0] === dayFilter);
     
+    // Date Range Filter
+    let matchDateRange = true;
+    if (createdAt && !Number.isNaN(createdAt.getTime())) {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        matchDateRange = matchDateRange && createdAt >= start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        matchDateRange = matchDateRange && createdAt <= end;
+      }
+    } else if (startDate || endDate) {
+      matchDateRange = false;
+    }
+
     // Use WorkflowService to check if loan should be visible to user
     const shouldShow = WorkflowService.shouldShowLoanToUser(
       l,
@@ -187,8 +219,33 @@ export default function Loans() {
       user?.managed_branch_ids
     );
     
-    return matchSearch && matchStatus && matchPddStatus && matchMonth && matchDay && shouldShow;
-  }), [loans, search, statusFilter, pddStatusFilter, monthFilter, dayFilter, user?.role, user?.id, user?.branch_id]);
+    return matchSearch && matchStatus && matchPddStatus && matchBranch && matchFinancier && matchMonth && matchDay && matchDateRange && shouldShow;
+  }), [loans, search, statusFilter, pddStatusFilter, branchFilter, financierFilter, startDate, endDate, monthFilter, dayFilter, user?.role, user?.id, user?.branch_id]);
+
+  const branches = useMemo(() => {
+    const b = new Set<string>();
+    loans.forEach((l: any) => { if (l.branch_name) b.add(l.branch_name); });
+    return Array.from(b).sort();
+  }, [loans]);
+
+  const financiers = useMemo(() => {
+    const f = new Set<string>();
+    loans.forEach((l: any) => { 
+      const name = l.bank_name || l.assigned_bank_name;
+      if (name) f.add(name); 
+    });
+    return Array.from(f).sort();
+  }, [loans]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setPddStatusFilter('all');
+    setBranchFilter('all');
+    setFinancierFilter('all');
+    setStartDate('');
+    setEndDate('');
+  };
 
   return (
     <div className="pb-20 lg:pb-0">
@@ -213,35 +270,131 @@ export default function Loans() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1 max-w-sm relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search name, loan number, ID, or car..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
-          />
-        </div>
-        
-        <div className="flex gap-2 min-w-[200px]">
+      <div className="space-y-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search name, loan number, ID, or car..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all shadow-sm"
+            />
+          </div>
           
-          <div className="flex-1">
-            <select
-              value={pddStatusFilter}
-              onChange={(e) => setPddStatusFilter(e.target.value as PDDStatusFilter)}
-              className="w-full px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.67%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px_20px] bg-[right_12px_center] bg-no-repeat pr-10"
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-sm font-semibold ${
+                showAdvancedFilters || statusFilter !== 'all' || branchFilter !== 'all' || financierFilter !== 'all' || startDate || endDate
+                  ? 'bg-accent/10 border-accent text-accent'
+                  : 'bg-card border-border text-foreground hover:bg-muted'
+              }`}
             >
-              <option value="all">All PDD Status</option>
-              {(['pending', 'pending_approval', 'approved', 'rejected'] as PDDStatusFilter[]).map((status) => (
-                <option key={status} value={status}>
-                  PDD {status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                </option>
-              ))}
-            </select>
+              <Filter size={16} />
+              Filters
+              {(statusFilter !== 'all' || branchFilter !== 'all' || financierFilter !== 'all' || startDate || endDate || pddStatusFilter !== 'all') && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] text-accent-foreground ml-1">
+                  {[statusFilter !== 'all', branchFilter !== 'all', financierFilter !== 'all', !!startDate, !!endDate, pddStatusFilter !== 'all'].filter(Boolean).length}
+                </span>
+              )}
+            </button>
+            {(search || statusFilter !== 'all' || branchFilter !== 'all' || financierFilter !== 'all' || startDate || endDate || pddStatusFilter !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="p-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-all"
+                title="Clear all filters"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
+
+        {showAdvancedFilters && (
+          <div className="p-5 rounded-2xl border border-border bg-card shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Loan Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                >
+                  <option value="all">All Statuses</option>
+                  {LOAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">PDD Status</label>
+                <select
+                  value={pddStatusFilter}
+                  onChange={(e) => setPddStatusFilter(e.target.value as PDDStatusFilter)}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                >
+                  <option value="all">All PDD Status</option>
+                  {(['pending', 'pending_approval', 'approved', 'rejected'] as PDDStatusFilter[]).map((status) => (
+                    <option key={status} value={status}>
+                      {status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Branch</label>
+                <select
+                  value={branchFilter}
+                  onChange={(e) => setBranchFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                >
+                  <option value="all">All Branches</option>
+                  {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Financier</label>
+                <select
+                  value={financierFilter}
+                  onChange={(e) => setFinancierFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                >
+                  <option value="all">All Financiers</option>
+                  {financiers.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">From Date</label>
+                <div className="relative">
+                  <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">To Date</label>
+                <div className="relative">
+                  <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mobile Card View */}
