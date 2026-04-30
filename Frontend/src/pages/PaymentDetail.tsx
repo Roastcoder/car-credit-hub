@@ -344,9 +344,27 @@ export default function PaymentDetail() {
 
   const addLedgerRow = () => setLedgerEntries(prev => [...prev, { date: '', debit: '', credit: '', narration: '', isNew: true }]);
   const removeLedgerRow = (i: number) => setLedgerEntries(prev => prev.filter((_, idx) => idx !== i));
-  const updateLedgerRow = (i: number, field: string, value: string) => {
+  const updateLedgerRow = (i: number, field: string, value: string, isAllLoanEntry: boolean = false) => {
     setLedgerSaved(false);
-    setLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+    if (isAllLoanEntry) {
+      setAllLoanLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+      // Also update ledgerEntries if it's the same row
+      const row = allLoanLedgerEntries[i];
+      if (!row.application_id || row.application_id === Number(id)) {
+        const localIdx = ledgerEntries.findIndex(e => e.id === row.id || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
+        if (localIdx !== -1) {
+          setLedgerEntries(prev => prev.map((r, idx) => idx === localIdx ? { ...r, [field]: value } : r));
+        }
+      }
+    } else {
+      setLedgerEntries(prev => prev.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+      // Also update allLoanLedgerEntries
+      const row = ledgerEntries[i];
+      const globalIdx = allLoanLedgerEntries.findIndex(e => e.id === row.id || (e.narration === row.narration && e.date === row.date && e.credit === row.credit && e.debit === row.debit));
+      if (globalIdx !== -1) {
+        setAllLoanLedgerEntries(prev => prev.map((r, idx) => idx === globalIdx ? { ...r, [field]: value } : r));
+      }
+    }
   };
 
   const deleteVoucher = useMutation({
@@ -1122,32 +1140,37 @@ export default function PaymentDetail() {
                             <tr key={i} className="border-b border-border/50">
                               <td className="py-1 pr-2">
                                 {isFromCurrentApp && canEditLedger
-                                  ? <input type="date" value={row.date} onChange={e => updateLedgerRow(ledgerIdx, 'date', e.target.value)}
+                                  ? <input type="date" value={row.date} onChange={e => updateLedgerRow(i, 'date', e.target.value, true)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
                                   : <span className="text-xs">{row.date}</span>}
                               </td>
                               <td className="py-1 pr-2">
                                 {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
-                                  ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(ledgerIdx, 'credit', e.target.value)}
+                                  ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(i, 'credit', e.target.value, true)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1 pr-2">
                                 {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
-                                  ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(ledgerIdx, 'debit', e.target.value)}
+                                  ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(i, 'debit', e.target.value, true)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1">
                                 {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
-                                  ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(ledgerIdx, 'narration', e.target.value)}
+                                  ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(i, 'narration', e.target.value, true)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
                                   : <span className="text-xs">{row.narration}</span>}
                               </td>
                               {canEditLedger && (
                                 <td className="py-1 pl-1">
                                   {isFromCurrentApp && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF'))) && (
-                                    <button type="button" onClick={() => removeLedgerRow(ledgerIdx)} className="text-red-400 hover:text-red-600" title="Remove row">
+                                    <button type="button" onClick={() => {
+                                      removeLedgerRow(ledgerIdx);
+                                      if (allLoanLedgerEntries.length > 0) {
+                                        setAllLoanLedgerEntries(prev => prev.filter((_, idx) => idx !== i));
+                                      }
+                                    }} className="text-red-400 hover:text-red-600" title="Remove row">
                                       <XCircle size={14} />
                                     </button>
                                   )}
