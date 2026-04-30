@@ -655,8 +655,9 @@ export default function PaymentDetail() {
      payment.status === 'voucher_created' || 
      (payment.status === 'payment_released' && remainingAppBalance > 0) ||
      (payment.status === 'completed' && remainingAppBalance > 0));
-  const canEditLedger = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
-    ['voucher_created', 'manager_approved', 'payment_released', 'completed'].includes(payment.status);
+  const isSuperAdmin = user?.role === 'super_admin';
+  const canEditLedger = isSuperAdmin || ((['accountant', 'admin'].includes(user?.role || '')) &&
+    ['voucher_created', 'manager_approved', 'payment_released', 'completed'].includes(payment.status));
   const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
     (payment.status === 'payment_released' || payment.status === 'completed');
 
@@ -1111,7 +1112,7 @@ export default function PaymentDetail() {
 
                         {/* Display merged all-loan ledger entries (read-only for old entries) */}
                         {displayLedger.map((row, i) => {
-                          const isFromCurrentApp = !row.application_id || row.application_id === Number(id);
+                          const isFromCurrentApp = isSuperAdmin || !row.application_id || row.application_id === Number(id);
                           const ledgerIdx = displayLedger
                             .slice(0, i + 1)
                             .filter(entry => !entry.application_id || entry.application_id === Number(id))
@@ -1126,26 +1127,26 @@ export default function PaymentDetail() {
                                   : <span className="text-xs">{row.date}</span>}
                               </td>
                               <td className="py-1 pr-2">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
+                                {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
                                   ? <input type="number" value={row.credit} onChange={e => updateLedgerRow(ledgerIdx, 'credit', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.credit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1 pr-2">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
+                                {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
                                   ? <input type="number" value={row.debit} onChange={e => updateLedgerRow(ledgerIdx, 'debit', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="0" />
                                   : <span className="font-mono text-xs">{Number(row.debit || 0).toLocaleString()}</span>}
                               </td>
                               <td className="py-1">
-                                {isFromCurrentApp && canEditLedger && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')
+                                {isFromCurrentApp && canEditLedger && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF')))
                                   ? <input type="text" value={row.narration} onChange={e => updateLedgerRow(ledgerIdx, 'narration', e.target.value)}
                                     className="w-full px-1 py-0.5 border border-border rounded bg-background text-xs focus:outline-none focus:ring-1 focus:ring-accent" placeholder="Narration" />
                                   : <span className="text-xs">{row.narration}</span>}
                               </td>
                               {canEditLedger && (
                                 <td className="py-1 pl-1">
-                                  {isFromCurrentApp && !row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF') && (
+                                  {isFromCurrentApp && (isSuperAdmin || (!row.narration?.includes('Initial Sanction') && !row.narration?.includes('Mehar PF'))) && (
                                     <button type="button" onClick={() => removeLedgerRow(ledgerIdx)} className="text-red-400 hover:text-red-600" title="Remove row">
                                       <XCircle size={14} />
                                     </button>
