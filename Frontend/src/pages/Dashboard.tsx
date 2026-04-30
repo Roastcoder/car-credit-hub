@@ -8,9 +8,9 @@ import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
 import { loansAPI, branchesAPI, smsAPI } from '@/lib/api';
 import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3, MessagesSquare } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, AreaChart, Area, Legend 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -156,7 +156,7 @@ export default function Dashboard() {
     const monthly: Record<string, { name: string, amount: number, count: number }> = {};
     // Use the full loans array for trends if in "all" mode, otherwise just the filtered set
     const trendBase = adminFilterMode === 'all' ? loans : displayLoans;
-    
+
     trendBase.forEach((l: any) => {
       if (!l.created_at) return;
       const date = new Date(l.created_at);
@@ -167,7 +167,7 @@ export default function Dashboard() {
       monthly[monthYear].amount += Number(l.loan_amount) / 100000;
       monthly[monthYear].count += 1;
     });
-    
+
     // Pad with last 6 months to ensure a line is drawn even with single month data
     const months = [];
     for (let i = 5; i >= 0; i--) {
@@ -194,18 +194,18 @@ export default function Dashboard() {
 
   const pddStats = useMemo(() => {
     if (!isPddDashboard) return null;
-    const disbursedLoans = loans.filter((l: any) => l.status === 'disbursed');
+    const pendingLoans = loans.filter((l: any) => l.status === 'disbursed' && l.pdd_status !== 'approved');
     return {
-      total: disbursedLoans.length,
-      pendingApproval: disbursedLoans.filter((l: any) => l.pdd_status === 'pending_approval').length,
-      delayed: disbursedLoans.filter((l: any) => (l.pdd_status !== 'approved' && Number(l.delay_days) > 15)).length,
-      pending: disbursedLoans.filter((l: any) => l.pdd_status === 'pending' || !l.pdd_status).length
+      total: pendingLoans.length,
+      pendingApproval: pendingLoans.filter((l: any) => l.pdd_status === 'pending_approval').length,
+      delayed: pendingLoans.filter((l: any) => Number(l.delay_days) > 15).length,
+      pending: pendingLoans.filter((l: any) => l.pdd_status === 'pending' || !l.pdd_status).length
     };
   }, [loans, isPddDashboard]);
 
   const pddLoans = useMemo(() => {
     if (!isPddDashboard) return [];
-    return loans.filter((l: any) => l.status === 'disbursed')
+    return loans.filter((l: any) => l.status === 'disbursed' && l.pdd_status !== 'approved')
       .sort((a: any, b: any) => (Number(b.delay_days || 0) - Number(a.delay_days || 0)))
       .slice(0, 15);
   }, [loans, isPddDashboard]);
@@ -338,7 +338,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'Total Disbursed', value: pddStats.total, sub: 'Files needing PDD', color: '#3b82f6', trend: trendData.map(d => ({ value: d.count })) },
+                { label: 'Total Pending', value: pddStats.total, sub: 'Files needing PDD', color: '#3b82f6', trend: trendData.map(d => ({ value: d.count })) },
                 { label: 'Pending PDD', value: pddStats.pending, sub: 'Not submitted', color: '#f59e0b', trend: trendData.map(d => ({ value: d.count * 0.4 })) },
                 { label: 'Awaiting Approval', value: pddStats.pendingApproval, sub: 'Needs review', color: '#8b5cf6', trend: trendData.map(d => ({ value: d.count * 0.2 })) },
                 { label: 'Highly Delayed', value: pddStats.delayed, sub: '> 15 days delay', color: '#ef4444', trend: trendData.map(d => ({ value: d.count * 0.1 })) },
@@ -394,11 +394,10 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="py-4 text-right">
-                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
-                            loan.pdd_status === 'pending_approval' ? 'bg-purple-500/10 text-purple-600' :
+                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${loan.pdd_status === 'pending_approval' ? 'bg-purple-500/10 text-purple-600' :
                             loan.pdd_status === 'rejected' ? 'bg-red-500/10 text-red-600' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
+                              'bg-muted text-muted-foreground'
+                            }`}>
                             {(loan.pdd_status || 'PENDING').replace(/_/g, ' ')}
                           </div>
                         </td>
@@ -518,8 +517,8 @@ export default function Dashboard() {
                       <AreaChart data={trendData}>
                         <defs>
                           <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
@@ -678,7 +677,7 @@ export default function Dashboard() {
               </span>
               <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500 bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">SDUI V1</span>
             </div>
-            
+
             <SDUIRenderer config={brokerSduiConfig} context={sduiContext} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -695,8 +694,8 @@ export default function Dashboard() {
                       <AreaChart data={trendData}>
                         <defs>
                           <linearGradient id="colorAmountBroker" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
