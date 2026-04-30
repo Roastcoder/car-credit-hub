@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
-import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera } from 'lucide-react';
+import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera, IndianRupee } from 'lucide-react';
 import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 
 const safeParseNumber = (val: any): number => {
@@ -102,6 +102,9 @@ interface PaymentApplication {
   all_loan_ledger_entries?: any[];
   vouchers?: any[];
   payment_history?: any[];
+  purpose_loan_amount?: number | string;
+  sanction_amount?: number | string;
+  net_seed_amount?: number | string;
 }
 
 const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
@@ -785,25 +788,36 @@ export default function PaymentDetail() {
                 </div>
               </Section>
 
-              {/* Loan & Financial Information */}
-              <Section title="Loan & Financial Details" icon={<DollarSign size={20} />}>
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Financier Name" value={payment.financier_name} />
-                  <Field label="Loan Amount" value={formatCurrency(Number(payment.loan_amount || 0))} />
-                  <Field label="Disbursement Amount" value={formatCurrency(Number(payment.disbursement_amount || 0))} />
-                  <Field label="Disbursement Date" value={formatDisplayDate(payment.disbursement_date)} />
-                  <Field label="Tenure (Months)" value={String(payment.tenure_months || 0)} />
-                  <Field label="EMI Amount" value={formatCurrency(Number(payment.emi_amount || 0))} />
-                  <Field label="EMI Mode" value={payment.emi_mode || '—'} />
-                  <Field label="IRR (%)" value={`${payment.irr_percentage || 0}%`} />
-                  <Field label="Loan Type" value={payment.loan_type} />
-                  <Field label="Mehar PF" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
-                  <div className="col-span-2">
-                    <Field label="Purpose/Description" value={payment.payment_purpose || payment.description} />
+              {/* Financial & Payout Summary - NEW LAYOUT */}
+              <div className="lg:col-span-2">
+                <Section title="Financial & Payout Summary" icon={<IndianRupee size={20} />}>
+                  <div className="p-5 rounded-2xl bg-[#f8fcfc] dark:bg-slate-900/50 border border-[#e0f2f2] dark:border-slate-800 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                      <Field label="1. Purposed Amount" value={formatCurrency(Number(payment.purpose_loan_amount || payment.loan_amount || 0))} />
+                      <Field label="2. Total Amount (EMI)" value={formatCurrency(Number(payment.sanction_amount || payment.loan_amount || 0))} className="text-emerald-500 font-black" />
+                      <Field label="3. Actual Amount (Payout)" value={formatCurrency(Number(payment.loan_amount || 0))} />
+                      <Field label="4. Received (Bank)" value={formatCurrency(Number(payment.received_amount || payment.net_seed_amount || 0))} />
+                      <Field label="5. Mehar PF (₹)" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
+                      <Field label="6. Net Amount (After PF)" value={formatCurrency(Number(payment.disbursement_amount || 0))} className="text-emerald-500 font-black" />
+                    </div>
                   </div>
-                  <Field label="File Booked Code" value={payment.file_booked_code} />
-                </div>
-              </Section>
+                  
+                  {/* Supplementary Details */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6 px-2">
+                    <Field label="Financier" value={payment.financier_name || '—'} />
+                    <Field label="Disbursement Date" value={formatDisplayDate(payment.disbursement_date)} />
+                    <Field label="Tenure" value={`${payment.tenure_months || 0} Months`} />
+                    <Field label="EMI Amount" value={formatCurrency(Number(payment.emi_amount || 0))} />
+                    <Field label="IRR (%)" value={`${payment.irr_percentage || 0}%`} />
+                    <Field label="EMI Mode" value={payment.emi_mode || '—'} />
+                    <Field label="Loan Type" value={payment.loan_type} />
+                    <Field label="File Booked Code" value={payment.file_booked_code || '—'} />
+                    <div className="md:col-span-2">
+                      <Field label="Purpose/Description" value={payment.payment_purpose || payment.description} />
+                    </div>
+                  </div>
+                </Section>
+              </div>
 
               {/* Payment Release Breakdown */}
               <Section title="Payment Release Breakdown" icon={<CreditCard size={20} />}>

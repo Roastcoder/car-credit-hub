@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import {
   Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt, IndianRupee
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { formatCurrency } from '@/lib/utils';
@@ -78,6 +78,9 @@ interface PaymentApplication {
   mehar_deduction?: number;
   total_released_amount?: number;
   remaining_balance?: number;
+  purpose_loan_amount?: number;
+  sanction_amount?: number;
+  net_seed_amount?: number;
 }
 
 export default function PaymentApplicationForm() {
@@ -168,7 +171,10 @@ export default function PaymentApplicationForm() {
     loan_amount: 0,
     mehar_deduction: 0,
     total_released_amount: 0,
-    remaining_balance: 0
+    remaining_balance: 0,
+    purpose_loan_amount: 0,
+    sanction_amount: 0,
+    net_seed_amount: 0
   });
 
   useEffect(() => {
@@ -199,7 +205,10 @@ export default function PaymentApplicationForm() {
   const applicantPaymentName = normalizePaymentName(formData.applicant_name);
   const beneficiaryPaymentName = normalizePaymentName(formData.payment_in_favour_name);
   const isBeneficiaryPayment = !!applicantPaymentName && !!beneficiaryPaymentName && applicantPaymentName !== beneficiaryPaymentName;
-  const needsPaymentVerification = isBeneficiaryPayment && formData.status !== 'sent_back' && user?.role !== 'super_admin';
+  const needsPaymentVerification = isBeneficiaryPayment && 
+                                    formData.status !== 'sent_back' && 
+                                    user?.role !== 'super_admin' && 
+                                    Number(formData.today_release_amount || formData.disbursement_amount || 0) > 0;
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
@@ -332,7 +341,10 @@ export default function PaymentApplicationForm() {
         hold_amount: prev.hold_amount || Number(d.hold_amount) || 0,
         challan_amount: prev.challan_amount || Number(d.rto_challan_amount) || 0,
         payment_in_favour_name: prev.payment_in_favour_name || d.payment_in_favour || '',
-        mehar_deduction: prev.mehar_deduction || Number(d.mehar_deduction) || 0
+        mehar_deduction: prev.mehar_deduction || Number(d.mehar_deduction) || 0,
+        purpose_loan_amount: Number(d.purpose_loan_amount || d.loan_amount) || 0,
+        sanction_amount: Number(d.sanction_amount || d.loan_amount) || 0,
+        net_seed_amount: Number(d.net_seed_amount || 0) || 0
       }));
 
       // Fetch existing payment applications for this loan to calculate old_release_amount
@@ -600,15 +612,17 @@ export default function PaymentApplicationForm() {
       // Upload banking documents first
       const bankingDocPaths = await uploadBankingDocuments();
 
+      const needsVerification = needsPaymentVerification && Number(formData.today_release_amount || 0) > 0;
+
       const applicationData = {
         ...formData,
         banking_documents: [...(formData.banking_documents || []), ...bankingDocPaths],
         old_release_amount: isRaiseRemainingMode ? totalReleased : formData.old_release_amount,
-        today_release_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.today_release_amount,
-        payment_amount: isRaiseRemainingMode ? (Number(formData.today_release_amount) || remainingLoanAmount) : formData.payment_amount,
+        today_release_amount: isRaiseRemainingMode ? (formData.today_release_amount !== undefined && formData.today_release_amount !== 0 ? Number(formData.today_release_amount) : remainingLoanAmount) : formData.today_release_amount,
+        payment_amount: isRaiseRemainingMode ? (formData.today_release_amount !== undefined && formData.today_release_amount !== 0 ? Number(formData.today_release_amount) : remainingLoanAmount) : formData.today_release_amount,
         status,
-        aadhaar_number: needsPaymentVerification ? aadhaarNumber : null,
-        aadhaar_verified: needsPaymentVerification && aadhaarVerificationStatus === 'verified'
+        aadhaar_number: needsVerification ? aadhaarNumber : null,
+        aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified'
       };
 
       if (id) {
@@ -796,6 +810,46 @@ export default function PaymentApplicationForm() {
             </div>
           </div>
         )}
+        {/* Financial & Payout Summary */}
+        <section className="bg-[#f8fcfc] dark:bg-slate-900/50 border border-[#e0f2f2] dark:border-slate-800 rounded-2xl p-6 shadow-sm mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-3 mb-6 border-b border-[#e0f2f2] dark:border-slate-800 pb-4">
+            <div className="p-2 bg-emerald-500/10 rounded-lg">
+              <IndianRupee className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Financial & Payout Summary</h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Core Loan & Disbursement Figures</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Purposed Amount</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.purpose_loan_amount || formData.loan_amount || 0))}</p>
+            </div>
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">2. Total Amount (EMI)</p>
+              <p className="text-lg font-black text-emerald-500">{formatCurrency(Number(formData.sanction_amount || formData.loan_amount || 0))}</p>
+            </div>
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">3. Actual Amount (Payout)</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.loan_amount || 0))}</p>
+            </div>
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">4. Received (Bank)</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.net_seed_amount || 0))}</p>
+            </div>
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">5. Mehar PF (₹)</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.mehar_deduction || 0))}</p>
+            </div>
+            <div className="space-y-1 text-left">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">6. Net Amount (After PF)</p>
+              <p className="text-lg font-black text-emerald-500">{formatCurrency(Number(formData.disbursement_amount || 0))}</p>
+            </div>
+          </div>
+        </section>
+
         {/* 1. Customer Details */}
         <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
