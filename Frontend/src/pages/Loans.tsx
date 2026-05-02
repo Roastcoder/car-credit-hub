@@ -28,6 +28,7 @@ type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admi
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
 
 export default function Loans() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
