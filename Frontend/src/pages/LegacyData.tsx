@@ -139,24 +139,6 @@ export default function LegacyData() {
             })}
           </div>
         </ScrollArea>
-
-        {/* Stats Summary */}
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Records</p>
-            <History className="h-3 w-3 text-slate-400" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-slate-500 font-bold mb-1">Loans</p>
-              <p className="text-lg font-black text-slate-900 dark:text-white">{stats?.data?.totalLoans || 0}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 font-bold mb-1">Customers</p>
-              <p className="text-lg font-black text-slate-900 dark:text-white">{stats?.data?.totalCustomers || 0}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Main Content Area */}
