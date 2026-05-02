@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { 
-  Database, Search, ArrowRight, User, FileText, 
-  Users, Building2, CreditCard, ShieldCheck, 
-  Briefcase, GraduationCap, LayoutList, History, 
+import {
+  Database, Search, ArrowRight, User, FileText,
+  Users, Building2, CreditCard, ShieldCheck,
+  Briefcase, GraduationCap, LayoutList, History,
   Table as TableIcon, ChevronRight
 } from 'lucide-react';
 import { legacyAPI } from '@/lib/api';
@@ -75,18 +75,18 @@ export default function LegacyData() {
 
   const filteredData = tableData?.data?.filter((item: any) => {
     if (!searchTerm) return true;
-    return Object.values(item).some(val => 
+    return Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
   }) || [];
 
   const handleExport = () => {
     if (!filteredData || filteredData.length === 0) return;
-    
+
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Archive Data");
-    
+
     const tableName = ARCHIVE_TABLES.find(t => t.id === activeTable)?.label || activeTable;
     XLSX.writeFile(wb, `Legacy_${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
@@ -110,15 +110,15 @@ export default function LegacyData() {
             {ARCHIVE_TABLES.map((table) => {
               const Icon = table.icon;
               const isActive = activeTable === table.id;
-              
+
               return (
                 <button
                   key={table.id}
                   onClick={() => handleTabChange(table.id)}
                   className={cn(
                     "w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group",
-                    isActive 
-                      ? "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm" 
+                    isActive
+                      ? "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
                       : "hover:bg-slate-100 dark:hover:bg-slate-900/50 text-slate-600 dark:text-slate-400"
                   )}
                 >
@@ -139,6 +139,7 @@ export default function LegacyData() {
             })}
           </div>
         </ScrollArea>
+
       </div>
 
       {/* Main Content Area */}
@@ -147,15 +148,15 @@ export default function LegacyData() {
         <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder={`Search in ${ARCHIVE_TABLES.find(t => t.id === activeTable)?.label}...`} 
+            <Input
+              placeholder={`Search in ${ARCHIVE_TABLES.find(t => t.id === activeTable)?.label}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl"
             />
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
             onClick={handleExport}
             disabled={filteredData.length === 0}
@@ -195,18 +196,18 @@ export default function LegacyData() {
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
                         {/* Try to find a primary name/label in various common legacy column formats */}
-                        {item.customer_name || item.employee_name || item.schemes_name || item.name || 
-                         item.vEmployeeName || item.vSchemeName || item.vDsaName || item.firstname ||
-                         item.financier_name_in_m_parivahan || item.vAssociateName || item.vFinancierName || 
-                         item.financier_name || item.username || (item.loanfile_no ? `Payout for File #${item.loanfile_no}` : null) ||
-                         item.vLoanNumber || item.file_no || 
-                         `Record #${item.iLoanId || item.iCustomerId || item.id || item.ipddId || item.iDsapayoutId || item.iEmployeeId || item.iSchemesId || item.iAssociatesId || item.iFinancierId}`}
+                        {item.customer_name || item.employee_name || item.schemes_name || item.name ||
+                          item.vEmployeeName || item.vSchemeName || item.vDsaName || item.firstname ||
+                          item.financier_name_in_m_parivahan || item.vAssociateName || item.vFinancierName ||
+                          item.financier_name || item.username || (item.loanfile_no ? `Payout for File #${item.loanfile_no}` : null) ||
+                          item.vLoanNumber || item.file_no ||
+                          `Record #${item.iLoanId || item.iCustomerId || item.id || item.ipddId || item.iDsapayoutId || item.iEmployeeId || item.iSchemesId || item.iAssociatesId || item.iFinancierId}`}
                       </p>
                       <p className="text-xs text-slate-500 truncate max-w-xs">
-                        {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail || 
-                         item.vAddress || item.current_address || item.address || 
-                         (item.loan_id ? `Loan ID: ${item.loan_id}` : null) ||
-                         (item.username ? `@${item.username}` : 'No additional contact info')}
+                        {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail ||
+                          item.vAddress || item.current_address || item.address ||
+                          (item.loan_id ? `Loan ID: ${item.loan_id}` : null) ||
+                          (item.username ? `@${item.username}` : 'No additional contact info')}
                       </p>
                     </td>
                     <td className="px-6 py-4">
@@ -236,9 +237,9 @@ export default function LegacyData() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10"
                         onClick={() => handleShowDetails(item)}
                       >
