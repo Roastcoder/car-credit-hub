@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import { Download } from 'lucide-react';
 
 const ARCHIVE_TABLES = [
   { id: 'loanfile', label: 'Loan Files', icon: FileText, color: 'text-blue-500' },
@@ -30,8 +32,6 @@ const ARCHIVE_TABLES = [
 export default function LegacyData() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTable, setActiveTable] = useState('loanfile');
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ['legacy-stats'],
@@ -62,6 +62,17 @@ export default function LegacyData() {
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
   }) || [];
+
+  const handleExport = () => {
+    if (!filteredData || filteredData.length === 0) return;
+    
+    const ws = XLSX.utils.json_to_sheet(filteredData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Archive Data");
+    
+    const tableName = ARCHIVE_TABLES.find(t => t.id === activeTable)?.label || activeTable;
+    XLSX.writeFile(wb, `Legacy_${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6 p-6">
@@ -144,6 +155,15 @@ export default function LegacyData() {
               className="pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl"
             />
           </div>
+          <Button 
+            variant="outline" 
+            className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
+            onClick={handleExport}
+            disabled={filteredData.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export XLS
+          </Button>
           <Badge variant="outline" className="px-4 py-1.5 border-slate-200 dark:border-slate-800">
             {filteredData.length} Records Found
           </Badge>
