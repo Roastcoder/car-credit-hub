@@ -7,9 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 export default function LegacyData() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('loans');
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleShowDetails = (item: any) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
 
   const { data: stats } = useQuery({
     queryKey: ['legacy-stats'],
@@ -134,7 +144,12 @@ export default function LegacyData() {
                   }>
                     {loan.file_status}
                   </Badge>
-                  <Button variant="ghost" size="sm" className="group/btn text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="group/btn text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                    onClick={() => handleShowDetails(loan)}
+                  >
                     Details
                     <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
                   </Button>
@@ -187,7 +202,12 @@ export default function LegacyData() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-amber-600">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-slate-400 hover:text-amber-600"
+                        onClick={() => handleShowDetails(customer)}
+                      >
                         View Profile
                       </Button>
                     </td>
@@ -198,6 +218,49 @@ export default function LegacyData() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-2xl">
+          <DialogHeader className="p-6 pb-4 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-3 mb-1">
+              <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                #{selectedItem?.iLoanId || selectedItem?.iCustomerId}
+              </Badge>
+              <Badge className="bg-slate-100 text-slate-600 border-none">
+                {selectedItem?.iLoanId ? 'Archive Loan' : 'Archive Customer'}
+              </Badge>
+            </div>
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">
+              {selectedItem?.customer_name || selectedItem?.vCustomerName || 'Record Details'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium">
+              Full data dump from legacy MySQL database
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="p-6 h-full overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {selectedItem && Object.entries(selectedItem).map(([key, value]: [string, any]) => {
+                // Skip internal IDs and null values if requested, but user asked for "full details"
+                if (value === null || value === 'NULL' || value === '') return null;
+                if (typeof value === 'object') return null;
+
+                return (
+                  <div key={key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 group hover:border-amber-500/20 transition-colors">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1 group-hover:text-amber-600 transition-colors">
+                      {key.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 break-words">
+                      {String(value)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-12" /> {/* Spacer */}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
