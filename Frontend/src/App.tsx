@@ -55,6 +55,7 @@ const Chat = lazy(() => import("@/pages/Chat"));
 const SchemeManagement = lazy(() => import("./pages/SchemeManagement"));
 const ModelManagement = lazy(() => import("./pages/ModelManagement"));
 const SubventionGrid = lazy(() => import("./pages/SubventionGrid"));
+const LegacyData = lazy(() => import("@/pages/LegacyData"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -154,6 +155,13 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/legacy-archive" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>
+            <LegacyData />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
       <Route path="/pdd-tracking" element={<ProtectedRoute><PDDTracking /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute><PaymentApplicationsList /></ProtectedRoute>} />
       <Route path="/payments/new" element={<ProtectedRoute><PaymentApplicationForm /></ProtectedRoute>} />

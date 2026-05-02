@@ -365,6 +365,14 @@ export const paymentApplicationAPI = {
   getAccountantStats: () => api.get('/payments/stats/accountant'),
 };
 
+// Legacy Data API (MySQL)
+export const legacyAPI = {
+  getLoans: (params?: any) => api.get('/legacy/loans' + (params ? `?${new URLSearchParams(params)}` : '')),
+  getLoanById: (id: string | number) => api.get(`/legacy/loans/${id}`),
+  getCustomers: (params?: any) => api.get('/legacy/customers' + (params ? `?${new URLSearchParams(params)}` : '')),
+  getStats: () => api.get('/legacy/stats'),
+};
+
 // Permissions API
 export const permissionsAPI = {
   getAllUsers: () => api.get('/permissions/users'),

@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
   Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List,
-  AlertTriangle, CheckCircle2, MessageSquare, Plus
+  AlertTriangle, CheckCircle2, MessageSquare, Plus, Database
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -99,6 +99,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: 'Vehicle Models', path: '/settings/vehicle-models', icon: Car, shortLabel: 'VM' },
     ],
   },
+  { title: 'Legacy Archive', path: '/legacy-archive', icon: Database, shortLabel: 'LA', roles: ['super_admin', 'admin'] },
 ];
 
 const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
