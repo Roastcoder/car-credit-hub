@@ -102,23 +102,23 @@ export default function LegacyData() {
                       #{loan.iLoanId}
                     </Badge>
                     <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                      {loan.vCustomerName || 'N/A'}
+                      {loan.customer_name || 'N/A'}
                     </h3>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Loan Amount</p>
-                    <p className="font-black text-slate-900 dark:text-white">{formatCurrency(loan.fLoanAmount)}</p>
+                    <p className="font-black text-slate-900 dark:text-white">{formatCurrency(loan.loan_amount)}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-6">
                   <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
                     <Phone className="h-3.5 w-3.5 mr-2" />
-                    {loan.vMobileNo || 'No phone'}
+                    {loan.mobile_no || 'No phone'}
                   </div>
                   <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
                     <MapPin className="h-3.5 w-3.5 mr-2" />
-                    {loan.vAddress || 'No address'}
+                    {loan.current_address || 'No address'}
                   </div>
                   <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
                     <Clock className="h-3.5 w-3.5 mr-2" />
@@ -152,8 +152,8 @@ export default function LegacyData() {
                   <th className="px-6 py-4">ID</th>
                   <th className="px-6 py-4">Name</th>
                   <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">City</th>
-                  <th className="px-6 py-4">Type</th>
+                  <th className="px-6 py-4">District</th>
+                  <th className="px-6 py-4">Branch</th>
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -171,19 +171,19 @@ export default function LegacyData() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                        {customer.vFirstName} {customer.vLastName}
+                        {customer.customer_name}
                       </p>
-                      <p className="text-xs text-slate-500">{customer.vEmail}</p>
+                      <p className="text-xs text-slate-500">{customer.pan_number || 'No PAN'}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.vMobileNo}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.phone}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.vCity}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.district}</p>
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant="outline" className="text-[10px]">
-                        {customer.vCustomerType || 'Standard'}
+                        {customer.our_branch || 'N/A'}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
