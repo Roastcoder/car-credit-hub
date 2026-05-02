@@ -154,7 +154,11 @@ export default function LegacyData() {
                   </tr>
                 ))
               ) : filteredData.map((item: any, idx: number) => (
-                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
+                <tr 
+                  key={idx} 
+                  onClick={() => handleShowDetails(item)}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                >
                   <td className="px-6 py-4">
                     <span className="text-xs font-mono text-slate-400">{idx + 1}</span>
                   </td>
