@@ -28,31 +28,37 @@ type LoanStatusFilter = 'all' | 'draft' | 'submitted' | 'manager_review' | 'admi
 type PDDStatusFilter = 'all' | 'pending' | 'pending_approval' | 'approved' | 'rejected';
 
 export default function Loans() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [pddStatusFilter, setPddStatusFilter] = useState<PDDStatusFilter>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [branchFilter, setBranchFilter] = useState('all');
-  const [financierFilter, setFinancierFilter] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  
+  // URL-driven filters
+  const search = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || 'all';
+  const pddStatusFilter = (searchParams.get('pddStatus') as PDDStatusFilter) || 'all';
+  const branchFilter = searchParams.get('branch') || 'all';
+  const financierFilter = searchParams.get('financier') || 'all';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const monthFilter = searchParams.get('month') || '';
+  const dayFilter = searchParams.get('day') || '';
+
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; loanId: string; currentRemarks: string }>({ open: false, loanId: '', currentRemarks: '' });
   const importRef = useRef<HTMLInputElement>(null);
   
   const permissions = getRolePermissions(user?.role || 'employee');
-  const urlStatusFilter = searchParams.get('status');
-  const monthFilter = searchParams.get('month');
-  const dayFilter = searchParams.get('day');
 
-  // Sync URL status filter with local state
-  useMemo(() => {
-    if (urlStatusFilter) setStatusFilter(urlStatusFilter);
-  }, [urlStatusFilter]);
+  const updateFilter = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value === 'all' || !value) {
+      newParams.delete(key);
+    } else {
+      newParams.set(key, value);
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   const loanSwitcherOptions = [
     { label: 'Loans List', path: '/loans', icon: <List size={18} /> },
@@ -238,13 +244,7 @@ export default function Loans() {
   }, [loans]);
 
   const clearFilters = () => {
-    setSearch('');
-    setStatusFilter('all');
-    setPddStatusFilter('all');
-    setBranchFilter('all');
-    setFinancierFilter('all');
-    setStartDate('');
-    setEndDate('');
+    setSearchParams({}, { replace: true });
   };
 
   return (
@@ -278,7 +278,7 @@ export default function Loans() {
               type="text"
               placeholder="Search name, loan number, ID, or car..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => updateFilter('search', e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all shadow-sm"
             />
           </div>
@@ -319,7 +319,7 @@ export default function Loans() {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Loan Status</label>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => updateFilter('status', e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                 >
                   <option value="all">All Statuses</option>
@@ -331,7 +331,7 @@ export default function Loans() {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">PDD Status</label>
                 <select
                   value={pddStatusFilter}
-                  onChange={(e) => setPddStatusFilter(e.target.value as PDDStatusFilter)}
+                  onChange={(e) => updateFilter('pddStatus', e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                 >
                   <option value="all">All PDD Status</option>
@@ -347,7 +347,7 @@ export default function Loans() {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Branch</label>
                 <select
                   value={branchFilter}
-                  onChange={(e) => setBranchFilter(e.target.value)}
+                  onChange={(e) => updateFilter('branch', e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                 >
                   <option value="all">All Branches</option>
@@ -359,7 +359,7 @@ export default function Loans() {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Financier</label>
                 <select
                   value={financierFilter}
-                  onChange={(e) => setFinancierFilter(e.target.value)}
+                  onChange={(e) => updateFilter('financier', e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                 >
                   <option value="all">All Financiers</option>
@@ -374,7 +374,7 @@ export default function Loans() {
                   <input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => updateFilter('startDate', e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                   />
                 </div>
@@ -387,7 +387,7 @@ export default function Loans() {
                   <input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => updateFilter('endDate', e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-accent/30 outline-none"
                   />
                 </div>

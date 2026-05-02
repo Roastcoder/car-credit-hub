@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { loansAPI, externalAPI } from '@/lib/api';
@@ -55,8 +55,20 @@ const DOC_TYPES = [
 export default function LoanDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Filters from URL
+  const search = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || 'all';
+  const pddStatusFilter = searchParams.get('pddStatus') || 'all';
+  const branchFilter = searchParams.get('branch') || 'all';
+  const financierFilter = searchParams.get('financier') || 'all';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const monthFilter = searchParams.get('month');
+  const dayFilter = searchParams.get('day');
   const permissions = getRolePermissions(user?.role || 'employee');
 
   const [remarksModal, setRemarksModal] = useState<{ open: boolean; currentRemarks: string }>({ open: false, currentRemarks: '' });
@@ -66,10 +78,52 @@ export default function LoanDetail() {
     queryKey: ['loans', user?.id, user?.role],
     queryFn: async () => {
       const response = await loansAPI.getAll();
-      return Array.isArray(response.data) ? response.data : [];
+      let data = response;
+      if (response && typeof response === 'object' && !Array.isArray(response) && response.data) {
+        data = response.data;
+      }
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!user,
   });
+
+  const filteredLoans = useMemo(() => {
+    return (Array.isArray(loans) ? loans : []).filter((l: any) => {
+      const matchSearch = !search ||
+        l.applicant_name?.toLowerCase().includes(search.toLowerCase()) ||
+        l.id?.toLowerCase().includes(search.toLowerCase()) ||
+        l.loan_number?.toLowerCase().includes(search.toLowerCase()) ||
+        l.car_model?.toLowerCase().includes(search.toLowerCase());
+      
+      const matchStatus = statusFilter === 'all' || l.status === statusFilter;
+      const loanPddStatus = l.pdd_status || 'pending';
+      const matchPddStatus = pddStatusFilter === 'all' || loanPddStatus === pddStatusFilter;
+      const matchBranch = branchFilter === 'all' || l.branch_name === branchFilter;
+      const matchFinancier = financierFilter === 'all' || (l.bank_name || l.assigned_bank_name) === financierFilter;
+      
+      const createdAt = l.created_at ? new Date(l.created_at) : null;
+      const matchMonth = !monthFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().slice(0, 7) === monthFilter);
+      const matchDay = !dayFilter || (createdAt && !Number.isNaN(createdAt.getTime()) && createdAt.toISOString().split('T')[0] === dayFilter);
+      
+      let matchDateRange = true;
+      if (createdAt && !Number.isNaN(createdAt.getTime())) {
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          matchDateRange = matchDateRange && createdAt >= start;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchDateRange = matchDateRange && createdAt <= end;
+        }
+      } else if (startDate || endDate) {
+        matchDateRange = false;
+      }
+
+      return matchSearch && matchStatus && matchPddStatus && matchBranch && matchFinancier && matchMonth && matchDay && matchDateRange;
+    });
+  }, [loans, search, statusFilter, pddStatusFilter, branchFilter, financierFilter, startDate, endDate, monthFilter, dayFilter]);
 
   const { data: banks = [] } = useQuery({
     queryKey: ['banks-list'],
@@ -418,7 +472,7 @@ export default function LoanDetail() {
     <>
       <div className="max-w-full mx-auto px-4 pb-20 lg:pb-4">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate('/loans')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft size={16} /> Back to Applications
           </button>
 
@@ -426,22 +480,22 @@ export default function LoanDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                const prevId = WorkflowService.getPreviousLoanId(id!, loans, user?.role || 'employee');
-                if (prevId) navigate(`/loans/${prevId}`);
+                const prevId = WorkflowService.getPreviousLoanId(id!, filteredLoans, user?.role || 'employee', user?.id, user?.branch_id);
+                if (prevId) navigate(`/loans/${prevId}?${searchParams.toString()}`);
                 else toast.info('No previous application found');
               }}
-              disabled={!WorkflowService.getPreviousLoanId(id!, loans, user?.role || 'employee')}
+              disabled={!WorkflowService.getPreviousLoanId(id!, filteredLoans, user?.role || 'employee', user?.id, user?.branch_id)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-30"
             >
               ← Previous
             </button>
             <button
               onClick={() => {
-                const nextId = WorkflowService.getNextLoanId(id!, loans, user?.role || 'employee');
-                if (nextId) navigate(`/loans/${nextId}`);
+                const nextId = WorkflowService.getNextLoanId(id!, filteredLoans, user?.role || 'employee', user?.id, user?.branch_id);
+                if (nextId) navigate(`/loans/${nextId}?${searchParams.toString()}`);
                 else toast.info('No more applications found');
               }}
-              disabled={!WorkflowService.getNextLoanId(id!, loans, user?.role || 'employee')}
+              disabled={!WorkflowService.getNextLoanId(id!, filteredLoans, user?.role || 'employee', user?.id, user?.branch_id)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-30"
             >
               Next →
