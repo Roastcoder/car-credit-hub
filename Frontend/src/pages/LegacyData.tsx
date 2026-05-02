@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Database, Search, ArrowRight, User, FileText, 
   Users, Building2, CreditCard, ShieldCheck, 
@@ -30,8 +31,23 @@ const ARCHIVE_TABLES = [
 ];
 
 export default function LegacyData() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTable, setActiveTable] = useState('loanfile');
+  const [activeTable, setActiveTable] = useState(searchParams.get('tab') || 'loanfile');
+
+  // Sync activeTable with URL parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTable) {
+      setActiveTable(tab);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes internally (if any)
+  const handleTabChange = (tabId: string) => {
+    setActiveTable(tabId);
+    setSearchParams({ tab: tabId });
+  };
 
   const { data: stats } = useQuery({
     queryKey: ['legacy-stats'],
@@ -100,7 +116,7 @@ export default function LegacyData() {
               return (
                 <button
                   key={table.id}
-                  onClick={() => setActiveTable(table.id)}
+                  onClick={() => handleTabChange(table.id)}
                   className={cn(
                     "w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group",
                     isActive 

@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Users, Building2, UserCheck, BarChart3,
   LogOut, X, Car, CreditCard, ChevronLeft, ChevronRight, MapPin, UserPlus, Send, ClipboardCheck, Wallet,
   Activity, Receipt, Shield, User, Menu, ShieldCheck, Settings, Layers, List,
-  AlertTriangle, CheckCircle2, MessageSquare, Plus, Database
+  AlertTriangle, CheckCircle2, MessageSquare, Plus, Database, Briefcase, GraduationCap
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import MobileBottomNav from './MobileBottomNav';
@@ -99,7 +99,25 @@ const NAV_ITEMS: NavItem[] = [
       { title: 'Vehicle Models', path: '/settings/vehicle-models', icon: Car, shortLabel: 'VM' },
     ],
   },
-  { title: 'Legacy Archive', path: '/legacy-archive', icon: Database, shortLabel: 'LA', roles: ['super_admin', 'admin'] },
+  {
+    title: 'Legacy Archive',
+    path: '/legacy-archive',
+    icon: Database,
+    shortLabel: 'LA',
+    roles: ['super_admin', 'admin'],
+    children: [
+      { title: 'Loan Files', path: '/legacy-archive?tab=loanfile', icon: FileText, shortLabel: 'LF' },
+      { title: 'Customers', path: '/legacy-archive?tab=customers', icon: User, shortLabel: 'CS' },
+      { title: 'Brokers / DSA', path: '/legacy-archive?tab=dsa', icon: Building2, shortLabel: 'BR' },
+      { title: 'Payouts', path: '/legacy-archive?tab=dsa_payout', icon: CreditCard, shortLabel: 'PO' },
+      { title: 'PDD Records', path: '/legacy-archive?tab=pdd', icon: ShieldCheck, shortLabel: 'PD' },
+      { title: 'Employees', path: '/legacy-archive?tab=employees', icon: Users, shortLabel: 'EM' },
+      { title: 'Loan Schemes', path: '/legacy-archive?tab=schemes', icon: List, shortLabel: 'LS' },
+      { title: 'System Users', path: '/legacy-archive?tab=users', icon: ShieldCheck, shortLabel: 'SU' },
+      { title: 'Associates', path: '/legacy-archive?tab=associates', icon: Briefcase, shortLabel: 'AS' },
+      { title: 'Financiers', path: '/legacy-archive?tab=financier', icon: GraduationCap, shortLabel: 'FN' },
+    ],
+  },
 ];
 
 const PDD_MANAGER_NAV_ITEMS: NavItem[] = [
