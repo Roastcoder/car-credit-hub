@@ -18,6 +18,10 @@ import { SDUIRenderer } from '@/components/SDUI/SDUIRenderer';
 import { SDUIComponentProps } from '@/components/SDUI/types';
 
 const STATUS_CHART_COLORS = ['#1e40af', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+const VERTICAL_COLORS = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+const BRANCH_COLORS = ['#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
+const LOAN_TYPE_COLORS = ['#d97706', '#f59e0b', '#fbbf24', '#fcd34d', '#fef3c7'];
+const BANK_COLORS = ['#dc2626', '#ef4444', '#f87171', '#fb923c', '#fdba74', '#e11d48'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -517,15 +521,18 @@ export default function Dashboard() {
                       <AreaChart data={trendData}>
                         <defs>
                           <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                        <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                        <Tooltip 
+                          formatter={(val: number) => [`₹${val.toFixed(2)} Lakhs`, 'Amount']}
+                          contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                        />
+                        <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
@@ -546,10 +553,13 @@ export default function Dashboard() {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" horizontal={false} />
                         <XAxis type="number" hide />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: 'var(--text-muted-light)', fontWeight: 600 }} axisLine={false} tickLine={false} width={100} />
-                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} />
-                        <Bar dataKey="amount" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={20}>
+                        <Tooltip 
+                          formatter={(val: number) => [`₹${val.toFixed(2)} Lakhs`, 'Amount']}
+                          contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} 
+                        />
+                        <Bar dataKey="amount" fill="#7c3aed" radius={[0, 6, 6, 0]} barSize={20}>
                           {branchData.map((_, i) => (
-                            <Cell key={i} fill={STATUS_CHART_COLORS[i % STATUS_CHART_COLORS.length]} />
+                            <Cell key={i} fill={BRANCH_COLORS[i % BRANCH_COLORS.length]} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -570,7 +580,7 @@ export default function Dashboard() {
                       <PieChart>
                         <Pie data={verticalData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
                           {verticalData.map((_, i) => (
-                            <Cell key={i} fill={STATUS_CHART_COLORS[(i + 2) % STATUS_CHART_COLORS.length]} />
+                            <Cell key={i} fill={VERTICAL_COLORS[i % VERTICAL_COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} />
@@ -593,7 +603,7 @@ export default function Dashboard() {
                       <PieChart>
                         <Pie data={loanTypeData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value" stroke="none">
                           {loanTypeData.map((_, i) => (
-                            <Cell key={i} fill={i === 0 ? '#2563eb' : '#fbbf24'} />
+                            <Cell key={i} fill={LOAN_TYPE_COLORS[i % LOAN_TYPE_COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px' }} />
@@ -650,8 +660,15 @@ export default function Dashboard() {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                        <Bar dataKey="amount" fill="#2563eb" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                        <Tooltip 
+                          formatter={(val: number) => [`₹${val.toFixed(2)} Lakhs`, 'Amount']}
+                          contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
+                        />
+                        <Bar dataKey="amount" fill="#dc2626" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                          {bankData.map((_, i) => (
+                            <Cell key={i} fill={BANK_COLORS[i % BANK_COLORS.length]} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -701,7 +718,10 @@ export default function Dashboard() {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" vertical={false} />
                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted-light)' }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} />
+                        <Tooltip 
+                          formatter={(val: number) => [`₹${val.toFixed(2)} Lakhs`, 'Amount']}
+                          contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: '12px', fontSize: '12px' }} 
+                        />
                         <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorAmountBroker)" />
                       </AreaChart>
                     </ResponsiveContainer>
