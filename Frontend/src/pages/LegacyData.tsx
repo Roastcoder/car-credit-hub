@@ -195,28 +195,42 @@ export default function LegacyData() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                        {item.customer_name || item.vCustomerName || item.vFirstName || item.vLoanNumber || item.name || 'N/A'}
+                        {/* Try to find a primary name/label in various common legacy column formats */}
+                        {item.customer_name || item.vCustomerName || item.vFirstName || 
+                         item.vEmployeeName || item.vSchemeName || item.vDsaName || 
+                         item.vAssociateName || item.vFinancierName || item.vName ||
+                         item.vLoanNumber || item.file_no || item.name || 
+                         `Record #${item.iLoanId || item.iCustomerId || item.id || item.iPddId || item.iPayoutId || item.iEmployeeId || item.iSchemeId || item.iUserId || item.iAssociatesId || item.iFinancierId}`}
                       </p>
                       <p className="text-xs text-slate-500 truncate max-w-xs">
-                        {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail || 'No contact info'}
+                        {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail || 
+                         item.vAddress || item.current_address || item.address || 'No additional contact info'}
                       </p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-2">
-                        {item.loan_amount && (
+                        {/* Handle various amount/status columns */}
+                        {(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount) && (
                           <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-100">
-                            {formatCurrency(item.loan_amount)}
+                            {formatCurrency(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount)}
                           </Badge>
                         )}
-                        {item.file_status && (
+                        {(item.file_status || item.vStatus || item.status) && (
                           <Badge className={cn(
                             "text-[10px] border-none",
-                            item.file_status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+                            (item.file_status === 'Approved' || item.vStatus === 'Active') ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
                           )}>
-                            {item.file_status}
+                            {item.file_status || item.vStatus || item.status}
                           </Badge>
                         )}
-                        {item.district && <span className="text-xs text-slate-400">{item.district}</span>}
+                        {(item.district || item.vCity || item.city) && (
+                          <span className="text-xs text-slate-400">{item.district || item.vCity || item.city}</span>
+                        )}
+                        {item.create_date && (
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {new Date(item.create_date).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
