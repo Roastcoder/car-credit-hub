@@ -371,6 +371,7 @@ export const legacyAPI = {
   getLoanById: (id: string | number) => api.get(`/legacy/loans/${id}`),
   getCustomers: (params?: any) => api.get('/legacy/customers' + (params ? `?${new URLSearchParams(params)}` : '')),
   getStats: () => api.get('/legacy/stats'),
+  getTableData: (table: string) => api.get(`/legacy/table/${table}`),
 };
 
 // Permissions API

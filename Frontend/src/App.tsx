@@ -56,6 +56,7 @@ const SchemeManagement = lazy(() => import("./pages/SchemeManagement"));
 const ModelManagement = lazy(() => import("./pages/ModelManagement"));
 const SubventionGrid = lazy(() => import("./pages/SubventionGrid"));
 const LegacyData = lazy(() => import("@/pages/LegacyData"));
+const LegacyDetail = lazy(() => import("@/pages/LegacyDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -159,6 +160,13 @@ function AppRoutes() {
         <ProtectedRoute>
           <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>
             <LegacyData />
+          </RoleProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/legacy-archive/:table/:id" element={
+        <ProtectedRoute>
+          <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>
+            <LegacyDetail />
           </RoleProtectedRoute>
         </ProtectedRoute>
       } />

@@ -1,42 +1,52 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Database, Search, Filter, ArrowRight, User, FileText, BarChart3, Clock, MapPin, Phone } from 'lucide-react';
+import { 
+  Database, Search, ArrowRight, User, FileText, 
+  Users, Building2, CreditCard, ShieldCheck, 
+  Briefcase, GraduationCap, LayoutList, History, 
+  Table as TableIcon, ChevronRight
+} from 'lucide-react';
 import { legacyAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+
+const ARCHIVE_TABLES = [
+  { id: 'loanfile', label: 'Loan Files', icon: FileText, color: 'text-blue-500' },
+  { id: 'customers', label: 'Customers', icon: User, color: 'text-emerald-500' },
+  { id: 'dsa', label: 'Brokers / DSA', icon: Building2, color: 'text-purple-500' },
+  { id: 'dsa_payout', label: 'Payouts', icon: CreditCard, color: 'text-amber-500' },
+  { id: 'pdd', label: 'PDD Records', icon: ShieldCheck, color: 'text-rose-500' },
+  { id: 'employees', label: 'Employees', icon: Users, color: 'text-indigo-500' },
+  { id: 'schemes', label: 'Loan Schemes', icon: LayoutList, color: 'text-cyan-500' },
+  { id: 'users', label: 'System Users', icon: ShieldCheck, color: 'text-slate-500' },
+  { id: 'associates', label: 'Associates', icon: Briefcase, color: 'text-orange-500' },
+  { id: 'financier', label: 'Financiers', icon: GraduationCap, color: 'text-pink-500' },
+];
 
 export default function LegacyData() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('loans');
+  const [activeTable, setActiveTable] = useState('loanfile');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleShowDetails = (item: any) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
-  };
 
   const { data: stats } = useQuery({
     queryKey: ['legacy-stats'],
     queryFn: () => legacyAPI.getStats()
   });
 
-  const { data: loans, isLoading: loansLoading } = useQuery({
-    queryKey: ['legacy-loans', searchTerm],
-    queryFn: () => legacyAPI.getLoans({ search: searchTerm }),
-    enabled: activeTab === 'loans'
+  const { data: tableData, isLoading } = useQuery({
+    queryKey: ['legacy-table', activeTable],
+    queryFn: () => legacyAPI.getTableData(activeTable),
   });
 
-  const { data: customers, isLoading: customersLoading } = useQuery({
-    queryKey: ['legacy-customers'],
-    queryFn: () => legacyAPI.getCustomers(),
-    enabled: activeTab === 'customers'
-  });
+  const handleShowDetails = (item: any) => {
+    const id = item.iLoanId || item.iCustomerId || item.id || item.iAssociatesId;
+    window.open(`/legacy-archive/${activeTable}/${id}`, '_blank');
+  };
 
   const formatCurrency = (amount: any) => {
     return new Intl.NumberFormat('en-IN', {
@@ -46,221 +56,173 @@ export default function LegacyData() {
     }).format(Number(amount) || 0);
   };
 
+  const filteredData = tableData?.data?.filter((item: any) => {
+    if (!searchTerm) return true;
+    return Object.values(item).some(val => 
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }) || [];
+
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
+    <div className="flex h-[calc(100vh-8rem)] gap-6 p-6">
+      {/* Sidebar Navigation */}
+      <div className="w-72 flex flex-col gap-4">
+        <div className="mb-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
               <Database className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Legacy Archive</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Legacy Archive</h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">Migrated historical data from previous MySQL system</p>
+          <p className="text-xs text-slate-500 font-medium">Historical MySQL Data Explorer</p>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-6 px-6 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Total Loans</p>
-              <p className="text-xl font-black text-slate-900 dark:text-white">{stats?.data?.totalLoans || 0}</p>
+
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-1.5">
+            {ARCHIVE_TABLES.map((table) => {
+              const Icon = table.icon;
+              const isActive = activeTable === table.id;
+              
+              return (
+                <button
+                  key={table.id}
+                  onClick={() => setActiveTable(table.id)}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group",
+                    isActive 
+                      ? "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm" 
+                      : "hover:bg-slate-100 dark:hover:bg-slate-900/50 text-slate-600 dark:text-slate-400"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      isActive ? "bg-slate-100 dark:bg-slate-800" : "bg-transparent group-hover:bg-white dark:group-hover:bg-slate-800"
+                    )}>
+                      <Icon className={cn("h-4 w-4", isActive ? table.color : "text-slate-400")} />
+                    </div>
+                    <span className={cn("text-sm font-bold", isActive ? "text-slate-900 dark:text-white" : "")}>
+                      {table.label}
+                    </span>
+                  </div>
+                  {isActive && <ChevronRight className="h-4 w-4 text-slate-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </ScrollArea>
+
+        {/* Stats Summary */}
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Records</p>
+            <History className="h-3 w-3 text-slate-400" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-slate-500 font-bold mb-1">Loans</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{stats?.data?.totalLoans || 0}</p>
             </div>
-            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Total Customers</p>
-              <p className="text-xl font-black text-slate-900 dark:text-white">{stats?.data?.totalCustomers || 0}</p>
+            <div>
+              <p className="text-xs text-slate-500 font-bold mb-1">Customers</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{stats?.data?.totalCustomers || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
-          <TabsList className="bg-transparent border-none">
-            <TabsTrigger value="loans" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm rounded-xl px-6 py-2">
-              <FileText className="h-4 w-4 mr-2" />
-              Loan Files
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm rounded-xl px-6 py-2">
-              <User className="h-4 w-4 mr-2" />
-              Customer Records
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="relative w-full md:w-72">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+        {/* Search Bar */}
+        <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search legacy records..." 
+              placeholder={`Search in ${ARCHIVE_TABLES.find(t => t.id === activeTable)?.label}...`} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
+              className="pl-10 bg-slate-50 dark:bg-slate-950 border-none rounded-xl"
             />
           </div>
+          <Badge variant="outline" className="px-4 py-1.5 border-slate-200 dark:border-slate-800">
+            {filteredData.length} Records Found
+          </Badge>
         </div>
 
-        <TabsContent value="loans">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {loansLoading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-48 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl border border-slate-200 dark:border-slate-700" />
-              ))
-            ) : loans?.data?.map((loan: any) => (
-              <div key={loan.iLoanId} className="group bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-amber-500/5">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 mb-2">
-                      #{loan.iLoanId}
-                    </Badge>
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                      {loan.customer_name || 'N/A'}
-                    </h3>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Loan Amount</p>
-                    <p className="font-black text-slate-900 dark:text-white">{formatCurrency(loan.loan_amount)}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                    <Phone className="h-3.5 w-3.5 mr-2" />
-                    {loan.mobile_no || 'No phone'}
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                    <MapPin className="h-3.5 w-3.5 mr-2" />
-                    {loan.current_address || 'No address'}
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                    <Clock className="h-3.5 w-3.5 mr-2" />
-                    Created: {new Date(loan.create_date).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Badge className={
-                    loan.file_status === 'Approved' ? 'bg-green-100 text-green-700' : 
-                    loan.file_status === 'Pending' ? 'bg-blue-100 text-blue-700' : 
-                    'bg-slate-100 text-slate-700'
-                  }>
-                    {loan.file_status}
-                  </Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="group/btn text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                    onClick={() => handleShowDetails(loan)}
-                  >
-                    Details
-                    <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="customers">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        {/* Data Table */}
+        <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm flex flex-col">
+          <ScrollArea className="flex-1">
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">ID</th>
-                  <th className="px-6 py-4">Name</th>
-                  <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">District</th>
-                  <th className="px-6 py-4">Branch</th>
+              <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900/90 backdrop-blur-sm">
+                <tr className="text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                  <th className="px-6 py-4">S.No</th>
+                  <th className="px-6 py-4">Details</th>
+                  <th className="px-6 py-4">Status / Additional Info</th>
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {customersLoading ? (
-                  [1, 2, 3, 4, 5].map((i) => (
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                {isLoading ? (
+                  [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={6} className="px-6 py-6 h-16 bg-slate-50/50" />
+                      <td colSpan={4} className="px-6 py-6 h-16 bg-slate-50/50 dark:bg-slate-900/50" />
                     </tr>
                   ))
-                ) : customers?.data?.map((customer: any) => (
-                  <tr key={customer.iCustomerId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                ) : filteredData.map((item: any, idx: number) => (
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                     <td className="px-6 py-4">
-                      <span className="text-xs font-mono text-slate-400">#{customer.iCustomerId}</span>
+                      <span className="text-xs font-mono text-slate-400">{idx + 1}</span>
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                        {customer.customer_name}
+                        {item.customer_name || item.vCustomerName || item.vFirstName || item.vLoanNumber || item.name || 'N/A'}
                       </p>
-                      <p className="text-xs text-slate-500">{customer.pan_number || 'No PAN'}</p>
+                      <p className="text-xs text-slate-500 truncate max-w-xs">
+                        {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail || 'No contact info'}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.phone}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{customer.district}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline" className="text-[10px]">
-                        {customer.our_branch || 'N/A'}
-                      </Badge>
+                      <div className="flex flex-wrap gap-2">
+                        {item.loan_amount && (
+                          <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-100">
+                            {formatCurrency(item.loan_amount)}
+                          </Badge>
+                        )}
+                        {item.file_status && (
+                          <Badge className={cn(
+                            "text-[10px] border-none",
+                            item.file_status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+                          )}>
+                            {item.file_status}
+                          </Badge>
+                        )}
+                        {item.district && <span className="text-xs text-slate-400">{item.district}</span>}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-slate-400 hover:text-amber-600"
-                        onClick={() => handleShowDetails(customer)}
+                        className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                        onClick={() => handleShowDetails(item)}
                       >
-                        View Profile
+                        Full Details
+                        <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-2xl">
-          <DialogHeader className="p-6 pb-4 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
-            <div className="flex items-center gap-3 mb-1">
-              <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
-                #{selectedItem?.iLoanId || selectedItem?.iCustomerId}
-              </Badge>
-              <Badge className="bg-slate-100 text-slate-600 border-none">
-                {selectedItem?.iLoanId ? 'Archive Loan' : 'Archive Customer'}
-              </Badge>
-            </div>
-            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">
-              {selectedItem?.customer_name || selectedItem?.vCustomerName || 'Record Details'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-500 font-medium">
-              Full data dump from legacy MySQL database
-            </DialogDescription>
-          </DialogHeader>
-
-          <ScrollArea className="p-6 h-full overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedItem && Object.entries(selectedItem).map(([key, value]: [string, any]) => {
-                // Skip internal IDs and null values if requested, but user asked for "full details"
-                if (value === null || value === 'NULL' || value === '') return null;
-                if (typeof value === 'object') return null;
-
-                return (
-                  <div key={key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 group hover:border-amber-500/20 transition-colors">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1 group-hover:text-amber-600 transition-colors">
-                      {key.replace(/_/g, ' ')}
-                    </p>
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 break-words">
-                      {String(value)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="h-12" /> {/* Spacer */}
+            {filteredData.length === 0 && !isLoading && (
+              <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                <TableIcon className="h-12 w-12 mb-4 opacity-20" />
+                <p className="font-bold">No records found matching your search</p>
+              </div>
+            )}
           </ScrollArea>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   );
 }
