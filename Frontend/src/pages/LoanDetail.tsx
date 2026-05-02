@@ -23,6 +23,13 @@ import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 import PDDForm from '@/components/PDDForm';
 import VehicleDetailsCard from '@/components/VehicleDetailsCard';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ClipboardCheck,
   CheckCircle,
   XSquare,
@@ -232,6 +239,39 @@ export default function LoanDetail() {
       toast.success('Document uploaded successfully');
     },
     onError: () => toast.error('Failed to upload document'),
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['users-list'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.data || []);
+    },
+    enabled: user?.role === 'super_admin',
+  });
+
+  const updateLoanCreator = useMutation({
+    mutationFn: async (newCreatorId: string) => {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/loans/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}` 
+        },
+        body: JSON.stringify({ created_by: newCreatorId }),
+      });
+      if (!res.ok) throw new Error('Failed to update creator');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loan', id] });
+      toast.success('Creator updated successfully');
+    },
+    onError: () => toast.error('Failed to update creator'),
   });
 
 
@@ -706,7 +746,29 @@ export default function LoanDetail() {
                           </div>
                         )}
                         <Field label="Application ID" value={applicationIdentifier} />
-                        <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
+                        <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
+                        {user?.role === 'super_admin' ? (
+                          <div className="space-y-1.5">
+                            <p className="text-[11px] text-muted-foreground mb-0.5">Created By</p>
+                            <Select
+                              value={String(loan.created_by)}
+                              onValueChange={(val) => updateLoanCreator.mutate(val)}
+                            >
+                              <SelectTrigger className="h-8 w-full text-xs font-medium border-slate-200">
+                                <SelectValue placeholder="Select Creator" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {users.map((u: any) => (
+                                  <SelectItem key={u.id} value={String(u.id)} className="text-xs">
+                                    {u.name} ({u.role})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ) : (
+                          <Field label="Created By" value={(loan as any).creator_name || (loan as any).user_name || '—'} />
+                        )}
                       </div>
                     </Section>
 
