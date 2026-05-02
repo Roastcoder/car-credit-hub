@@ -198,38 +198,40 @@ export default function LegacyData() {
                         {/* Try to find a primary name/label in various common legacy column formats */}
                         {item.customer_name || item.employee_name || item.schemes_name || item.name || 
                          item.vEmployeeName || item.vSchemeName || item.vDsaName || item.firstname ||
-                         item.vAssociateName || item.vFinancierName || item.financier_name || item.username ||
+                         item.financier_name_in_m_parivahan || item.vAssociateName || item.vFinancierName || 
+                         item.financier_name || item.username || (item.loanfile_no ? `Payout for File #${item.loanfile_no}` : null) ||
                          item.vLoanNumber || item.file_no || 
                          `Record #${item.iLoanId || item.iCustomerId || item.id || item.ipddId || item.iDsapayoutId || item.iEmployeeId || item.iSchemesId || item.iAssociatesId || item.iFinancierId}`}
                       </p>
                       <p className="text-xs text-slate-500 truncate max-w-xs">
                         {item.mobile_no || item.phone || item.vMobileNo || item.email || item.vEmail || 
                          item.vAddress || item.current_address || item.address || 
+                         (item.loan_id ? `Loan ID: ${item.loan_id}` : null) ||
                          (item.username ? `@${item.username}` : 'No additional contact info')}
                       </p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-2">
                         {/* Handle various amount/status columns */}
-                        {(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount || item.loan_amount_required) && (
+                        {(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount || item.payout_amount || item.loan_amount_required) && (
                           <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-100">
-                            {formatCurrency(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount || item.loan_amount_required)}
+                            {formatCurrency(item.loan_amount || item.fLoanAmount || item.fAmount || item.amount || item.payout_amount || item.loan_amount_required)}
                           </Badge>
                         )}
-                        {(item.file_status || item.vStatus || item.status || item.active !== undefined) && (
+                        {(item.file_status || item.vStatus || item.status || item.rto_work_status || item.paid_status || item.active !== undefined) && (
                           <Badge className={cn(
                             "text-[10px] border-none",
-                            (item.file_status === 'Approved' || item.vStatus === 'Active' || item.active === 1) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+                            (item.file_status === 'Approved' || item.vStatus === 'Active' || item.active === 1 || item.paid_status === 'Paid') ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
                           )}>
-                            {item.file_status || item.vStatus || item.status || (item.active === 1 ? 'Active' : 'Inactive')}
+                            {item.file_status || item.vStatus || item.status || item.rto_work_status || item.paid_status || (item.active === 1 ? 'Active' : 'Inactive')}
                           </Badge>
                         )}
-                        {(item.district || item.vCity || item.city || item.our_branch) && (
-                          <span className="text-xs text-slate-400">{item.district || item.vCity || item.city || item.our_branch}</span>
+                        {(item.district || item.vCity || item.city || item.our_branch || item.dto_location) && (
+                          <span className="text-xs text-slate-400">{item.district || item.vCity || item.city || item.our_branch || item.dto_location}</span>
                         )}
-                        {(item.create_date || item.update_date) && (
+                        {(item.create_date || item.update_date || item.date) && (
                           <span className="text-[10px] text-slate-400 font-mono">
-                            {new Date(item.create_date || item.update_date).toLocaleDateString()}
+                            {new Date(item.create_date || item.update_date || item.date).toLocaleDateString()}
                           </span>
                         )}
                       </div>
