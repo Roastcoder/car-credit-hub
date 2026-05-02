@@ -37,7 +37,7 @@ export default function LegacyDetail() {
       <div className="flex items-center justify-between mb-8">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/legacy-archive')}
+          onClick={() => navigate(`/legacy-archive?tab=${table}`)}
           className="hover:bg-amber-50 text-amber-600 font-bold"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
