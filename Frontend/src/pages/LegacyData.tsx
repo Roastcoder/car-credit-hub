@@ -43,9 +43,12 @@ export default function LegacyData() {
     queryFn: () => legacyAPI.getTableData(activeTable),
   });
 
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleShowDetails = (item: any) => {
-    const id = item.iLoanId || item.iCustomerId || item.id || item.iAssociatesId;
-    window.open(`/legacy-archive/${activeTable}/${id}`, '_blank');
+    setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
   const formatCurrency = (amount: any) => {
@@ -260,6 +263,49 @@ export default function LegacyData() {
           </ScrollArea>
         </div>
       </div>
+
+      {/* Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-2xl">
+          <DialogHeader className="p-6 pb-4 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-3 mb-1">
+              <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                #{selectedItem?.iLoanId || selectedItem?.iCustomerId || selectedItem?.id || selectedItem?.ipddId || selectedItem?.iDsapayoutId}
+              </Badge>
+              <Badge className="bg-slate-100 text-slate-600 border-none">
+                {ARCHIVE_TABLES.find(t => t.id === activeTable)?.label} Record
+              </Badge>
+            </div>
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">
+              {selectedItem?.customer_name || selectedItem?.employee_name || selectedItem?.schemes_name || selectedItem?.name || selectedItem?.username || 'Record Details'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium">
+              Full data dump from legacy MySQL database
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="p-6 h-full overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {selectedItem && Object.entries(selectedItem).map(([key, value]: [string, any]) => {
+                if (value === null || value === 'NULL' || value === '') return null;
+                if (typeof value === 'object') return null;
+
+                return (
+                  <div key={key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 group hover:border-amber-500/20 transition-colors">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1 group-hover:text-amber-600 transition-colors">
+                      {key.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 break-words">
+                      {String(value)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-12" />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
