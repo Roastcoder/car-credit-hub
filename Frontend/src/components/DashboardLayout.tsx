@@ -200,7 +200,6 @@ const EMPLOYEE_NAV_ITEMS: NavItem[] = [
     icon: ClipboardCheck,
     shortLabel: 'PD',
     roles: ['employee'],
-    permission: 'canManagePdd'
   },
   {
     title: 'Payments',
@@ -215,7 +214,6 @@ const EMPLOYEE_NAV_ITEMS: NavItem[] = [
     icon: BarChart3,
     shortLabel: 'RP',
     roles: ['employee'],
-    permission: 'canViewReports'
   },
   {
     title: 'My Brokers',
