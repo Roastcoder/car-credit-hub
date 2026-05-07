@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -60,6 +60,15 @@ interface PaymentApplication {
   mehar_deduction?: number;
   emi_amount?: number;
   voucher_number?: string;
+  payment_type?: string;
+  payment_in_favour_name?: string;
+}
+
+interface LoanPaymentGroup {
+  key: string;
+  applications: PaymentApplication[];
+  primary: PaymentApplication;
+  totalAmount: number;
 }
 
 export default function PaymentApplicationsList() {
@@ -179,6 +188,26 @@ export default function PaymentApplicationsList() {
     return matchesSearch && matchesStatus && matchesRelease;
   });
 
+  const groupedApplications: LoanPaymentGroup[] = Object.values(
+    filteredApplications.reduce((groups: Record<string, LoanPaymentGroup>, app) => {
+      const key = String(app.loan_id || app.loan_number || app.id);
+      if (!groups[key]) {
+        groups[key] = {
+          key,
+          applications: [],
+          primary: app,
+          totalAmount: 0,
+        };
+      }
+
+      groups[key].applications.push(app);
+      groups[key].applications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      groups[key].primary = groups[key].applications[0];
+      groups[key].totalAmount = groups[key].applications.reduce((sum, item) => sum + Number(item.payment_amount || 0), 0);
+      return groups;
+    }, {})
+  ).sort((a, b) => new Date(b.primary.created_at).getTime() - new Date(a.primary.created_at).getTime());
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -199,6 +228,16 @@ export default function PaymentApplicationsList() {
     if (app.utr_number) return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:text-blue-400 dark:border-blue-800';
     if (app.voucher_number) return 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/10 dark:text-purple-400 dark:border-purple-800';
     return 'text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-900/10 dark:text-orange-400 dark:border-orange-800';
+  };
+
+  const formatPaymentType = (type?: string) => {
+    const labels: Record<string, string> = {
+      dealer: 'Dealer',
+      rto: 'RTO',
+      agent: 'Agent',
+      customer_balance: 'Customer Balance',
+    };
+    return labels[String(type || '').toLowerCase()] || 'Payment';
   };
 
   const canAccountProcess = ['accountant', 'admin', 'super_admin', 'pdd_manager'].includes(user?.role || '');
@@ -344,7 +383,7 @@ export default function PaymentApplicationsList() {
         <div className="flex items-center justify-center p-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : filteredApplications.length === 0 ? (
+      ) : groupedApplications.length === 0 ? (
         <div className="glass-card p-12 text-center rounded-2xl border border-white/20 dark:border-white/10 shadow-sm">
           <div className="flex flex-col items-center justify-center max-w-[300px] mx-auto">
             <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
@@ -360,8 +399,10 @@ export default function PaymentApplicationsList() {
         <>
           {/* Mobile Card View */}
           <div className="grid gap-4 md:hidden">
-            {filteredApplications.map((app) => (
-              <div key={app.id} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
+            {groupedApplications.map((group) => {
+              const app = group.primary;
+              return (
+              <div key={group.key} className="glass-card p-5 rounded-2xl border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
                 <div className="flex items-center justify-between mb-3 relative z-10">
                   {(() => {
                     const appPct = (Number(app.old_release_amount || app.total_release_amount) || 0) / (Number(app.disbursement_amount) || 1) * 100;
@@ -372,7 +413,7 @@ export default function PaymentApplicationsList() {
                       </div>
                     );
                   })()}
-                  <div className="text-[10px] text-gray-500 font-mono italic">#{app.id.toString().padStart(4, '0')}</div>
+                  <div className="text-[10px] text-gray-500 font-mono italic">{group.applications.length} request{group.applications.length === 1 ? '' : 's'}</div>
                 </div>
                 
                 <div className="space-y-4 mb-4 relative z-10">
@@ -412,13 +453,37 @@ export default function PaymentApplicationsList() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(app.payment_amount || 0)}</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(group.totalAmount || 0)}</p>
                       {app.emi_amount && <p className="text-[10px] font-medium text-gray-500">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium italic">
                       <Receipt size={10} className="text-blue-500" />
                       {app.payment_purpose || 'Standard Disbursement'}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {group.applications.map((request) => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between rounded-xl border border-gray-100 bg-white/70 px-3 py-2 dark:border-gray-800 dark:bg-gray-900/50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/payments/${request.id}`);
+                        }}
+                      >
+                        <div>
+                          <p className="text-[10px] font-black text-gray-900 dark:text-white">#{request.id.toString().padStart(4, '0')} · {formatPaymentType(request.payment_type)}</p>
+                          <p className="text-[10px] text-gray-500">{request.payment_in_favour_name || request.applicant_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-blue-600">{formatCurrency(request.payment_amount || 0)}</p>
+                          <span className={`mt-0.5 inline-block px-2 py-0.5 text-[8px] font-bold uppercase rounded-full ${getStatusColor(request.status)}`}>
+                            {request.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -503,7 +568,8 @@ export default function PaymentApplicationsList() {
                   )}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           {/* Desktop Table View */}
@@ -527,11 +593,20 @@ export default function PaymentApplicationsList() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                  {filteredApplications.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
+                  {groupedApplications.map((group) => {
+                    const app = group.primary;
+                    const total = Number(app.disbursement_amount) || 0;
+                    const released = Math.max(...group.applications.map(item => Number(item.old_release_amount || item.total_release_amount || 0)), 0);
+                    const pct = total > 0 ? Math.round((released / total) * 100) : 0;
+                    const appPct = (Number(app.old_release_amount || app.total_release_amount) || 0) / (Number(app.disbursement_amount) || 1) * 100;
+                    const actualStatus = (app.status === 'completed' && appPct < 99) ? 'payment_released' : app.status;
+
+                    return (
+                    <Fragment key={group.key}>
+                    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
                       <td className="px-3 py-3 whitespace-nowrap">
                         <div className="font-bold text-gray-900 dark:text-white text-[11px] leading-tight">{app.loan_number}</div>
-                        <div className="text-[10px] text-gray-400 italic">ID: #{app.id.toString().padStart(4, '0')}</div>
+                        <div className="text-[10px] text-blue-600 font-bold">{group.applications.length} payment request{group.applications.length === 1 ? '' : 's'}</div>
                         {isAccountant && (
                           <div className="text-[10px] text-gray-500 mt-1">
                             Approved by: <span className="font-medium text-gray-700 dark:text-gray-300">{app.approved_by_name || 'N/A'}</span>
@@ -574,7 +649,7 @@ export default function PaymentApplicationsList() {
                         </td>
                       )}
                       <td className="px-3 py-3 whitespace-nowrap text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
-                        {formatCurrency(app.payment_amount || 0)}
+                        {formatCurrency(group.totalAmount || 0)}
                       </td>
                       {!isAccountant && (
                         <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-600 dark:text-gray-400">
@@ -582,35 +657,22 @@ export default function PaymentApplicationsList() {
                         </td>
                       )}
                       <td className="px-3 py-3 whitespace-nowrap text-center">
-                        {(() => {
-                          const total = Number(app.disbursement_amount) || 0;
-                          const released = Number(app.old_release_amount) || 0;
-                          const pct = total > 0 ? Math.round((released / total) * 100) : 0;
-                          return (
-                            <div className="flex flex-col items-center">
-                              <span className={`text-[10px] font-extrabold ${pct >= 100 ? 'text-green-600' : pct > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
-                                {pct}%
-                              </span>
-                              <div className="w-12 h-1 bg-gray-200 dark:bg-gray-800 rounded-full mt-0.5 overflow-hidden">
-                                <div 
-                                  className={`h-full transition-all ${pct >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <div className="flex flex-col items-center">
+                          <span className={`text-[10px] font-extrabold ${pct >= 100 ? 'text-green-600' : pct > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                            {pct}%
+                          </span>
+                          <div className="w-12 h-1 bg-gray-200 dark:bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+                            <div
+                              className={`h-full transition-all ${pct >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                              style={{ width: `${Math.min(100, pct)}%` }}
+                            />
+                          </div>
+                        </div>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
-                        {(() => {
-                          const appPct = (Number(app.old_release_amount || app.total_release_amount) || 0) / (Number(app.disbursement_amount) || 1) * 100;
-                          const actualStatus = (app.status === 'completed' && appPct < 99) ? 'payment_released' : app.status;
-                          return (
-                            <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(actualStatus)}`}>
-                              {actualStatus.replace('_', ' ')}
-                            </span>
-                          );
-                        })()}
+                        <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(actualStatus)}`}>
+                          Latest: {actualStatus.replace('_', ' ')}
+                        </span>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border ${getFulfilmentColor(app)}`}>
@@ -675,7 +737,47 @@ export default function PaymentApplicationsList() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    <tr className="bg-slate-50/40 dark:bg-slate-900/20">
+                      <td colSpan={isAccountant ? 8 : 12} className="px-3 pb-3 pt-0">
+                        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/40">
+                          {group.applications.map((request) => (
+                            <div
+                              key={request.id}
+                              className="grid grid-cols-12 items-center gap-2 border-b border-slate-100 px-3 py-2 text-[10px] last:border-b-0 dark:border-slate-800"
+                            >
+                              <button
+                                type="button"
+                                className="col-span-2 text-left font-mono font-black text-blue-600 hover:underline"
+                                onClick={() => navigate(`/payments/${request.id}`)}
+                              >
+                                #{request.id.toString().padStart(4, '0')}
+                              </button>
+                              <div className="col-span-2 font-bold text-gray-700 dark:text-gray-300">{formatPaymentType(request.payment_type)}</div>
+                              <div className="col-span-2 truncate text-gray-500">{request.payment_in_favour_name || request.applicant_name}</div>
+                              <div className="col-span-2 font-bold text-blue-600">{formatCurrency(request.payment_amount || 0)}</div>
+                              <div className="col-span-2">
+                                <span className={`rounded-full px-2 py-0.5 font-bold uppercase ${getStatusColor(request.status)}`}>
+                                  {request.status.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <div className="col-span-2 flex justify-end gap-1">
+                                <Button variant="ghost" size="sm" className="h-7 px-2 text-blue-600 text-[9px] font-bold" onClick={() => navigate(`/payments/${request.id}`)}>
+                                  View
+                                </Button>
+                                {canAccountProcess && ['manager_approved', 'voucher_created', 'payment_released'].includes(request.status) && (
+                                  <Button variant="ghost" size="sm" className="h-7 px-2 text-green-600 text-[9px] font-bold" onClick={() => navigate(`/payments/${request.id}`)}>
+                                    {request.status === 'manager_approved' ? 'Pay' : request.status === 'voucher_created' ? 'UTR' : 'Proof'}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
