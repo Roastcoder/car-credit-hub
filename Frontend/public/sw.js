@@ -108,9 +108,11 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
   try {
     const data = event.data.json();
-    const title = data.notification?.title || data.title || 'Mehar Finance';
-    const body = data.notification?.body || data.body || 'New notification';
-    const url = data.data?.url || data.url || '/';
+    console.log('[sw.js] Push event data:', data);
+
+    const title = data.notification?.title || data.title || data.subject || 'Mehar Finance';
+    const body = data.notification?.body || data.body || data.message || 'New notification';
+    const url = data.notification?.click_action || data.data?.url || data.url || '/';
     const options = {
       body: body,
       icon: '/icon-192.png',

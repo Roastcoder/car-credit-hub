@@ -13,11 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+  console.log('[firebase-messaging-sw.js] Background payload:', JSON.stringify(payload));
   
-  const title = payload.notification?.title || payload.data?.title || 'Mehar Finance';
-  const body = payload.notification?.body || payload.data?.body || 'New notification';
-  const url = payload.data?.url || '/';
+  const title = payload.notification?.title || payload.data?.title || payload.data?.subject || 'Mehar Finance';
+  const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'New notification';
+  const url = payload.data?.url || payload.notification?.click_action || '/';
 
   const options = {
     body: body,
