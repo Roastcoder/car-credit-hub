@@ -1,4 +1,7 @@
-const CACHE_NAME = 'mehar-finance-v3'; // Version bump
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+
+const CACHE_NAME = 'mehar-finance-v4'; // Version bump
 const urlsToCache = [
   '/',
   '/index.html',
@@ -75,19 +78,24 @@ self.addEventListener('message', (event) => {
   }
 });
 
-self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? {};
-  const title = data.title || 'Mehar Finance';
-  const options = {
-    body: data.body || 'New notification',
+// Initialize Firebase in Service Worker
+firebase.initializeApp({
+  messagingSenderId: "997732651411"
+});
+
+const messaging = firebase.messaging();
+
+// Handle background messages via FCM SDK
+messaging.onBackgroundMessage((payload) => {
+  console.log('[sw.js] Received background message ', payload);
+  const notificationTitle = payload.notification?.title || 'Mehar Finance';
+  const notificationOptions = {
+    body: payload.notification?.body || 'New notification',
     icon: '/icon-192.png',
     badge: '/favicon.png',
-    data: data.url,
-    vibrate: [200, 100, 200],
+    data: payload.data?.url || '/',
+    requireInteraction: true,
     tag: 'mehar-finance-push',
-    renotify: true,
-    silent: false,
-    requireInteraction: true, // Keep on screen until user interacts
     actions: [
       { action: 'open', title: 'Open Dashboard' },
       { action: 'close', title: 'Dismiss' }
@@ -97,7 +105,48 @@ self.addEventListener('push', (event) => {
   // Notify active tabs to play sound
   channel.postMessage({ type: 'PUSH_RECEIVED' });
   
-  event.waitUntil(self.registration.showNotification(title, options));
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('push', (event) => {
+  // If the push event is already handled by FCM (onBackgroundMessage), 
+  // this event might still trigger but we should be careful about duplicates.
+  // Usually, messaging.onBackgroundMessage handles FCM's special push format.
+  
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    
+    // Check if it's an FCM message that might have been missed or is a manual push
+    // FCM messages often have 'notification' or 'data' properties
+    const title = data.notification?.title || data.title || 'Mehar Finance';
+    const body = data.notification?.body || data.body || 'New notification';
+    const url = data.data?.url || data.url || '/';
+
+    const options = {
+      body: body,
+      icon: '/icon-192.png',
+      badge: '/favicon.png',
+      data: url,
+      vibrate: [200, 100, 200],
+      tag: 'mehar-finance-push',
+      renotify: true,
+      silent: false,
+      requireInteraction: true,
+      actions: [
+        { action: 'open', title: 'Open Dashboard' },
+        { action: 'close', title: 'Dismiss' }
+      ]
+    };
+
+    // Notify active tabs to play sound
+    channel.postMessage({ type: 'PUSH_RECEIVED' });
+    
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (err) {
+    console.error('Push event error:', err);
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {

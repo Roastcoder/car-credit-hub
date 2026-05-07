@@ -18,8 +18,10 @@ export const requestFcmToken = async () => {
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      const registration = await navigator.serviceWorker.ready;
       const token = await getToken(messaging, {
-        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration
       });
       if (token) {
         // Send token to backend
