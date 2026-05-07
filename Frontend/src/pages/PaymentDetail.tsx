@@ -105,6 +105,18 @@ interface PaymentApplication {
   purpose_loan_amount?: number | string;
   sanction_amount?: number | string;
   net_seed_amount?: number | string;
+  transactions?: Array<{
+    id: number;
+    beneficiary_name: string;
+    bank_name: string;
+    account_number: string;
+    ifsc_code: string;
+    amount: number;
+    type: string;
+    status: string;
+    utr_number?: string;
+    released_at?: string;
+  }>;
 }
 
 const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
@@ -655,8 +667,10 @@ export default function PaymentDetail() {
   const currentStatus = (payment.status === 'completed' && releasePct < 99) ? 'payment_released' : payment.status;
   const statusConfig = PAYMENT_STATUSES.find(s => s.value === currentStatus);
 
+  // Parallel-Aware Totals
   const totalReleased = (payment.vouchers || []).reduce((sum, v) => sum + (Number(v.amount) || 0), 0);
-  const targetAmount = Number(payment.today_release_amount || 0);
+  const transactionSum = (payment.transactions || []).reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
+  const targetAmount = transactionSum > 0 ? transactionSum : Number(payment.today_release_amount || payment.amount || 0);
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
   // Derived ledger totals — use merged all-loan ledger for display/PDF
@@ -740,19 +754,91 @@ export default function PaymentDetail() {
           {/* Left: Main Details */}
           <div className="flex-1 min-w-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Beneficiary & Bank Information - HIGHLIGHTED */}
+              {/* Parallel Disbursement Ledger - NEW ENTERPRISE VIEW */}
               <div className="lg:col-span-2">
-                <Section title="Beneficiary & Bank Details" icon={<Building2 size={20} />}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/20">
-                    <div className="col-span-1 md:col-span-2">
-                      <Field label="Payment In Favour (Beneficiary)" value={payment.payment_in_favour_name} className="text-lg font-bold text-blue-700 dark:text-blue-400" />
-                    </div>
-                    <Field label="Bank Name" value={payment.bank_name} />
-                    <Field label="Account Number" value={payment.account_number} className="font-mono tracking-wider text-green-600 dark:text-green-400" />
-                    <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
-                    <Field label="Branch Name" value={payment.branch_name} />
-                    <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
-                    <Field label="RBM Approval Status" value={payment.status === 'manager_rejected' ? 'REJECTED' : ['manager_approved', 'voucher_created', 'payment_released', 'completed'].includes(payment.status) ? 'APPROVED' : 'PENDING'} />
+                <Section title="Parallel Disbursement Ledger" icon={<Building2 size={20} />}>
+                  <div className="grid grid-cols-1 gap-4">
+                    {payment.transactions && payment.transactions.length > 0 ? (
+                      payment.transactions.map((tx, idx) => (
+                        <div key={idx} className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                                <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="text-base font-black text-slate-800 dark:text-white">{tx.beneficiary_name}</h4>
+                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                    tx.type === 'Dealer' ? 'bg-indigo-100 text-indigo-700' :
+                                    tx.type === 'RTO' ? 'bg-orange-100 text-orange-700' :
+                                    'bg-emerald-100 text-emerald-700'
+                                  }`}>
+                                    {tx.type}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1">
+                                  <p className="text-[11px] text-slate-500 font-medium">Bank: <span className="text-slate-900 dark:text-slate-300 font-bold">{tx.bank_name}</span></p>
+                                  <p className="text-[11px] text-slate-500 font-medium">A/C: <span className="text-slate-900 dark:text-slate-300 font-bold font-mono tracking-tighter">{tx.account_number}</span></p>
+                                  <p className="text-[11px] text-slate-500 font-medium">IFSC: <span className="text-slate-900 dark:text-slate-300 font-bold font-mono uppercase">{tx.ifsc_code}</span></p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 md:border-l border-slate-200 dark:border-slate-800 md:pl-6">
+                              <div className="text-right">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payout Amount</p>
+                                <p className="text-xl font-black text-blue-600 dark:text-blue-400">{formatCurrency(tx.amount)}</p>
+                              </div>
+                              <div className="text-right min-w-[120px]">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                  tx.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                                  tx.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {tx.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Transaction Metadata Bar */}
+                          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-6">
+                            {tx.utr_number && (
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                                  UTR: <span className="font-mono text-emerald-600 select-all">{tx.utr_number}</span>
+                                </p>
+                              </div>
+                            )}
+                            {tx.released_at && (
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                <p className="text-[11px] font-bold text-slate-500">
+                                  Released: <span className="text-slate-700 dark:text-slate-300">{formatDisplayDate(tx.released_at)}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      /* Legacy Fallback for older single-payment applications */
+                      <div className="bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                          <div className="col-span-1 md:col-span-2">
+                            <Field label="Payment In Favour (Beneficiary)" value={payment.payment_in_favour_name} className="text-lg font-bold text-blue-700 dark:text-blue-400" />
+                          </div>
+                          <Field label="Bank Name" value={payment.bank_name} />
+                          <Field label="Account Number" value={payment.account_number} className="font-mono tracking-wider text-green-600 dark:text-green-400" />
+                          <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
+                          <Field label="Branch Name" value={payment.branch_name} />
+                          <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Section>
               </div>
