@@ -604,7 +604,7 @@ export default function PaymentApplicationsList() {
                     return (
                     <Fragment key={group.key}>
                     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => navigate(`/payments/${app.id}`)}>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         <div className="font-bold text-gray-900 dark:text-white text-[11px] leading-tight">{app.loan_number}</div>
                         <div className="text-[10px] text-blue-600 font-bold">{group.applications.length} payment request{group.applications.length === 1 ? '' : 's'}</div>
                         {isAccountant && (
@@ -619,7 +619,7 @@ export default function PaymentApplicationsList() {
                         )}
                       </td>
                       {!isAccountant && (
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        <td className="px-3 py-3">
                           <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
                             {new Date(app.created_at).toLocaleDateString()}
                           </div>
@@ -628,35 +628,35 @@ export default function PaymentApplicationsList() {
                           </div>
                         </td>
                       )}
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         <div className="font-bold text-gray-900 dark:text-white text-[11px]">{app.applicant_name}</div>
                         <div className="text-[10px] text-blue-600 font-medium">{app.applicant_phone}</div>
                       </td>
                       {!isAccountant && (
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        <td className="px-3 py-3">
                           <div className="text-[11px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[100px]">
                             {app.vehicle_name} {app.vehicle_model}
                           </div>
                           <div className="text-[10px] text-gray-500 font-mono">{app.vehicle_number}</div>
                         </td>
                       )}
-                      <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-700 dark:text-gray-300">
+                      <td className="px-3 py-3 text-[11px] text-gray-700 dark:text-gray-300">
                         {app.bank_name || app.financier_name || 'N/A'}
                       </td>
                       {!isAccountant && (
-                        <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-700 dark:text-gray-300">
+                        <td className="px-3 py-3 text-[11px] text-gray-700 dark:text-gray-300">
                           {app.financier_name || app.disbursement_branch || 'N/A'}
                         </td>
                       )}
-                      <td className="px-3 py-3 whitespace-nowrap text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
+                      <td className="px-3 py-3 text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
                         {formatCurrency(group.totalAmount || 0)}
                       </td>
                       {!isAccountant && (
-                        <td className="px-3 py-3 whitespace-nowrap text-[11px] text-gray-600 dark:text-gray-400">
+                        <td className="px-3 py-3 text-[11px] text-gray-600 dark:text-gray-400">
                           {app.emi_amount ? `₹${Number(app.emi_amount).toLocaleString()}/mo` : 'N/A'}
                         </td>
                       )}
-                      <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <td className="px-3 py-3 text-center">
                         <div className="flex flex-col items-center">
                           <span className={`text-[10px] font-extrabold ${pct >= 100 ? 'text-green-600' : pct > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
                             {pct}%
@@ -669,17 +669,17 @@ export default function PaymentApplicationsList() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3">
                         <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full ${getStatusColor(actualStatus)}`}>
                           Latest: {actualStatus.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3">
                          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded border ${getFulfilmentColor(app)}`}>
                             {getFulfilmentLabel(app)}
                          </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-0.5">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => navigate(`/payments/${app.id}`)}>
                             <Eye size={14} />
