@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import {
   Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt, IndianRupee
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt, IndianRupee, Calculator
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { formatCurrency } from '@/lib/utils';
@@ -908,42 +908,56 @@ export default function PaymentApplicationForm() {
             </div>
           </div>
         )}
-        {/* Financial & Payout Summary */}
-        <section className="bg-[#f8fcfc] dark:bg-slate-900/50 border border-[#e0f2f2] dark:border-slate-800 rounded-2xl p-6 shadow-sm mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3 mb-6 border-b border-[#e0f2f2] dark:border-slate-800 pb-4">
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
-              <IndianRupee className="h-5 w-5 text-emerald-500" />
+        {/* Financial & Payout Summary - Enterprise Version */}
+        <section className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 rounded-3xl p-8 shadow-xl shadow-blue-500/5 mb-10 animate-in fade-in slide-in-from-top-6 duration-700">
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-50 dark:border-slate-800">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-500/20">
+                <IndianRupee className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Financial & Payout Summary</h2>
+                <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.3em] mt-1">Certified Disbursement Ledger</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Financial & Payout Summary</h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Core Loan & Disbursement Figures</p>
+            <div className="hidden md:flex items-center gap-3">
+               <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Loan ID</p>
+                  <p className="text-xs font-black text-slate-700 dark:text-slate-200">{formData.loan_number || 'PENDING'}</p>
+               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Purposed Amount</p>
-              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.purpose_loan_amount || formData.loan_amount || 0))}</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-y-8 gap-x-4">
+            <div className="space-y-1.5 border-r border-gray-100 dark:border-slate-800 pr-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gross Loan</p>
+              <p className="text-xl font-black text-slate-900 dark:text-white">{formatCurrency(Number(formData.sanction_amount || formData.loan_amount || 0))}</p>
+              <p className="text-[9px] font-bold text-slate-400 italic">Total EMI Base</p>
             </div>
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">2. Total Amount (EMI)</p>
-              <p className="text-lg font-black text-emerald-500">{formatCurrency(Number(formData.sanction_amount || formData.loan_amount || 0))}</p>
+            <div className="space-y-1.5 border-r border-gray-100 dark:border-slate-800 pr-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Payout</p>
+              <p className="text-xl font-black text-blue-600">{formatCurrency(Number(formData.loan_amount || 0))}</p>
+              <p className="text-[9px] font-bold text-blue-400 italic">Actual Disbursement</p>
             </div>
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">3. Actual Amount (Payout)</p>
-              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.loan_amount || 0))}</p>
+            <div className="space-y-1.5 border-r border-gray-100 dark:border-slate-800 pr-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mehar PF</p>
+              <p className="text-xl font-black text-red-500">{formatCurrency(Number(formData.mehar_deduction || 0))}</p>
+              <p className="text-[9px] font-bold text-red-400 italic">Internal Deduction</p>
             </div>
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">4. Received (Bank)</p>
-              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.net_seed_amount || 0))}</p>
+            <div className="space-y-1.5 border-r border-gray-100 dark:border-slate-800 pr-4">
+              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Final Limit</p>
+              <p className="text-xl font-black text-emerald-600">{formatCurrency(Number(formData.disbursement_amount || 0))}</p>
+              <p className="text-[9px] font-bold text-emerald-400 italic">Available to Release</p>
             </div>
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">5. Mehar PF (₹)</p>
-              <p className="text-lg font-black text-slate-800 dark:text-white">{formatCurrency(Number(formData.mehar_deduction || 0))}</p>
+            <div className="space-y-1.5 border-r border-gray-100 dark:border-slate-800 pr-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Released</p>
+              <p className="text-xl font-black text-slate-900 dark:text-white">{formatCurrency(Number(formData.old_release_amount || 0))}</p>
+              <p className="text-[9px] font-bold text-slate-400 italic">Prior Requests</p>
             </div>
-            <div className="space-y-1 text-left">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">6. Net Amount (After PF)</p>
-              <p className="text-lg font-black text-emerald-500">{formatCurrency(Number(formData.disbursement_amount || 0))}</p>
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Balance</p>
+              <p className="text-xl font-black text-indigo-600">{formatCurrency(Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0)))}</p>
+              <p className="text-[9px] font-bold text-indigo-400 italic">Left in Ledger</p>
             </div>
           </div>
         </section>
@@ -962,23 +976,62 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 2. Payment Amount */}
+        {/* 2. Payment Amount - Refined for Parallel Split */}
         <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
           <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
-            <CreditCard className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Payment Amount</h2>
-            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Required</span>
+            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+              <CreditCard className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Payment Lifecycle Details</h2>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Managing the Parallel Split</p>
+            </div>
+            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Disbursement Hub</span>
           </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Net Disbursement Amount" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Previously Released" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Pay Today" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} required disabled={isReadOnly} />
-            <FormField label="Hold / Balance" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
+            <FormField label="Net Disbursement Limit" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} placeholder="0.00" />
+            <FormField label="Previously Released" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled placeholder="0.00" />
+            <FormField 
+              label="Today Total Release *" 
+              name="today_release_amount" 
+              type="number" 
+              value={formData.today_release_amount} 
+              onChange={handleInputChange} 
+              required 
+              disabled={transactions.length > 1 || isReadOnly} 
+              placeholder="0.00"
+              icon={<Calculator size={16} className="text-blue-500" />}
+            />
+            <FormField label="Remaining Balance" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled placeholder="0.00" />
           </div>
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <AmountCard label="Total After This Payment" value={Number(formData.total_release_amount || 0)} tone="blue" />
-            <AmountCard label="Release Percentage" value={`${Number(formData.total_release_percentage || 0).toFixed(2)}%`} tone="green" />
-            <AmountCard label="Payment Left" value={Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0))} tone="orange" />
+
+          {transactions.length > 1 && (
+            <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl flex items-center gap-3 animate-in fade-in zoom-in-95 duration-300">
+              <Info size={16} className="text-indigo-600" />
+              <p className="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">
+                "Today Total Release" is locked and derived from the sum of {transactions.length} parallel beneficiaries below.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="p-5 bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950/20 rounded-2xl border border-blue-100 dark:border-blue-900/40 shadow-sm">
+              <label className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-2 block">Release Percentage</label>
+              <div className="flex items-center gap-3">
+                <p className="text-3xl font-black text-gray-900 dark:text-white">
+                  {((Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100).toFixed(1)}%
+                </p>
+                <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-600 transition-all duration-1000" 
+                    style={{ width: `${(Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <AmountCard label="Cumulative Release" value={Number(formData.old_release_amount || 0) + Number(formData.today_release_amount || 0)} tone="green" />
+            <AmountCard label="Post-Payment Hold" value={Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0))} tone="orange" />
           </div>
         </section>
 
