@@ -26,17 +26,26 @@ export const checkPushSubscription = async (): Promise<boolean> => {
 };
 
 export const subscribeUserToPush = async (): Promise<any> => {
-  // 1. Try Firebase FCM first
-  const fcmToken = await requestFcmToken();
-  if (fcmToken) return { fcmToken };
-
-  // 2. Fallback to legacy Web-Push
+  // 1. Fallback to legacy Web-Push and check for service worker
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     return null;
   }
 
   try {
     const registration = await navigator.serviceWorker.ready;
+    
+    // FORCE RESET: Unsubscribe from any existing subscription first to handle VAPID key changes
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      console.log('Clearing old push subscription...');
+      await existingSubscription.unsubscribe();
+    }
+
+    // 2. Try Firebase FCM with the fresh state
+    const fcmToken = await requestFcmToken();
+    if (fcmToken) return { fcmToken };
+
+    // 3. Fallback to legacy Web-Push if FCM fails
     const applicationServerKey = urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || '');
     
     const subscription = await registration.pushManager.subscribe({
@@ -48,7 +57,7 @@ export const subscribeUserToPush = async (): Promise<any> => {
     if (!token) return subscription;
 
     // Send subscription to backend
-    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/subscribe`, {
+    await fetch(`${import.meta.env.VITE_API_URL || '/api'}/notifications/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
