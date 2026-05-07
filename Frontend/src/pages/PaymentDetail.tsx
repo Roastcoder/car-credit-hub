@@ -165,15 +165,24 @@ export default function PaymentDetail() {
   });
 
   useEffect(() => {
-    let entries = payment?.ledger_entries || [];
-    const hasInitialCredit = entries.some((e: any) => 
+    // 1. Get all entries for this loan to check for duplicates
+    let allEntries = payment?.all_loan_ledger_entries || [];
+    const hasGlobalCredit = allEntries.some((e: any) => 
       e.narration?.includes('Initial Sanction') || 
       e.narration?.includes('Received Amount')
     );
 
     const creditAmount = payment?.received_amount || payment?.disbursement_amount || payment?.loan_amount || 0;
 
-    if (!hasInitialCredit && creditAmount) {
+    // 2. Handle Local Application Ledger
+    let entries = payment?.ledger_entries || [];
+    const hasLocalCredit = entries.some((e: any) => 
+      e.narration?.includes('Initial Sanction') || 
+      e.narration?.includes('Received Amount')
+    );
+
+    // Only inject credit into local entries if NO application for this loan has it yet
+    if (!hasGlobalCredit && !hasLocalCredit && creditAmount) {
       const initialEntry = {
         date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         credit: String(creditAmount),
@@ -205,14 +214,8 @@ export default function PaymentDetail() {
       setSavedLedgerCount(entries.length);
     }
 
-    // Show all ledger entries for the loan
-    let allEntries = payment?.all_loan_ledger_entries || [];
-    const hasInitialCreditAll = allEntries.some((e: any) => 
-      e.narration?.includes('Initial Sanction') || 
-      e.narration?.includes('Received Amount')
-    );
-
-    if (!hasInitialCreditAll && creditAmount) {
+    // 3. Handle Global Loan Ledger (Display Only)
+    if (!hasGlobalCredit && creditAmount) {
       const initialEntry = {
         date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         credit: String(creditAmount),
