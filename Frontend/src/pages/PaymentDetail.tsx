@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { paymentApplicationAPI } from '@/lib/api';
-import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera, IndianRupee } from 'lucide-react';
+import { ArrowLeft, FileText, CreditCard, Building2, User, Calendar, CheckCircle, XCircle, Eye, Edit, DollarSign, Download, Info, Camera, IndianRupee, Clock } from 'lucide-react';
 import DocumentPreviewCard from '@/components/DocumentPreviewCard';
 
 const safeParseNumber = (val: any): number => {
