@@ -75,10 +75,12 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Initialize Firebase in Service Worker
 firebase.initializeApp({
-  messagingSenderId: "997732651411",
+  apiKey: "AIzaSyAj4KEdxX2IRIxOVA4_zT8cyky_XG8pPI8",
+  authDomain: "mehar-finance.firebaseapp.com",
   projectId: "mehar-finance",
+  storageBucket: "mehar-finance.firebasestorage.app",
+  messagingSenderId: "997732651411",
   appId: "1:997732651411:web:91363580ba169a63f01866"
 });
 
