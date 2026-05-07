@@ -63,7 +63,7 @@ export const subscribeUserToPush = async (): Promise<any> => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(subscription)
+      body: JSON.stringify({ subscription })
     });
 
     return subscription;
