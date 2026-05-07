@@ -6,7 +6,7 @@ import { Bell, Check, CheckCheck, Trash2, FileText, AlertCircle, CheckCircle2, I
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { subscribeUserToPush } from '@/lib/notifications';
+import { subscribeUserToPush, checkPushSubscription } from '@/lib/notifications';
 
 interface Notification {
   id: string;
@@ -112,12 +112,29 @@ export default function NotificationBell() {
     }
   };
 
-  useEffect(() => {
-    // Re-subscribe if already granted to ensure backend has fresh data
+  const [isSubscribedOnBackend, setIsSubscribedOnBackend] = useState<boolean | null>(null);
+
+  const checkStatus = async () => {
     if (notificationPermission === 'granted') {
-      subscribeToPushNotifications();
+      const isSubscribed = await checkPushSubscription();
+      setIsSubscribedOnBackend(isSubscribed);
+      
+      // Auto-fix: If permission is granted but not subscribed on backend, try to subscribe
+      if (isSubscribed === false) {
+        console.log('Permission granted but no backend subscription found. Auto-subscribing...');
+        await subscribeToPushNotifications();
+        const recheck = await checkPushSubscription();
+        setIsSubscribedOnBackend(recheck);
+      }
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    checkStatus();
+    // Re-check status every 30 seconds
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, [notificationPermission]);
 
   useEffect(() => {
     if (notifications.length > 0) {
@@ -251,8 +268,16 @@ export default function NotificationBell() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Push Alerts</span>
                 <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${notificationPermission === 'granted' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
-                  <span className="text-[10px] font-medium capitalize">{notificationPermission === 'granted' ? 'Active' : notificationPermission}</span>
+                  <span className={`w-2 h-2 rounded-full ${
+                    notificationPermission === 'granted' 
+                      ? (isSubscribedOnBackend === true ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-yellow-500 animate-pulse') 
+                      : 'bg-red-500'
+                  }`} />
+                  <span className="text-[10px] font-medium capitalize">
+                    {notificationPermission === 'granted' 
+                      ? (isSubscribedOnBackend === true ? 'Active' : 'Reconnecting...') 
+                      : notificationPermission}
+                  </span>
                 </div>
               </div>
               

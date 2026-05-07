@@ -9,6 +9,22 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 
 import { requestFcmToken } from './firebase';
 
+export const checkPushSubscription = async (): Promise<boolean> => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/notifications/status`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    return data.subscribed === true;
+  } catch (error) {
+    console.error('Check subscription error:', error);
+    return false;
+  }
+};
+
 export const subscribeUserToPush = async (): Promise<any> => {
   // 1. Try Firebase FCM first
   const fcmToken = await requestFcmToken();
