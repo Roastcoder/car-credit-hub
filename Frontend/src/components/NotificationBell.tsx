@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Check, CheckCheck, Trash2, FileText, AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, FileText, AlertCircle, CheckCircle2, Info, X, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof Info; color: string }> = {
   success: { icon: CheckCircle2, color: 'text-green-500' },
   warning: { icon: AlertCircle, color: 'text-yellow-500' },
   error: { icon: AlertCircle, color: 'text-red-500' },
+  chat: { icon: MessageSquare, color: 'text-purple-500' },
 };
 
 export default function NotificationBell() {
@@ -130,7 +131,7 @@ export default function NotificationBell() {
           icon: latest.type === 'success' ? <CheckCircle2 className="text-green-500" /> : <Info className="text-blue-500" />,
           action: latest.url ? {
             label: 'View',
-            onClick: () => navigate(latest.url)
+            onClick: () => navigate(latest.url!)
           } : undefined
         });
 
@@ -299,7 +300,16 @@ export default function NotificationBell() {
                             onClick={() => { setOpen(false); if (!n.is_read) markAsRead.mutate(n.id); }}
                             className="text-[10px] text-accent font-medium hover:underline flex items-center gap-1"
                           >
-                            <FileText size={10} /> View Loan
+                            <FileText size={10} /> View Detail
+                          </Link>
+                        )}
+                        {n.type === 'chat' && (
+                          <Link
+                            to={n.url || '/chat'}
+                            onClick={() => { setOpen(false); if (!n.is_read) markAsRead.mutate(n.id); }}
+                            className="text-[10px] text-purple-500 font-medium hover:underline flex items-center gap-1"
+                          >
+                            <MessageSquare size={10} /> Open Chat
                           </Link>
                         )}
                         {!n.is_read && (
