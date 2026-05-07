@@ -81,6 +81,17 @@ interface PaymentApplication {
   purpose_loan_amount?: number;
   sanction_amount?: number;
   net_seed_amount?: number;
+  transactions?: Transaction[];
+}
+
+interface Transaction {
+  id?: number;
+  beneficiary_name: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  amount: number;
+  type: 'DEALER' | 'RTO' | 'CUSTOMER' | 'INSURANCE' | 'OTHER';
 }
 
 export default function PaymentApplicationForm() {
@@ -111,6 +122,10 @@ export default function PaymentApplicationForm() {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [isRaiseRemainingMode, setIsRaiseRemainingMode] = useState(false);
   const [showAdvancedDetails, setShowAdvancedDetails] = useState(false);
+
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'CUSTOMER' }
+  ]);
 
   const [formData, setFormData] = useState<PaymentApplication>({
     loan_id: loanId || '',
@@ -229,6 +244,9 @@ export default function PaymentApplicationForm() {
       setIsRaiseRemainingMode(false);
       if (data.pdd_documents) {
         setSelectedPddDocs(data.pdd_documents);
+      }
+      if (data.transactions && data.transactions.length > 0) {
+        setTransactions(data.transactions);
       }
       // Also fetch PDD documents for the loan associated with this application
       if (data.loan_id) {
@@ -434,6 +452,35 @@ export default function PaymentApplicationForm() {
     fetchPddDocumentsById(loan.id.toString());
   };
 
+  const addTransaction = () => {
+    setTransactions(prev => [
+      ...prev,
+      { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'OTHER' }
+    ]);
+  };
+
+  const removeTransaction = (index: number) => {
+    if (transactions.length <= 1) return;
+    setTransactions(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleTransactionChange = (index: number, field: keyof Transaction, value: any) => {
+    setTransactions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      
+      // Update today_release_amount based on sum of transactions
+      const totalTxAmount = updated.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
+      setFormData(f => ({ 
+        ...f, 
+        today_release_amount: totalTxAmount,
+        payment_amount: totalTxAmount
+      }));
+      
+      return updated;
+    });
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as any;
     const numValue = type === 'number' ? parseFloat(value) || 0 : value;
@@ -448,9 +495,18 @@ export default function PaymentApplicationForm() {
       if (name === 'today_release_amount') {
         const remaining = disbursementAmt - oldAmt - (numValue as number);
         newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
+        
+        // If we have only one transaction, sync it
+        if (transactions.length === 1) {
+          setTransactions(txs => [{ ...txs[0], amount: numValue as number }]);
+        }
       } else if (name === 'hold_amount') {
         const releaseNeeded = disbursementAmt - oldAmt - (numValue as number);
         newData.today_release_amount = Math.max(0, parseFloat(releaseNeeded.toFixed(2)));
+        
+        if (transactions.length === 1) {
+          setTransactions(txs => [{ ...txs[0], amount: newData.today_release_amount }]);
+        }
       } else if (name === 'disbursement_amount') {
         // If disbursement changes, adjust hold to maintain today_release
         const todayAmt = Number(newData.today_release_amount) || 0;
@@ -633,7 +689,8 @@ export default function PaymentApplicationForm() {
         payment_amount: isRaiseRemainingMode ? (formData.today_release_amount !== undefined && formData.today_release_amount !== 0 ? Number(formData.today_release_amount) : remainingLoanAmount) : formData.today_release_amount,
         status,
         aadhaar_number: needsVerification ? aadhaarNumber : null,
-        aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified'
+        aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified',
+        transactions
       };
 
       if (id) {
@@ -690,6 +747,36 @@ export default function PaymentApplicationForm() {
   return (
     <div className="p-6 max-w-5xl mx-auto pb-20">
       <MobilePageSwitcher options={appSwitcherOptions} activeLabel={id ? 'Edit App' : 'New App'} />
+      
+      {/* --- Pro-Disbursement Guide --- */}
+      <section className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm dark:border-blue-900/30 dark:from-blue-950/20 dark:to-indigo-950/20 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+            <Info size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Enterprise Disbursement Guide</h2>
+            <p className="mt-1 text-sm font-medium text-gray-600 dark:text-gray-400">
+              Welcome to the upgraded Parallel Disbursement Engine. You can now manage complex payouts in a single request.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Parallel Payouts</p>
+                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Add multiple beneficiaries (Dealer, RTO, Customer) in one application. No more waiting for the first UTR!</p>
+              </div>
+              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Independent UTRs</p>
+                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Each beneficiary gets their own UTR. Accountants can pay the Dealer today and the RTO tomorrow independently.</p>
+              </div>
+              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
+                <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Batch OTP Approval</p>
+                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Admins can authorize a whole batch of 50+ transactions with a single OTP, streamlining the entire payout lifecycle.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="hidden md:block">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -895,52 +982,137 @@ export default function PaymentApplicationForm() {
           </div>
         </section>
 
-        {/* 3. Beneficiary Banking Details */}
+        {/* 3. Beneficiary Banking Details - DYNAMIC LIST */}
         <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
           <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
             <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Banking Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Banking Details (Multi-Payout)</h2>
             <div className="ml-auto flex items-center gap-2">
               {!isReadOnly && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      payment_in_favour_name: prev.applicant_name,
-                      is_third_party: false
-                    }));
-                    toast.info('Beneficiary set to Customer');
-                  }}
-                  className="text-[10px] font-bold text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
+                  onClick={addTransaction}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
                 >
-                  Same as Customer
+                  <Plus size={14} /> Add Another Beneficiary
                 </button>
               )}
-              <span className="text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FormField label="Payment In Favour (Beneficiary Name) *" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} required placeholder="Enter beneficiary name" disabled={isReadOnly} />
-            <FormField label="Bank Name *" name="bank_name" value={formData.bank_name} onChange={handleInputChange} required placeholder="Enter bank name" disabled={isReadOnly} />
-            <FormField label="Account Number *" name="account_number" value={formData.account_number} onChange={handleInputChange} required placeholder="Enter account number" disabled={isReadOnly} />
-            <FormField label="IFSC Code *" name="ifsc_code" value={formData.ifsc_code} onChange={handleInputChange} required placeholder="e.g. SBIN0001234" disabled={isReadOnly} />
-            <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" disabled={isReadOnly} />
-            <div className="flex flex-col gap-2">
-              <FormCheckbox label="Pay to Third Party?" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} disabled={isReadOnly} />
-              <p className="text-[10px] text-gray-500 ml-8 -mt-1 font-medium italic">Uncheck if paying directly to the customer to skip verification.</p>
-            </div>
-            <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} disabled={isReadOnly} />
+
+          <div className="space-y-6">
+            {transactions.map((tx, index) => (
+              <div key={index} className="relative p-6 bg-white dark:bg-gray-900 rounded-xl border border-blue-100 dark:border-blue-800/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-300">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-50 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center h-6 w-6 bg-blue-600 text-white text-[10px] font-black rounded-full">
+                      {index + 1}
+                    </span>
+                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                      Payout #{index + 1}
+                    </h3>
+                    <select
+                      value={tx.type}
+                      onChange={(e) => handleTransactionChange(index, 'type', e.target.value)}
+                      disabled={isReadOnly}
+                      className="ml-2 text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 px-2 py-1 rounded border-none outline-none cursor-pointer"
+                    >
+                      {['CUSTOMER', 'DEALER', 'RTO', 'INSURANCE', 'OTHER'].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {!isReadOnly && index === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleTransactionChange(index, 'beneficiary_name', formData.applicant_name);
+                          handleTransactionChange(index, 'bank_name', formData.bank_name);
+                          handleTransactionChange(index, 'account_number', formData.account_number);
+                          handleTransactionChange(index, 'ifsc_code', formData.ifsc_code);
+                          toast.info('Transaction #1 set to Customer');
+                        }}
+                        className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
+                      >
+                        Same as Customer
+                      </button>
+                    )}
+                    {!isReadOnly && transactions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTransaction(index)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <FormField 
+                    label="Beneficiary Name *" 
+                    value={tx.beneficiary_name} 
+                    onChange={(e: any) => handleTransactionChange(index, 'beneficiary_name', e.target.value)} 
+                    required 
+                    placeholder="Enter name" 
+                    disabled={isReadOnly} 
+                  />
+                  <FormField 
+                    label="Bank Name *" 
+                    value={tx.bank_name} 
+                    onChange={(e: any) => handleTransactionChange(index, 'bank_name', e.target.value)} 
+                    required 
+                    placeholder="Enter bank" 
+                    disabled={isReadOnly} 
+                  />
+                  <FormField 
+                    label="Account Number *" 
+                    value={tx.account_number} 
+                    onChange={(e: any) => handleTransactionChange(index, 'account_number', e.target.value)} 
+                    required 
+                    placeholder="Enter account" 
+                    disabled={isReadOnly} 
+                  />
+                  <FormField 
+                    label="IFSC Code *" 
+                    value={tx.ifsc_code} 
+                    onChange={(e: any) => handleTransactionChange(index, 'ifsc_code', e.target.value)} 
+                    required 
+                    placeholder="IFSC Code" 
+                    disabled={isReadOnly} 
+                  />
+                  <FormField 
+                    label="Amount to Pay (₹) *" 
+                    type="number" 
+                    value={tx.amount} 
+                    onChange={(e: any) => handleTransactionChange(index, 'amount', e.target.value)} 
+                    required 
+                    placeholder="0.00" 
+                    disabled={isReadOnly} 
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-          {!isReadOnly && formData.applicant_name && formData.payment_in_favour_name && (
-            <div className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
-              needsPaymentVerification
-                ? 'border-purple-200 bg-purple-50 text-purple-800 dark:border-purple-900/40 dark:bg-purple-900/10 dark:text-purple-200'
-                : 'border-green-200 bg-green-50 text-green-800 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-200'
-            }`}>
-              {needsPaymentVerification
-                ? 'Beneficiary is different from the customer. Aadhaar and OTP verification is required.'
-                : 'Payment is going to the customer. Aadhaar and OTP verification is not required.'}
+
+          <div className="mt-6 p-4 bg-blue-600 text-white rounded-xl flex items-center justify-between shadow-lg shadow-blue-500/20">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Total Parallel Payout</p>
+              <p className="text-2xl font-black">{formatCurrency(transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0))}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Parent Today Release</p>
+              <p className="text-xl font-bold">{formatCurrency(Number(formData.today_release_amount || 0))}</p>
+            </div>
+          </div>
+
+          {Number(formData.today_release_amount || 0) !== transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0) && (
+            <div className="mt-3 flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+              <AlertCircle size={14} />
+              Error: Transaction sum must match the "Pay Today" amount (Section 2).
             </div>
           )}
         </section>

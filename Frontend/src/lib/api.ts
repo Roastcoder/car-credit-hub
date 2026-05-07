@@ -365,6 +365,15 @@ export const paymentApplicationAPI = {
   getAccountantStats: () => api.get('/payments/stats/accountant'),
 };
 
+// Disbursement Engine API
+export const disbursementAPI = {
+  getPendingTransactions: () => api.get('/disbursements/transactions/pending'),
+  updateTransactionUTR: (id: number, utr_number: string, remarks?: string) => 
+    api.put(`/disbursements/transactions/${id}/utr`, { utr_number, remarks }),
+  createBatch: (transactionIds: number[]) => api.post('/disbursements/batches', { transactionIds }),
+  authorizeBatch: (id: number, otp: string) => api.post(`/disbursements/batches/${id}/authorize`, { otp }),
+};
+
 // Legacy Data API (MySQL)
 export const legacyAPI = {
   getLoans: (params?: any) => api.get('/legacy/loans' + (params ? `?${new URLSearchParams(params)}` : '')),
