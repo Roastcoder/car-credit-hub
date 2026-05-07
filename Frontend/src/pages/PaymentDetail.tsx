@@ -167,22 +167,27 @@ export default function PaymentDetail() {
   useEffect(() => {
     // 1. Get all entries for this loan to check for duplicates
     let allEntries = payment?.all_loan_ledger_entries || [];
-    const hasGlobalCredit = allEntries.some((e: any) => 
-      e.narration?.includes('Initial Sanction') || 
-      e.narration?.includes('Received Amount')
-    );
+    
+    const sanctionAmt = Number(payment?.sanction_amount || payment?.disbursement_amount || payment?.loan_amount || 0);
+    
+    const checkIsInitial = (entry: any) => {
+      const narration = (entry.narration || '').toLowerCase();
+      const creditAmt = Number(entry.credit || 0);
+      return narration.includes('initial sanction') || 
+             narration.includes('received amount') || 
+             narration.includes('payment rec') ||
+             (creditAmt > 0 && Math.abs(creditAmt - sanctionAmt) < 1);
+    };
 
-    const creditAmount = payment?.received_amount || payment?.disbursement_amount || payment?.loan_amount || 0;
+    const hasGlobalCredit = allEntries.some(checkIsInitial);
+    const creditAmount = sanctionAmt;
 
     // 2. Handle Local Application Ledger
     let entries = payment?.ledger_entries || [];
-    const hasLocalCredit = entries.some((e: any) => 
-      e.narration?.includes('Initial Sanction') || 
-      e.narration?.includes('Received Amount')
-    );
+    const hasLocalCredit = entries.some(checkIsInitial);
 
     // Only inject credit into local entries if NO application for this loan has it yet
-    if (!hasGlobalCredit && !hasLocalCredit && creditAmount) {
+    if (!hasGlobalCredit && !hasLocalCredit && creditAmount > 0) {
       const initialEntry = {
         date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         credit: String(creditAmount),
@@ -193,10 +198,10 @@ export default function PaymentDetail() {
       entries = [initialEntry, ...entries];
     }
 
-    const hasMeharPF = entries.some((e: any) => 
-      e.narration?.includes('Mehar PF') || 
-      e.narration?.includes('Processing Fee')
-    );
+    const hasMeharPF = entries.some((e: any) => {
+      const n = (e.narration || '').toLowerCase();
+      return n.includes('mehar pf') || n.includes('processing fee');
+    });
 
     if (!hasMeharPF && payment?.mehar_deduction && Number(payment.mehar_deduction) > 0) {
       const pfEntry = {
@@ -215,7 +220,7 @@ export default function PaymentDetail() {
     }
 
     // 3. Handle Global Loan Ledger (Display Only)
-    if (!hasGlobalCredit && creditAmount) {
+    if (!hasGlobalCredit && creditAmount > 0) {
       const initialEntry = {
         date: payment?.created_at ? new Date(payment.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         credit: String(creditAmount),
@@ -226,10 +231,10 @@ export default function PaymentDetail() {
       allEntries = [initialEntry, ...allEntries];
     }
 
-    const hasMeharPFAll = allEntries.some((e: any) => 
-      e.narration?.includes('Mehar PF') || 
-      e.narration?.includes('Processing Fee')
-    );
+    const hasMeharPFAll = allEntries.some((e: any) => {
+      const n = (e.narration || '').toLowerCase();
+      return n.includes('mehar pf') || n.includes('processing fee');
+    });
 
     if (!hasMeharPFAll && payment?.mehar_deduction && Number(payment.mehar_deduction) > 0) {
       const pfEntry = {
@@ -610,8 +615,8 @@ export default function PaymentDetail() {
 
 
 
-    // 2. Ledger Entries
-    ledgerEntries.forEach((entry) => {
+    // 2. Clean Global Ledger Entries (Deduplicated)
+    displayLedger.forEach((entry) => {
       addRow(
         entry.date ? new Date(entry.date).toLocaleDateString('en-IN') : '-',
         Number(entry.credit || 0).toLocaleString('en-IN'),
