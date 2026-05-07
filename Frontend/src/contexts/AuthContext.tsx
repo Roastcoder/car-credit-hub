@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI, api } from '@/lib/api';
+import { subscribeUserToPush } from '@/lib/notifications';
 import { UserRole, UserPermissions } from '@/lib/auth';
 
 export interface AppUser {
@@ -53,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, []);
+
+  // Auto-subscribe to push notifications when user is loaded
+  useEffect(() => {
+    if (user) {
+      subscribeUserToPush();
+    }
+  }, [user]);
 
   const login = async (email: string, password: string): Promise<{ error: string | null }> => {
     try {

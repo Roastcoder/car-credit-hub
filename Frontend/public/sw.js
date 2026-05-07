@@ -61,6 +61,8 @@ self.addEventListener('activate', (event) => {
 });
 
 // Handle messages from the app
+const channel = new BroadcastChannel('notifications');
+
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
@@ -81,17 +83,44 @@ self.addEventListener('push', (event) => {
     icon: '/icon-192.png',
     badge: '/favicon.png',
     data: data.url,
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
     tag: 'mehar-finance-push',
     renotify: true,
-    silent: false
+    silent: false,
+    requireInteraction: true, // Keep on screen until user interacts
+    actions: [
+      { action: 'open', title: 'Open Dashboard' },
+      { action: 'close', title: 'Dismiss' }
+    ]
   };
+  
+  // Notify active tabs to play sound
+  channel.postMessage({ type: 'PUSH_RECEIVED' });
+  
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  
+  if (event.action === 'close') {
+    return;
+  }
+
+  // Default 'open' action or clicking the notification body
   if (event.notification.data) {
-    event.waitUntil(clients.openWindow(event.notification.data));
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then((clientList) => {
+          for (const client of clientList) {
+            if (client.url.includes(new URL(event.notification.data, self.location.origin).pathname) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          if (clients.openWindow) {
+            return clients.openWindow(event.notification.data);
+          }
+        })
+    );
   }
 });

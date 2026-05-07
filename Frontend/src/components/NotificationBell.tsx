@@ -6,6 +6,7 @@ import { Bell, Check, CheckCheck, Trash2, FileText, AlertCircle, CheckCircle2, I
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { subscribeUserToPush } from '@/lib/notifications';
 
 interface Notification {
   id: string;
@@ -102,31 +103,8 @@ export default function NotificationBell() {
   };
 
   const subscribeToPushNotifications = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      
-      if (!vapidKey) {
-        console.warn('VAPID public key not found in environment variables');
-        return;
-      }
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: vapidKey
-      });
-
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ subscription })
-      });
-      
+      await subscribeUserToPush();
       console.log('Push subscription successful');
     } catch (error) {
       console.error('Push subscription failed:', error);
@@ -178,6 +156,17 @@ export default function NotificationBell() {
       setLastNotificationId(latest.id);
     }
   }, [notifications, lastNotificationId, navigate, notificationPermission]);
+
+  useEffect(() => {
+    // Listen for push notifications from service worker even if tab is in background
+    const channel = new BroadcastChannel('notifications');
+    channel.onmessage = (event) => {
+      if (event.data.type === 'PUSH_RECEIVED') {
+        playNotificationSound();
+      }
+    };
+    return () => channel.close();
+  }, []);
 
   useEffect(() => {
     // Realtime disabled for now

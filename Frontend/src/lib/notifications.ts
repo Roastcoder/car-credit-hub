@@ -7,7 +7,14 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
   return await Notification.requestPermission();
 };
 
-export const subscribeUserToPush = async (): Promise<PushSubscription | null> => {
+import { requestFcmToken } from './firebase';
+
+export const subscribeUserToPush = async (): Promise<any> => {
+  // 1. Try Firebase FCM first
+  const fcmToken = await requestFcmToken();
+  if (fcmToken) return { fcmToken };
+
+  // 2. Fallback to legacy Web-Push
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     return null;
   }
