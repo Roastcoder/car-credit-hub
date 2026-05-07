@@ -80,7 +80,11 @@ self.addEventListener('push', (event) => {
     body: data.body || 'New notification',
     icon: '/icon-192.png',
     badge: '/favicon.png',
-    data: data.url
+    data: data.url,
+    vibrate: [100, 50, 100],
+    tag: 'mehar-finance-push',
+    renotify: true,
+    silent: false
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });

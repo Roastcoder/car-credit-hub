@@ -679,6 +679,9 @@ export default function PaymentDetail() {
   const canUploadProof = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
     (payment.status === 'payment_released' || payment.status === 'completed');
 
+  const canAccountantSendBack = (['accountant', 'accounts'].includes(user?.role || '')) && 
+    ['manager_approved', 'voucher_created', 'payment_released'].includes(payment.status);
+
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="bg-card rounded-lg border border-border p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -1286,6 +1289,33 @@ export default function PaymentDetail() {
                 <div className="bg-card border border-purple-200 dark:border-purple-800 rounded-lg p-4">
                   <p className="text-sm font-semibold text-foreground mb-3">Upload Payment Proof</p>
                   <ProofUploader onFile={(f) => uploadProof.mutate(f)} isPending={uploadProof.isPending} />
+                </div>
+              )}
+
+              {canAccountantSendBack && (
+                <div className="bg-card border border-orange-200 dark:border-orange-900 rounded-lg p-4 space-y-3">
+                  <p className="text-sm font-semibold text-foreground mb-1">Accountant Actions</p>
+                  
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Correction Reason / Remarks</label>
+                    <textarea
+                      value={pendingRemark}
+                      onChange={(e) => setPendingRemark(e.target.value)}
+                      placeholder="Explain why you are sending this back for correction..."
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => { 
+                      if (!pendingRemark.trim()) return toast.error('Please add a reason in remarks'); 
+                      managerAction.mutate({ action: 'send_back', remarks: pendingRemark }); 
+                    }} 
+                    disabled={managerAction.isPending}
+                    className="w-full px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm font-semibold disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft size={16} /> Send Back for Correction
+                  </button>
                 </div>
               )}
 
