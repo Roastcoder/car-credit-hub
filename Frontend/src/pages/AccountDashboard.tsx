@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { accountAPI, paymentApplicationAPI } from '@/lib/api';
+import { accountAPI, paymentApplicationAPI, notificationsAPI } from '@/lib/api';
 import { 
-  CreditCard, FileText, TrendingUp, Receipt, Activity, Clock
+  CreditCard, FileText, TrendingUp, Receipt, Activity, Clock, Bell, AlertCircle, Info, CheckCircle2
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function AccountDashboard() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function AccountDashboard() {
     total_completed: 0,
     total_disbursed: 0
   });
+  const [notifications, setNotifications] = useState<any[]>([]);
   const isOverviewPage = location.pathname === '/account';
 
   useEffect(() => {
@@ -30,12 +32,14 @@ export default function AccountDashboard() {
     try {
       setLoading(true);
       // Fetch both general overview and accountant-specific payment stats
-      const [overviewData, paymentStats] = await Promise.all([
+      const [overviewData, paymentStats, notifs] = await Promise.all([
         accountAPI.getOverview(),
-        paymentApplicationAPI.getAccountantStats()
+        paymentApplicationAPI.getAccountantStats(),
+        notificationsAPI.getAll()
       ]);
       
       setStats(paymentStats);
+      setNotifications(notifs.slice(0, 5)); // Only show top 5
     } catch (error) {
       console.error('Error fetching account overview:', error);
     } finally {
@@ -115,7 +119,7 @@ export default function AccountDashboard() {
             )}
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               <div 
                 onClick={() => navigate('/payments')}
                 className="glass-card p-5 rounded-2xl cursor-pointer hover:scale-[1.02] transition-all duration-300 border border-white/20 dark:border-white/10 hover:shadow-xl group"
@@ -144,6 +148,54 @@ export default function AccountDashboard() {
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Closed Requests</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Completed requests stay visible here, and employees can raise any remaining amount from the same application.</p>
+              </div>
+            </div>
+
+            {/* Recent Alerts Section */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-accent" />
+                  Recent Alerts
+                </h2>
+              </div>
+              
+              <div className="space-y-3">
+                {notifications.length === 0 ? (
+                  <div className="glass-card p-8 text-center rounded-2xl border border-dashed border-white/20">
+                    <p className="text-sm text-gray-500 italic">No recent alerts found</p>
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div 
+                      key={n.id}
+                      onClick={() => n.url && navigate(n.url)}
+                      className={`glass-card p-4 rounded-xl border border-white/20 dark:border-white/10 flex items-start gap-4 hover:bg-white/40 dark:hover:bg-white/5 transition-all cursor-pointer group ${!n.is_read ? 'border-l-4 border-l-accent' : ''}`}
+                    >
+                      <div className={`p-2 rounded-lg shrink-0 ${
+                        n.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
+                        n.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600' :
+                        n.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
+                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
+                      }`}>
+                        {n.type === 'success' ? <CheckCircle2 size={18} /> : 
+                         n.type === 'error' ? <AlertCircle size={18} /> : 
+                         <Info size={18} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className={`text-sm font-bold truncate ${!n.is_read ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                            {n.title}
+                          </h4>
+                          <span className="text-[10px] text-gray-500 font-medium">
+                            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">{n.message}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

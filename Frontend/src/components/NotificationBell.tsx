@@ -4,7 +4,8 @@ import { supabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Check, CheckCheck, Trash2, FileText, AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface Notification {
   id: string;
@@ -12,6 +13,7 @@ interface Notification {
   message: string;
   type: string;
   loan_id: string | null;
+  url: string | null;
   is_read: boolean;
   created_at: string;
 }
@@ -38,6 +40,7 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const navigate = useNavigate();
   const [lastNotificationId, setLastNotificationId] = useState<number | null>(null);
 
   const { data: notifications = [] } = useQuery({
@@ -80,10 +83,20 @@ export default function NotificationBell() {
       const latest = notifications[0]; // Assuming sorted by created_at DESC
       if (lastNotificationId !== null && latest.id !== lastNotificationId) {
         playNotificationSound();
+        
+        // Show toast for new notification
+        toast(latest.title, {
+          description: latest.message,
+          icon: latest.type === 'success' ? <CheckCircle2 className="text-green-500" /> : <Info className="text-blue-500" />,
+          action: latest.url ? {
+            label: 'View',
+            onClick: () => navigate(latest.url)
+          } : undefined
+        });
       }
       setLastNotificationId(latest.id);
     }
-  }, [notifications, lastNotificationId]);
+  }, [notifications, lastNotificationId, navigate]);
 
   useEffect(() => {
     // Realtime disabled for now

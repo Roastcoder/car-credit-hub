@@ -120,8 +120,6 @@ export const getRolePermissions = (role: UserRole | string | null | undefined): 
         canChangeStatus: false,
         canAddRemarks: true,
         canViewAll: false,
-        canManagePdd: true,
-        canViewReports: true,
       };
 
     case 'bank':

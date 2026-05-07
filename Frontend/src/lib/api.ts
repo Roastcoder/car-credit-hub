@@ -387,6 +387,14 @@ export const smsAPI = {
   sendTest: (data: { mobile: string; message: string }) => api.post('/sms/test', data),
 };
 
+// Notifications API
+export const notificationsAPI = {
+  getAll: () => api.get('/notifications'),
+  markAsRead: (id: string | number) => api.put(`/notifications/${id}/read`, {}),
+  markAllRead: () => api.put('/notifications/read-all', {}),
+  delete: (id: string | number) => api.delete(`/notifications/${id}`),
+};
+
 // Legacy supabase compatibility shim (for components using supabase.auth.*)
 export const supabase = {
   auth: {
