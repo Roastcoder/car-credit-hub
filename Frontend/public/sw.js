@@ -1,7 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'mehar-finance-v5'; // Version bump
+const CACHE_NAME = 'mehar-finance-v5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -19,12 +19,10 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
     return;
   }
-  
   if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
     event.respondWith(
       fetch(event.request)
@@ -39,7 +37,6 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-
   event.respondWith(
     caches.match(event.request)
       .then((response) => response || fetch(event.request))
@@ -60,7 +57,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Handle messages from the app
 const channel = new BroadcastChannel('notifications');
 
 self.addEventListener('message', (event) => {
@@ -86,14 +82,11 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Handle background messages via FCM SDK
 messaging.onBackgroundMessage((payload) => {
   console.log('[sw.js] Received background message:', payload);
-  
   const title = payload.notification?.title || payload.data?.title || 'Mehar Finance';
   const body = payload.notification?.body || payload.data?.body || 'New notification';
   const url = payload.data?.url || '/';
-
   const options = {
     body: body,
     icon: '/icon-192.png',
@@ -107,26 +100,17 @@ messaging.onBackgroundMessage((payload) => {
       { action: 'close', title: 'Dismiss' }
     ]
   };
-  
-  // Notify active tabs to play sound if they are open
   channel.postMessage({ type: 'PUSH_RECEIVED', payload });
-  
   return self.registration.showNotification(title, options);
 });
 
-// Fallback for generic push events (non-FCM)
 self.addEventListener('push', (event) => {
-  console.log('[sw.js] Generic push event received');
   if (!event.data) return;
-
   try {
     const data = event.data.json();
-    console.log('[sw.js] Push data:', data);
-
     const title = data.notification?.title || data.title || 'Mehar Finance';
     const body = data.notification?.body || data.body || 'New notification';
     const url = data.data?.url || data.url || '/';
-
     const options = {
       body: body,
       icon: '/icon-192.png',
@@ -136,7 +120,6 @@ self.addEventListener('push', (event) => {
       tag: 'mehar-finance-push',
       vibrate: [200, 100, 200]
     };
-
     channel.postMessage({ type: 'PUSH_RECEIVED', payload: data });
     event.waitUntil(self.registration.showNotification(title, options));
   } catch (err) {
@@ -145,26 +128,19 @@ self.addEventListener('push', (event) => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  console.log('[sw.js] Notification clicked:', event.notification.tag);
   event.notification.close();
-  
   if (event.action === 'close') return;
-
   const urlToOpen = event.notification.data || '/';
-  
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Try to find an existing tab and focus it
         for (const client of clientList) {
           const clientPath = new URL(client.url).pathname;
           const targetPath = new URL(urlToOpen, self.location.origin).pathname;
-          
           if (clientPath === targetPath && 'focus' in client) {
             return client.focus();
           }
         }
-        // If no tab found, open a new one
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
