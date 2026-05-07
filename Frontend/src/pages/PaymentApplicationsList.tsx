@@ -739,34 +739,36 @@ export default function PaymentApplicationsList() {
                     </tr>
                     <tr className="bg-slate-50/40 dark:bg-slate-900/20">
                       <td colSpan={isAccountant ? 8 : 12} className="px-3 pb-3 pt-0">
-                        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/40">
+                        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/40 w-full overflow-hidden shadow-inner">
                           {group.applications.map((request) => (
                             <div
                               key={request.id}
-                              className="grid grid-cols-12 items-center gap-2 border-b border-slate-100 px-3 py-2 text-[10px] last:border-b-0 dark:border-slate-800"
+                              className="flex items-center justify-between border-b border-slate-100 px-4 py-3 text-[11px] last:border-b-0 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors"
                             >
-                              <button
-                                type="button"
-                                className="col-span-2 text-left font-mono font-black text-blue-600 hover:underline"
-                                onClick={() => navigate(`/payments/${request.id}`)}
-                              >
-                                #{request.id.toString().padStart(4, '0')}
-                              </button>
-                              <div className="col-span-2 font-bold text-gray-700 dark:text-gray-300">{formatPaymentType(request.payment_type)}</div>
-                              <div className="col-span-2 truncate text-gray-500">{request.payment_in_favour_name || request.applicant_name}</div>
-                              <div className="col-span-2 font-bold text-blue-600">{formatCurrency(request.payment_amount || 0)}</div>
-                              <div className="col-span-2">
-                                <span className={`rounded-full px-2 py-0.5 font-bold uppercase ${getStatusColor(request.status)}`}>
-                                  {request.status.replace('_', ' ')}
-                                </span>
+                              <div className="flex items-center gap-6 flex-1 min-w-0">
+                                <button
+                                  type="button"
+                                  className="w-16 text-left font-mono font-black text-blue-600 hover:underline shrink-0"
+                                  onClick={() => navigate(`/payments/${request.id}`)}
+                                >
+                                  #{request.id.toString().padStart(4, '0')}
+                                </button>
+                                <div className="w-32 font-bold text-gray-700 dark:text-gray-300 shrink-0">{formatPaymentType(request.payment_type)}</div>
+                                <div className="w-48 truncate text-gray-500 shrink-0">{request.payment_in_favour_name || request.applicant_name}</div>
+                                <div className="w-24 font-black text-blue-700 dark:text-blue-400 shrink-0">{formatCurrency(request.payment_amount || 0)}</div>
+                                <div className="w-40 shrink-0">
+                                  <span className={`rounded-full px-2.5 py-1 font-bold uppercase tracking-widest text-[9px] ${getStatusColor(request.status)}`}>
+                                    {request.status.replace('_', ' ')}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="col-span-2 flex justify-end gap-1">
-                                <Button variant="ghost" size="sm" className="h-7 px-2 text-blue-600 text-[9px] font-bold" onClick={() => navigate(`/payments/${request.id}`)}>
-                                  View
+                              <div className="flex justify-end gap-2 shrink-0 pl-4">
+                                <Button variant="outline" size="sm" className="h-8 px-4 text-blue-600 text-[10px] font-bold rounded-lg" onClick={() => navigate(`/payments/${request.id}`)}>
+                                  View Details
                                 </Button>
                                 {canAccountProcess && ['manager_approved', 'voucher_created', 'payment_released'].includes(request.status) && (
-                                  <Button variant="ghost" size="sm" className="h-7 px-2 text-green-600 text-[9px] font-bold" onClick={() => navigate(`/payments/${request.id}`)}>
-                                    {request.status === 'manager_approved' ? 'Pay' : request.status === 'voucher_created' ? 'UTR' : 'Proof'}
+                                  <Button size="sm" className="h-8 px-4 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-lg shadow-sm" onClick={() => navigate(`/payments/${request.id}`)}>
+                                    {request.status === 'manager_approved' ? 'Process Payment' : request.status === 'voucher_created' ? 'Add UTR' : 'Upload Proof'}
                                   </Button>
                                 )}
                               </div>
