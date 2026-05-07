@@ -204,7 +204,18 @@ export default function PaymentApplicationForm() {
   const normalizePaymentName = (name?: string) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   const applicantPaymentName = normalizePaymentName(formData.applicant_name);
   const beneficiaryPaymentName = normalizePaymentName(formData.payment_in_favour_name);
-  const isBeneficiaryPayment = !!applicantPaymentName && !!beneficiaryPaymentName && applicantPaymentName !== beneficiaryPaymentName;
+  
+  // A payment is a beneficiary payment if:
+  // 1. It is explicitly marked as third party, OR
+  // 2. The names don't match and it's not explicitly marked as NOT third party
+  const isBeneficiaryPayment = formData.is_third_party === true || 
+                                (formData.is_third_party !== false && 
+                                 !!applicantPaymentName && 
+                                 !!beneficiaryPaymentName && 
+                                 applicantPaymentName !== beneficiaryPaymentName &&
+                                 beneficiaryPaymentName !== 'customer' &&
+                                 beneficiaryPaymentName !== 'self');
+
   const needsPaymentVerification = isBeneficiaryPayment && 
                                     formData.status !== 'sent_back' && 
                                     user?.role !== 'super_admin' && 
@@ -889,7 +900,25 @@ export default function PaymentApplicationForm() {
           <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
             <Building2 className="h-5 w-5 text-blue-600" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Banking Details</h2>
-            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
+            <div className="ml-auto flex items-center gap-2">
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      payment_in_favour_name: prev.applicant_name,
+                      is_third_party: false
+                    }));
+                    toast.info('Beneficiary set to Customer');
+                  }}
+                  className="text-[10px] font-bold text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
+                >
+                  Same as Customer
+                </button>
+              )}
+              <span className="text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Payment To</span>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField label="Payment In Favour (Beneficiary Name) *" name="payment_in_favour_name" value={formData.payment_in_favour_name} onChange={handleInputChange} required placeholder="Enter beneficiary name" disabled={isReadOnly} />
@@ -897,6 +926,10 @@ export default function PaymentApplicationForm() {
             <FormField label="Account Number *" name="account_number" value={formData.account_number} onChange={handleInputChange} required placeholder="Enter account number" disabled={isReadOnly} />
             <FormField label="IFSC Code *" name="ifsc_code" value={formData.ifsc_code} onChange={handleInputChange} required placeholder="e.g. SBIN0001234" disabled={isReadOnly} />
             <FormField label="Branch Name" name="branch_name" value={formData.branch_name} onChange={handleInputChange} placeholder="Enter branch name" disabled={isReadOnly} />
+            <div className="flex flex-col gap-2">
+              <FormCheckbox label="Pay to Third Party?" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} disabled={isReadOnly} />
+              <p className="text-[10px] text-gray-500 ml-8 -mt-1 font-medium italic">Uncheck if paying directly to the customer to skip verification.</p>
+            </div>
             <FormCheckbox label="DM Approval" name="dm_approval" checked={formData.dm_approval} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
           {!isReadOnly && formData.applicant_name && formData.payment_in_favour_name && (
@@ -1001,7 +1034,6 @@ export default function PaymentApplicationForm() {
             <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} disabled={isReadOnly} />
             <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} disabled={isReadOnly} />
             <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormCheckbox label="Third Party" name="is_third_party" checked={formData.is_third_party} onChange={handleInputChange} disabled={isReadOnly} />
           </div>
         </section>
 
