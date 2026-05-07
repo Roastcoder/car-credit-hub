@@ -245,20 +245,41 @@ export default function NotificationBell() {
                 </button>
               </div>
             </div>
-            {notificationPermission === 'default' && (
-              <button
-                onClick={requestPermission}
-                className="mx-4 mb-3 p-2 bg-accent/10 border border-accent/20 rounded-lg text-[10px] font-bold text-accent hover:bg-accent/20 transition-all flex items-center justify-center gap-2 animate-pulse"
-              >
-                <Bell size={12} />
-                Enable Browser Push Notifications
-              </button>
-            )}
-            {notificationPermission === 'denied' && (
-              <p className="mx-4 mb-3 text-[10px] text-destructive text-center font-medium italic">
-                Browser notifications are blocked. Please enable them in settings.
-              </p>
-            )}
+
+            {/* Push Notification Status & Actions */}
+            <div className="mx-4 mb-3 p-3 bg-muted/50 rounded-lg border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Push Alerts</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${notificationPermission === 'granted' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
+                  <span className="text-[10px] font-medium capitalize">{notificationPermission === 'granted' ? 'Active' : notificationPermission}</span>
+                </div>
+              </div>
+              
+              {notificationPermission !== 'granted' ? (
+                <button
+                  onClick={requestPermission}
+                  className="w-full p-2 bg-accent text-accent-foreground rounded-md text-[10px] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  <Bell size={12} />
+                  Enable Browser Notifications
+                </button>
+              ) : (
+                <button
+                  onClick={subscribeToPushNotifications}
+                  className="w-full p-2 bg-accent/10 border border-accent/20 text-accent rounded-md text-[10px] font-bold hover:bg-accent/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 size={12} />
+                  Refresh Connection
+                </button>
+              )}
+
+              {notificationPermission === 'denied' && (
+                <p className="mt-2 text-[9px] text-destructive leading-tight font-medium">
+                  Blocked by browser. Click the lock icon in address bar to Allow.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* List */}
