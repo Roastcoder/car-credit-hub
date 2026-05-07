@@ -62,22 +62,73 @@ export default function NotificationBell() {
     refetchInterval: 5000, // Refetch every 5 seconds for real-time feel
   });
 
+  // Persistent AudioContext and cached buffer for accountant sound
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const accountantBufferRef = useRef<AudioBuffer | null>(null);
+
+  const getAudioContext = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    // Resume if suspended (browser autoplay policy)
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
+
+  // Unlock AudioContext on first user interaction
+  useEffect(() => {
+    const unlock = () => {
+      getAudioContext();
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+    return () => {
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
+  // Preload accountant MP3 buffer
+  useEffect(() => {
+    if (user?.role === 'accountant' && !accountantBufferRef.current) {
+      fetch('/notification-accountant.mp3')
+        .then(res => res.arrayBuffer())
+        .then(buf => {
+          const ctx = getAudioContext();
+          return ctx.decodeAudioData(buf);
+        })
+        .then(decoded => {
+          accountantBufferRef.current = decoded;
+          console.log('✅ Accountant notification sound preloaded');
+        })
+        .catch(e => console.warn('Could not preload accountant sound:', e));
+    }
+  }, [user?.role]);
+
   const playNotificationSound = () => {
     try {
+      const ctx = getAudioContext();
+
       // Accountants get the custom Hindi voice notification
-      if (user?.role === 'accountant') {
-        const audio = new Audio('/notification-accountant.mp3');
-        audio.volume = 0.8;
-        audio.play().catch(e => console.warn('Accountant notification sound blocked:', e));
+      if (user?.role === 'accountant' && accountantBufferRef.current) {
+        const source = ctx.createBufferSource();
+        const gainNode = ctx.createGain();
+        source.buffer = accountantBufferRef.current;
+        gainNode.gain.value = 0.8;
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        source.start(0);
         return;
       }
 
       // Standard chime for all other roles
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
       const playChime = (freq: number, startTime: number) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, startTime);
         osc.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + 0.1);
@@ -87,14 +138,14 @@ export default function NotificationBell() {
         gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
         
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(ctx.destination);
         osc.start(startTime);
         osc.stop(startTime + 0.5);
       };
 
       // Play double chime
-      playChime(523.25, audioCtx.currentTime); // C5
-      playChime(659.25, audioCtx.currentTime + 0.15); // E5
+      playChime(523.25, ctx.currentTime); // C5
+      playChime(659.25, ctx.currentTime + 0.15); // E5
     } catch (e) { console.error('Notification sound failed', e); }
   };
 
