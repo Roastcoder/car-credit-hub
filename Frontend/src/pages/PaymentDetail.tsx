@@ -738,6 +738,81 @@ export default function PaymentDetail() {
     </div>
   );
 
+  const loanPaymentRequests = (payment.payment_history && payment.payment_history.length > 0)
+    ? payment.payment_history
+    : [payment];
+
+  const getLoanRequestAmount = (request: any) =>
+    Number(request.voucher_amount || request.payment_amount || request.today_release_amount || request.amount || 0);
+
+  const loanPaymentTotal = loanPaymentRequests.reduce((sum: number, request: any) => sum + getLoanRequestAmount(request), 0);
+
+  const LoanPaymentRequestsTable = () => (
+    <Section title="All Payment Applications In This Loan File" icon={<FileText size={20} className="text-blue-500" />}>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Loan File</p>
+          <p className="mt-1 text-sm font-bold text-foreground">{payment.loan_number || '—'}</p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Requests</p>
+          <p className="mt-1 text-sm font-bold text-foreground">{loanPaymentRequests.length}</p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Requested / Released</p>
+          <p className="mt-1 text-sm font-bold text-blue-600">{formatCurrency(loanPaymentTotal)}</p>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left">
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Request ID</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Payment Type</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Beneficiary Name</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Voucher Number</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">UTR Number</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Payment Status</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Created Date</th>
+              <th className="py-2 pr-3 text-muted-foreground font-semibold">Approved By</th>
+              <th className="py-2 text-right text-muted-foreground font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loanPaymentRequests.map((request: any, idx: number) => {
+              const requestId = Number(request.id);
+              const isCurrent = requestId === Number(id);
+              return (
+                <tr
+                  key={`${request.id || 'current'}-${idx}`}
+                  className={`border-b border-border/50 text-left ${isCurrent ? 'bg-blue-50/60 dark:bg-blue-900/10 font-bold' : 'hover:bg-muted/30 cursor-pointer'}`}
+                  onClick={() => !isCurrent && requestId && navigate(`/payments/${requestId}`)}
+                >
+                  <td className="py-2 pr-3">
+                    <span className="font-mono text-xs">#PAY-{request.id}</span>
+                  </td>
+                  <td className="py-2 pr-3 text-xs">{formatPaymentType(request.payment_type)}</td>
+                  <td className="py-2 pr-3 text-xs font-medium">{request.payment_in_favour_name || request.beneficiary_name || request.applicant_name || '—'}</td>
+                  <td className="py-2 pr-3 text-xs font-mono">{request.voucher_number || '—'}</td>
+                  <td className="py-2 pr-3 text-xs font-mono text-green-700 dark:text-green-400">{request.utr_number || request.reference_number || '—'}</td>
+                  <td className="py-2 pr-3">
+                    <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-slate-100 text-slate-700">
+                      {formatPaymentStatus(request.status)}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-3 text-xs">{formatDisplayDate(request.created_at)}</td>
+                  <td className="py-2 pr-3 text-xs">{request.approved_by_name || '—'}</td>
+                  <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">{formatCurrency(getLoanRequestAmount(request))}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+  );
+
   return (
     <>
       <div className="w-full px-4 pb-20 lg:pb-4">
@@ -772,6 +847,10 @@ export default function PaymentDetail() {
           </div>
 
           <div />
+        </div>
+
+        <div className="mb-6">
+          <LoanPaymentRequestsTable />
         </div>
 
         {/* Dual Layout */}
@@ -1084,53 +1163,6 @@ export default function PaymentDetail() {
             {payment.remarks && (
               <Section title="Applicant Remarks" icon={<FileText size={20} />}>
                 <p className="text-sm text-foreground whitespace-pre-wrap">{payment.remarks}</p>
-              </Section>
-            )}
-
-            {/* All Loan Payment Operations */}
-            {(payment.payment_history && payment.payment_history.length > 0) && (
-              <Section title="All Payment Requests In This Loan File" icon={<FileText size={20} className="text-blue-500" />}>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-left">
-                        <th className="py-2 text-muted-foreground font-semibold">Request ID</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Payment Type</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Beneficiary</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Voucher / UTR</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Status</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Created</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Approved By</th>
-                        <th className="py-2 text-right text-muted-foreground font-semibold">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payment.payment_history.map((ph, idx) => (
-                        <tr key={idx} className={`border-b border-border/50 text-left ${ph.id === Number(id) ? 'bg-blue-50/50 dark:bg-blue-900/10 font-bold' : ''}`}>
-                          <td className="py-2">
-                            <span className="font-mono text-xs">#PAY-{ph.id}</span>
-                          </td>
-                          <td className="py-2 text-xs">{formatPaymentType(ph.payment_type)}</td>
-                          <td className="py-2 text-xs font-medium">{ph.payment_in_favour_name || '—'}</td>
-                          <td className="py-2 text-xs">
-                            {ph.voucher_number && <p className="font-mono">{ph.voucher_number}</p>}
-                            {ph.utr_number || ph.reference_number ? (
-                              <p className="font-mono text-green-700 dark:text-green-400">{ph.utr_number || ph.reference_number}</p>
-                            ) : <span className="text-muted-foreground">—</span>}
-                          </td>
-                          <td className="py-2">
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-slate-100 text-slate-700">
-                              {formatPaymentStatus(ph.status)}
-                            </span>
-                          </td>
-                          <td className="py-2 text-xs">{formatDisplayDate(ph.created_at)}</td>
-                          <td className="py-2 text-xs">{ph.approved_by_name || '—'}</td>
-                          <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.voucher_amount || ph.payment_amount).toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               </Section>
             )}
 
