@@ -31,10 +31,11 @@ interface PaymentApplication {
   applicant_name: string;
   applicant_phone?: string;
   applicant_email?: string;
-  amount: number | string;
+  amount?: number | string;
   payment_amount?: number | string;
   status: PaymentStatus;
   payment_purpose?: string;
+  payment_type?: string;
   description?: string;
   created_at: string;
   released_at?: string;
@@ -94,6 +95,7 @@ interface PaymentApplication {
   reference_number?: string;
   prepared_by?: string;
   approved_by?: string;
+  approved_by_name?: string;
   narration?: string;
   manager_remarks?: string;
   remarks?: string;
@@ -121,14 +123,28 @@ interface PaymentApplication {
 
 const PAYMENT_STATUSES: { value: PaymentStatus; label: string; color: string; icon: any }[] = [
   { value: 'draft', label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: FileText },
-  { value: 'submitted', label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: Calendar },
-  { value: 'manager_approved', label: 'RBM Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
-  { value: 'manager_rejected', label: 'RBM Rejected', color: 'bg-red-100 text-red-800', icon: XCircle },
-  { value: 'sent_back', label: 'Sent Back', color: 'bg-orange-100 text-orange-800', icon: ArrowLeft },
-  { value: 'voucher_created', label: 'Voucher Created', color: 'bg-purple-100 text-purple-800', icon: FileText },
+  { value: 'submitted', label: 'Pending Approval', color: 'bg-blue-100 text-blue-800', icon: Calendar },
+  { value: 'manager_approved', label: 'Approved', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
+  { value: 'manager_rejected', label: 'Failed', color: 'bg-red-100 text-red-800', icon: XCircle },
+  { value: 'sent_back', label: 'Failed', color: 'bg-orange-100 text-orange-800', icon: ArrowLeft },
+  { value: 'account_processing', label: 'Processing', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  { value: 'voucher_created', label: 'Processing', color: 'bg-purple-100 text-purple-800', icon: FileText },
   { value: 'payment_released', label: 'Payment Released', color: 'bg-blue-100 text-blue-800', icon: DollarSign },
-  { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle }
+  { value: 'completed', label: 'Payment Released', color: 'bg-green-100 text-green-800', icon: CheckCircle }
 ];
+
+const formatPaymentType = (value?: string) => {
+  const labels: Record<string, string> = {
+    dealer: 'Dealer',
+    rto: 'RTO',
+    agent: 'Agent',
+    customer_balance: 'Customer Balance',
+  };
+  return labels[String(value || '').toLowerCase()] || 'Customer Balance';
+};
+
+const formatPaymentStatus = (status?: string) =>
+  PAYMENT_STATUSES.find(s => s.value === status)?.label || status || 'Draft';
 
 export default function PaymentDetail() {
   const navigate = useNavigate();
@@ -678,7 +694,8 @@ export default function PaymentDetail() {
   // Parallel-Aware Totals
   const totalReleased = (payment.vouchers || []).reduce((sum, v) => sum + (Number(v.amount) || 0), 0);
   const transactionSum = (payment.transactions || []).reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
-  const targetAmount = transactionSum > 0 ? transactionSum : Number(payment.today_release_amount || payment.amount || 0);
+  const requestedAmount = Number(payment.payment_amount || payment.today_release_amount || payment.amount || 0);
+  const targetAmount = transactionSum > 0 ? transactionSum : requestedAmount;
   const remainingAppBalance = Math.max(0, targetAmount - totalReleased);
   const totalLoanDisbursement = Number(payment.disbursement_amount || 0);
   // Derived ledger totals — use merged all-loan ledger for display/PDF
@@ -750,7 +767,7 @@ export default function PaymentDetail() {
               <span>•</span>
               <span>Customer: <span className="font-medium">{payment.applicant_name}</span></span>
               <span>•</span>
-              <span>Amount: <span className="font-medium text-green-600">{formatCurrency(Number(payment.amount))}</span></span>
+              <span>Amount: <span className="font-medium text-green-600">{formatCurrency(requestedAmount)}</span></span>
             </div>
           </div>
 
@@ -762,9 +779,9 @@ export default function PaymentDetail() {
           {/* Left: Main Details */}
           <div className="flex-1 min-w-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Parallel Disbursement Ledger - NEW ENTERPRISE VIEW */}
+              {/* Current Payment Request */}
               <div className="lg:col-span-2">
-                <Section title="Parallel Disbursement Ledger" icon={<Building2 size={20} />}>
+                <Section title="Current Payment Request" icon={<Building2 size={20} />}>
                   <div className="grid grid-cols-1 gap-4">
                     {payment.transactions && payment.transactions.length > 0 ? (
                       payment.transactions.map((tx, idx) => (
@@ -778,11 +795,11 @@ export default function PaymentDetail() {
                                 <div className="flex items-center gap-2 mb-1">
                                   <h4 className="text-base font-black text-slate-800 dark:text-white">{tx.beneficiary_name}</h4>
                                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                                    tx.type === 'Dealer' ? 'bg-indigo-100 text-indigo-700' :
-                                    tx.type === 'RTO' ? 'bg-orange-100 text-orange-700' :
+                                    tx.type === 'dealer' ? 'bg-indigo-100 text-indigo-700' :
+                                    tx.type === 'rto' ? 'bg-orange-100 text-orange-700' :
                                     'bg-emerald-100 text-emerald-700'
                                   }`}>
-                                    {tx.type}
+                                    {formatPaymentType(tx.type)}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-1">
@@ -837,13 +854,14 @@ export default function PaymentDetail() {
                       <div className="bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/20">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                           <div className="col-span-1 md:col-span-2">
-                            <Field label="Payment In Favour (Beneficiary)" value={payment.payment_in_favour_name} className="text-lg font-bold text-blue-700 dark:text-blue-400" />
+                              <Field label="Payment Type" value={formatPaymentType(payment.payment_type)} />
+                              <Field label="Payment In Favour (Beneficiary)" value={payment.payment_in_favour_name} className="text-lg font-bold text-blue-700 dark:text-blue-400" />
                           </div>
                           <Field label="Bank Name" value={payment.bank_name} />
                           <Field label="Account Number" value={payment.account_number} className="font-mono tracking-wider text-green-600 dark:text-green-400" />
                           <Field label="IFSC Code" value={payment.ifsc_code} className="font-mono text-gray-700 dark:text-gray-300" />
                           <Field label="Branch Name" value={payment.branch_name} />
-                          <Field label="Total Amount to Pay" value={formatCurrency(Number(payment.payment_amount || payment.amount))} className="text-xl font-bold" />
+                          <Field label="Total Amount to Pay" value={formatCurrency(requestedAmount)} className="text-xl font-bold" />
                         </div>
                       </div>
                     )}
@@ -860,7 +878,7 @@ export default function PaymentDetail() {
                     <Field label="Email Address" value={payment.applicant_email} />
                   </div>
                   <Field label="KYC Documents Verified" value={payment.kyc_documents === 'Yes' ? 'YES' : 'NO'} />
-                  <Field label="Status" value={payment.status?.toUpperCase()} />
+                  <Field label="Status" value={formatPaymentStatus(payment.status)} />
                   <Field label="Created By" value={payment.created_by_name || 'System'} />
                   <Field label="Application Date" value={formatDisplayDate(payment.created_at)} />
 
@@ -947,6 +965,7 @@ export default function PaymentDetail() {
                    <Field label="Hold Amount" value={formatCurrency(Number(payment.hold_amount || 0))} />
                    <Field label="Hold Percentage" value={`${payment.hold_percentage || 0}%`} />
                   <Field label="Challan Amount" value={formatCurrency(Number(payment.challan_amount || 0))} />
+                  <Field label="Payment Type" value={formatPaymentType(payment.payment_type)} />
                   <Field label="Payment In Favour" value={payment.payment_in_favour_name} />
                 </div>
               </Section>
@@ -1068,17 +1087,21 @@ export default function PaymentDetail() {
               </Section>
             )}
 
-            {/* All Loan Payment Operations — only when UTR-confirmed entries exist */}
+            {/* All Loan Payment Operations */}
             {(payment.payment_history && payment.payment_history.length > 0) && (
-              <Section title="Payment Release History (UTR Confirmed)" icon={<FileText size={20} className="text-blue-500" />}>
+              <Section title="All Payment Requests In This Loan File" icon={<FileText size={20} className="text-blue-500" />}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border text-left">
-                        <th className="py-2 text-muted-foreground font-semibold">ID / Date</th>
-                        <th className="py-2 text-muted-foreground font-semibold">Status</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Request ID</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Payment Type</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Beneficiary</th>
                         <th className="py-2 text-muted-foreground font-semibold">Voucher / UTR</th>
-                        <th className="py-2 text-right text-muted-foreground font-semibold">Amount (₹)</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Status</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Created</th>
+                        <th className="py-2 text-muted-foreground font-semibold">Approved By</th>
+                        <th className="py-2 text-right text-muted-foreground font-semibold">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1086,23 +1109,22 @@ export default function PaymentDetail() {
                         <tr key={idx} className={`border-b border-border/50 text-left ${ph.id === Number(id) ? 'bg-blue-50/50 dark:bg-blue-900/10 font-bold' : ''}`}>
                           <td className="py-2">
                             <span className="font-mono text-xs">#PAY-{ph.id}</span>
-                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(ph.released_at || ph.created_at)}</p>
+                          </td>
+                          <td className="py-2 text-xs">{formatPaymentType(ph.payment_type)}</td>
+                          <td className="py-2 text-xs font-medium">{ph.payment_in_favour_name || '—'}</td>
+                          <td className="py-2 text-xs">
+                            {ph.voucher_number && <p className="font-mono">{ph.voucher_number}</p>}
+                            {ph.utr_number || ph.reference_number ? (
+                              <p className="font-mono text-green-700 dark:text-green-400">{ph.utr_number || ph.reference_number}</p>
+                            ) : <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="py-2">
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-green-100 text-green-800">
-                              Released
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-slate-100 text-slate-700">
+                              {formatPaymentStatus(ph.status)}
                             </span>
                           </td>
-                          <td className="py-2">
-                            {ph.utr_number ? (
-                              <div className="text-xs">
-                                <span className="font-mono font-semibold text-green-700 dark:text-green-400">{ph.utr_number}</span>
-                                {ph.voucher_number && <p className="text-[10px] text-muted-foreground">Voucher: {ph.voucher_number}</p>}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">—</span>
-                            )}
-                          </td>
+                          <td className="py-2 text-xs">{formatDisplayDate(ph.created_at)}</td>
+                          <td className="py-2 text-xs">{ph.approved_by_name || '—'}</td>
                           <td className="py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">₹{Number(ph.voucher_amount || ph.payment_amount).toLocaleString()}</td>
                         </tr>
                       ))}

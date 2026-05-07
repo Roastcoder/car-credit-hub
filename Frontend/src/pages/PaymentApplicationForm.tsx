@@ -23,6 +23,7 @@ interface PaymentApplication {
   branch_name: string;
   payment_amount: number;
   payment_purpose: string;
+  payment_type?: 'dealer' | 'rto' | 'agent' | 'customer_balance';
   pdd_documents: string[];
   banking_documents: string[];
   remarks: string;
@@ -91,8 +92,18 @@ interface Transaction {
   account_number: string;
   ifsc_code: string;
   amount: number;
-  type: 'DEALER' | 'RTO' | 'CUSTOMER' | 'INSURANCE' | 'OTHER';
+  type: 'dealer' | 'rto' | 'agent' | 'customer_balance';
 }
+
+const PAYMENT_TYPE_OPTIONS = [
+  { value: 'dealer', label: 'Dealer' },
+  { value: 'rto', label: 'RTO' },
+  { value: 'agent', label: 'Agent' },
+  { value: 'customer_balance', label: 'Customer Balance' },
+] as const;
+
+const getPaymentTypeLabel = (value?: string) =>
+  PAYMENT_TYPE_OPTIONS.find(option => option.value === value)?.label || 'Customer Balance';
 
 export default function PaymentApplicationForm() {
   const { user } = useAuth();
@@ -124,7 +135,7 @@ export default function PaymentApplicationForm() {
   const [showAdvancedDetails, setShowAdvancedDetails] = useState(false);
 
   const [transactions, setTransactions] = useState<Transaction[]>([
-    { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'CUSTOMER' }
+    { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'customer_balance' }
   ]);
 
   const [formData, setFormData] = useState<PaymentApplication>({
@@ -138,6 +149,7 @@ export default function PaymentApplicationForm() {
     branch_name: '',
     payment_amount: 0,
     payment_purpose: '',
+    payment_type: 'customer_balance',
     pdd_documents: [],
     banking_documents: [],
     remarks: '',
@@ -214,6 +226,8 @@ export default function PaymentApplicationForm() {
   const editableStatuses = ['draft', 'submitted', 'manager_rejected', 'sent_back'];
   const totalReleased = (formData.vouchers || []).reduce((sum, voucher) => sum + (Number(voucher.amount) || 0), 0);
   const remainingLoanAmount = Math.max(0, (Number(formData.disbursement_amount) || 0) - totalReleased);
+  const availableLoanBalance = Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0));
+  const requestedPaymentAmount = Number(formData.today_release_amount || formData.payment_amount || 0);
   const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
   const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode && user?.role !== 'super_admin';
   const normalizePaymentName = (name?: string) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -378,8 +392,11 @@ export default function PaymentApplicationForm() {
 
       // Fetch existing payment applications for this loan to calculate old_release_amount
       const apps = await paymentApplicationAPI.getAll();
-      const loanApps = Array.isArray(apps) ? apps.filter((app: any) => String(app.loan_id) === String(lId) && app.status === 'completed') : [];
-      const totalAlreadyReleased = loanApps.reduce((sum: number, app: any) => sum + (Number(app.payment_amount) || 0), 0);
+      const loanApps = Array.isArray(apps) ? apps.filter((app: any) =>
+        String(app.loan_id) === String(lId) && ['payment_released', 'completed'].includes(app.status)
+      ) : [];
+      const totalAlreadyReleased = loanApps.reduce((sum: number, app: any) =>
+        sum + (Number(app.voucher_amount || app.payment_amount) || 0), 0);
 
       setFormData(prev => ({
         ...prev,
@@ -455,7 +472,7 @@ export default function PaymentApplicationForm() {
   const addTransaction = () => {
     setTransactions(prev => [
       ...prev,
-      { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'OTHER' }
+      { beneficiary_name: '', bank_name: '', account_number: '', ifsc_code: '', amount: 0, type: 'customer_balance' }
     ]);
   };
 
@@ -474,7 +491,12 @@ export default function PaymentApplicationForm() {
       setFormData(f => ({ 
         ...f, 
         today_release_amount: totalTxAmount,
-        payment_amount: totalTxAmount
+        payment_amount: totalTxAmount,
+        ...(index === 0 && field === 'type' ? { payment_type: value } : {}),
+        ...(index === 0 && field === 'beneficiary_name' ? { payment_in_favour_name: value } : {}),
+        ...(index === 0 && field === 'bank_name' ? { bank_name: value } : {}),
+        ...(index === 0 && field === 'account_number' ? { account_number: value } : {}),
+        ...(index === 0 && field === 'ifsc_code' ? { ifsc_code: value } : {}),
       }));
       
       return updated;
@@ -493,6 +515,10 @@ export default function PaymentApplicationForm() {
       const oldAmt = Number(newData.old_release_amount) || 0;
 
       if (name === 'today_release_amount') {
+        if ((numValue as number) > Math.max(0, disbursementAmt - oldAmt)) {
+          toast.error('Payment amount cannot exceed available loan balance');
+          return prev;
+        }
         const remaining = disbursementAmt - oldAmt - (numValue as number);
         newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
         
@@ -511,6 +537,8 @@ export default function PaymentApplicationForm() {
         // If disbursement changes, adjust hold to maintain today_release
         const todayAmt = Number(newData.today_release_amount) || 0;
         newData.hold_amount = Math.max(0, parseFloat((numValue as number - oldAmt - todayAmt).toFixed(2)));
+      } else if (name === 'payment_type') {
+        setTransactions(txs => txs.map((tx, index) => index === 0 ? { ...tx, type: numValue as Transaction['type'] } : tx));
       }
 
       return newData;
@@ -668,6 +696,22 @@ export default function PaymentApplicationForm() {
 
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
+      if (requestedPaymentAmount <= 0) {
+        toast.error('Enter a payment amount greater than zero');
+        return;
+      }
+
+      if (requestedPaymentAmount > availableLoanBalance + 0.01) {
+        toast.error('Payment amount cannot exceed available loan balance');
+        return;
+      }
+
+      const firstTransaction = transactions[0];
+      if (!firstTransaction?.beneficiary_name || !firstTransaction?.bank_name || !firstTransaction?.account_number || !firstTransaction?.ifsc_code) {
+        toast.error('Complete beneficiary details before submitting');
+        return;
+      }
+
       // Only third-party/beneficiary payments need Aadhaar + OTP verification.
       if (status === 'submitted' && !isPaymentVerificationDone) {
         toast.error('Please complete beneficiary verification before submitting');
@@ -690,7 +734,9 @@ export default function PaymentApplicationForm() {
         status,
         aadhaar_number: needsVerification ? aadhaarNumber : null,
         aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified',
-        transactions
+        payment_type: formData.payment_type || firstTransaction.type,
+        payment_in_favour_name: formData.payment_in_favour_name || firstTransaction.beneficiary_name,
+        transactions: [firstTransaction]
       };
 
       if (id) {
@@ -705,12 +751,6 @@ export default function PaymentApplicationForm() {
 
     } catch (error: any) {
       console.error('Error submitting application:', error);
-
-      if (error?.existing_application_id) {
-        toast.error('Payment application already exists for this loan. Opening the existing application.');
-        navigate(`/payments/${error.existing_application_id}`);
-        return;
-      }
 
       toast.error(error?.message || 'Failed to submit application');
     } finally {
@@ -748,31 +788,16 @@ export default function PaymentApplicationForm() {
     <div className="p-6 max-w-5xl mx-auto pb-20">
       <MobilePageSwitcher options={appSwitcherOptions} activeLabel={id ? 'Edit App' : 'New App'} />
       
-      {/* --- Pro-Disbursement Guide --- */}
-      <section className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm dark:border-blue-900/30 dark:from-blue-950/20 dark:to-indigo-950/20 animate-in fade-in slide-in-from-top-4 duration-700">
+      <section className="mb-8 rounded-xl border border-blue-200 bg-blue-50 p-5 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/20 animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/20">
             <Info size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Enterprise Disbursement Guide</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Sequential Payment Request</h2>
             <p className="mt-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-              Welcome to the upgraded Parallel Disbursement Engine. You can now manage complex payouts in a single request.
+              Create one beneficiary payment at a time from this loan file. Every request keeps its own voucher, UTR, status, and audit trail while the loan balance stays centralized.
             </p>
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Parallel Payouts</p>
-                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Add multiple beneficiaries (Dealer, RTO, Customer) in one application. No more waiting for the first UTR!</p>
-              </div>
-              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
-                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Independent UTRs</p>
-                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Each beneficiary gets their own UTR. Accountants can pay the Dealer today and the RTO tomorrow independently.</p>
-              </div>
-              <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-900/40 border border-white/40 dark:border-white/10">
-                <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Batch OTP Approval</p>
-                <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">Admins can authorize a whole batch of 50+ transactions with a single OTP, streamlining the entire payout lifecycle.</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -984,14 +1009,15 @@ export default function PaymentApplicationForm() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">2. Payment Lifecycle Details</h2>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Managing the Parallel Split</p>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">One request, one beneficiary, one UTR</p>
             </div>
-            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Disbursement Hub</span>
+            <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Available: {formatCurrency(availableLoanBalance)}</span>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField label="Net Disbursement Limit" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} placeholder="0.00" />
             <FormField label="Previously Released" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled placeholder="0.00" />
+            <FormSelect label="Payment Type" name="payment_type" value={formData.payment_type} onChange={handleInputChange} options={PAYMENT_TYPE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} disabled={isReadOnly} />
             <FormField 
               label="Today Total Release *" 
               name="today_release_amount" 
@@ -999,21 +1025,11 @@ export default function PaymentApplicationForm() {
               value={formData.today_release_amount} 
               onChange={handleInputChange} 
               required 
-              disabled={transactions.length > 1 || isReadOnly} 
+              disabled={isReadOnly}
               placeholder="0.00"
               icon={<Calculator size={16} className="text-blue-500" />}
             />
-            <FormField label="Remaining Balance" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled placeholder="0.00" />
           </div>
-
-          {transactions.length > 1 && (
-            <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl flex items-center gap-3 animate-in fade-in zoom-in-95 duration-300">
-              <Info size={16} className="text-indigo-600" />
-              <p className="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">
-                "Today Total Release" is locked and derived from the sum of {transactions.length} parallel beneficiaries below.
-              </p>
-            </div>
-          )}
 
           <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="p-5 bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950/20 rounded-2xl border border-blue-100 dark:border-blue-900/40 shadow-sm">
@@ -1025,32 +1041,21 @@ export default function PaymentApplicationForm() {
                 <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-600 transition-all duration-1000" 
-                    style={{ width: `${(Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100}%` }}
+                    style={{ width: `${Math.min(100, (Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100)}%` }}
                   />
                 </div>
               </div>
             </div>
             <AmountCard label="Cumulative Release" value={Number(formData.old_release_amount || 0) + Number(formData.today_release_amount || 0)} tone="green" />
-            <AmountCard label="Post-Payment Hold" value={Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0))} tone="orange" />
+            <AmountCard label="Remaining Loan Balance" value={Math.max(0, (Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0))} tone="orange" />
           </div>
         </section>
 
-        {/* 3. Beneficiary Banking Details - DYNAMIC LIST */}
+        {/* 3. Beneficiary Banking Details */}
         <section className="glass-card p-6 rounded-xl border border-blue-200 dark:border-blue-800/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/5">
           <div className="flex items-center gap-3 mb-6 border-b border-blue-100 dark:border-blue-800 pb-4">
             <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Banking Details (Multi-Payout)</h2>
-            <div className="ml-auto flex items-center gap-2">
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={addTransaction}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
-                >
-                  <Plus size={14} /> Add Another Beneficiary
-                </button>
-              )}
-            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">3. Beneficiary Details</h2>
           </div>
 
           <div className="space-y-6">
@@ -1062,7 +1067,7 @@ export default function PaymentApplicationForm() {
                       {index + 1}
                     </span>
                     <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                      Payout #{index + 1}
+                      Payment Request #{index + 1}
                     </h3>
                     <select
                       value={tx.type}
@@ -1070,8 +1075,8 @@ export default function PaymentApplicationForm() {
                       disabled={isReadOnly}
                       className="ml-2 text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 px-2 py-1 rounded border-none outline-none cursor-pointer"
                     >
-                      {['CUSTOMER', 'DEALER', 'RTO', 'INSURANCE', 'OTHER'].map(t => (
-                        <option key={t} value={t}>{t}</option>
+                      {PAYMENT_TYPE_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>
                   </div>
@@ -1090,15 +1095,6 @@ export default function PaymentApplicationForm() {
                         className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
                       >
                         Same as Customer
-                      </button>
-                    )}
-                    {!isReadOnly && transactions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeTransaction(index)}
-                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      >
-                        <X size={18} />
                       </button>
                     )}
                   </div>
@@ -1153,12 +1149,16 @@ export default function PaymentApplicationForm() {
 
           <div className="mt-6 p-4 bg-blue-600 text-white rounded-xl flex items-center justify-between shadow-lg shadow-blue-500/20">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Total Parallel Payout</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Current Request Amount</p>
               <p className="text-2xl font-black">{formatCurrency(transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0))}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Parent Today Release</p>
-              <p className="text-xl font-bold">{formatCurrency(Number(formData.today_release_amount || 0))}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Payment Type</p>
+              <p className="text-xl font-bold">{getPaymentTypeLabel(formData.payment_type)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Balance After Request</p>
+              <p className="text-xl font-bold">{formatCurrency(Math.max(0, availableLoanBalance - Number(formData.today_release_amount || 0)))}</p>
             </div>
           </div>
 
@@ -1689,8 +1689,10 @@ function FormSelect({ label, name, value, onChange, options, disabled }: any) {
         disabled={disabled}
         className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"
       >
-        {options.map((opt: string) => (
-          <option key={opt} value={opt}>{opt}</option>
+        {options.map((opt: string | { value: string; label: string }) => (
+          <option key={typeof opt === 'string' ? opt : opt.value} value={typeof opt === 'string' ? opt : opt.value}>
+            {typeof opt === 'string' ? opt : opt.label}
+          </option>
         ))}
       </select>
     </div>

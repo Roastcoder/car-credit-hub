@@ -439,6 +439,26 @@ export default function LoanDetail() {
     )
   ) ? (loan as any).loan_number : String(loan.id);
 
+  const paymentRequests = Array.isArray((loan as any).payment_requests) ? (loan as any).payment_requests : [];
+  const canCreatePaymentRequest = !!loan?.id && Number((loan as any).remaining_balance || 0) > 0;
+  const paymentTypeLabel = (value?: string) => ({
+    dealer: 'Dealer',
+    rto: 'RTO',
+    agent: 'Agent',
+    customer_balance: 'Customer Balance',
+  } as Record<string, string>)[String(value || '').toLowerCase()] || 'Customer Balance';
+  const paymentStatusLabel = (status?: string) => ({
+    draft: 'Draft',
+    submitted: 'Pending Approval',
+    manager_approved: 'Approved',
+    account_processing: 'Processing',
+    voucher_created: 'Processing',
+    payment_released: 'Payment Released',
+    completed: 'Payment Released',
+    manager_rejected: 'Failed',
+    sent_back: 'Failed',
+  } as Record<string, string>)[String(status || '').toLowerCase()] || status || 'Draft';
+
   const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <div className="stat-card">
       <div className="flex items-center gap-2 mb-3">
@@ -1017,6 +1037,78 @@ export default function LoanDetail() {
                           <Field label="HPN at Login" value={(loan as any).hpn_at_login ? 'Yes' : 'No'} />
                         </div>
                       </Section>
+                    )}
+
+                    {user?.role !== 'broker' && !isPddManager && (
+                      <div className="lg:col-span-2">
+                        <Section title="Payment Requests" icon={<CreditCard size={16} />}>
+                          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-xs text-muted-foreground">All payment requests under this loan file stay visible here.</p>
+                              <p className="mt-1 text-xs font-semibold text-blue-600">
+                                Users can create the next request any time; released vouchers control the remaining balance.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/payments/loan/${loan.id}`)}
+                              disabled={!canCreatePaymentRequest}
+                              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Plus size={14} /> Next Payment Request
+                            </button>
+                          </div>
+
+                          {paymentRequests.length > 0 ? (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="border-b border-border text-left">
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Request ID</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Payment Type</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Beneficiary</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Voucher</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">UTR</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Status</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Created</th>
+                                    <th className="py-2 pr-3 font-semibold text-muted-foreground">Approved By</th>
+                                    <th className="py-2 text-right font-semibold text-muted-foreground">Amount</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {paymentRequests.map((request: any) => (
+                                    <tr
+                                      key={request.id}
+                                      className="cursor-pointer border-b border-border/50 hover:bg-muted/40"
+                                      onClick={() => navigate(`/payments/${request.id}`)}
+                                    >
+                                      <td className="py-2 pr-3 font-mono font-semibold">#PAY-{request.id}</td>
+                                      <td className="py-2 pr-3">{paymentTypeLabel(request.payment_type)}</td>
+                                      <td className="py-2 pr-3 font-medium">{request.payment_in_favour_name || '—'}</td>
+                                      <td className="py-2 pr-3 font-mono">{request.voucher_number || '—'}</td>
+                                      <td className="py-2 pr-3 font-mono">{request.utr_number || request.reference_number || '—'}</td>
+                                      <td className="py-2 pr-3">
+                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase">
+                                          {paymentStatusLabel(request.status)}
+                                        </span>
+                                      </td>
+                                      <td className="py-2 pr-3">{formatDisplayDate(request.created_at)}</td>
+                                      <td className="py-2 pr-3">{request.approved_by_name || '—'}</td>
+                                      <td className="py-2 text-right font-mono font-bold">
+                                        {formatCurrency(Number(request.voucher_amount || request.payment_amount || 0))}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-border py-6 text-center">
+                              <p className="text-sm text-muted-foreground">No payment requests have been created yet.</p>
+                            </div>
+                          )}
+                        </Section>
+                      </div>
                     )}
 
                     {/* Credit Reports Section (Superadmin Only) */}
