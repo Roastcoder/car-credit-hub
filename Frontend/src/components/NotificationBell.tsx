@@ -78,6 +78,59 @@ export default function NotificationBell() {
     } catch (e) { console.error('Notification sound failed', e); }
   };
 
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+  );
+
+  const requestPermission = async () => {
+    if (typeof Notification === 'undefined') return;
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+    if (permission === 'granted') {
+      toast.success('Browser notifications enabled!');
+      subscribeToPushNotifications();
+    }
+  };
+
+  const subscribeToPushNotifications = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      
+      if (!vapidKey) {
+        console.warn('VAPID public key not found in environment variables');
+        return;
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidKey
+      });
+
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/notifications/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ subscription })
+      });
+      
+      console.log('Push subscription successful');
+    } catch (error) {
+      console.error('Push subscription failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Re-subscribe if already granted to ensure backend has fresh data
+    if (notificationPermission === 'granted') {
+      subscribeToPushNotifications();
+    }
+  }, []);
+
   useEffect(() => {
     if (notifications.length > 0) {
       const latest = notifications[0]; // Assuming sorted by created_at DESC
@@ -93,10 +146,29 @@ export default function NotificationBell() {
             onClick: () => navigate(latest.url)
           } : undefined
         });
+
+        // Show native browser notification if permitted
+        if (notificationPermission === 'granted') {
+          try {
+            const n = new Notification(latest.title, {
+              body: latest.message,
+              icon: '/favicon.png',
+              tag: 'mehar-finance-notif', // Prevent duplicate alerts
+              requireInteraction: false
+            });
+            n.onclick = () => {
+              window.focus();
+              if (latest.url) navigate(latest.url);
+              n.close();
+            };
+          } catch (e) {
+            console.error('Native notification failed', e);
+          }
+        }
       }
       setLastNotificationId(latest.id);
     }
-  }, [notifications, lastNotificationId, navigate]);
+  }, [notifications, lastNotificationId, navigate, notificationPermission]);
 
   useEffect(() => {
     // Realtime disabled for now
@@ -157,21 +229,37 @@ export default function NotificationBell() {
       {open && (
         <div className="absolute right-0 top-12 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden max-h-[70vh] flex flex-col transition-all duration-200">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h3 className="font-bold text-foreground">Notifications</h3>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={() => markAllRead.mutate()}
-                  className="text-xs text-accent hover:underline font-medium flex items-center gap-1"
-                >
-                  <CheckCheck size={14} /> Mark all read
+          <div className="flex flex-col border-b border-border">
+            <div className="flex items-center justify-between p-4 pb-2">
+              <h3 className="font-bold text-foreground">Notifications</h3>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={() => markAllRead.mutate()}
+                    className="text-xs text-accent hover:underline font-medium flex items-center gap-1"
+                  >
+                    <CheckCheck size={14} /> Mark all read
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-muted">
+                  <X size={16} className="text-muted-foreground" />
                 </button>
-              )}
-              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-muted">
-                <X size={16} className="text-muted-foreground" />
-              </button>
+              </div>
             </div>
+            {notificationPermission === 'default' && (
+              <button
+                onClick={requestPermission}
+                className="mx-4 mb-3 p-2 bg-accent/10 border border-accent/20 rounded-lg text-[10px] font-bold text-accent hover:bg-accent/20 transition-all flex items-center justify-center gap-2 animate-pulse"
+              >
+                <Bell size={12} />
+                Enable Browser Push Notifications
+              </button>
+            )}
+            {notificationPermission === 'denied' && (
+              <p className="mx-4 mb-3 text-[10px] text-destructive text-center font-medium italic">
+                Browser notifications are blocked. Please enable them in settings.
+              </p>
+            )}
           </div>
 
           {/* List */}

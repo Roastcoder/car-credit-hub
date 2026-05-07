@@ -262,27 +262,31 @@ export const getWorkflowSteps = (userRole: string) => {
 };
 
 /**
- * Requests all required native permissions for the Mehar Finance mobile app.
- * This triggers the system dialogs for Camera, Storage, and Notifications.
+ * Requests all required native and browser permissions for the Mehar Finance platform.
  */
 export async function requestAllNativePermissions() {
+  // 1. Browser Notification Permission (Global)
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+
+  // 2. Capacitor-specific permissions
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-
-    // 1. Notification Permissions (Crucial for Android 13+)
+    // Notification Permissions (Crucial for Android 13+)
     const pushStatus = await PushNotifications.checkPermissions();
     if (pushStatus.receive !== 'granted') {
       await PushNotifications.requestPermissions();
     }
 
-    // 2. Camera Permissions
+    // Camera Permissions
     const cameraStatus = await Camera.checkPermissions();
     if (cameraStatus.camera !== 'granted') {
       await Camera.requestPermissions();
     }
 
-    // 3. Filesystem / Storage (Standard checks)
+    // Filesystem / Storage (Standard checks)
     const fsStatus = await Filesystem.checkPermissions();
     if (fsStatus.publicStorage !== 'granted') {
       await Filesystem.requestPermissions();

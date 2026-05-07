@@ -225,6 +225,7 @@ function AppRoutes() {
 
 const App = () => {
   useEffect(() => {
+    requestAllNativePermissions();
   }, []);
 
   return (
