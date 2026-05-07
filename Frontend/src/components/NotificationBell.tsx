@@ -64,6 +64,15 @@ export default function NotificationBell() {
 
   const playNotificationSound = () => {
     try {
+      // Accountants get the custom Hindi voice notification
+      if (user?.role === 'accountant') {
+        const audio = new Audio('/notification-accountant.mp3');
+        audio.volume = 0.8;
+        audio.play().catch(e => console.warn('Accountant notification sound blocked:', e));
+        return;
+      }
+
+      // Standard chime for all other roles
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       
       const playChime = (freq: number, startTime: number) => {
