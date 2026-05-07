@@ -139,6 +139,7 @@ const formatPaymentType = (value?: string) => {
     rto: 'RTO',
     agent: 'Agent',
     customer_balance: 'Customer Balance',
+    foreclosure: 'Foreclosure',
   };
   return labels[String(value || '').toLowerCase()] || 'Customer Balance';
 };

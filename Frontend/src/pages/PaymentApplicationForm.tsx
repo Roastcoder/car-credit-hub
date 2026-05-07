@@ -23,7 +23,7 @@ interface PaymentApplication {
   branch_name: string;
   payment_amount: number;
   payment_purpose: string;
-  payment_type?: 'dealer' | 'rto' | 'agent' | 'customer_balance';
+  payment_type?: 'dealer' | 'rto' | 'agent' | 'customer_balance' | 'foreclosure';
   pdd_documents: string[];
   banking_documents: string[];
   remarks: string;
@@ -92,7 +92,7 @@ interface Transaction {
   account_number: string;
   ifsc_code: string;
   amount: number;
-  type: 'dealer' | 'rto' | 'agent' | 'customer_balance';
+  type: 'dealer' | 'rto' | 'agent' | 'customer_balance' | 'foreclosure';
 }
 
 const PAYMENT_TYPE_OPTIONS = [
@@ -100,6 +100,7 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: 'rto', label: 'RTO' },
   { value: 'agent', label: 'Agent' },
   { value: 'customer_balance', label: 'Customer Balance' },
+  { value: 'foreclosure', label: 'Foreclosure' },
 ] as const;
 
 const getPaymentTypeLabel = (value?: string) =>
@@ -233,22 +234,22 @@ export default function PaymentApplicationForm() {
   const normalizePaymentName = (name?: string) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   const applicantPaymentName = normalizePaymentName(formData.applicant_name);
   const beneficiaryPaymentName = normalizePaymentName(formData.payment_in_favour_name);
-  
+
   // A payment is a beneficiary payment if:
   // 1. It is explicitly marked as third party, OR
   // 2. The names don't match and it's not explicitly marked as NOT third party
-  const isBeneficiaryPayment = formData.is_third_party === true || 
-                                (formData.is_third_party !== false && 
-                                 !!applicantPaymentName && 
-                                 !!beneficiaryPaymentName && 
-                                 applicantPaymentName !== beneficiaryPaymentName &&
-                                 beneficiaryPaymentName !== 'customer' &&
-                                 beneficiaryPaymentName !== 'self');
+  const isBeneficiaryPayment = formData.is_third_party === true ||
+    (formData.is_third_party !== false &&
+      !!applicantPaymentName &&
+      !!beneficiaryPaymentName &&
+      applicantPaymentName !== beneficiaryPaymentName &&
+      beneficiaryPaymentName !== 'customer' &&
+      beneficiaryPaymentName !== 'self');
 
-  const needsPaymentVerification = isBeneficiaryPayment && 
-                                    formData.status !== 'sent_back' && 
-                                    user?.role !== 'super_admin' && 
-                                    Number(formData.today_release_amount || formData.disbursement_amount || 0) > 0;
+  const needsPaymentVerification = isBeneficiaryPayment &&
+    formData.status !== 'sent_back' &&
+    user?.role !== 'super_admin' &&
+    Number(formData.today_release_amount || formData.disbursement_amount || 0) > 0;
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
@@ -286,7 +287,7 @@ export default function PaymentApplicationForm() {
       const data = await response.json();
       const docs = Array.isArray(data) ? data : [];
       setPddDocuments(docs);
-      
+
       // Auto-select all documents if this is a new application
       if (!id && docs.length > 0) {
         const allDocKeys = docs.map((doc: any, index: number) => doc.file_url || doc.file_path || String(doc.id || index));
@@ -485,11 +486,11 @@ export default function PaymentApplicationForm() {
     setTransactions(prev => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
-      
+
       // Update today_release_amount based on sum of transactions
       const totalTxAmount = updated.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
-      setFormData(f => ({ 
-        ...f, 
+      setFormData(f => ({
+        ...f,
         today_release_amount: totalTxAmount,
         payment_amount: totalTxAmount,
         ...(index === 0 && field === 'type' ? { payment_type: value } : {}),
@@ -498,7 +499,7 @@ export default function PaymentApplicationForm() {
         ...(index === 0 && field === 'account_number' ? { account_number: value } : {}),
         ...(index === 0 && field === 'ifsc_code' ? { ifsc_code: value } : {}),
       }));
-      
+
       return updated;
     });
   };
@@ -521,7 +522,7 @@ export default function PaymentApplicationForm() {
         }
         const remaining = disbursementAmt - oldAmt - (numValue as number);
         newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
-        
+
         // If we have only one transaction, sync it
         if (transactions.length === 1) {
           setTransactions(txs => [{ ...txs[0], amount: numValue as number }]);
@@ -529,7 +530,7 @@ export default function PaymentApplicationForm() {
       } else if (name === 'hold_amount') {
         const releaseNeeded = disbursementAmt - oldAmt - (numValue as number);
         newData.today_release_amount = Math.max(0, parseFloat(releaseNeeded.toFixed(2)));
-        
+
         if (transactions.length === 1) {
           setTransactions(txs => [{ ...txs[0], amount: newData.today_release_amount }]);
         }
@@ -787,7 +788,7 @@ export default function PaymentApplicationForm() {
   return (
     <div className="p-6 max-w-5xl mx-auto pb-20">
       <MobilePageSwitcher options={appSwitcherOptions} activeLabel={id ? 'Edit App' : 'New App'} />
-      
+
       <section className="mb-8 rounded-xl border border-blue-200 bg-blue-50 p-5 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/20 animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="flex items-start gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/20">
@@ -946,10 +947,10 @@ export default function PaymentApplicationForm() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
-               <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Loan ID</p>
-                  <p className="text-xs font-black text-slate-700 dark:text-slate-200">{formData.loan_number || 'PENDING'}</p>
-               </div>
+              <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Loan ID</p>
+                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{formData.loan_number || 'PENDING'}</p>
+              </div>
             </div>
           </div>
 
@@ -1013,18 +1014,18 @@ export default function PaymentApplicationForm() {
             </div>
             <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-full uppercase tracking-wider">Available: {formatCurrency(availableLoanBalance)}</span>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FormField label="Net Disbursement Limit" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} placeholder="0.00" />
             <FormField label="Previously Released" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled placeholder="0.00" />
             <FormSelect label="Payment Type" name="payment_type" value={formData.payment_type} onChange={handleInputChange} options={PAYMENT_TYPE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} disabled={isReadOnly} />
-            <FormField 
-              label="Today Total Release *" 
-              name="today_release_amount" 
-              type="number" 
-              value={formData.today_release_amount} 
-              onChange={handleInputChange} 
-              required 
+            <FormField
+              label="Today Total Release *"
+              name="today_release_amount"
+              type="number"
+              value={formData.today_release_amount}
+              onChange={handleInputChange}
+              required
               disabled={isReadOnly}
               placeholder="0.00"
               icon={<Calculator size={16} className="text-blue-500" />}
@@ -1039,8 +1040,8 @@ export default function PaymentApplicationForm() {
                   {((Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100).toFixed(1)}%
                 </p>
                 <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-1000" 
+                  <div
+                    className="h-full bg-blue-600 transition-all duration-1000"
                     style={{ width: `${Math.min(100, (Number(formData.today_release_amount || 0) / (Number(formData.disbursement_amount) || 1)) * 100)}%` }}
                   />
                 </div>
@@ -1101,46 +1102,46 @@ export default function PaymentApplicationForm() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <FormField 
-                    label="Beneficiary Name *" 
-                    value={tx.beneficiary_name} 
-                    onChange={(e: any) => handleTransactionChange(index, 'beneficiary_name', e.target.value)} 
-                    required 
-                    placeholder="Enter name" 
-                    disabled={isReadOnly} 
+                  <FormField
+                    label="Beneficiary Name *"
+                    value={tx.beneficiary_name}
+                    onChange={(e: any) => handleTransactionChange(index, 'beneficiary_name', e.target.value)}
+                    required
+                    placeholder="Enter name"
+                    disabled={isReadOnly}
                   />
-                  <FormField 
-                    label="Bank Name *" 
-                    value={tx.bank_name} 
-                    onChange={(e: any) => handleTransactionChange(index, 'bank_name', e.target.value)} 
-                    required 
-                    placeholder="Enter bank" 
-                    disabled={isReadOnly} 
+                  <FormField
+                    label="Bank Name *"
+                    value={tx.bank_name}
+                    onChange={(e: any) => handleTransactionChange(index, 'bank_name', e.target.value)}
+                    required
+                    placeholder="Enter bank"
+                    disabled={isReadOnly}
                   />
-                  <FormField 
-                    label="Account Number *" 
-                    value={tx.account_number} 
-                    onChange={(e: any) => handleTransactionChange(index, 'account_number', e.target.value)} 
-                    required 
-                    placeholder="Enter account" 
-                    disabled={isReadOnly} 
+                  <FormField
+                    label="Account Number *"
+                    value={tx.account_number}
+                    onChange={(e: any) => handleTransactionChange(index, 'account_number', e.target.value)}
+                    required
+                    placeholder="Enter account"
+                    disabled={isReadOnly}
                   />
-                  <FormField 
-                    label="IFSC Code *" 
-                    value={tx.ifsc_code} 
-                    onChange={(e: any) => handleTransactionChange(index, 'ifsc_code', e.target.value)} 
-                    required 
-                    placeholder="IFSC Code" 
-                    disabled={isReadOnly} 
+                  <FormField
+                    label="IFSC Code *"
+                    value={tx.ifsc_code}
+                    onChange={(e: any) => handleTransactionChange(index, 'ifsc_code', e.target.value)}
+                    required
+                    placeholder="IFSC Code"
+                    disabled={isReadOnly}
                   />
-                  <FormField 
-                    label="Amount to Pay (₹) *" 
-                    type="number" 
-                    value={tx.amount} 
-                    onChange={(e: any) => handleTransactionChange(index, 'amount', e.target.value)} 
-                    required 
-                    placeholder="0.00" 
-                    disabled={isReadOnly} 
+                  <FormField
+                    label="Amount to Pay (₹) *"
+                    type="number"
+                    value={tx.amount}
+                    onChange={(e: any) => handleTransactionChange(index, 'amount', e.target.value)}
+                    required
+                    placeholder="0.00"
+                    disabled={isReadOnly}
                   />
                 </div>
               </div>
@@ -1183,136 +1184,136 @@ export default function PaymentApplicationForm() {
 
         {showAdvancedDetails && (
           <>
-        {/* Advanced: Loan Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <Building2 className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Loan Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Net Amount after Mehar PF" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Mehar PF (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
-            <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
-
-        {/* Advanced: Vehicle Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <Upload className="h-5 w-5 text-purple-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Vehicle Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Vehicle Model" name="vehicle_model" value={formData.vehicle_model} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Vehicle Number" name="vehicle_number" value={formData.vehicle_number} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Vehicle Type" name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
-
-        {/* Advanced: Branch & Manager Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <Building2 className="h-5 w-5 text-orange-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Branch & Manager Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Disbursement Branch" name="disbursement_branch" value={formData.disbursement_branch} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Branch Manager Name" name="branch_manager_name" value={formData.branch_manager_name} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
-
-        {/* Advanced: RTO Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <FileText className="h-5 w-5 text-teal-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">RTO Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="RTO Mobile Number" name="rto_mobile" value={formData.rto_mobile} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="DTO Location" name="dto_location" value={formData.dto_location} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="RTO Work" name="rto_work_type" value={formData.rto_work_type} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="RTO Document Location" name="rto_doc_location" value={formData.rto_doc_location} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
-
-        {/* Advanced: Document & Status Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Document & Status Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
-            <FormSelect label="NOC Status" name="noc_status" value={formData.noc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
-            <FormField label="Checked By (NOC Status)" name="noc_checked_by" value={formData.noc_checked_by} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
-
-        {/* Advanced: Payment & Foreclosure Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <Plus className="h-5 w-5 text-indigo-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Payment & Foreclosure Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Previously Released Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200/50 dark:border-orange-800/20 shadow-sm">
-              <label className="text-xs font-bold text-orange-600 uppercase mb-1 block text-left">Balance Payment Left (₹)</label>
-              <p className="text-2xl font-black text-orange-950 dark:text-orange-100 text-left underline decoration-double decoration-orange-300">
-                ₹{((Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0)).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
-              <label className="text-xs font-semibold text-blue-600 uppercase mb-1 block text-left">Total Payment Release Amount</label>
-              <p className="text-xl font-bold text-blue-900 dark:text-blue-100 text-left">₹{formData.total_release_amount?.toLocaleString()}</p>
-            </div>
-            <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg flex flex-col justify-center">
-              <div className="flex justify-between items-end mb-1">
-                <label className="text-xs font-semibold text-green-600 uppercase block text-left">Total Released (%)</label>
-                <label className="text-[10px] font-bold text-orange-600 uppercase block text-right">Payment Left (%)</label>
+            {/* Advanced: Loan Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <Building2 className="h-5 w-5 text-green-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Loan Details</h2>
               </div>
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-bold text-green-900 dark:text-green-100 text-left">{formData.total_release_percentage}%</p>
-                <p className="text-xl font-bold text-orange-900 dark:text-orange-100 text-right">{Math.max(0, 100 - (formData.total_release_percentage || 0)).toFixed(2)}%</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <FormField label="Financier Name" name="financier_name" value={formData.financier_name} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Loan Amount" name="loan_amount" type="number" value={formData.loan_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Net Amount after Mehar PF" name="disbursement_amount" type="number" value={formData.disbursement_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Disbursement Date" name="disbursement_date" type="date" value={formData.disbursement_date} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Tenure (Months)" name="tenure_months" type="number" value={formData.tenure_months} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="EMI Amount" name="emi_amount" type="number" value={formData.emi_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="EMI Mode" name="emi_mode" value={formData.emi_mode} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="IRR (%)" name="irr_percentage" type="number" value={formData.irr_percentage} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Mehar PF (₹)" name="mehar_deduction" type="number" value={formData.mehar_deduction} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormSelect label="Loan Type" name="loan_type" value={formData.loan_type} onChange={handleInputChange} options={['New', 'Refinance']} disabled={isReadOnly} />
+                <FormField label="File Booked Code" name="file_booked_code" value={formData.file_booked_code} onChange={handleInputChange} disabled={isReadOnly} />
               </div>
-              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mt-2 overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all"
-                  style={{ width: `${formData.total_release_percentage}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* Advanced: Hold & Balance Details */}
-        <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Hold & Balance Details</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
-            <FormField label="Hold Amount (Balance)" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
-          </div>
-        </section>
+            {/* Advanced: Vehicle Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <Upload className="h-5 w-5 text-purple-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Vehicle Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <FormField label="Vehicle Name" name="vehicle_name" value={formData.vehicle_name} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Vehicle Model" name="vehicle_model" value={formData.vehicle_model} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Vehicle Number" name="vehicle_number" value={formData.vehicle_number} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Vehicle Type" name="vehicle_type" value={formData.vehicle_type} onChange={handleInputChange} disabled={isReadOnly} />
+              </div>
+            </section>
+
+            {/* Advanced: Branch & Manager Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <Building2 className="h-5 w-5 text-orange-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Branch & Manager Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField label="Our Branch" name="branch_name" value={formData.branch_name} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Disbursement Branch" name="disbursement_branch" value={formData.disbursement_branch} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Branch Manager Name" name="branch_manager_name" value={formData.branch_manager_name} onChange={handleInputChange} disabled={isReadOnly} />
+              </div>
+            </section>
+
+            {/* Advanced: RTO Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <FileText className="h-5 w-5 text-teal-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">RTO Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <FormField label="RTO Agent Name" name="rto_agent_name" value={formData.rto_agent_name} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="RTO Mobile Number" name="rto_mobile" value={formData.rto_mobile} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="DTO Location" name="dto_location" value={formData.dto_location} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="RTO Work" name="rto_work_type" value={formData.rto_work_type} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="RTO Document Location" name="rto_doc_location" value={formData.rto_doc_location} onChange={handleInputChange} disabled={isReadOnly} />
+              </div>
+            </section>
+
+            {/* Advanced: Document & Status Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Document & Status Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <FormSelect label="RC Status" name="rc_status" value={formData.rc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
+                <FormSelect label="NOC Status" name="noc_status" value={formData.noc_status} onChange={handleInputChange} options={['Pending', 'OK']} disabled={isReadOnly} />
+                <FormField label="Checked By (NOC Status)" name="noc_checked_by" value={formData.noc_checked_by} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormCheckbox label="Insurance Available" name="insurance_available" checked={formData.insurance_available} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormCheckbox label="3rd Party Stamp" name="third_party_stamp" checked={formData.third_party_stamp} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormCheckbox label="NOC Stamp" name="noc_stamp" checked={formData.noc_stamp} onChange={handleInputChange} disabled={isReadOnly} />
+              </div>
+            </section>
+
+            {/* Advanced: Payment & Foreclosure Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <Plus className="h-5 w-5 text-indigo-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Payment & Foreclosure Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <FormField label="Foreclosure Amount" name="foreclosure_amount" type="number" value={formData.foreclosure_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Foreclosure Name" name="foreclosure_name" value={formData.foreclosure_name} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Previously Released Amount" name="old_release_amount" type="number" value={formData.old_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Today Payment Release Amount" name="today_release_amount" type="number" value={formData.today_release_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200/50 dark:border-orange-800/20 shadow-sm">
+                  <label className="text-xs font-bold text-orange-600 uppercase mb-1 block text-left">Balance Payment Left (₹)</label>
+                  <p className="text-2xl font-black text-orange-950 dark:text-orange-100 text-left underline decoration-double decoration-orange-300">
+                    ₹{((Number(formData.disbursement_amount) || 0) - (Number(formData.old_release_amount) || 0) - (Number(formData.today_release_amount) || 0)).toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                  <label className="text-xs font-semibold text-blue-600 uppercase mb-1 block text-left">Total Payment Release Amount</label>
+                  <p className="text-xl font-bold text-blue-900 dark:text-blue-100 text-left">₹{formData.total_release_amount?.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg flex flex-col justify-center">
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="text-xs font-semibold text-green-600 uppercase block text-left">Total Released (%)</label>
+                    <label className="text-[10px] font-bold text-orange-600 uppercase block text-right">Payment Left (%)</label>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-bold text-green-900 dark:text-green-100 text-left">{formData.total_release_percentage}%</p>
+                    <p className="text-xl font-bold text-orange-900 dark:text-orange-100 text-right">{Math.max(0, 100 - (formData.total_release_percentage || 0)).toFixed(2)}%</p>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mt-2 overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 transition-all"
+                      style={{ width: `${formData.total_release_percentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Advanced: Hold & Balance Details */}
+            <section className="glass-card p-6 rounded-xl border border-white/20 dark:border-white/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Hold & Balance Details</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField label="Challan Amount" name="challan_amount" type="number" value={formData.challan_amount} onChange={handleInputChange} disabled={isReadOnly} />
+                <FormField label="Hold Amount (Balance)" name="hold_amount" type="number" value={formData.hold_amount} onChange={handleInputChange} disabled={isReadOnly} />
+              </div>
+            </section>
           </>
         )}
 
@@ -1335,23 +1336,22 @@ export default function PaymentApplicationForm() {
             {/* Banking Docs - Left Side */}
             <div className="space-y-4">
               <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] text-left">Upload Banking Proofs</label>
-              
+
               <div className="relative group">
-                <input 
-                  type="file" 
-                  id="banking-docs-final" 
-                  multiple 
-                  onChange={handleBankingDocUpload} 
-                  className="hidden" 
-                  disabled={isReadOnly} 
+                <input
+                  type="file"
+                  id="banking-docs-final"
+                  multiple
+                  onChange={handleBankingDocUpload}
+                  className="hidden"
+                  disabled={isReadOnly}
                 />
-                <label 
-                  htmlFor="banking-docs-final" 
-                  className={`flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-3xl transition-all duration-300 ${
-                    isReadOnly 
-                      ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-900/10' 
-                      : 'border-blue-200 bg-blue-50/20 hover:bg-blue-50 hover:border-blue-400 cursor-pointer active:scale-95 shadow-inner'
-                  }`}
+                <label
+                  htmlFor="banking-docs-final"
+                  className={`flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-3xl transition-all duration-300 ${isReadOnly
+                    ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50 dark:bg-gray-900/10'
+                    : 'border-blue-200 bg-blue-50/20 hover:bg-blue-50 hover:border-blue-400 cursor-pointer active:scale-95 shadow-inner'
+                    }`}
                 >
                   <div className={`p-4 rounded-2xl shadow-sm mb-4 transition-all duration-300 ${isReadOnly ? 'bg-gray-100' : 'bg-white dark:bg-gray-800 group-hover:rotate-6 group-hover:scale-110'}`}>
                     <Upload size={32} className={isReadOnly ? "text-gray-300" : "text-blue-500"} />
@@ -1377,8 +1377,8 @@ export default function PaymentApplicationForm() {
                       </div>
                     </div>
                     {!isReadOnly && (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => removeBankingDoc(i)}
                         className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 hover:text-red-500 rounded-xl transition-colors"
                       >
@@ -1387,79 +1387,79 @@ export default function PaymentApplicationForm() {
                     )}
                   </div>
                 ))}
-                
+
                 {/* Server-Side Saved Files */}
                 {(formData.banking_documents || []).length > 0 && (
-                   <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
-                     <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                       <CheckCircle size={10} className="text-green-500" /> Currently Attached
-                     </p>
-                     <div className="space-y-2">
-                       {(formData.banking_documents || []).map((path, idx) => (
-                         <div key={idx} className="flex items-center gap-3 p-2.5 bg-green-50/30 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/20">
-                           <span className="text-[10px] font-black truncate text-green-700 dark:text-green-400 tracking-tight">{path.split('/').pop()}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
+                  <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
+                    <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <CheckCircle size={10} className="text-green-500" /> Currently Attached
+                    </p>
+                    <div className="space-y-2">
+                      {(formData.banking_documents || []).map((path, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2.5 bg-green-50/30 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/20">
+                          <span className="text-[10px] font-black truncate text-green-700 dark:text-green-400 tracking-tight">{path.split('/').pop()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Loan PDD Selection - Right Side */}
             <div className="space-y-4">
-               <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] text-left">Select From Loan File</label>
-               <div className="p-4 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border border-gray-100 dark:border-gray-800">
-                 <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 leading-relaxed text-left">
-                   Choose any existing documents from the loan account that are relevant to this disbursement request.
-                 </p>
-               </div>
-               
-               <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                  {pddDocuments.length > 0 ? (
-                    pddDocuments.map((doc, index) => {
-                      const docKey = doc.file_url || doc.file_path || String(doc.id || index);
-                      const docLabel = doc.document_name || doc.document_type || doc.file_name || `Document ${index + 1}`;
-                      const isSelected = formData.pdd_documents.includes(docKey);
-                      return (
-                        <div
-                          key={index}
-                          className={`p-4 border-2 rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between ${isSelected
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/10'
-                            : 'border-gray-100 dark:border-gray-800 hover:border-blue-200 hover:bg-white dark:hover:bg-gray-800 shadow-sm'
-                            }`}
-                          onClick={() => handlePddDocumentToggle(docKey)}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`p-2.5 rounded-xl transition-all ${isSelected ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
-                              <FileText size={18} />
-                            </div>
-                            <div className="min-w-0">
-                              <p className={`text-sm font-black truncate max-w-[180px] ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>{docLabel}</p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{doc.document_type || 'Loan Document'}</p>
-                            </div>
+              <label className="block text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] text-left">Select From Loan File</label>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border border-gray-100 dark:border-gray-800">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 leading-relaxed text-left">
+                  Choose any existing documents from the loan account that are relevant to this disbursement request.
+                </p>
+              </div>
+
+              <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {pddDocuments.length > 0 ? (
+                  pddDocuments.map((doc, index) => {
+                    const docKey = doc.file_url || doc.file_path || String(doc.id || index);
+                    const docLabel = doc.document_name || doc.document_type || doc.file_name || `Document ${index + 1}`;
+                    const isSelected = formData.pdd_documents.includes(docKey);
+                    return (
+                      <div
+                        key={index}
+                        className={`p-4 border-2 rounded-2xl cursor-pointer transition-all duration-200 flex items-center justify-between ${isSelected
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/10'
+                          : 'border-gray-100 dark:border-gray-800 hover:border-blue-200 hover:bg-white dark:hover:bg-gray-800 shadow-sm'
+                          }`}
+                        onClick={() => handlePddDocumentToggle(docKey)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-xl transition-all ${isSelected ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                            <FileText size={18} />
                           </div>
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-transparent'}`}>
-                             <CheckCircle size={14} />
+                          <div className="min-w-0">
+                            <p className={`text-sm font-black truncate max-w-[180px] ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>{docLabel}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{doc.document_type || 'Loan Document'}</p>
                           </div>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-900/30 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800 shadow-inner">
-                       <Activity size={32} className="text-gray-200 mb-3 animate-pulse" />
-                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest italic">No prior documents found</p>
-                    </div>
-                  )}
-               </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-transparent'}`}>
+                          <CheckCircle size={14} />
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-900/30 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800 shadow-inner">
+                    <Activity size={32} className="text-gray-200 mb-3 animate-pulse" />
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest italic">No prior documents found</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Remarks Area */}
           <div className="mt-10 pt-8 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-3">
-               <Receipt size={16} className="text-gray-400" />
-               <label className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-left">Official Remarks</label>
+              <Receipt size={16} className="text-gray-400" />
+              <label className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] text-left">Official Remarks</label>
             </div>
             <textarea
               name="remarks"

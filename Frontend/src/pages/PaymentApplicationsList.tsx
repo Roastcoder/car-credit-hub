@@ -246,6 +246,7 @@ export default function PaymentApplicationsList() {
       rto: 'RTO',
       agent: 'Agent',
       customer_balance: 'Customer Balance',
+      foreclosure: 'Foreclosure',
     };
     return labels[String(type || '').toLowerCase()] || 'Payment';
   };
