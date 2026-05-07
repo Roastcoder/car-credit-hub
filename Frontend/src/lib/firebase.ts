@@ -42,7 +42,7 @@ export const requestFcmToken = async () => {
       }
     }
   } catch (err) {
-    console.error('An error occurred while retrieving token. ', err);
+    // Silence FCM errors since we have a working fallback
   }
   return null;
 };

@@ -68,7 +68,7 @@ export const subscribeUserToPush = async (): Promise<any> => {
 
     return subscription;
   } catch (error) {
-    console.error('Push subscription error:', error);
+    // Silence errors since we fallback gracefully
     return null;
   }
 };
