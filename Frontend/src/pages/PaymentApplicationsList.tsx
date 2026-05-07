@@ -78,6 +78,7 @@ export default function PaymentApplicationsList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [subpageFilter, setSubpageFilter] = useState('all');
   const [releasePercentageFilter, setReleasePercentageFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadingForId, setUploadingForId] = useState<number | null>(null);
@@ -185,7 +186,16 @@ export default function PaymentApplicationsList() {
     else if (releasePercentageFilter === 'partial') matchesRelease = pct > 0 && pct < 100;
     else if (releasePercentageFilter === 'full') matchesRelease = pct >= 99.9; // Handling float precision
 
-    return matchesSearch && matchesStatus && matchesRelease;
+    let matchesSubpage = true;
+    if (subpageFilter === 'requests') {
+      matchesSubpage = ['draft', 'submitted', 'sent_back', 'manager_rejected'].includes(app.status);
+    } else if (subpageFilter === 'approved') {
+      matchesSubpage = ['manager_approved', 'account_processing', 'voucher_created', 'payment_released'].includes(app.status);
+    } else if (subpageFilter === 'completed') {
+      matchesSubpage = app.status === 'completed';
+    }
+
+    return matchesSearch && matchesStatus && matchesRelease && matchesSubpage;
   });
 
   const groupedApplications: LoanPaymentGroup[] = Object.values(
@@ -263,6 +273,29 @@ export default function PaymentApplicationsList() {
       </div>
 
       <MobilePageSwitcher options={appSwitcherOptions} activeLabel="Application List" />
+
+      {/* Subpage Tabs */}
+      <div className="flex overflow-x-auto gap-2 mb-6 border-b border-gray-200 dark:border-gray-800 pb-px hide-scrollbar">
+        {[
+          { id: 'all', label: 'All Applications', icon: <Layers size={16} /> },
+          { id: 'requests', label: 'Pending Requests', icon: <CircleDashed size={16} /> },
+          { id: 'approved', label: 'In Process', icon: <CheckCircle2 size={16} /> },
+          { id: 'completed', label: 'Completed', icon: <Receipt size={16} /> },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setSubpageFilter(tab.id)}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold whitespace-nowrap border-b-2 transition-all duration-300 ${
+              subpageFilter === tab.id
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 dark:text-gray-400 dark:hover:text-white'
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* Eligible Loans Quick Start */}
       {eligibleLoans.length > 0 && (
