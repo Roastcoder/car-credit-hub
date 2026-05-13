@@ -184,7 +184,7 @@ export default function PaymentApplicationForm() {
     insurance_available: false,
     third_party_stamp: false,
     noc_stamp: false,
-    is_third_party: false,
+    is_third_party: undefined,
     foreclosure_amount: 0,
     foreclosure_name: '',
     old_release_amount: 0,
