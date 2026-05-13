@@ -707,7 +707,8 @@ export default function PaymentDetail() {
   const ledgerDebitTotal = ledgerDebitTotalSum;
   const remainingLoanBalance = ledgerCreditTotalSum - ledgerDebitTotalSum;
 
-  const canApprove = ['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted';
+  const canApprove = (['rbm', 'admin', 'super_admin'].includes(user?.role || '') && payment.status === 'submitted') ||
+    (user?.role === 'super_admin' && ['manager_approved', 'voucher_created', 'payment_released'].includes(payment.status));
   const canAddUTR = (['accountant', 'admin', 'super_admin'].includes(user?.role || '')) &&
     (payment.status === 'manager_approved' ||
      payment.status === 'voucher_created' || 
