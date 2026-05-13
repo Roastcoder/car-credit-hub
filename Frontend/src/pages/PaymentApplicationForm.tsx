@@ -6,7 +6,7 @@ import { paymentApplicationAPI, loansAPI } from '@/lib/api';
 import {
   Upload, FileText, Plus, X, Save, Send,
   User, Building2, CreditCard, Calendar,
-  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt, IndianRupee, Calculator
+  AlertCircle, CheckCircle, Clock, Search, ChevronRight, List, Info, SlidersHorizontal, Activity, Receipt, IndianRupee, Calculator, ShieldCheck
 } from 'lucide-react';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
 import { formatCurrency } from '@/lib/utils';
@@ -1118,14 +1118,29 @@ export default function PaymentApplicationForm() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <FormField
-                    label="Beneficiary Name *"
-                    value={tx.beneficiary_name}
-                    onChange={(e: any) => handleTransactionChange(index, 'beneficiary_name', e.target.value)}
-                    required
-                    placeholder="Enter name"
-                    disabled={isReadOnly}
-                  />
+                  <div className="relative">
+                    <FormField
+                      label="Beneficiary Name *"
+                      value={tx.beneficiary_name}
+                      onChange={(e: any) => handleTransactionChange(index, 'beneficiary_name', e.target.value)}
+                      required
+                      placeholder="Enter name"
+                      disabled={isReadOnly}
+                    />
+                    {tx.beneficiary_name && (
+                      <div className="absolute right-3 top-[38px]">
+                        {normalize(tx.beneficiary_name) === applicantNormalized || normalize(tx.beneficiary_name) === 'customer' || normalize(tx.beneficiary_name) === 'self' ? (
+                          <span className="flex items-center gap-1 text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 uppercase tracking-tighter">
+                            <CheckCircle size={10} /> Customer
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[9px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-tighter shadow-sm animate-pulse">
+                            <ShieldCheck size={10} /> Third Party
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <FormField
                     label="Bank Name *"
                     value={tx.bank_name}
