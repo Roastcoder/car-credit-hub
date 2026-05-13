@@ -19,6 +19,7 @@ export default function Commission() {
     if ((commissions as any[]).length === 0) { toast.error('No data to export'); return; }
     const rows = (commissions as any[]).map((c: any) => ({
       'ID': c.id,
+      'Booking Month': c.loans?.booking_month || '—',
       'Loan': c.loans?.applicant_name || '',
       'Loan ID': c.loan_id,
       'Broker': c.brokers?.name || '',
@@ -28,6 +29,7 @@ export default function Commission() {
       'Status': c.status,
       'Paid Date': c.paid_date || '',
     }));
+
     exportToCSV(rows, 'commission-report');
     toast.success('Commission report exported as CSV!');
   };

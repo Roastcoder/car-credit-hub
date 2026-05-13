@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI, branchesAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS } from '@/lib/constants';
+import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS, MONTHS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
@@ -19,6 +19,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DocumentUploadCard = ({
   label,
@@ -306,6 +313,8 @@ export default function CreateLoan() {
       localStorage.setItem('loan_form_draft', JSON.stringify(draftToSave));
     }
   }, [form, id]);
+
+
 
   if (!permissions.canCreateLoan && !id) {
     return (
@@ -1526,7 +1535,24 @@ export default function CreateLoan() {
                         readOnly
                       />
                     </div>
-                    <div><label className={labelClass}>Booking Month</label><input className={inputClass} value={form.bookingMonth} onChange={e => update('bookingMonth', e.target.value)} placeholder="e.g. April 2024" /></div>
+                    <div>
+                      <label className={labelClass}>Booking Month</label>
+                      <input
+                        className={inputClass}
+                        value={form.bookingMonth}
+                        onChange={e => update('bookingMonth', e.target.value)}
+                        placeholder="e.g. April 2024"
+                        list="booking-month-datalist"
+                      />
+                      <datalist id="booking-month-datalist">
+                        {MONTHS.map(m => (
+                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`} />
+                        ))}
+                        {MONTHS.map(m => (
+                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`} />
+                        ))}
+                      </datalist>
+                    </div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                     <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>

@@ -76,20 +76,33 @@ export default function Reports() {
 
   const handleExportCSV = () => {
     if (loans.length === 0) { toast.error('No data to export'); return; }
-    const rows = loans.map(l => ({
-      'Loan ID': l.id,
-      'Applicant': l.applicant_name,
-      'Mobile': l.mobile,
-      'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
-      'Bank': l.bank_name || l.banks?.name || '',
-      'Broker': l.broker_name || l.brokers?.name || '',
-      'Loan Amount': l.loan_amount,
-      'EMI': l.emi,
-      'Tenure': l.tenure,
-      'Interest Rate': l.interest_rate,
-      'Status': STATUS_LABELS[l.status] || l.status,
-      'Created': new Date(l.created_at).toLocaleDateString('en-IN'),
-    }));
+    const rows = loans.map(l => {
+      // Use existing booking_month if available, otherwise compute it as fallback
+      let bookingMonth = l.booking_month;
+      if (!bookingMonth) {
+        const date = new Date(l.created_at);
+        if (!isNaN(date.getTime())) {
+          bookingMonth = date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+        }
+      }
+
+      return {
+        'Loan ID': l.id,
+        'Booking Month': bookingMonth || '—',
+        'Applicant': l.applicant_name,
+        'Mobile': l.mobile,
+        'Vehicle': `${l.car_make || ''} ${l.car_model || ''}`.trim(),
+        'Bank': l.bank_name || l.banks?.name || '',
+        'Broker': l.broker_name || l.brokers?.name || '',
+        'Loan Amount': l.loan_amount,
+        'EMI': l.emi,
+        'Tenure': l.tenure,
+        'Interest Rate': l.interest_rate,
+        'Status': STATUS_LABELS[l.status] || l.status,
+        'Created': new Date(l.created_at).toLocaleDateString('en-IN'),
+      };
+    });
+
     exportToCSV(rows, 'loan-report');
     toast.success('Report exported as CSV!');
   };
