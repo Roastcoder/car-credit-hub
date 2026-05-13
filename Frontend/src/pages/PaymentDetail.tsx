@@ -1034,6 +1034,39 @@ export default function PaymentDetail() {
                 </Section>
               </div>
 
+              {/* Transactions List */}
+              {payment.transactions && payment.transactions.length > 0 && (
+                <div className="lg:col-span-2">
+                  <Section title="Beneficiary Transactions Breakdown" icon={<Building2 size={20} />}>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50 text-left">
+                          <tr>
+                            <th className="p-3 font-semibold">Type</th>
+                            <th className="p-3 font-semibold">Beneficiary Name</th>
+                            <th className="p-3 font-semibold">Bank Details</th>
+                            <th className="p-3 font-semibold text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {payment.transactions.map((tx) => (
+                            <tr key={tx.id} className="hover:bg-muted/30">
+                              <td className="p-3 capitalize font-medium text-accent">{tx.type}</td>
+                              <td className="p-3">{tx.beneficiary_name}</td>
+                              <td className="p-3">
+                                <p className="font-mono text-[11px]">{tx.bank_name}</p>
+                                <p className="text-muted-foreground text-[10px]">{tx.account_number} | {tx.ifsc_code}</p>
+                              </td>
+                              <td className="p-3 text-right font-bold text-emerald-600">{formatCurrency(tx.amount)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Section>
+                </div>
+              )}
+
               {/* Payment Release Breakdown */}
               <Section title="Payment Release Breakdown" icon={<CreditCard size={20} />}>
                 <div className="grid grid-cols-2 gap-4">

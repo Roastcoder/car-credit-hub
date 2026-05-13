@@ -246,10 +246,10 @@ export default function PaymentApplicationForm() {
       beneficiaryPaymentName !== 'customer' &&
       beneficiaryPaymentName !== 'self');
 
-  const needsPaymentVerification = isBeneficiaryPayment &&
+  const needsPaymentVerification = (isBeneficiaryPayment || formData.is_third_party) &&
     formData.status !== 'sent_back' &&
     user?.role !== 'super_admin' &&
-    Number(formData.today_release_amount || formData.disbursement_amount || 0) > 0;
+    requestedPaymentAmount > 0;
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
@@ -635,7 +635,7 @@ export default function PaymentApplicationForm() {
           body: JSON.stringify({
             phone: formData.applicant_phone,
             applicant_name: formData.applicant_name,
-            payment_amount: formData.payment_amount,
+            payment_amount: requestedPaymentAmount,
             disbursement_amount: formData.disbursement_amount
           })
         });
@@ -738,9 +738,9 @@ export default function PaymentApplicationForm() {
         status,
         aadhaar_number: needsVerification ? aadhaarNumber : null,
         aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified',
-        payment_type: formData.payment_type || firstTransaction.type,
-        payment_in_favour_name: formData.payment_in_favour_name || firstTransaction.beneficiary_name,
-        transactions: [firstTransaction]
+        payment_type: formData.payment_type || transactions[0]?.type,
+        payment_in_favour_name: formData.payment_in_favour_name || transactions[0]?.beneficiary_name,
+        transactions: transactions
       };
 
       if (id) {
@@ -1089,21 +1089,35 @@ export default function PaymentApplicationForm() {
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
                     {!isReadOnly && index === 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleTransactionChange(index, 'beneficiary_name', formData.applicant_name);
-                          handleTransactionChange(index, 'bank_name', formData.bank_name);
-                          handleTransactionChange(index, 'account_number', formData.account_number);
-                          handleTransactionChange(index, 'ifsc_code', formData.ifsc_code);
-                          toast.info('Transaction #1 set to Customer');
-                        }}
-                        className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
-                      >
-                        Same as Customer
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={!!formData.is_third_party}
+                            onChange={(e) => setFormData(prev => ({ ...prev, is_third_party: e.target.checked }))}
+                            className="w-4 h-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600 uppercase tracking-wider">
+                            Third Party Payment
+                          </span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleTransactionChange(index, 'beneficiary_name', formData.applicant_name);
+                            handleTransactionChange(index, 'bank_name', formData.bank_name);
+                            handleTransactionChange(index, 'account_number', formData.account_number);
+                            handleTransactionChange(index, 'ifsc_code', formData.ifsc_code);
+                            setFormData(prev => ({ ...prev, is_third_party: false }));
+                            toast.info('Transaction #1 set to Customer');
+                          }}
+                          className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
+                        >
+                          Same as Customer
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1151,8 +1165,27 @@ export default function PaymentApplicationForm() {
                     disabled={isReadOnly}
                   />
                 </div>
+                {!isReadOnly && transactions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTransaction(index)}
+                    className="absolute -top-2 -right-2 h-6 w-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors shadow-sm"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             ))}
+
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={addTransaction}
+                className="w-full py-4 border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-bold flex items-center justify-center gap-2"
+              >
+                + Add Another Beneficiary / Payment
+              </button>
+            )}
           </div>
 
           <div className="mt-6 p-4 bg-blue-600 text-white rounded-xl flex items-center justify-between shadow-lg shadow-blue-500/20">
