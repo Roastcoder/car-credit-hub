@@ -241,7 +241,7 @@ export default function PaymentApplicationForm() {
            name !== 'self';
   });
 
-  const needsPaymentVerification = (isBeneficiaryPayment || formData.is_third_party) &&
+  const needsPaymentVerification = isBeneficiaryPayment &&
     formData.status !== 'sent_back' &&
     user?.role !== 'super_admin' &&
     requestedPaymentAmount > 0;
@@ -741,8 +741,9 @@ export default function PaymentApplicationForm() {
         today_release_amount: isRaiseRemainingMode ? (formData.today_release_amount !== undefined && formData.today_release_amount !== 0 ? Number(formData.today_release_amount) : remainingLoanAmount) : formData.today_release_amount,
         payment_amount: isRaiseRemainingMode ? (formData.today_release_amount !== undefined && formData.today_release_amount !== 0 ? Number(formData.today_release_amount) : remainingLoanAmount) : formData.today_release_amount,
         status,
-        aadhaar_number: needsVerification ? aadhaarNumber : null,
-        aadhaar_verified: needsVerification && aadhaarVerificationStatus === 'verified',
+        is_third_party: isBeneficiaryPayment,
+        aadhaar_number: needsPaymentVerification ? aadhaarNumber : null,
+        aadhaar_verified: needsPaymentVerification && aadhaarVerificationStatus === 'verified',
         payment_type: formData.payment_type || transactions[0]?.type,
         payment_in_favour_name: formData.payment_in_favour_name || transactions[0]?.beneficiary_name,
         transactions: transactions
@@ -1097,17 +1098,6 @@ export default function PaymentApplicationForm() {
                   <div className="flex items-center gap-4">
                     {!isReadOnly && index === 0 && (
                       <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={!!formData.is_third_party}
-                            onChange={(e) => setFormData(prev => ({ ...prev, is_third_party: e.target.checked }))}
-                            className="w-4 h-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600 uppercase tracking-wider">
-                            Third Party Payment
-                          </span>
-                        </label>
                         <button
                           type="button"
                           onClick={() => {
@@ -1115,7 +1105,6 @@ export default function PaymentApplicationForm() {
                             handleTransactionChange(index, 'bank_name', formData.bank_name);
                             handleTransactionChange(index, 'account_number', formData.account_number);
                             handleTransactionChange(index, 'ifsc_code', formData.ifsc_code);
-                            setFormData(prev => ({ ...prev, is_third_party: false }));
                             toast.info('Transaction #1 set to Customer');
                           }}
                           className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 px-3 py-1.5 rounded-lg uppercase tracking-wider transition-colors"
