@@ -241,8 +241,7 @@ export default function PaymentApplicationForm() {
   });
 
   const needsPaymentVerification = isBeneficiaryPayment &&
-    formData.status !== 'sent_back' &&
-    user?.role !== 'super_admin';
+    formData.status !== 'sent_back';
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
