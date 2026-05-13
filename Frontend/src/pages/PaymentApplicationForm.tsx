@@ -231,14 +231,15 @@ export default function PaymentApplicationForm() {
   const requestedPaymentAmount = Number(formData.today_release_amount || formData.payment_amount || 0);
   const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
   const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode && user?.role !== 'super_admin';
-  const applicantPaymentName = formData.applicant_name?.toLowerCase().trim();
+  const normalize = (val?: string) => (val || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+  const applicantNormalized = normalize(formData.applicant_name);
   
   const isBeneficiaryPayment = transactions.some(tx => {
-    const name = tx.beneficiary_name?.toLowerCase().trim();
-    return name && 
-           name !== applicantPaymentName && 
-           name !== 'customer' && 
-           name !== 'self';
+    const nameNormalized = normalize(tx.beneficiary_name);
+    return nameNormalized && 
+           nameNormalized !== applicantNormalized && 
+           nameNormalized !== 'customer' && 
+           nameNormalized !== 'self';
   });
 
   const needsPaymentVerification = isBeneficiaryPayment &&
