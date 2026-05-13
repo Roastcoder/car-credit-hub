@@ -1535,24 +1535,6 @@ export default function CreateLoan() {
                         readOnly
                       />
                     </div>
-                    <div>
-                      <label className={labelClass}>Booking Month</label>
-                      <input
-                        className={inputClass}
-                        value={form.bookingMonth}
-                        onChange={e => update('bookingMonth', e.target.value)}
-                        placeholder="e.g. April 2024"
-                        list="booking-month-datalist"
-                      />
-                      <datalist id="booking-month-datalist">
-                        {MONTHS.map(m => (
-                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`} />
-                        ))}
-                        {MONTHS.map(m => (
-                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`} />
-                        ))}
-                      </datalist>
-                    </div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                     <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
@@ -2067,6 +2049,24 @@ export default function CreateLoan() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
+                  <div>
+                    <label className={labelClass}>Booking Month</label>
+                    <input
+                      className={inputClass}
+                      value={form.bookingMonth}
+                      onChange={e => update('bookingMonth', e.target.value)}
+                      placeholder="e.g. April 2024"
+                      list="booking-month-datalist-new"
+                    />
+                    <datalist id="booking-month-datalist-new">
+                      {MONTHS.map(m => (
+                        <option key={`${m}-curr-new`} value={`${m} ${new Date().getFullYear()}`} />
+                      ))}
+                      {MONTHS.map(m => (
+                        <option key={`${m}-prev-new`} value={`${m} ${new Date().getFullYear() - 1}`} />
+                      ))}
+                    </datalist>
+                  </div>
                   <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
                 </div>
