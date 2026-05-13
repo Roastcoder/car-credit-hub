@@ -262,6 +262,16 @@ export default function PaymentApplicationForm() {
       }
       if (data.transactions && data.transactions.length > 0) {
         setTransactions(data.transactions);
+      } else {
+        // Fallback for legacy applications: pre-fill from top-level fields
+        setTransactions([{
+          beneficiary_name: data.payment_in_favour_name || data.applicant_name || '',
+          bank_name: data.bank_name || '',
+          account_number: data.account_number || '',
+          ifsc_code: data.ifsc_code || '',
+          amount: Number(data.today_release_amount || data.payment_amount || 0),
+          type: data.payment_type || 'dealer'
+        }]);
       }
       // Also fetch PDD documents for the loan associated with this application
       if (data.loan_id) {
