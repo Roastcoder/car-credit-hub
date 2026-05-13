@@ -96,7 +96,7 @@ const DocumentUploadCard = ({
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "group relative bg-card border rounded-xl p-3 transition-all hover:shadow-md",
         isExpanded ? "col-span-full border-accent/40 bg-accent/5 shadow-lg" : "border-border hover:border-accent/40",
@@ -395,7 +395,7 @@ export default function CreateLoan() {
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-4">Read-Only Access</h2>
         <p className="text-muted-foreground mb-8">
-          This loan application was booked via a broker and is read-only for your account. 
+          This loan application was booked via a broker and is read-only for your account.
           Please contact the branch manager for any modifications.
         </p>
         <div className="flex justify-center gap-4">
@@ -1535,6 +1535,24 @@ export default function CreateLoan() {
                         readOnly
                       />
                     </div>
+                    <div>
+                      <label className={labelClass}>Booking Month</label>
+                      <input
+                        className={inputClass}
+                        value={form.bookingMonth}
+                        onChange={e => update('bookingMonth', e.target.value)}
+                        placeholder="e.g. April 2024"
+                        list="booking-month-datalist"
+                      />
+                      <datalist id="booking-month-datalist">
+                        {MONTHS.map(m => (
+                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`} />
+                        ))}
+                        {MONTHS.map(m => (
+                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`} />
+                        ))}
+                      </datalist>
+                    </div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
                     <div className="md:col-span-3"><label className={labelClass}>Address</label><textarea className={inputClass} rows={2} value={form.currentAddress} onChange={e => update('currentAddress', e.target.value)} /></div>
@@ -1604,8 +1622,8 @@ export default function CreateLoan() {
                       {rcCacheStatus && (
                         <div className="absolute -bottom-6 left-0">
                           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${rcCacheStatus === 'db'
-                              ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                              : 'bg-green-500/10 text-green-600 border-green-500/20'
+                            ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                            : 'bg-green-500/10 text-green-600 border-green-500/20'
                             }`}>
                             <div className={`w-1 h-1 rounded-full ${rcCacheStatus === 'db' ? 'bg-blue-500' : 'bg-green-500 animate-pulse'}`} />
                             {rcCacheStatus === 'db' ? 'from db' : 'Live API Response'}
@@ -1720,10 +1738,10 @@ export default function CreateLoan() {
                                     <td className="p-3 text-right font-bold text-foreground">₹{(c.amount || 0).toLocaleString()}</td>
                                     <td className="p-3 text-center">
                                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.challan_status === 'Pending'
-                                          ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                                          : c.challan_status
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                            : 'bg-muted text-muted-foreground'
+                                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                        : c.challan_status
+                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                          : 'bg-muted text-muted-foreground'
                                         }`}>
                                         {c.challan_status || 'Unknown'}
                                       </span>
@@ -1821,7 +1839,7 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
                     <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
-                    
+
                     <div className="md:col-span-3"><label className={labelClass}>RTO Work Description</label><input className={inputClass} value={form.rtoWorkDescription} onChange={e => update('rtoWorkDescription', e.target.value)} /></div>
 
                     <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/30">
@@ -2049,24 +2067,6 @@ export default function CreateLoan() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div><label className={labelClass}>Login Date</label><input type="date" className={inputClass} value={form.loginDate} onChange={e => update('loginDate', e.target.value)} /></div>
-                  <div>
-                    <label className={labelClass}>Booking Month</label>
-                    <input
-                      className={inputClass}
-                      value={form.bookingMonth}
-                      onChange={e => update('bookingMonth', e.target.value)}
-                      placeholder="e.g. April 2024"
-                      list="booking-month-datalist-new"
-                    />
-                    <datalist id="booking-month-datalist-new">
-                      {MONTHS.map(m => (
-                        <option key={`${m}-curr-new`} value={`${m} ${new Date().getFullYear()}`} />
-                      ))}
-                      {MONTHS.map(m => (
-                        <option key={`${m}-prev-new`} value={`${m} ${new Date().getFullYear() - 1}`} />
-                      ))}
-                    </datalist>
-                  </div>
                   <div><label className={labelClass}>Approval Date</label><input type="date" className={inputClass} value={form.approvalDate} onChange={e => update('approvalDate', e.target.value)} /></div>
                   <div><label className={labelClass}>Sourcing Person</label><input className={inputClass} value={form.sourcingPersonName} onChange={e => update('sourcingPersonName', e.target.value)} /></div>
                 </div>
@@ -2499,8 +2499,8 @@ export default function CreateLoan() {
         </div>
       )}
 
-      <Dialog 
-        open={showDeleteDocModal} 
+      <Dialog
+        open={showDeleteDocModal}
         onOpenChange={(open) => !open && setShowDeleteDocModal(false)}
       >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">

@@ -399,12 +399,18 @@ export default function PaymentApplicationForm() {
       const totalAlreadyReleased = loanApps.reduce((sum: number, app: any) =>
         sum + (Number(app.voucher_amount || app.payment_amount) || 0), 0);
 
+      const initialTodayRelease = 0; // Set to 0 to allow manual entry as requested
       setFormData(prev => ({
         ...prev,
         old_release_amount: totalAlreadyReleased,
-        today_release_amount: Math.max(0, (Number(prev.disbursement_amount) || 0) - totalAlreadyReleased),
-        hold_amount: 0
+        today_release_amount: initialTodayRelease,
+        hold_amount: Math.max(0, (Number(d.net_disbursement_amount || d.disbursement_amount || 0)) - totalAlreadyReleased)
       }));
+
+      setTransactions(prev => [{
+        ...prev[0],
+        amount: initialTodayRelease
+      }]);
 
     } catch (error) {
       console.error('Error fetching loan data:', error);
@@ -493,6 +499,7 @@ export default function PaymentApplicationForm() {
         ...f,
         today_release_amount: totalTxAmount,
         payment_amount: totalTxAmount,
+        hold_amount: Math.max(0, (Number(f.disbursement_amount) || 0) - (Number(f.old_release_amount) || 0) - totalTxAmount),
         ...(index === 0 && field === 'type' ? { payment_type: value } : {}),
         ...(index === 0 && field === 'beneficiary_name' ? { payment_in_favour_name: value } : {}),
         ...(index === 0 && field === 'bank_name' ? { bank_name: value } : {}),
@@ -516,10 +523,6 @@ export default function PaymentApplicationForm() {
       const oldAmt = Number(newData.old_release_amount) || 0;
 
       if (name === 'today_release_amount') {
-        if ((numValue as number) > Math.max(0, disbursementAmt - oldAmt)) {
-          toast.error('Payment amount cannot exceed available loan balance');
-          return prev;
-        }
         const remaining = disbursementAmt - oldAmt - (numValue as number);
         newData.hold_amount = Math.max(0, parseFloat(remaining.toFixed(2)));
 
@@ -769,6 +772,10 @@ export default function PaymentApplicationForm() {
       total_release_amount: totalReleased + remainingLoanAmount,
       hold_amount: Math.max(0, (Number(prev.disbursement_amount) || 0) - totalReleased - remainingLoanAmount),
     }));
+    setTransactions(prev => [{
+      ...prev[0],
+      amount: remainingLoanAmount
+    }]);
     toast.success('Remaining amount request opened on this application');
   };
 
@@ -1163,7 +1170,7 @@ export default function PaymentApplicationForm() {
             </div>
           </div>
 
-          {Number(formData.today_release_amount || 0) !== transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0) && (
+          {Math.abs(Number(formData.today_release_amount || 0) - transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0)) > 0.1 && (
             <div className="mt-3 flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
               <AlertCircle size={14} />
               Error: Transaction sum must match the "Pay Today" amount (Section 2).
