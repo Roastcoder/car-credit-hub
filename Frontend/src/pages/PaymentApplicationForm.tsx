@@ -231,20 +231,15 @@ export default function PaymentApplicationForm() {
   const requestedPaymentAmount = Number(formData.today_release_amount || formData.payment_amount || 0);
   const canRaiseRemainingAmount = !!id && formData.status === 'completed' && remainingLoanAmount > 0;
   const isReadOnly = !!id && !!formData.status && !editableStatuses.includes(formData.status) && !isRaiseRemainingMode && user?.role !== 'super_admin';
-  const normalizePaymentName = (name?: string) => String(name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  const applicantPaymentName = normalizePaymentName(formData.applicant_name);
-  const beneficiaryPaymentName = normalizePaymentName(formData.payment_in_favour_name);
-
-  // A payment is a beneficiary payment if:
-  // 1. It is explicitly marked as third party, OR
-  // 2. The names don't match and it's not explicitly marked as NOT third party
-  const isBeneficiaryPayment = formData.is_third_party === true ||
-    (formData.is_third_party !== false &&
-      !!applicantPaymentName &&
-      !!beneficiaryPaymentName &&
-      applicantPaymentName !== beneficiaryPaymentName &&
-      beneficiaryPaymentName !== 'customer' &&
-      beneficiaryPaymentName !== 'self');
+  const applicantPaymentName = formData.applicant_name?.toLowerCase().trim();
+  
+  const isBeneficiaryPayment = transactions.some(tx => {
+    const name = tx.beneficiary_name?.toLowerCase().trim();
+    return name && 
+           name !== applicantPaymentName && 
+           name !== 'customer' && 
+           name !== 'self';
+  });
 
   const needsPaymentVerification = (isBeneficiaryPayment || formData.is_third_party) &&
     formData.status !== 'sent_back' &&
