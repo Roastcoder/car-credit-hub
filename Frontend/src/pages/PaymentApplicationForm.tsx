@@ -236,16 +236,13 @@ export default function PaymentApplicationForm() {
   
   const isBeneficiaryPayment = transactions.some(tx => {
     const nameNormalized = normalize(tx.beneficiary_name);
-    return nameNormalized && 
-           nameNormalized !== applicantNormalized && 
-           nameNormalized !== 'customer' && 
-           nameNormalized !== 'self';
+    const isThirdPartyType = ['dealer', 'rto', 'agent', 'foreclosure'].includes(tx.type);
+    return (nameNormalized && nameNormalized !== applicantNormalized && nameNormalized !== 'customer' && nameNormalized !== 'self') || isThirdPartyType;
   });
 
   const needsPaymentVerification = isBeneficiaryPayment &&
     formData.status !== 'sent_back' &&
-    user?.role !== 'super_admin' &&
-    requestedPaymentAmount > 0;
+    user?.role !== 'super_admin';
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
