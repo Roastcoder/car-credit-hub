@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, externalAPI, loansAPI, branchesAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS, MONTHS } from '@/lib/constants';
+import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS, MONTHS, FINANCERS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
 import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
@@ -1510,21 +1510,32 @@ export default function CreateLoan() {
                         ))}
                       </div>
                     </div>
+                    <div>
+                      <label className={labelClass}>Income Source</label>
+                      <select className={inputClass} value={form.incomeSource} onChange={e => update('incomeSource', e.target.value)}>
+                        <option value="">Select Income Source</option>
+                        <option value="Salaried">Salaried</option>
+                        <option value="Self Employed">Self Employed</option>
+                        <option value="Business">Business</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} /></div>
                     <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                     <div>
                       <label className={labelClass}>Our Branch</label>
-                      <input
+                      <select
                         className={inputClass}
                         value={form.ourBranch}
                         onChange={e => update('ourBranch', e.target.value)}
-                        list="branches-datalist"
-                      />
-                      <datalist id="branches-datalist">
+                      >
+                        <option value="">Select Branch</option>
                         {branches.map((b: any) => (
-                          <option key={b.id} value={b.name} />
+                          <option key={b.id} value={b.name}>{b.name}</option>
                         ))}
-                      </datalist>
+                      </select>
                     </div>
                     <div>
                       <label className={labelClass}>Branch Manager Name</label>
@@ -1537,21 +1548,19 @@ export default function CreateLoan() {
                     </div>
                     <div>
                       <label className={labelClass}>Booking Month</label>
-                      <input
+                      <select
                         className={inputClass}
                         value={form.bookingMonth}
                         onChange={e => update('bookingMonth', e.target.value)}
-                        placeholder="e.g. April 2024"
-                        list="booking-month-datalist"
-                      />
-                      <datalist id="booking-month-datalist">
+                      >
+                        <option value="">Select Month</option>
                         {MONTHS.map(m => (
-                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`} />
+                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`}>{m} {new Date().getFullYear()}</option>
                         ))}
                         {MONTHS.map(m => (
-                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`} />
+                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`}>{m} {new Date().getFullYear() - 1}</option>
                         ))}
-                      </datalist>
+                      </select>
                     </div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
@@ -1633,8 +1642,21 @@ export default function CreateLoan() {
                     </div>
                   </div>
                   <div><label className={labelClass}>RC Owner Name</label><input className={inputClass} value={form.rcOwnerName} onChange={e => update('rcOwnerName', e.target.value)} /></div>
-                  <div><label className={labelClass}>HPN / Financed Status</label><input className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)} placeholder="Auto-filled from RC" /></div>
-                  <div><label className={labelClass}>Maker's Name</label><input className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)} /></div>
+                  <div>
+                    <label className={labelClass}>HPN / Financed Status</label>
+                    <select className={inputClass} value={form.hpnAtLogin} onChange={e => update('hpnAtLogin', e.target.value)}>
+                      <option value="">Select Financier</option>
+                      {FINANCERS.map(f => <option key={f} value={f}>{f}</option>)}
+                      <option value="SELF">SELF / NO HPN</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Maker's Name</label>
+                    <select className={inputClass} value={form.makerName} onChange={e => update('makerName', e.target.value)}>
+                      <option value="">Select Maker</option>
+                      {CAR_MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
                   <div><label className={labelClass}>Model / Variant</label><input className={inputClass} value={form.modelVariantName} onChange={e => update('modelVariantName', e.target.value)} /></div>
                   <div><label className={labelClass}>Mfg Year <span className="text-[10px] text-accent opacity-70 ml-1 font-normal">(Auto)</span></label><input type="number" className={inputClass} value={form.mfgYear} onChange={e => update('mfgYear', e.target.value)} min="2000" max="2030" /></div>
                   <div><label className={labelClass}>Chassis Number</label><input className={inputClass} value={form.chassisNumber} onChange={e => update('chassisNumber', e.target.value)} /></div>
@@ -1836,7 +1858,13 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>Agent Email</label><input className={inputClass} value={form.rtoMail} onChange={e => update('rtoMail', e.target.value)} /></div>
 
                     {/* RTO Work Details Group */}
-                    <div><label className={labelClass}>New Financier</label><input className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>New Financier</label>
+                      <select className={inputClass} value={form.newFinancier} onChange={e => update('newFinancier', e.target.value)}>
+                        <option value="">Select Financier</option>
+                        {FINANCERS.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
                     <div><label className={labelClass}>DTO Location</label><input className={inputClass} value={form.dtoLocation} onChange={e => update('dtoLocation', e.target.value)} /></div>
                     <div><label className={labelClass}>RTO Docs Handover Date</label><input type="date" className={inputClass} value={form.rtoDocsHandoverDate} onChange={e => update('rtoDocsHandoverDate', e.target.value)} /></div>
 
@@ -1844,14 +1872,35 @@ export default function CreateLoan() {
 
                     <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/30">
                       <div><label className={labelClass}>Docs Location</label><input className={inputClass} value={form.rtoDocsLocation} onChange={e => update('rtoDocsLocation', e.target.value)} /></div>
-                      <div><label className={labelClass}>Work Status</label><input className={inputClass} value={form.rtoWorkStatus} onChange={e => update('rtoWorkStatus', e.target.value)} /></div>
+                      <div>
+                        <label className={labelClass}>Work Status</label>
+                        <select className={inputClass} value={form.rtoWorkStatus} onChange={e => update('rtoWorkStatus', e.target.value)}>
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </div>
                       <div><label className={labelClass}>Paper Details</label><input className={inputClass} value={form.rtoPaperDetails} onChange={e => update('rtoPaperDetails', e.target.value)} /></div>
                     </div>
 
                     <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div><label className={labelClass}>Pending Documents</label><input className={inputClass} value={form.pendingRtoDocuments} onChange={e => update('pendingRtoDocuments', e.target.value)} /></div>
-                      <div><label className={labelClass}>Pollution Status</label><input className={inputClass} value={form.pollutionStatus} onChange={e => update('pollutionStatus', e.target.value)} /></div>
-                      <div><label className={labelClass}>Vehicle Check Status</label><input className={inputClass} value={form.vehicleCheckStatus} onChange={e => update('vehicleCheckStatus', e.target.value)} /></div>
+                      <div>
+                        <label className={labelClass}>Pollution Status</label>
+                        <select className={inputClass} value={form.pollutionStatus} onChange={e => update('pollutionStatus', e.target.value)}>
+                          <option value="Valid">Valid</option>
+                          <option value="Expired">Expired</option>
+                          <option value="N/A">N/A</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelClass}>Vehicle Check Status</label>
+                        <select className={inputClass} value={form.vehicleCheckStatus} onChange={e => update('vehicleCheckStatus', e.target.value)}>
+                          <option value="Pending">Pending</option>
+                          <option value="Done">Done</option>
+                          <option value="N/A">N/A</option>
+                        </select>
+                      </div>
                       <div><label className={labelClass}>Is Financed (at Login)?</label><select className={inputClass} value={form.isFinanced} onChange={e => update('isFinanced', e.target.value)}><option value="">Select</option>{YES_NO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     </div>
                   </div>
@@ -1917,9 +1966,29 @@ export default function CreateLoan() {
                     <div><label className={labelClass}>FC Deposit Date</label><input type="date" className={inputClass} value={form.fcDepositDate} onChange={e => update('fcDepositDate', e.target.value)} /></div>
                     <div><label className={labelClass}>FC Receipt</label><input className={inputClass} value={form.fcReceipt} onChange={e => update('fcReceipt', e.target.value)} /></div>
                     <div><label className={labelClass}>Zero Statement</label><input className={inputClass} value={form.zeroStatement} onChange={e => update('zeroStatement', e.target.value)} /></div>
-                    <div><label className={labelClass}>Current FC Status</label><input className={inputClass} value={form.currentFcStatus} onChange={e => update('currentFcStatus', e.target.value)} /></div>
-                    <div><label className={labelClass}>Prev Financier Name</label><input className={inputClass} value={form.prevFinancierAccountStatus} onChange={e => update('prevFinancierAccountStatus', e.target.value)} /></div>
-                    <div><label className={labelClass}>NOC Status</label><input className={inputClass} value={form.nocStatus} onChange={e => update('nocStatus', e.target.value)} /></div>
+                    <div>
+                      <label className={labelClass}>Current FC Status</label>
+                      <select className={inputClass} value={form.currentFcStatus} onChange={e => update('currentFcStatus', e.target.value)}>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="N/A">N/A</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Prev Financier Name</label>
+                      <select className={inputClass} value={form.prevFinancierAccountStatus} onChange={e => update('prevFinancierAccountStatus', e.target.value)}>
+                        <option value="">Select Financier</option>
+                        {FINANCERS.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>NOC Status</label>
+                      <select className={inputClass} value={form.nocStatus} onChange={e => update('nocStatus', e.target.value)}>
+                        <option value="Pending">Pending</option>
+                        <option value="Received">Received</option>
+                        <option value="N/A">N/A</option>
+                      </select>
+                    </div>
                     <div><label className={labelClass}>NOC Checked By</label><input className={inputClass} value={form.nocCheckedBy} onChange={e => update('nocCheckedBy', e.target.value)} /></div>
                     <div><label className={labelClass}>DTO NOC</label><input className={inputClass} value={form.previousDtoNoc} onChange={e => update('previousDtoNoc', e.target.value)} /></div>
 
