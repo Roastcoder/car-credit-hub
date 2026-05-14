@@ -702,8 +702,8 @@ export default function PaymentApplicationForm() {
 
   const handleSubmit = async (status: 'draft' | 'submitted') => {
     try {
-      if (requestedPaymentAmount <= 0) {
-        toast.error('Enter a payment amount greater than zero');
+      if (requestedPaymentAmount < 0) {
+        toast.error('Enter a valid payment amount');
         return;
       }
 
@@ -891,7 +891,7 @@ export default function PaymentApplicationForm() {
           <div className="grid gap-3 md:grid-cols-5">
             {[
               { label: 'Select customer', done: !!formData.loan_id || !!formData.applicant_name },
-              { label: 'Confirm amount', done: Number(formData.today_release_amount || formData.payment_amount) > 0 },
+              { label: 'Confirm amount', done: Number(formData.today_release_amount || formData.payment_amount) >= 0 },
               { label: 'Bank details', done: !!formData.payment_in_favour_name && !!formData.bank_name && !!formData.account_number && !!formData.ifsc_code },
               { label: 'Documents', done: bankingDocs.length > 0 || (formData.banking_documents || []).length > 0 },
               { label: 'Verify & submit', done: isPaymentVerificationDone || isReadOnly },
