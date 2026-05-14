@@ -1510,18 +1510,6 @@ export default function CreateLoan() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <label className={labelClass}>Income Source</label>
-                      <select className={inputClass} value={form.incomeSource} onChange={e => update('incomeSource', e.target.value)}>
-                        <option value="">Select Income Source</option>
-                        <option value="Salaried">Salaried</option>
-                        <option value="Self Employed">Self Employed</option>
-                        <option value="Business">Business</option>
-                        <option value="Agriculture">Agriculture</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div><label className={labelClass}>Monthly Income (₹)</label><input type="number" className={inputClass} value={form.monthlyIncome} onChange={e => update('monthlyIncome', e.target.value)} /></div>
                     <div><label className={labelClass}>PAN Number</label><input className={inputClass} value={form.panNumber} onChange={e => update('panNumber', e.target.value)} maxLength={10} placeholder="e.g. ABCDE1234F" /></div>
                     <div><label className={labelClass}>Aadhaar Number</label><input className={inputClass} value={form.aadharNumber} onChange={e => update('aadharNumber', e.target.value)} maxLength={12} placeholder="e.g. 1234 5678 9012" /></div>
                     <div>
@@ -1548,19 +1536,34 @@ export default function CreateLoan() {
                     </div>
                     <div>
                       <label className={labelClass}>Booking Month</label>
-                      <select
-                        className={inputClass}
-                        value={form.bookingMonth}
-                        onChange={e => update('bookingMonth', e.target.value)}
-                      >
-                        <option value="">Select Month</option>
-                        {MONTHS.map(m => (
-                          <option key={`${m}-curr`} value={`${m} ${new Date().getFullYear()}`}>{m} {new Date().getFullYear()}</option>
-                        ))}
-                        {MONTHS.map(m => (
-                          <option key={`${m}-prev`} value={`${m} ${new Date().getFullYear() - 1}`}>{m} {new Date().getFullYear() - 1}</option>
-                        ))}
-                      </select>
+                      <div className="flex gap-2">
+                        <select
+                          className={cn(inputClass, "flex-1")}
+                          value={form.bookingMonth?.split(' ')[0] || ''}
+                          onChange={e => {
+                            const year = form.bookingMonth?.split(' ')[1] || new Date().getFullYear().toString();
+                            update('bookingMonth', `${e.target.value} ${year}`);
+                          }}
+                        >
+                          <option value="">Select Month</option>
+                          {MONTHS.map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                        <select
+                          className={cn(inputClass, "w-[120px]")}
+                          value={form.bookingMonth?.split(' ')[1] || ''}
+                          onChange={e => {
+                            const month = form.bookingMonth?.split(' ')[0] || MONTHS[new Date().getMonth()];
+                            update('bookingMonth', `${month} ${e.target.value}`);
+                          }}
+                        >
+                          <option value="">Year</option>
+                          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
+                            <option key={y} value={y.toString()}>{y}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     <div className="md:col-span-3 mt-6"><h3 className="font-semibold text-foreground mb-3">Current Address</h3></div>
