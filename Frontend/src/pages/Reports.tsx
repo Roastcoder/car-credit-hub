@@ -6,6 +6,7 @@ import { reportsAPI, loansAPI } from '@/lib/api';
 import { BarChart3, Download, FileText, IndianRupee, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
+import { MONTHS } from '@/lib/constants';
 import MobileStatCarousel from '@/components/MobileStatCarousel';
 
 const CHART_COLORS = ['#2dd4bf', '#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#6b7280', '#ec4899'];
@@ -82,7 +83,7 @@ export default function Reports() {
       if (!bookingMonth) {
         const date = new Date(l.created_at);
         if (!isNaN(date.getTime())) {
-          bookingMonth = date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+          bookingMonth = `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
         }
       }
 

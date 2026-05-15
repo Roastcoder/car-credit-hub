@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getRolePermissions } from '@/lib/permissions';
 import MobilePageSwitcher from '@/components/MobilePageSwitcher';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -113,6 +113,7 @@ export default function PDDTracking() {
   const [expandedLoans, setExpandedLoans] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>((searchParams.get('tab') as 'pending' | 'completed') || 'pending');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'date' | 'delay'>('date');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -184,8 +185,18 @@ export default function PDDTracking() {
       );
     }
 
-    return data;
-  }, [allLoans, user, activeTab, searchTerm]);
+    // Sort by priority/delay
+    return [...data].sort((a: any, b: any) => {
+      if (sortBy === 'delay') {
+        const getDelay = (l: any) => {
+          const start = new Date(l.disbursement_date || l.created_at);
+          return Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        };
+        return getDelay(b) - getDelay(a);
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [allLoans, user, activeTab, searchTerm, sortBy]);
 
   const canEditPdd = user?.role === 'employee' || user?.role === 'manager' || user?.role === 'pdd_manager';
   const canApprovePdd = user?.role === 'manager' || user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'pdd_manager';
@@ -307,6 +318,17 @@ export default function PDDTracking() {
               Completed ({allLoans.filter(l => l.pdd_status === 'approved').length})
             </button>
           </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-border/60 rounded-2xl">
+            <Filter size={14} className="text-muted-foreground" />
+            <select 
+              className="bg-transparent text-[10px] font-black uppercase tracking-widest focus:outline-none"
+              value={sortBy}
+              onChange={(e: any) => setSortBy(e.target.value)}
+            >
+              <option value="date">Sort: Recent</option>
+              <option value="delay">Sort: Delay Days</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -374,13 +396,35 @@ export default function PDDTracking() {
                             <MapPin size={12} className="text-rose-500" />
                             {loan.branch_name || 'Branch'}
                           </span>
+                          {loan.disbursement_date && (
+                            <>
+                              <div className="w-1 h-1 rounded-full bg-border" />
+                              <span className={cn(
+                                "flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest",
+                                (Math.floor((new Date().getTime() - new Date(loan.disbursement_date).getTime()) / (1000 * 60 * 60 * 24))) > 15
+                                  ? "bg-rose-500 text-white animate-pulse"
+                                  : "bg-amber-100 text-amber-700"
+                              )}>
+                                <Clock size={10} />
+                                {Math.floor((new Date().getTime() - new Date(loan.disbursement_date).getTime()) / (1000 * 60 * 60 * 24))} Days Delay
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Quick Summary Grid */}
                     {!isExpanded && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 py-4 px-6 rounded-3xl bg-muted/20 border border-border/40 w-full xl:w-auto xl:min-w-[500px]">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-8 gap-y-2 py-4 px-6 rounded-3xl bg-muted/20 border border-border/40 w-full xl:w-auto xl:min-w-[500px]">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Actual Payout</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{formatCurrency(loan.loan_amount || 0)}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Total Sanctioned</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{formatCurrency(loan.sanction_amount || 0)}</p>
+                        </div>
                         <div className="space-y-0.5">
                           <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">Payment</p>
                           <p className="text-[11px] font-bold text-foreground truncate">{loan.balance_payment_status || '—'}</p>
@@ -502,22 +546,47 @@ export default function PDDTracking() {
                               <ShieldCheck size={14} /> Checks & Verification
                             </h4>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-xs">
-                              <div>
+                              <div className="flex flex-col gap-1">
                                 <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Insurance</p>
-                                <p className="font-bold text-foreground">{loan.insurance_status || '—'}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className={cn(
+                                    "font-bold text-xs px-2 py-0.5 rounded uppercase tracking-widest",
+                                    loan.insurance_status === 'Endorsement Completed' ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                                  )}>
+                                    {loan.insurance_status || 'Pending'}
+                                  </p>
+                                </div>
                               </div>
                               <div>
                                 <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Pollution</p>
                                 <p className="font-bold text-foreground">{loan.pollution_status || '—'}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Police Case</p>
-                                <p className="font-bold text-foreground">{loan.police_case_status || '—'}</p>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">NOC Status</p>
+                                <p className="font-bold text-foreground">{loan.noc_status || 'Pending'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">NOC Recv.</p>
+                                <p className="font-bold text-foreground">{loan.noc_received === true ? 'Yes' : (loan.noc_received === false ? 'No' : '—')}</p>
                               </div>
                               <div>
                                 <p className="text-muted-foreground font-medium mb-1 uppercase tracking-tighter text-[9px]">Challan</p>
                                 <p className="font-bold text-foreground">{loan.challan_status || '—'}</p>
                               </div>
+                            </div>
+                            <div className="pt-2 flex flex-wrap gap-2">
+                              <button 
+                                onClick={() => toast.info('Triggering RC API for ' + loan.vehicle_number)}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                              >
+                                <Files size={12} /> Sync RC
+                              </button>
+                              <button 
+                                onClick={() => toast.info('Triggering Challan API for ' + loan.vehicle_number)}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all active:scale-95 shadow-lg shadow-slate-800/20"
+                              >
+                                <Search size={12} /> Sync Challan
+                              </button>
                             </div>
                           </div>
 

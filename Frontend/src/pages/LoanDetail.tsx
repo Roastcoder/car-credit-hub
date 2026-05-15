@@ -890,15 +890,15 @@ export default function LoanDetail() {
                       <div className="lg:col-span-2">
                         <Section title="Financial & Payout Summary" icon={<IndianRupee size={16} />}>
                           <div className="space-y-6">
-                            {/* Primary Financial Sequence (1-5) */}
+                            {/* Primary Financial Sequence (1-6) */}
                             <div className="p-5 rounded-2xl bg-accent/5 border border-accent/10 shadow-sm">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                                <Field label="1. Purposed Amount" value={formatCurrency(Number((loan as any).purpose_loan_amount || 0))} />
-                                <Field label="2. Total Amount (EMI)" value={formatCurrency(Number((loan as any).sanction_amount || 0))} className="text-accent font-black text-base" />
-                                <Field label="3. Actual Amount (Payout)" value={formatCurrency(Number(loan.loan_amount || 0))} />
-                                <Field label="4. Received (Bank)" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} />
-                                <Field label="5. Mehar PF (₹)" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} />
-                                <Field label="6. Net Amount (After PF)" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} className="text-green-600 font-black text-base" />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                                <Field label="1. Received (Bank)" value={formatCurrency(Number((loan as any).net_seed_amount || 0))} className="text-foreground font-bold" />
+                                <Field label="2. Mehar PF (Deduction)" value={formatCurrency(Number((loan as any).mehar_deduction || 0))} className="text-rose-600" />
+                                <Field label="3. Net After PF" value={formatCurrency(Number((loan as any).net_seed_amount || 0) - Number((loan as any).mehar_deduction || 0))} className="text-blue-600 font-black" />
+                                <Field label="4. Prepaid Insurance" value={formatCurrency(Number((loan as any).premium_amount || 0))} />
+                                <Field label="5. Final Net Payout" value={formatCurrency(Number((loan as any).net_disbursement_amount || 0))} className="text-green-600 font-black text-xl" />
+                                <Field label="6. Hold Amount" value={formatCurrency(Number((loan as any).hold_amount || 0))} className="text-rose-500 font-bold" />
                               </div>
                             </div>
 
@@ -957,6 +957,10 @@ export default function LoanDetail() {
                           <Field label="Financier Executive" value={(loan as any).financier_executive_name || '—'} />
                           <Field label="Financier Team" value={(loan as any).financier_team_vertical || '—'} />
                           <Field label="Disburse Branch" value={(loan as any).disburse_branch_name || '—'} />
+                          <Field label="File Code" value={(loan as any).file_booked_code || '—'} />
+                          <Field label="DSA Name" value={(loan as any).broker_name || '—'} />
+                          <Field label="Branch Manager" value={(loan as any).branch_manager_name || '—'} />
+                          <Field label="Booking Month" value={(loan as any).booking_month || '—'} />
                         </div>
                       </Section>
                     )}

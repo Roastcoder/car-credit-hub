@@ -57,6 +57,7 @@ const ModelManagement = lazy(() => import("./pages/ModelManagement"));
 const SubventionGrid = lazy(() => import("./pages/SubventionGrid"));
 const LegacyData = lazy(() => import("@/pages/LegacyData"));
 const LegacyDetail = lazy(() => import("@/pages/LegacyDetail"));
+const SMSTemplates = lazy(() => import("@/pages/SMSTemplates"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -181,6 +182,7 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/download" element={<Download />} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/sms-templates" element={<ProtectedRoute><SMSTemplates /></ProtectedRoute>} />
       <Route path="/api-logs" element={
         <ProtectedRoute>
           <RoleProtectedRoute allowedRoles={['super_admin', 'admin']}>

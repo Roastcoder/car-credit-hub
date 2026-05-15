@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, loansAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { LOAN_STATUSES } from '@/lib/constants';
+import { LOAN_STATUSES, MONTHS } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { WorkflowService } from '@/lib/workflow';
 import { exportToCSV, parseCSV } from '@/lib/export-utils';
@@ -143,7 +143,7 @@ export default function Loans() {
         if (dateStr) {
           const d = new Date(dateStr);
           if (!isNaN(d.getTime())) {
-            bookingMonth = d.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            bookingMonth = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
           }
         }
       }
@@ -447,7 +447,7 @@ export default function Loans() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Amount</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Actual Loan Amount (Payout)</p>
                   <p className="font-bold text-foreground">{formatCurrency(Number(loan.loan_amount))}</p>
                 </div>
                 <div>
@@ -498,7 +498,7 @@ export default function Loans() {
                     <MessageSquare size={13} className="text-blue-500" /> Remarks
                   </button>
                 )}
-                {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
+                {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && loan.status !== 'approved' && loan.status !== 'disbursed' && (
                   <button
                     onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
@@ -548,17 +548,17 @@ export default function Loans() {
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Loan Number</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date & Time</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Booking Month</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Applicant</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Vehicle</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Bank</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
-                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Amount</th>
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Actual Loan Amount (Payout)</th>
                     {user?.role !== 'broker' && <th className="text-right py-3 px-3 font-medium text-muted-foreground">EMI</th>}
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">PDD</th>
                     {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
-                    {user?.role === 'broker' && <th className="text-left py-3 px-3 font-medium text-muted-foreground">District</th>}
-                    {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground">Actions</th>}
+                    {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && <th className="text-left py-3 px-3 font-medium text-muted-foreground text-center">Actions</th>}
                     <th className="py-3 px-3"></th>
                   </tr>
                 </thead>
@@ -583,6 +583,9 @@ export default function Loans() {
                           hour12: true
                         }) : '—'}
                       </td>
+                      <td className="py-3.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {loan.booking_month || (loan.login_date ? `${MONTHS[new Date(loan.login_date).getMonth()]} ${new Date(loan.login_date).getFullYear()}` : '—')}
+                      </td>
                       <td className="py-3.5 px-3">
                         <p className="font-medium text-foreground">{loan.applicant_name}</p>
                         <p className="text-xs text-muted-foreground">{loan.mobile}</p>
@@ -602,7 +605,7 @@ export default function Loans() {
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (
+                            {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && loan.status !== 'approved' && loan.status !== 'disbursed' && (
                               <button
                                 onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                                 className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"

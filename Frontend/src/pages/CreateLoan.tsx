@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CAR_MAKES, VERTICALS, SCHEMES, LOAN_TYPES, INSURANCE_MADE_BY_OPTIONS, YES_NO_OPTIONS, FINANCIER_TEAM_VERTICAL_OPTIONS, MONTHS, FINANCERS } from '@/lib/constants';
 import { calculateEMI, formatCurrency, normalizeLoanNumberVertical } from '@/lib/utils';
 import { getRolePermissions } from '@/lib/permissions';
-import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Calculator, Search, X, AlertTriangle, Eye, List, ClipboardCheck, Plus, Trash2, FileText, Image as ImageIcon, Camera, Upload, CheckCircle2, Clock, MessageSquare, IndianRupee, User, ExternalLink, ChevronUp, ChevronDown, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { calculateCommission, calculateAdvancedCommission } from '@/lib/schemes';
@@ -232,7 +232,7 @@ export default function CreateLoan() {
       loanNumber: '', purposeLoanAmount: '', loanAmount: '', ltv: '', loanTypeVehicle: '',
       vehicleNumber: '', makerName: '', modelVariantName: '', mfgYear: '',
       chassisNumber: '', engineNumber: '',
-      vertical: '', scheme: '', bookingMonth: '', branchManagerName: '',
+      vertical: '', scheme: '', bookingMonth: `${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}`, branchManagerName: '',
       // Income Details
       incomeSource: '', monthlyIncome: '',
       // RTO Details
@@ -387,16 +387,21 @@ export default function CreateLoan() {
   // Broker read-only check
   const isBrokerReadOnly = isEditMode && user?.role === 'broker' && existingLoan?.booking_mode === 'broker';
 
-  if (isBrokerReadOnly) {
+  // Approved/Disbursed read-only check (New requirement: No editing after approval)
+  const isApprovedReadOnly = isEditMode && (existingLoan?.status === 'approved' || existingLoan?.status === 'disbursed') && !['admin', 'super_admin'].includes(user?.role || '');
+
+  if (isBrokerReadOnly || isApprovedReadOnly) {
+    const isApproved = existingLoan?.status === 'approved' || existingLoan?.status === 'disbursed';
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle size={32} className="text-amber-500" />
+        <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4", isApproved ? "bg-blue-100" : "bg-amber-100")}>
+          {isApproved ? <ShieldCheck size={32} className="text-blue-500" /> : <AlertTriangle size={32} className="text-amber-500" />}
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-4">Read-Only Access</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-4">{isApproved ? 'Application Locked' : 'Read-Only Access'}</h2>
         <p className="text-muted-foreground mb-8">
-          This loan application was booked via a broker and is read-only for your account.
-          Please contact the branch manager for any modifications.
+          {isApproved 
+            ? 'This loan application has been approved or disbursed and can no longer be edited. All details are now locked for auditing and financial integrity.'
+            : 'This loan application was booked via a broker and is read-only for your account. Please contact the branch manager for any modifications.'}
         </p>
         <div className="flex justify-center gap-4">
           <button onClick={() => navigate(`/loans/${id}`)} className="px-6 py-2 rounded-lg bg-accent text-accent-foreground font-semibold">
@@ -486,6 +491,37 @@ export default function CreateLoan() {
     },
     enabled: !!leadId && !isEditMode,
   });
+
+  const { data: vehicleCache } = useQuery({
+    queryKey: ['vehicle-cache', form.vehicleNumber],
+    queryFn: async () => {
+      if (!form.vehicleNumber || form.vehicleNumber.length < 5) return null;
+      try {
+        const res = await externalAPI.getVehicleCache(form.vehicleNumber);
+        return res.data || res;
+      } catch (err) {
+        return null;
+      }
+    },
+    enabled: !!form.vehicleNumber && form.vehicleNumber.length >= 5,
+  });
+
+  // Auto-populate from cache if fields are empty
+  useEffect(() => {
+    if (vehicleCache && isEditMode) {
+      const rcData = vehicleCache.rc_full?.data || vehicleCache.rc_lite?.data || vehicleCache;
+      if (rcData) {
+        setForm(prev => ({
+          ...prev,
+          makerName: prev.makerName || rcData.maker_name || rcData.make || '',
+          modelVariantName: prev.modelVariantName || rcData.model_variant_name || rcData.model || '',
+          mfgYear: prev.mfgYear || rcData.manufacturing_year || rcData.mfg_year || '',
+          chassisNumber: prev.chassisNumber || rcData.chassis_number || '',
+          engineNumber: prev.engineNumber || rcData.engine_number || '',
+        }));
+      }
+    }
+  }, [vehicleCache, isEditMode]);
 
   const { data: leadDocuments = [] } = useQuery({
     queryKey: ['lead-documents', leadId],
@@ -1255,7 +1291,7 @@ export default function CreateLoan() {
           loan_amount: Number(form.loanAmount) || 0,
           ltv: Number(form.ltv) || null,
           loan_type_vehicle: form.loanTypeVehicle || null,
-          vehicle_number: form.vehicleNumber || null,
+          vehicle_number: form.vehicleNumber?.trim() || null,
           maker_name: form.makerName || null,
           model_variant_name: form.modelVariantName || null,
           mfg_year: form.mfgYear || null,
@@ -1612,7 +1648,7 @@ export default function CreateLoan() {
                           value={form.vehicleNumber}
                           onChange={e => {
                             const value = e.target.value.toUpperCase();
-                            update('vehicleNumber', value);
+                            update('vehicleNumber', value.replace(/\s/g, ''));
                           }}
                           placeholder="e.g., RJ60SW9525"
                         />
@@ -1631,14 +1667,14 @@ export default function CreateLoan() {
                         {fetchingVehicleData ? '...' : 'Verify'}
                       </button>
 
-                      {rcCacheStatus && (
+                      {(rcCacheStatus || (vehicleCache && Object.keys(vehicleCache).length > 0)) && (
                         <div className="absolute -bottom-6 left-0">
-                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${rcCacheStatus === 'db'
+                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${(rcCacheStatus === 'db' || (!rcCacheStatus && vehicleCache))
                             ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
                             : 'bg-green-500/10 text-green-600 border-green-500/20'
                             }`}>
-                            <div className={`w-1 h-1 rounded-full ${rcCacheStatus === 'db' ? 'bg-blue-500' : 'bg-green-500 animate-pulse'}`} />
-                            {rcCacheStatus === 'db' ? 'from db' : 'Live API Response'}
+                            <div className={`w-1 h-1 rounded-full ${(rcCacheStatus === 'db' || (!rcCacheStatus && vehicleCache)) ? 'bg-blue-500' : 'bg-green-500 animate-pulse'}`} />
+                            {(rcCacheStatus === 'db' || (!rcCacheStatus && vehicleCache)) ? 'Verified RC' : 'Live API Response'}
                           </div>
                         </div>
                       )}

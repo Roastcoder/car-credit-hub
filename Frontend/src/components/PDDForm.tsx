@@ -317,6 +317,8 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
     noc: [],
     rc_front: [],
     rc_back: [],
+    new_rc: [],
+    old_rc_front: [],
     dm: [],
     insurance: []
   });
@@ -348,6 +350,8 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
         files.noc.forEach(f => docFormData.append('noc', f));
         files.rc_front.forEach(f => docFormData.append('rc_front', f));
         files.rc_back.forEach(f => docFormData.append('rc_back', f));
+        files.new_rc.forEach(f => docFormData.append('new_rc', f));
+        files.old_rc_front.forEach(f => docFormData.append('old_rc_front', f));
         files.dm.forEach(f => docFormData.append('dm_document', f));
         files.insurance.forEach(f => docFormData.append('insurance', f));
         
@@ -583,11 +587,20 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
           </FormSection>
 
           <FormSection title="NOC & Schedule" icon={<ShieldCheck size={18} />} index={5}>
-            <InputField 
-              label={`NOC Status ${isBT ? '*' : ''}`} icon={<ShieldCheck size={12}/>}
-              value={formData.noc_status} onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
-              disabled={!canEdit}
-            />
+            <div className="space-y-1">
+              <label className={labelClass}>NOC Status {isBT ? '*' : ''}</label>
+              <select 
+                className={inputClass}
+                value={formData.noc_status} 
+                onChange={(e) => setFormData({...formData, noc_status: e.target.value})} 
+                disabled={!canEdit}
+              >
+                <option value="">Select Status</option>
+                <option value="OK">OK</option>
+                <option value="Pending">Pending</option>
+                <option value="Manual Checked">Manual Checked</option>
+              </select>
+            </div>
             <InputField 
               label="Checked By" icon={<User size={12}/>}
               value={formData.noc_checked_by} onChange={(e) => setFormData({...formData, noc_checked_by: e.target.value})} 
@@ -623,6 +636,24 @@ export default function PDDForm({ loan, onCancel, onSuccess, existingDocuments =
               types={['rc_back']}
               onChange={(f) => setFiles({...files, rc_back: f})}
               onClear={() => setFiles({...files, rc_back: []})}
+              disabled={!canEdit}
+            />
+            <DocumentUploadCard 
+              label="New RC"
+              files={files.new_rc}
+              existingDocs={existingDocuments}
+              types={['new_rc']}
+              onChange={(f) => setFiles({...files, new_rc: f})}
+              onClear={() => setFiles({...files, new_rc: []})}
+              disabled={!canEdit}
+            />
+            <DocumentUploadCard 
+              label="Old RC Front"
+              files={files.old_rc_front}
+              existingDocs={existingDocuments}
+              types={['old_rc_front']}
+              onChange={(f) => setFiles({...files, old_rc_front: f})}
+              onClear={() => setFiles({...files, old_rc_front: []})}
               disabled={!canEdit}
             />
             <DocumentUploadCard 

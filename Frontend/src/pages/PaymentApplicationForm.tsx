@@ -724,6 +724,13 @@ export default function PaymentApplicationForm() {
         return;
       }
 
+      // Check transaction sum consistency
+      const txSum = transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
+      if (Math.abs(Number(formData.today_release_amount || 0) - txSum) > 0.1) {
+        toast.error('The sum of beneficiary amounts must match the total payment release amount');
+        return;
+      }
+
       setLoading(true);
 
       // Upload banking documents first
@@ -1707,7 +1714,7 @@ function FormField({ label, name, type = 'text', value, onChange, disabled, requ
         <input
           type={type}
           name={name}
-          value={value || ''}
+          value={value ?? ''}
           onChange={onChange}
           onFocus={onFocus}
           disabled={disabled}
@@ -1730,7 +1737,7 @@ function FormSelect({ label, name, value, onChange, options, disabled }: any) {
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>
       <select
         name={name}
-        value={value || ''}
+        value={value ?? ''}
         onChange={onChange}
         disabled={disabled}
         className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-800/50"

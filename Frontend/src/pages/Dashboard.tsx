@@ -7,7 +7,7 @@ import { LOAN_STATUSES } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 import { ROLE_LABELS } from '@/lib/auth';
 import { loansAPI, branchesAPI, smsAPI } from '@/lib/api';
-import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3, MessagesSquare } from 'lucide-react';
+import { FileText, IndianRupee, CheckCircle2, Clock, Building2, MapPin, ChevronRight, Activity, BarChart3, MessagesSquare, User } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area, Legend
@@ -45,6 +45,7 @@ export default function Dashboard() {
       }
     },
     enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds to keep dashboard stats updated
   });
 
   const { data: branchInfo } = useQuery({
@@ -77,6 +78,7 @@ export default function Dashboard() {
   const isPddDashboard = user.role === 'pdd_manager';
   const isBroker = user.role === 'broker';
   const isAccountant = user.role === 'accountant';
+  const isRBM = user.role === 'rbm';
 
   const filteredAdminLoans = useMemo(() => {
     return loans.filter((loan: any) => {
@@ -889,6 +891,74 @@ export default function Dashboard() {
                   <Clock size={14} className="text-amber-500" />
                   <span>Needs attention</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RBM Task List */}
+        {isRBM && (
+          <div className="mt-6 animate-in slide-in-from-bottom-4 duration-700">
+            <div className="stat-card border-l-4 border-l-rose-500">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-black text-blue-950 dark:text-white flex items-center gap-2">
+                    <Activity size={20} className="text-rose-500" />
+                    Action Required: Payment Requests
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">Real-time payment tasks needing your review</p>
+                </div>
+                <Link to="/payment-applications" className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+                  View All Tasks
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {loans.filter((l: any) => l.status === 'approved' && l.remaining_balance > 0).slice(0, 6).map((loan: any) => (
+                  <div 
+                    key={loan.id} 
+                    onClick={() => navigate(`/loans/${loan.loan_number || loan.id}`)}
+                    className="group bg-card border border-border/60 p-4 rounded-2xl hover:border-rose-500/50 hover:shadow-xl transition-all cursor-pointer relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <IndianRupee size={48} />
+                    </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600">
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-foreground text-sm group-hover:text-rose-600 transition-colors">{loan.applicant_name}</h4>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{loan.loan_number}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                        <span>Balance to Release</span>
+                        <span className="text-rose-600">{formatCurrency(loan.remaining_balance)}</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-rose-500 transition-all duration-1000" 
+                          style={{ width: `${Math.min(100, (Number(loan.total_released_amount || 0) / Number(loan.net_disbursement_amount || 1)) * 100)}%` }} 
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter">
+                        {loan.car_make} {loan.car_model}
+                      </span>
+                      <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                ))}
+                {loans.filter((l: any) => l.status === 'approved' && l.remaining_balance > 0).length === 0 && (
+                  <div className="col-span-full py-12 flex flex-col items-center justify-center text-center gap-3 bg-muted/20 rounded-3xl border border-dashed border-border">
+                    <div className="w-12 h-12 rounded-full bg-white dark:bg-black/20 flex items-center justify-center text-muted-foreground/30">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-muted-foreground">All caught up! No pending payment releases.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

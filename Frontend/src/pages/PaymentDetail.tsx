@@ -185,7 +185,7 @@ export default function PaymentDetail() {
     // 1. Get all entries for this loan to check for duplicates
     let allEntries = payment?.all_loan_ledger_entries || [];
     
-    const sanctionAmt = Number(payment?.sanction_amount || payment?.disbursement_amount || payment?.loan_amount || 0);
+    const sanctionAmt = Number(payment?.received_amount || payment?.net_seed_amount || payment?.sanction_amount || payment?.loan_amount || 0);
     
     const checkIsInitial = (entry: any) => {
       const narration = (entry.narration || '').toLowerCase();
@@ -744,8 +744,13 @@ export default function PaymentDetail() {
     ? payment.payment_history
     : [payment];
 
-  const getLoanRequestAmount = (request: any) =>
-    Number(request.voucher_amount || request.payment_amount || request.today_release_amount || request.amount || 0);
+  const getLoanRequestAmount = (request: any) => {
+    // Parallel-Aware: If multi-transactions exist, use their sum to prevent top-level field drift mismatches
+    if (request.transactions && request.transactions.length > 0) {
+      return request.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0);
+    }
+    return Number(request.voucher_amount || request.payment_amount || request.today_release_amount || request.amount || 0);
+  };
 
   const loanPaymentTotal = loanPaymentRequests.reduce((sum: number, request: any) => sum + getLoanRequestAmount(request), 0);
 
@@ -1009,8 +1014,8 @@ export default function PaymentDetail() {
                   <div className="p-5 rounded-2xl bg-[#f8fcfc] dark:bg-slate-900/50 border border-[#e0f2f2] dark:border-slate-800 shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                       <Field label="1. Purposed Amount" value={formatCurrency(Number(payment.purpose_loan_amount || payment.loan_amount || 0))} />
-                      <Field label="2. Total Amount (EMI)" value={formatCurrency(Number(payment.sanction_amount || payment.loan_amount || 0))} className="text-emerald-500 font-black" />
-                      <Field label="3. Actual Amount (Payout)" value={formatCurrency(Number(payment.loan_amount || 0))} />
+                      <Field label="2. Total Sanctioned Amount" value={formatCurrency(Number(payment.sanction_amount || payment.loan_amount || 0))} />
+                      <Field label="3. Actual Loan Amount (Payout)" value={formatCurrency(Number(payment.loan_amount || 0))} className="text-emerald-500 font-bold" />
                       <Field label="4. Received (Bank)" value={formatCurrency(Number(payment.received_amount || payment.net_seed_amount || 0))} />
                       <Field label="5. Mehar PF (₹)" value={formatCurrency(Number(payment.mehar_deduction || 0))} />
                       <Field label="6. Net Amount (After PF)" value={formatCurrency(Number(payment.disbursement_amount || 0))} className="text-emerald-500 font-black" />

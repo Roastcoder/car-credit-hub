@@ -28,5 +28,9 @@
         "**/node_modules/@capacitor/push-notifications/android": true,
         "**/node_modules/@capacitor/splash-screen/android": true,
         "**/node_modules/@capgo/capacitor-native-biometric/android": true
+    },
+    "css.lint.unknownAtRules": "ignore",
+    "files.associations": {
+        "*.css": "tailwindcss"
     }
 }
