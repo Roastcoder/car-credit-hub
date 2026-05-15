@@ -474,7 +474,7 @@ export default function PaymentApplicationsList() {
                         <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">Total Released</p>
                         <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(group.totalAmount || 0)}</p>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                          <p className="text-[10px] font-bold text-blue-600 whitespace-nowrap">Requested: {formatCurrency(app.transactions && app.transactions.length > 0 ? app.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0) : (app.payment_amount || 0))}</p>
+                          <p className="text-[10px] font-bold text-blue-600 whitespace-nowrap">Requested: {formatCurrency(app.today_release_amount || app.payment_amount || 0)}</p>
                           <p className="text-[10px] font-bold text-slate-500 whitespace-nowrap">Actual Payout: {formatCurrency(Number(app.disbursement_amount) || 0)}</p>
                           {app.emi_amount && <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
                         </div>
@@ -500,7 +500,7 @@ export default function PaymentApplicationsList() {
                             <p className="text-[10px] text-gray-500">{request.payment_in_favour_name || request.applicant_name}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[10px] font-bold text-blue-600">{formatCurrency(request.transactions && request.transactions.length > 0 ? request.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0) : (request.payment_amount || 0))}</p>
+                            <p className="text-[10px] font-bold text-blue-600">{formatCurrency(request.today_release_amount || request.payment_amount || 0)}</p>
                             <span className={`mt-0.5 inline-block px-2 py-0.5 text-[8px] font-bold uppercase rounded-full ${getStatusColor(request.status)}`}>
                               {request.status.replace('_', ' ')}
                             </span>
@@ -666,7 +666,7 @@ export default function PaymentApplicationsList() {
                             {app.financier_name || app.disbursement_branch || 'N/A'}
                           </td>
                           <td className="px-3 py-3 text-[11px] font-extrabold text-blue-700 dark:text-blue-400 text-center">
-                            {formatCurrency(app.transactions && app.transactions.length > 0 ? app.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0) : (app.payment_amount || 0))}
+                            {formatCurrency(app.today_release_amount || app.payment_amount || 0)}
                             <div className="text-[9px] text-gray-400 font-normal">Requested</div>
                           </td>
                           <td className="px-3 py-3 text-[11px] text-gray-600 dark:text-gray-400">

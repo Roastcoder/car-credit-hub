@@ -745,11 +745,8 @@ export default function PaymentDetail() {
     : [payment];
 
   const getLoanRequestAmount = (request: any) => {
-    // Parallel-Aware: If multi-transactions exist, use their sum to prevent top-level field drift mismatches
-    if (request.transactions && request.transactions.length > 0) {
-      return request.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0);
-    }
-    return Number(request.voucher_amount || request.payment_amount || request.today_release_amount || request.amount || 0);
+    // Return the parent entered amount as the source of truth for "Requested Amount"
+    return Number(request.today_release_amount || request.payment_amount || request.voucher_amount || request.amount || 0);
   };
 
   const loanPaymentTotal = loanPaymentRequests.reduce((sum: number, request: any) => sum + getLoanRequestAmount(request), 0);
