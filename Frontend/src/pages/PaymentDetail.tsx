@@ -751,9 +751,17 @@ export default function PaymentDetail() {
 
   const loanPaymentTotal = loanPaymentRequests.reduce((sum: number, request: any) => sum + getLoanRequestAmount(request), 0);
 
+  const getActualPayoutAmount = (request: any) => {
+    if (request.transactions && request.transactions.length > 0) {
+      return request.transactions.reduce((sum: number, tx: any) => sum + (Number(tx.amount) || 0), 0);
+    }
+    return getLoanRequestAmount(request);
+  };
+  const actualPayoutTotal = loanPaymentRequests.reduce((sum: number, request: any) => sum + getActualPayoutAmount(request), 0);
+
   const LoanPaymentRequestsTable = () => (
     <Section title="All Payment Applications In This Loan File" icon={<FileText size={20} className="text-blue-500" />}>
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-border bg-muted/20 p-3">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Loan File</p>
           <p className="mt-1 text-sm font-bold text-foreground">{payment.loan_number || '—'}</p>
@@ -763,8 +771,12 @@ export default function PaymentDetail() {
           <p className="mt-1 text-sm font-bold text-foreground">{loanPaymentRequests.length}</p>
         </div>
         <div className="rounded-lg border border-border bg-muted/20 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Requested / Released</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Requested</p>
           <p className="mt-1 text-sm font-bold text-blue-600">{formatCurrency(loanPaymentTotal)}</p>
+        </div>
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Actual Payout</p>
+          <p className="mt-1 text-sm font-bold text-emerald-600">{formatCurrency(actualPayoutTotal)}</p>
         </div>
       </div>
 
