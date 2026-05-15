@@ -61,6 +61,8 @@ interface PaymentApplication {
   emi_amount?: number;
   voucher_number?: string;
   payment_type?: string;
+  sanction_amount?: number;
+  today_release_amount?: number;
   payment_in_favour_name?: string;
 }
 
@@ -488,7 +490,10 @@ export default function PaymentApplicationsList() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(group.totalAmount || 0)}</p>
-                      {app.emi_amount && <p className="text-[10px] font-medium text-gray-500">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
+                        <p className="text-[10px] font-bold text-blue-600 whitespace-nowrap">Requested: {formatCurrency(app.payment_amount || 0)}</p>
+                        {app.emi_amount && <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap">EMI: ₹{Number(app.emi_amount).toLocaleString()}/mo</p>}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium italic">
                       <Receipt size={10} className="text-blue-500" />
@@ -618,6 +623,7 @@ export default function PaymentApplicationsList() {
                     {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vehicle</th>}
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Bank</th>
                     {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Branch</th>}
+                    <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Requested Amount</th>
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Amount</th>
                     {!isAccountant && <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">EMI</th>}
                     <th className="px-3 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Release %</th>
@@ -682,6 +688,9 @@ export default function PaymentApplicationsList() {
                           {app.financier_name || app.disbursement_branch || 'N/A'}
                         </td>
                       )}
+                      <td className="px-3 py-3 text-[11px] font-extrabold text-blue-700 dark:text-blue-400 text-center">
+                        {formatCurrency(app.payment_amount || 0)}
+                      </td>
                       <td className="px-3 py-3 text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
                         {formatCurrency(group.totalAmount || 0)}
                       </td>
