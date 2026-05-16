@@ -625,8 +625,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto px-0 py-3 pb-20 lg:p-4 sm:lg:p-5 scroll-smooth antialiased transform-gpu overscroll-behavior-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="animate-fade-in-slow min-h-full will-change-transform">
+        <main className="flex-1 overflow-y-auto px-0 py-3 pb-20 lg:p-4 sm:lg:p-5 scroll-smooth antialiased overscroll-behavior-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="min-h-full">
             {children}
           </div>
         </main>
