@@ -241,7 +241,8 @@ export default function PaymentApplicationForm() {
   });
 
   const needsPaymentVerification = isBeneficiaryPayment &&
-    formData.status !== 'sent_back';
+    formData.status !== 'sent_back' &&
+    formData.payment_type !== 'rto';
   const isPaymentVerificationDone = !needsPaymentVerification || aadhaarVerificationStatus === 'verified';
 
   const fetchApplicationData = async () => {
