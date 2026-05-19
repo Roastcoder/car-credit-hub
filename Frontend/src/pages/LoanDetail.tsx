@@ -573,6 +573,15 @@ export default function LoanDetail() {
             )}
             {!isEditingPDD && (
               <>
+                {permissions.canEdit && !isBrokerReadOnly && (loan.status !== 'approved' && loan.status !== 'disbursed' || ['admin', 'super_admin'].includes(user?.role || '')) && (
+                  <button
+                    onClick={() => navigate(`/loans/${hasFinalLoanNumber ? (loan as any).loan_number : applicationIdentifier}/edit`)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"
+                  >
+                    <Edit2 size={14} className="text-accent" />
+                    Edit
+                  </button>
+                )}
                 <button
                   onClick={() => exportLoanPDF(loan)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 hover:border-accent transition-colors"

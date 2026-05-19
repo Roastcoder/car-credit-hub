@@ -498,7 +498,7 @@ export default function Loans() {
                     <MessageSquare size={13} className="text-blue-500" /> Remarks
                   </button>
                 )}
-                {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && loan.status !== 'approved' && loan.status !== 'disbursed' && (
+                {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (loan.status !== 'approved' && loan.status !== 'disbursed' || ['admin', 'super_admin'].includes(user?.role || '')) && (
                   <button
                     onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-accent/10 transition-colors"
@@ -605,7 +605,7 @@ export default function Loans() {
                       {(permissions.canEdit || permissions.canDelete || canEditStatus || canAddRemarks) && (
                         <td className="py-3.5 px-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
-                            {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && loan.status !== 'approved' && loan.status !== 'disbursed' && (
+                            {permissions.canEdit && !(user?.role === 'broker' && loan.booking_mode === 'broker') && (loan.status !== 'approved' && loan.status !== 'disbursed' || ['admin', 'super_admin'].includes(user?.role || '')) && (
                               <button
                                 onClick={() => navigate(`/loans/${hasFinalLoanNumber(loan) ? loan.loan_number : getApplicationIdentifier(loan)}/edit`)}
                                 className="p-1.5 rounded-md border border-border bg-card hover:bg-accent/10 transition-colors"
